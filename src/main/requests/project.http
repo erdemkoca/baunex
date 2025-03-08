@@ -1,0 +1,12 @@
+###
+GET http://localhost:8080/project
+
+###
+POST http://localhost:8080/project
+Content-Type: application/json
+
+{
+  "name": "Edis Projekt",
+  "budget": 14,
+  "client": "Erdem Abi"
+}
