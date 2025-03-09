@@ -1,23 +1,23 @@
-package ch.baunex.user
+package ch.baunex.user.model
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity
 import jakarta.persistence.*
 
 @Entity
 @Table(name = "users")
-class UserModel() : PanacheEntity() { // <-- Add empty constructor here
+class UserModel() : PanacheEntity() {
+
     @Column(nullable = false, unique = true)
     lateinit var email: String
 
     @Column(nullable = false)
     lateinit var password: String
 
-    @ManyToOne
-    @JoinColumn(name = "role_id")
-    lateinit var role: RoleModel
+    @Enumerated(EnumType.STRING)  // Store role as ENUM
+    @Column(nullable = false)
+    lateinit var role: Role
 
-    // Additional constructor (optional)
-    constructor(email: String, password: String, role: RoleModel) : this() {
+    constructor(email: String, password: String, role: Role) : this() {
         this.email = email
         this.password = password
         this.role = role

@@ -1,7 +1,12 @@
 package ch.baunex.user.controller
 
-import ch.baunex.user.RoleModel
-import ch.baunex.user.UserService
+import ch.baunex.user.PasswordUtil
+import ch.baunex.user.UserRepository
+import ch.baunex.user.dto.UserDTO
+import ch.baunex.user.dto.UserResponseDTO
+import ch.baunex.user.model.UserModel
+import jakarta.inject.Inject
+import jakarta.transaction.Transactional
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
@@ -9,21 +14,25 @@ import jakarta.ws.rs.core.Response
 @Path("/api/users")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-class UserController(private val userService: UserService) {
+class UserController @Inject constructor(
+    private val userRepository: UserRepository
+) {
 
     @POST
-    @Path("/register")
-    fun registerUser(request: RegisterRequest): Response {
-        val user = userService.registerUser(request.email, request.password, request.role)
-        return Response.ok(user).build()
+    @Transactional
+    fun createUser(userDTO: UserDTO): Response {
+        val user = UserModel(userDTO.email, PasswordUtil.hashPassword(userDTO.password), userDTO.role)
+        userRepository.persist(user)
+
+        return Response.status(Response.Status.CREATED)
+            .entity(UserResponseDTO(user.id!!, user.email, user.role))
+            .build()
     }
 
     @GET
-    @Path("/{email}")
-    fun getUser(@PathParam("email") email: String): Response {
-        val user = userService.getUserByEmail(email) ?: return Response.status(404).build()
-        return Response.ok(user).build()
+    fun listUsers(): List<UserResponseDTO> {
+        return userRepository.listAll().map { user: UserModel ->
+            UserResponseDTO(user.id!!, user.email, user.role)
+        }
     }
 }
-
-data class RegisterRequest(val email: String, val password: String, val role: RoleModel)

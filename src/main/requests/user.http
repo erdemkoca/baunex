@@ -1,0 +1,22 @@
+##
+GET http://localhost:8080/api/users
+
+###
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "email": "edi.zeqiriGmail.com",
+  "password": "ediZeiqiri1",
+  "role": "ADMIN"
+}
+
+###
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "email": "erdem.zeqiriGmail.com",
+  "password": "erdemkoca1",
+  "role": "ELECTRICIAN"
+}

@@ -1,5 +1,8 @@
 package ch.baunex.user
 
+import ch.baunex.user.model.Role
+import ch.baunex.user.model.RoleModel
+import ch.baunex.user.model.UserModel
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -9,7 +12,7 @@ class UserService @Inject constructor(
     private val userRepository: UserRepository
 ) {
     @Transactional
-    fun registerUser(email: String, password: String, role: RoleModel): UserModel {
+    fun registerUser(email: String, password: String, role: Role): UserModel {
         val hashedPassword = PasswordUtil.hashPassword(password)
         val user = UserModel(email, hashedPassword, role)
         userRepository.persist(user)

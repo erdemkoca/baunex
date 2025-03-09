@@ -11,6 +11,6 @@ data class ProjectRequest(
         var name: String = "",
         var budget: Int = 0,
         var client: String = "",
-        var contact: String? = "No Info",
+        //var contact: String? = "No Info",
         @Id @GeneratedValue var id: Long? = null
 )
