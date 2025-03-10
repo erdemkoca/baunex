@@ -1,5 +1,4 @@
-package ch.baunex.user
-
+package ch.baunex.user.repository
 
 import ch.baunex.user.model.UserModel
 import io.quarkus.hibernate.orm.panache.PanacheRepository

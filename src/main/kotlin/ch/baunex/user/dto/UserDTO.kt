@@ -16,3 +16,6 @@ data class UserResponseDTO(
     val email: String,
     val role: Role
 )
+
+@Serializable
+data class LoginDTO(val email: String, val password: String)

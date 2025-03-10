@@ -20,3 +20,30 @@ Content-Type: application/json
   "password": "erdemkoca1",
   "role": "ELECTRICIAN"
 }
+
+###
+POST http://localhost:8080/api/users/login
+Content-Type: application/json
+
+{
+"email": "admin_erdem@example.com",
+"password": "securepassword"
+}
+
+###
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+"email": "admin_erdem@example.com",
+"password": "securepassword",
+"role": "ADMIN"
+}
+
+###
+GET http://localhost:8080/api/users/adminListUsers
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhZG1pbl9lcmRlbUBleGFtcGxlLmNvbSIsImdyb3VwcyI6WyJBRE1JTiJdLCJpc3MiOiJiYXVuZXgiLCJleHAiOjE3NDE2NzM0OTA1MTUsImlhdCI6MTc0MTU4NzA5MCwianRpIjoiOGFmMTZhODQtOWEzMC00MTFhLTg2OWEtYWQ5NDVmNWE2ZTVhIn0.gU2I4JFTUrsxbVBNpNz9o5DEo1mMuD6LHOCKn3vqEi9WR9jZwiQBdT5DGHusqHQ8O0faQ6FinF3tV1M1s6tO1XkF68TS4pQHSSSbYgjo4lAutHuQ4_BX3BVXVMBRDfcQDu2POnNTpjkQkFXdWyimtyFAOpESdMTfrKTwy1b8CvjebNKOboWYaaAIl-yfQjzNT4ZJPXLkbEwb0-gcmgtd4Uxp3cyfmIbHz51Lk7MclTtwzvHIshs1yxbe3XG-V2yL-zhiRDTmIiTu2bKA_POilQEyhC9FbNQHaBTpaEik9VA3orNpxJ-kIu8Q8u7mT-Gzusf9Opuikwog6EKgE4ikHQ
+
+###
+GET http://localhost:8080/api/users/testAdmin
+Authorization: Bearer <your_jwt_token>
