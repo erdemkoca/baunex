@@ -7,7 +7,7 @@ import jakarta.persistence.*
 @Table(name = "roles")
 class RoleModel() : PanacheEntity() {
 
-    @Enumerated(EnumType.STRING)  // Store as a STRING in the DB
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, unique = true)
     lateinit var name: Role
 
