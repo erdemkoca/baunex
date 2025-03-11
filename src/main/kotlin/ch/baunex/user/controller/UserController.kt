@@ -3,12 +3,15 @@ package ch.baunex.user.controller
 import ch.baunex.user.dto.LoginDTO
 import ch.baunex.user.dto.UserDTO
 import ch.baunex.user.dto.UserResponseDTO
+import ch.baunex.user.facade.UserFacade
 import ch.baunex.user.service.AuthService
 import ch.baunex.user.service.UserService
-import jakarta.annotation.security.RolesAllowed
+import ch.baunex.user.utils.RoleUtil
 import jakarta.inject.Inject
+import jakarta.ws.rs.core.SecurityContext
 import jakarta.transaction.Transactional
 import jakarta.ws.rs.*
+import jakarta.ws.rs.core.Context
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import kotlinx.serialization.Serializable
@@ -24,15 +27,17 @@ data class MessageResponse(val message: String)
 @Consumes(MediaType.APPLICATION_JSON)
 class UserController @Inject constructor(
     private val userService: UserService,
-    private val authService: AuthService
+    private val userFacade: UserFacade,
+    private val securityContext: SecurityContext,
+    private val roleUtil: RoleUtil
 ) {
 
     @POST
     @Transactional
     fun createUser(userDTO: UserDTO): Response {
-        val user = userService.registerUser(userDTO)
+        val user = userFacade.registerUser(userDTO)
         return Response.status(Response.Status.CREATED)
-            .entity(UserResponseDTO(user.id!!, user.email, user.role))
+            .entity(UserResponseDTO(user.id, user.email, user.role))
             .build()
     }
 
@@ -41,7 +46,7 @@ class UserController @Inject constructor(
     @Path("/login")
     @Transactional
     fun login(loginDTO: LoginDTO): Response {
-        val token = authService.authenticate(loginDTO)
+        val token = userFacade.authenticateUser(loginDTO)
         return if (token != null) {
             Response.ok(TokenResponse(token)).build()
         } else {
@@ -50,16 +55,29 @@ class UserController @Inject constructor(
     }
 
     @GET
-    @RolesAllowed("ADMIN")
     @Path("/adminListUsers")
-    fun listUsers(): List<UserResponseDTO> {
-        return userService.listUsers()
+    fun listUsers(@Context securityContext: SecurityContext): Response {
+        if (!roleUtil.hasRole(securityContext, "ADMIN")) {
+            return Response.status(Response.Status.FORBIDDEN).entity("Access denied").build()
+        }
+        return Response.ok(userService.listUsers()).build()
     }
 
     @GET
-    @RolesAllowed("ADMIN")
     @Path("/testAdmin")
     fun adminOnlyEndpoint(): Response {
+        if (!roleUtil.hasRole(securityContext, "ADMIN")) {
+            return Response.status(Response.Status.FORBIDDEN).entity("Access denied").build()
+        }
         return Response.ok(MessageResponse("Welcome, Admin!")).build()
     }
+
+    @GET
+    @Path("/allUsers")
+    fun getAllUsers(): List<UserResponseDTO> {
+        return userService.getAllUsers().map { user ->
+            UserResponseDTO(user.id!!, user.email, user.role)
+        }
+    }
+
 }

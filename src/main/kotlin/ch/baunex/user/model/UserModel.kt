@@ -13,7 +13,7 @@ class UserModel() : PanacheEntity() {
     @Column(nullable = false)
     lateinit var password: String
 
-    @Enumerated(EnumType.STRING)  // Store role as ENUM
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     lateinit var role: Role
 

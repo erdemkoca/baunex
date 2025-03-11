@@ -2,7 +2,6 @@ package ch.baunex.user.service
 
 import ch.baunex.user.dto.UserDTO
 import ch.baunex.user.dto.UserResponseDTO
-import ch.baunex.user.model.Role
 import ch.baunex.user.model.UserModel
 import ch.baunex.user.repository.UserRepository
 import ch.baunex.user.utils.PasswordUtil
@@ -15,17 +14,21 @@ class UserService @Inject constructor(
     private val userRepository: UserRepository
 ) {
     @Transactional
-    fun registerUser(userDTO: UserDTO): UserResponseDTO {
+    fun registerUser(userDTO: UserDTO): UserModel {
         val hashedPassword = PasswordUtil.hashPassword(userDTO.password)
         val newUser = UserModel(userDTO.email, hashedPassword, userDTO.role)
         userRepository.persist(newUser)
-        return UserResponseDTO(newUser.id!!, newUser.email, newUser.role)
+        return newUser
     }
-
 
     fun listUsers(): List<UserResponseDTO> {
         return userRepository.listAll().map { user ->
             UserResponseDTO(user.id!!, user.email, user.role)
         }
     }
+
+    fun getAllUsers(): List<UserModel> {
+        return userRepository.listAll()
+    }
+
 }

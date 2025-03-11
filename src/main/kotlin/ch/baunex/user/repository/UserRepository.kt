@@ -9,4 +9,9 @@ class UserRepository : PanacheRepository<UserModel> {
     fun findByEmail(email: String): UserModel? {
         return find("email", email).firstResult()
     }
+
+    fun getUserRole(email: String): String? {
+        return find("email", email).firstResult<UserModel>()?.role?.name
+    }
+
 }

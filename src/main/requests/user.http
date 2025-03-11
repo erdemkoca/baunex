@@ -1,58 +1,78 @@
-##
-GET http://localhost:8080/api/users
-
-###
+### 🟢 1️⃣ Create a new user (Regular User)
+# This request creates a new USER account
 POST http://localhost:8080/api/users
 Content-Type: application/json
 
 {
-  "email": "edi.zeqiriGmail.com",
-  "password": "ediZeiqiri1",
+  "email": "user1@example.com",
+  "password": "userpassword",
+  "role": "USER"
+}
+
+### 🟢 2️⃣ Login as the newly created user
+# Login with the credentials of user to get the JWT token
+POST http://localhost:8080/api/users/login
+Content-Type: application/json
+
+{
+  "email": "user1@example.com",
+  "password": "userpassword"
+}
+
+### 🔵 3️⃣ Create another user (Regular User)
+# This request creates another user for testing
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "email": "user2@example.com",
+  "password": "userpassword",
+  "role": "USER"
+}
+
+### 🔵 4️⃣ Create an admin user
+# Admins have more privileges
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "adminpassword",
   "role": "ADMIN"
 }
 
-###
-POST http://localhost:8080/api/users/login
-Content-Type: application/json
-
-{
-"email": "erdem.zeqiriGmail.com",
-"password": "erdemkoca1"
-}
-
-###
-POST http://localhost:8080/api/users
-Content-Type: application/json
-
-{
-  "email": "erdem.zeqiriGmail.com",
-  "password": "erdemkoca1",
-  "role": "ELECTRICIAN"
-}
-
-###
-POST http://localhost:8080/api/users/login
-Content-Type: application/json
-
-{
-"email": "admin_erdem@example.com",
-"password": "securepassword"
-}
-
-###
-POST http://localhost:8080/api/users
-Content-Type: application/json
-
-{
-"email": "admin_erdem@example.com",
-"password": "securepassword",
-"role": "ADMIN"
-}
-
-###
+### 🔴 5️⃣ Try accessing admin-only endpoint as a regular user (Expected: 403 Forbidden)
+# Replace "your-user-token" with the actual JWT token from Step 2
 GET http://localhost:8080/api/users/adminListUsers
-Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhZG1pbl9lcmRlbUBleGFtcGxlLmNvbSIsImdyb3VwcyI6WyJBRE1JTiJdLCJpc3MiOiJiYXVuZXgiLCJleHAiOjE3NDE2NzM0OTA1MTUsImlhdCI6MTc0MTU4NzA5MCwianRpIjoiOGFmMTZhODQtOWEzMC00MTFhLTg2OWEtYWQ5NDVmNWE2ZTVhIn0.gU2I4JFTUrsxbVBNpNz9o5DEo1mMuD6LHOCKn3vqEi9WR9jZwiQBdT5DGHusqHQ8O0faQ6FinF3tV1M1s6tO1XkF68TS4pQHSSSbYgjo4lAutHuQ4_BX3BVXVMBRDfcQDu2POnNTpjkQkFXdWyimtyFAOpESdMTfrKTwy1b8CvjebNKOboWYaaAIl-yfQjzNT4ZJPXLkbEwb0-gcmgtd4Uxp3cyfmIbHz51Lk7MclTtwzvHIshs1yxbe3XG-V2yL-zhiRDTmIiTu2bKA_POilQEyhC9FbNQHaBTpaEik9VA3orNpxJ-kIu8Q8u7mT-Gzusf9Opuikwog6EKgE4ikHQ
+Content-Type: application/json
+Authorization: Bearer your-user-token
 
-###
-GET http://localhost:8080/api/users/testAdmin
-Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhZG1pbl9lcmRlbUBleGFtcGxlLmNvbSIsImdyb3VwcyI6WyJBRE1JTiJdLCJpc3MiOiJiYXVuZXgiLCJleHAiOjE3NDE2NzM0OTA1MTUsImlhdCI6MTc0MTU4NzA5MCwianRpIjoiOGFmMTZhODQtOWEzMC00MTFhLTg2OWEtYWQ5NDVmNWE2ZTVhIn0.gU2I4JFTUrsxbVBNpNz9o5DEo1mMuD6LHOCKn3vqEi9WR9jZwiQBdT5DGHusqHQ8O0faQ6FinF3tV1M1s6tO1XkF68TS4pQHSSSbYgjo4lAutHuQ4_BX3BVXVMBRDfcQDu2POnNTpjkQkFXdWyimtyFAOpESdMTfrKTwy1b8CvjebNKOboWYaaAIl-yfQjzNT4ZJPXLkbEwb0-gcmgtd4Uxp3cyfmIbHz51Lk7MclTtwzvHIshs1yxbe3XG-V2yL-zhiRDTmIiTu2bKA_POilQEyhC9FbNQHaBTpaEik9VA3orNpxJ-kIu8Q8u7mT-Gzusf9Opuikwog6EKgE4ikHQ
+### 🟣 6️⃣ Login as Admin and get a JWT token
+# This will generate a token for the admin account
+POST http://localhost:8080/api/users/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "adminpassword"
+}
+
+### 🟣 7️⃣ Access admin-only endpoint with admin token (Expected: 200 OK)
+# Replace "your-admin-token" with the actual token received in Step 6
+GET http://localhost:8080/api/users/adminListUsers
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImdyb3VwcyI6WyJBRE1JTiJdLCJpc3MiOiJiYXVuZXgiLCJleHAiOjE3NDE3MzkyMDUwMzksImlhdCI6MTc0MTY1MjgwNSwianRpIjoiYjIwNzhlOWMtZjkxNy00NTE1LTg4YTItYTE5ZjgwMThlMDAzIn0.FlOSx230n7QwelRlX2QUcdgMRMFNDHenARalWPo2fuLWoXjqV6gmcQbb3HFoze6ckei7cJxZ_3trFr2diqFrx5xL923_Xj4gnKAakg-baXD3jKvYAPrft0K4CplKm0XColQlBKxMvADkzXz_aH6wHvTuY2TCmA8XNXI5mwov0CgQa52evj5DQbnhe4JLGszARoTV5TrfLgfYi_HTtVr9jqXZIMXvDDzJTvUMbtMxZRNfz9mHNDBVQQc2z4gdgeQ7un_0kkJ-EFqc2f8TxBzAklZMtisTGuTHPTpJ3UZ40vmZ_hD23B1k6GY8x3OuRh2VDdO3XfGKY4dvz1Qtv981LQ
+
+
+### 🟡 8️⃣ Test invalid login (wrong credentials, Expected: 401 Unauthorized)
+POST http://localhost:8080/api/users/login
+Content-Type: application/json
+
+{
+  "email": "user1@example.com",
+  "password": "wrongpassword"
+}
+
+### Fetch all users
+GET http://localhost:8080/api/users/allUsers
+Content-Type: application/json
