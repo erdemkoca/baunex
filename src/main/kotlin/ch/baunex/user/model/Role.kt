@@ -10,5 +10,6 @@ enum class Role {
     @SerialName("EMPLOYEE") EMPLOYEE,
     @SerialName("ELECTRICIAN") ELECTRICIAN,
     @SerialName("ACCOUNTANT") ACCOUNTANT,
-    @SerialName("CLIENT") CLIENT
+    @SerialName("CLIENT") CLIENT,
+    @SerialName("USER") USER
 }

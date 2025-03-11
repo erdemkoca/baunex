@@ -70,3 +70,32 @@ If you want to learn more about building native executables, please consult <htt
 Easily start your REST Web Services
 
 [Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+
+## Setting Up JWT Keys for Development
+
+### Generate Keys:
+
+openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048  
+openssl rsa -in private.pem -pubout -out public.pem  
+
+## Setting Up JWT Keys for Development
+
+Each developer **must generate their own keys** for secure authentication.
+
+### Generate Keys
+```sh
+openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048  
+openssl rsa -in private.pem -pubout -out public.pem  
+```
+
+### Setup Project
+- Place `public.pem` in `/resources/keys/`
+- Update `application.properties`:
+  ```properties
+  mp.jwt.verify.publickey.location=resources/keys/public.pem  
+  smallrye.jwt.sign.key.location=private.pem  
+  ```
+
+### Use Keys for Authentication
+- `private.pem` is used for signing tokens.
+- `public.pem` is used for verification.
