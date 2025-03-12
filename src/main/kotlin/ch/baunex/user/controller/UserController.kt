@@ -4,7 +4,6 @@ import ch.baunex.user.dto.LoginDTO
 import ch.baunex.user.dto.UserDTO
 import ch.baunex.user.dto.UserResponseDTO
 import ch.baunex.user.facade.UserFacade
-import ch.baunex.user.service.userFacade
 import ch.baunex.user.utils.RoleUtil
 import jakarta.inject.Inject
 import jakarta.ws.rs.core.SecurityContext
