@@ -4,8 +4,7 @@ import ch.baunex.user.dto.LoginDTO
 import ch.baunex.user.dto.UserDTO
 import ch.baunex.user.dto.UserResponseDTO
 import ch.baunex.user.facade.UserFacade
-import ch.baunex.user.service.AuthService
-import ch.baunex.user.service.UserService
+import ch.baunex.user.service.userFacade
 import ch.baunex.user.utils.RoleUtil
 import jakarta.inject.Inject
 import jakarta.ws.rs.core.SecurityContext
@@ -26,7 +25,6 @@ data class MessageResponse(val message: String)
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 class UserController @Inject constructor(
-    private val userService: UserService,
     private val userFacade: UserFacade,
     private val securityContext: SecurityContext,
     private val roleUtil: RoleUtil
@@ -56,11 +54,11 @@ class UserController @Inject constructor(
 
     @GET
     @Path("/adminListUsers")
-    fun listUsers(@Context securityContext: SecurityContext): Response {
+    fun listUsers(@Context securityContext: SecurityContext): List<UserResponseDTO> {
         if (!roleUtil.hasRole(securityContext, "ADMIN")) {
-            return Response.status(Response.Status.FORBIDDEN).entity("Access denied").build()
+            throw ForbiddenException("Access denied")
         }
-        return Response.ok(userService.listUsers()).build()
+        return userFacade.listUsers()
     }
 
     @GET
@@ -75,7 +73,7 @@ class UserController @Inject constructor(
     @GET
     @Path("/allUsers")
     fun getAllUsers(): List<UserResponseDTO> {
-        return userService.getAllUsers().map { user ->
+        return userFacade.getAllUsers().map { user ->
             UserResponseDTO(user.id!!, user.email, user.role)
         }
     }

@@ -11,7 +11,7 @@ object JWTUtil {
             .subject(email)
             .groups(setOf(role))  // Ensures role-based access
             .issuer("baunex")
-            .expiresAt(System.currentTimeMillis() + Duration.ofHours(24).toMillis())  // Token expires in 24 hours
+            .expiresAt(System.currentTimeMillis() + Duration.ofHours(24).toMillis())
             .sign()  // Uses configured signing key
     }
 

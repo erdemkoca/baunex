@@ -1,3 +1,12 @@
+### 🟣 6️⃣ Login as Superadmin and get a JWT token
+POST http://localhost:8080/api/users/login
+Content-Type: application/json
+
+{
+  "email": "superadmin@example.com",
+  "password": "superadminpassword"
+}
+
 ### 🟢 1️⃣ Create a new user (Regular User)
 # This request creates a new USER account
 POST http://localhost:8080/api/users
@@ -45,10 +54,9 @@ Content-Type: application/json
 # Replace "your-user-token" with the actual JWT token from Step 2
 GET http://localhost:8080/api/users/adminListUsers
 Content-Type: application/json
-Authorization: Bearer your-user-token
+### Authorization: Bearer your-user-token
 
 ### 🟣 6️⃣ Login as Admin and get a JWT token
-# This will generate a token for the admin account
 POST http://localhost:8080/api/users/login
 Content-Type: application/json
 
@@ -58,10 +66,9 @@ Content-Type: application/json
 }
 
 ### 🟣 7️⃣ Access admin-only endpoint with admin token (Expected: 200 OK)
-# Replace "your-admin-token" with the actual token received in Step 6
 GET http://localhost:8080/api/users/adminListUsers
 Content-Type: application/json
-Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImdyb3VwcyI6WyJBRE1JTiJdLCJpc3MiOiJiYXVuZXgiLCJleHAiOjE3NDE3MzkyMDUwMzksImlhdCI6MTc0MTY1MjgwNSwianRpIjoiYjIwNzhlOWMtZjkxNy00NTE1LTg4YTItYTE5ZjgwMThlMDAzIn0.FlOSx230n7QwelRlX2QUcdgMRMFNDHenARalWPo2fuLWoXjqV6gmcQbb3HFoze6ckei7cJxZ_3trFr2diqFrx5xL923_Xj4gnKAakg-baXD3jKvYAPrft0K4CplKm0XColQlBKxMvADkzXz_aH6wHvTuY2TCmA8XNXI5mwov0CgQa52evj5DQbnhe4JLGszARoTV5TrfLgfYi_HTtVr9jqXZIMXvDDzJTvUMbtMxZRNfz9mHNDBVQQc2z4gdgeQ7un_0kkJ-EFqc2f8TxBzAklZMtisTGuTHPTpJ3UZ40vmZ_hD23B1k6GY8x3OuRh2VDdO3XfGKY4dvz1Qtv981LQ
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ1c2VyMUBleGFtcGxlLmNvbSIsImdyb3VwcyI6WyJVU0VSIl0sImlzcyI6ImJhdW5leCIsImV4cCI6MTc0MTc2NDY0NjI4OCwiaWF0IjoxNzQxNjc4MjQ2LCJqdGkiOiIyMDM3YzNhMC0wZGU4LTQyOWQtYTMxYi0xZjRlZDc2NzdlZTQifQ.jkirAupnDRg8Y78VLGPTciLI5u32ZKLitEfQo4BVGfQvmaLEgRKDxy1I0eajX9HPSnMtTyRdxw0m0U1SfoDy5_N8bPyUU1rcJTq4cqqQsce9O8rB4tibXIuSRUk2R_YGsNno2tkAG-nSYBsvlXDlRpgX7UwJJYuK_nNKWBMSPx-3WPMSLnXfJOCwMCbYsWbOthB29D3HKWkrJZWQYqGxQO2AbZe0Bs18yaIKr-g3XZ9XfAPNcy1V5t6XwlqOIXujSlL6UvcKR94t3FO2FGD1Q0Q8r2Ncw0vbyd2xtGHasJbMe_qqhEzTE7g8bjQywVA13RXCI2veNTi-94BNzZtjaw
 
 
 ### 🟡 8️⃣ Test invalid login (wrong credentials, Expected: 401 Unauthorized)
@@ -76,3 +83,8 @@ Content-Type: application/json
 ### Fetch all users
 GET http://localhost:8080/api/users/allUsers
 Content-Type: application/json
+
+###
+GET http://localhost:8080/api/users/testAdmin
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImdyb3VwcyI6WyJBRE1JTiJdLCJpc3MiOiJiYXVuZXgiLCJleHAiOjE3NDE3NjM5ODkxNjIsImlhdCI6MTc0MTY3NzU4OSwianRpIjoiZGEzNmVhZDUtZDIwOS00NDVmLThlMDYtYjU5MjVjM2Q0NzI4In0.3HvBBzxqUbvcqnvMRfN-KHsypt5Qx0Ti1wcLFCAUTPuYHk2Xm2nAIdDT1erJwcG4O3pCvBNsErEHPq6V_7h4WgREDhnqriFhtoFqCySEcCZ25l0crwOp7TnqaoQ3yf0fFOa1bJIcagRiNLbkFaCPoejQqjZNW4v3EUQSNJ13S0GkP4rVj9GppIw02EBaNt69j5TB-KhKR0nU3vrAwig7ZpeQVRJL76KBc3ZdQz0PfP2_EQjVcYFEQdZL8K3aAj2cInivtne6vhZa2_JwlBcbpSYVyosRHqS3GuqBGGN9TEB_2wcuQjzF7RHL870_wqlCKKrdmnfuKXO0SdDM-4jf_Q
