@@ -7,7 +7,10 @@ import kotlinx.serialization.Serializable
 data class UserDTO(
     val email: String,
     val password: String,
-    val role: Role
+    val role: Role,
+    val phone: String? = null,
+    val street: String? = null,
+    val city: String? = null
 )
 
 @Serializable

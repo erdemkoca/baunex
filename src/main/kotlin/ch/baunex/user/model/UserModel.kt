@@ -10,6 +10,8 @@ class UserModel() : PanacheEntity() {
     @Column(nullable = false, unique = true)
     lateinit var email: String
 
+
+
     @Column(nullable = false)
     lateinit var password: String
 
@@ -17,9 +19,21 @@ class UserModel() : PanacheEntity() {
     @Column(nullable = false)
     lateinit var role: Role
 
-    constructor(email: String, password: String, role: Role) : this() {
-        this.email = email
-        this.password = password
-        this.role = role
-    }
+    // OPTIONAL ATTRIBUTES
+
+    @Column(unique = true)
+    var phone: String? = null
+
+    @Column(nullable = true)
+    var street: String? = null
+
+    @Column(nullable = true)
+    var city: String? = null
+
+//    constructor(email: String, phone: String?, password: String, role: Role) : this() {
+//        this.email = email
+//        this.phone = phone
+//        this.password = password
+//        this.role = role
+//    }
 }

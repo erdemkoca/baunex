@@ -19,7 +19,7 @@ import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 
 @QuarkusTest
-class UserControllerTest {
+class INITUserControllerTest {
 
     @Mock
     lateinit var userService: UserService

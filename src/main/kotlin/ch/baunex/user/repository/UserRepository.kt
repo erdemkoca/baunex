@@ -14,4 +14,12 @@ class UserRepository : PanacheRepository<UserModel> {
         return find("email", email).firstResult<UserModel>()?.role?.name
     }
 
+    fun findUniqueField(fieldName: String, fieldValue: String): UserModel? {
+        return find("$fieldName = ?1", fieldValue).firstResult()
+    }
+
+    fun updateUser(user: UserModel) {
+        persist(user)
+    }
+
 }

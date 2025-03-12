@@ -1,6 +1,7 @@
 package ch.baunex.user.controller
 
 import ch.baunex.user.dto.LoginDTO
+import ch.baunex.user.dto.UpdateUserDTO
 import ch.baunex.user.dto.UserDTO
 import ch.baunex.user.dto.UserResponseDTO
 import ch.baunex.user.facade.UserFacade
@@ -76,5 +77,22 @@ class UserController @Inject constructor(
             UserResponseDTO(user.id!!, user.email, user.role)
         }
     }
+
+    @PUT
+    @Path("/{id}")
+    @Transactional
+    fun updateUser(@PathParam("id") userId: Long, updateDTO: UpdateUserDTO): Response {
+        return try {
+            val updatedUser = userFacade.updateUser(userId, updateDTO)
+            if (updatedUser != null) {
+                Response.ok(UserResponseDTO(updatedUser.id!!, updatedUser.email, updatedUser.role)).build()
+            } else {
+                Response.status(Response.Status.NOT_FOUND).entity("User not found").build()
+            }
+        } catch (e: IllegalArgumentException) {
+            Response.status(Response.Status.CONFLICT).entity(e.message).build()
+        }
+    }
+
 
 }

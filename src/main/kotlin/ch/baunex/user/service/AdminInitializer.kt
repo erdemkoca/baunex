@@ -25,7 +25,13 @@ class AdminInitializer @Inject constructor(
     fun createSuperAdminIfNotExists() {
         if (userRepository.findByEmail("superadmin@example.com") == null) {
             val hashedPassword = PasswordUtil.hashPassword("superadminpassword")
-            val superAdmin = UserModel("superadmin@example.com", hashedPassword, Role.SUPERADMIN)
+
+            val superAdmin = UserModel().apply {
+                email = "superadmin@example.com"
+                password = hashedPassword
+                role = Role.SUPERADMIN
+            }
+
             userRepository.persist(superAdmin)
         }
     }

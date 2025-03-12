@@ -88,3 +88,36 @@ Content-Type: application/json
 GET http://localhost:8080/api/users/testAdmin
 Content-Type: application/json
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImdyb3VwcyI6WyJBRE1JTiJdLCJpc3MiOiJiYXVuZXgiLCJleHAiOjE3NDE3NjM5ODkxNjIsImlhdCI6MTc0MTY3NzU4OSwianRpIjoiZGEzNmVhZDUtZDIwOS00NDVmLThlMDYtYjU5MjVjM2Q0NzI4In0.3HvBBzxqUbvcqnvMRfN-KHsypt5Qx0Ti1wcLFCAUTPuYHk2Xm2nAIdDT1erJwcG4O3pCvBNsErEHPq6V_7h4WgREDhnqriFhtoFqCySEcCZ25l0crwOp7TnqaoQ3yf0fFOa1bJIcagRiNLbkFaCPoejQqjZNW4v3EUQSNJ13S0GkP4rVj9GppIw02EBaNt69j5TB-KhKR0nU3vrAwig7ZpeQVRJL76KBc3ZdQz0PfP2_EQjVcYFEQdZL8K3aAj2cInivtne6vhZa2_JwlBcbpSYVyosRHqS3GuqBGGN9TEB_2wcuQjzF7RHL870_wqlCKKrdmnfuKXO0SdDM-4jf_Q
+
+
+
+
+######################### update User
+
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "securepassword",
+  "role": "USER",
+  "phone": "+123456789",
+  "street": "123 Main St",
+  "city": "Zurich"
+}
+
+###
+GET http://localhost:8080/api/users/allUsers
+Content-Type: application/json
+
+###
+PUT http://localhost:8080/api/users/2
+Content-Type: application/json
+
+{
+  "email": "updatedemail@example.com",
+  "phone": "+491234567890",
+  "password": "newpassword123"
+}
+
+

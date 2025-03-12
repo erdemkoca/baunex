@@ -1,6 +1,7 @@
 package ch.baunex.user.facade
 
 import ch.baunex.user.dto.LoginDTO
+import ch.baunex.user.dto.UpdateUserDTO
 import ch.baunex.user.dto.UserDTO
 import ch.baunex.user.dto.UserResponseDTO
 import ch.baunex.user.model.UserModel
@@ -30,4 +31,9 @@ class UserFacade @Inject constructor(
     fun authenticateUser(loginDTO: LoginDTO): String? {
         return authService.authenticate(loginDTO)
     }
+
+    fun updateUser(userId: Long, updateDTO: UpdateUserDTO): UserModel? {
+        return userService.updateUser(userId, updateDTO)
+    }
+
 }
