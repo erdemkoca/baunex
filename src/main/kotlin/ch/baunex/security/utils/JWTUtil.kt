@@ -33,10 +33,9 @@ object JWTUtil {
             .compact()
     }
 
-    // ✅ NEW FUNCTION: Parses and validates JWT token
     fun parseToken(token: String): Claims {
         return Jwts.parserBuilder()
-            .setSigningKey(publicKey) // Uses public key for verification
+            .setSigningKey(publicKey)
             .build()
             .parseClaimsJws(token)
             .body
@@ -54,7 +53,6 @@ object JWTUtil {
         return keyFactory.generatePrivate(keySpec)
     }
 
-    // ✅ NEW FUNCTION: Loads the public key
     private fun loadPublicKey(): PublicKey {
         val keyBytes = Files.readAllBytes(Paths.get("src/main/resources/public.pem"))
         val keyString = String(keyBytes, Charsets.UTF_8)

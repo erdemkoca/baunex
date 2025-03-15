@@ -10,8 +10,6 @@ class UserModel() : PanacheEntity() {
     @Column(nullable = false, unique = true)
     lateinit var email: String
 
-
-
     @Column(nullable = false)
     lateinit var password: String
 

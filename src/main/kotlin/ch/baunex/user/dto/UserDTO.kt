@@ -14,19 +14,12 @@ data class UserDTO(
 )
 
 @Serializable
-//data class UserResponseDTO(
-//    val id: Long?,
-//    val email: String,
-//    val phone: String?,
-//    val street: String?,
-//    val role: Role
-//)
 data class UserResponseDTO(
     val id: Long?,
     val email: String,
-    val role: Role, // ✅ Fix: Use Role type directly
-    val phone: String?, // ✅ Include phone
-    val street: String? // ✅ Include street
+    val role: Role,
+    val phone: String?,
+    val street: String?
 )
 
 

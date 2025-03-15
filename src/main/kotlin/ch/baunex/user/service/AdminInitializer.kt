@@ -35,9 +35,9 @@ class AdminInitializer @Inject constructor(
                 role = Role.SUPERADMIN
             }
             userRepository.persist(superAdmin)
-            println("✅ Superadmin created successfully")
+            println("Superadmin created successfully")
         } else {
-            println("🟢 Superadmin already exists")
+            println("Superadmin already exists")
         }
     }
 

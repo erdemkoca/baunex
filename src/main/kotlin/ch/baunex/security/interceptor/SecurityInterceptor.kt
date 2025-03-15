@@ -33,8 +33,15 @@ class SecurityInterceptor @Inject constructor(
     override fun filter(requestContext: ContainerRequestContext) {
         if (isTestMode()) {
             println("⚠️ SecurityInterceptor is disabled in test mode") // Debugging
-            return  // ✅ Skip security in tests
+            return
         }
+
+        val requestUri = requestContext.uriInfo.path
+
+        // Allow Superadmin login without authentication
+//        if (requestUri == "api/users/login") {
+//            return
+//        }
 
         val authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION)
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
@@ -48,7 +55,6 @@ class SecurityInterceptor @Inject constructor(
         try {
             val claims: Claims = JWTUtil.parseToken(authorizationHeader.substring(7).trim())
 
-            // ✅ Assign custom SecurityContext with user details
             requestContext.securityContext = object : SecurityContext {
                 override fun getUserPrincipal(): Principal = Principal { claims.subject }
                 override fun isUserInRole(role: String?): Boolean = role == claims["role"]
