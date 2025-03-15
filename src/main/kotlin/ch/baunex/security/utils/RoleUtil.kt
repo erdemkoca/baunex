@@ -1,4 +1,4 @@
-package ch.baunex.user.utils
+package ch.baunex.security.utils
 
 import ch.baunex.user.repository.UserRepository
 import jakarta.enterprise.context.ApplicationScoped

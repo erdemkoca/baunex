@@ -1,3 +1,11 @@
+### 🟣 6️⃣ Login as test and get a JWT token
+POST http://localhost:8080/api/users/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
 ### 🟣 6️⃣ Login as Superadmin and get a JWT token
 POST http://localhost:8080/api/users/login
 Content-Type: application/json

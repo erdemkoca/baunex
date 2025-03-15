@@ -30,10 +30,5 @@ class UserModel() : PanacheEntity() {
     @Column(nullable = true)
     var city: String? = null
 
-//    constructor(email: String, phone: String?, password: String, role: Role) : this() {
-//        this.email = email
-//        this.phone = phone
-//        this.password = password
-//        this.role = role
-//    }
+
 }

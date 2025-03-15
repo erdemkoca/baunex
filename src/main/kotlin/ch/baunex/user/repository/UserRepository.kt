@@ -22,4 +22,8 @@ class UserRepository : PanacheRepository<UserModel> {
         persist(user)
     }
 
+    fun getAllUsers(): List<UserModel> {
+        return listAll()
+    }
+
 }

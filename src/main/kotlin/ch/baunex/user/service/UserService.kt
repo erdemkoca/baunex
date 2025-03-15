@@ -5,7 +5,7 @@ import ch.baunex.user.dto.UserDTO
 import ch.baunex.user.dto.UserResponseDTO
 import ch.baunex.user.model.UserModel
 import ch.baunex.user.repository.UserRepository
-import ch.baunex.user.utils.PasswordUtil
+import ch.baunex.security.utils.PasswordUtil
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -13,17 +13,20 @@ import kotlin.reflect.full.declaredMemberProperties
 import jakarta.persistence.Column
 import kotlin.reflect.jvm.javaField
 
-
 @ApplicationScoped
 class UserService @Inject constructor(
     private val userRepository: UserRepository
 ) {
     @Transactional
     fun registerUser(userDTO: UserDTO): UserModel {
-        val hashedPassword = PasswordUtil.hashPassword(userDTO.password)
+        if (userDTO.email?.let { userRepository.findByEmail(it) } != null) {
+            throw IllegalArgumentException("Email already in use")
+        }
+
+        val hashedPassword = PasswordUtil.hashPassword(userDTO.password ?: throw IllegalArgumentException("Password is required"))
 
         val newUser = UserModel().apply {
-            email = userDTO.email
+            email = userDTO.email ?: throw IllegalArgumentException("Email is required")
             password = hashedPassword
             role = userDTO.role
         }
@@ -44,15 +47,18 @@ class UserService @Inject constructor(
         return newUser
     }
 
-
     fun listUsers(): List<UserResponseDTO> {
         return userRepository.listAll().map { user ->
-            UserResponseDTO(user.id!!, user.email, user.role)
+            UserResponseDTO(user.id!!, user.email, user.role, user.phone, user.email)
         }
     }
 
     fun getAllUsers(): List<UserModel> {
         return userRepository.listAll()
+    }
+
+    fun getUserById(userId: Long): UserModel? {
+        return userRepository.findById(userId)
     }
 
     @Transactional
@@ -91,6 +97,4 @@ class UserService @Inject constructor(
         userRepository.updateUser(user)
         return user
     }
-
-
 }

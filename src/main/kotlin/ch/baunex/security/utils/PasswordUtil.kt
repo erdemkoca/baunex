@@ -1,4 +1,4 @@
-package ch.baunex.user.utils
+package ch.baunex.security.utils
 
 import org.mindrot.jbcrypt.BCrypt
 
