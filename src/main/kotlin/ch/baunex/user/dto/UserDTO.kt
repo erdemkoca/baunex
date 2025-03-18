@@ -22,6 +22,11 @@ data class UserResponseDTO(
     val street: String?
 )
 
+@Serializable
+data class UserResponseDTOList(
+    var allClients: List<UserResponseDTO>
+)
+
 
 
 @Serializable

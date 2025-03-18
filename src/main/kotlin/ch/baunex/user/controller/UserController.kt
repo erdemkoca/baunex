@@ -3,6 +3,7 @@ package ch.baunex.user.controller
 import ch.baunex.user.dto.*
 import ch.baunex.user.facade.UserFacade
 import ch.baunex.security.utils.RoleUtil
+import io.quarkus.arc.All
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.*
@@ -25,6 +26,7 @@ class UserController @Inject constructor(
 
     @POST
     @Transactional
+    //TODO DB normalisieren
     fun createUser(userDTO: UserDTO): Response {
         if (userDTO.email.isNullOrBlank() || userDTO.password.isNullOrBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -62,14 +64,18 @@ class UserController @Inject constructor(
         if (!roleUtil.hasRole(securityContext, "ADMIN")) {
             return Response.status(Response.Status.FORBIDDEN).entity(MessageResponse("Access denied")).build()
         }
+        //TODO !! and admin string enum
         val users = userFacade.getAllUsers().map { user ->
             UserResponseDTO(user.id!!, user.email, user.role, user.phone, user.street)
         }
-        return Response.ok(users).build()
+        return Response.ok(UserResponseDTOList(users)).build()
     }
+    //admin-controller or adroles falls überlappt. Pathordenrred berechtigungsgründer
 
     @PUT
     @Path("/{id}")
+    //id with JWT notevery ID every user another request, user/admin request. change own
+    //this is for admin
     @Transactional
     fun updateUser(@PathParam("id") userId: Long, updateDTO: UpdateUserDTO, @Context securityContext: SecurityContext): Response {
         if (securityContext.userPrincipal == null) {
@@ -99,15 +105,6 @@ class UserController @Inject constructor(
         }
     }
 
-    @GET
-    @Path("/adminListUsers")
-    fun listUsers(@Context securityContext: SecurityContext): Response {
-        if (!roleUtil.hasRole(securityContext, "ADMIN")) {
-            return Response.status(Response.Status.FORBIDDEN).entity(MessageResponse("Access denied")).build()
-        }
-        val users = userFacade.listUsers()
-        return Response.ok(users).build()
-    }
 
     @GET
     @Path("/testAdmin")

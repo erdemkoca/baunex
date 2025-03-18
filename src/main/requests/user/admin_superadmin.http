@@ -1,0 +1,85 @@
+### 🟣 6️⃣ Login as Superadmin and get a JWT token
+POST http://localhost:8080/api/users/login
+Content-Type: application/json
+
+{
+  "email": "superadmin@example.com",
+  "password": "superadminpassword"
+}
+
+### 🔵 4️⃣ Create an admin user
+# Admins have more privileges
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "adminpassword",
+  "role": "ADMIN"
+}
+
+### 🟣 6️⃣ Login as Admin and get a JWT token
+POST http://localhost:8080/api/users/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "adminpassword"
+}
+### Fetch all users: Admin-Only
+GET http://localhost:8080/api/users/allUsers
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlkIjoxLCJyb2xlIjoiQURNSU4iLCJpc3MiOiJiYXVuZXgiLCJleHAiOjE3NDIzNDEyMTcsImlhdCI6MTc0MjI1NDgxN30.rFIpNuZmZ7VWsMBzOROrbVV0n1XK_81ntwUsJrSyaLyVva0uDHpsTFurkZ6wnnk395NPh_pwSn49lOixcgXaMoj0npOGKmbBGv3bTwLMx7cwEkSKWY9aWn4E_hWJUsNd3ASKC79cyVmsweqmm0mqEMujhbUBGU2hUtdTn0w1Q1NfShz6HJ_k4sfdgDrh_lZ88g4uHNpOeYwvq8_QAa5LaSbP4lePUTPQE0WZB9Q7Q6gDGZXCbJG_lqB5tiJJjso_kH-vLaPUEp3ZpJZJRTFvL_vNNjq2coHxkqtAhjM7_wdZy5f4oMGyMlejOysCREGGe5tpzq3P_8iuVCA_0MZu-w
+
+###
+GET http://localhost:8080/api/users/testAdmin
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlkIjoxLCJyb2xlIjoiQURNSU4iLCJpc3MiOiJiYXVuZXgiLCJleHAiOjE3NDIzNDEyMTcsImlhdCI6MTc0MjI1NDgxN30.rFIpNuZmZ7VWsMBzOROrbVV0n1XK_81ntwUsJrSyaLyVva0uDHpsTFurkZ6wnnk395NPh_pwSn49lOixcgXaMoj0npOGKmbBGv3bTwLMx7cwEkSKWY9aWn4E_hWJUsNd3ASKC79cyVmsweqmm0mqEMujhbUBGU2hUtdTn0w1Q1NfShz6HJ_k4sfdgDrh_lZ88g4uHNpOeYwvq8_QAa5LaSbP4lePUTPQE0WZB9Q7Q6gDGZXCbJG_lqB5tiJJjso_kH-vLaPUEp3ZpJZJRTFvL_vNNjq2coHxkqtAhjM7_wdZy5f4oMGyMlejOysCREGGe5tpzq3P_8iuVCA_0MZu-w
+
+
+######################### update User
+
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "securepassword",
+  "role": "USER",
+  "phone": "+123456789",
+  "street": "123 Main St",
+  "city": "Zurich"
+}
+
+###
+GET http://localhost:8080/api/users/allUsers
+Content-Type: application/json
+
+### update with ID
+PUT http://localhost:8080/api/users/51
+Content-Type: application/json
+
+{
+  "email": "updatedemail@example.com",
+  "phone": "+491234567890",
+  "password": "newpassword123"
+}
+
+### update with ID
+PUT http://localhost:8080/api/users/51
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlkIjoxLCJyb2xlIjoiQURNSU4iLCJpc3MiOiJiYXVuZXgiLCJleHAiOjE3NDIzNDEyMTcsImlhdCI6MTc0MjI1NDgxN30.rFIpNuZmZ7VWsMBzOROrbVV0n1XK_81ntwUsJrSyaLyVva0uDHpsTFurkZ6wnnk395NPh_pwSn49lOixcgXaMoj0npOGKmbBGv3bTwLMx7cwEkSKWY9aWn4E_hWJUsNd3ASKC79cyVmsweqmm0mqEMujhbUBGU2hUtdTn0w1Q1NfShz6HJ_k4sfdgDrh_lZ88g4uHNpOeYwvq8_QAa5LaSbP4lePUTPQE0WZB9Q7Q6gDGZXCbJG_lqB5tiJJjso_kH-vLaPUEp3ZpJZJRTFvL_vNNjq2coHxkqtAhjM7_wdZy5f4oMGyMlejOysCREGGe5tpzq3P_8iuVCA_0MZu-w
+
+{
+  "phone": "+491234567890"
+}
+
+
+###
+POST http://localhost:8080/api/users/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "adminpassword"
+}

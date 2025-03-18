@@ -48,8 +48,9 @@ class UserService @Inject constructor(
     }
 
     fun listUsers(): List<UserResponseDTO> {
+
         return userRepository.listAll().map { user ->
-            UserResponseDTO(user.id!!, user.email, user.role, user.phone, user.email)
+            UserResponseDTO(user.id!!, user.email, user.role, user.phone, user.street)
         }
     }
 

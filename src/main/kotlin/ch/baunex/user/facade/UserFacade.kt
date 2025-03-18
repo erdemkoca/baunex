@@ -18,7 +18,7 @@ class UserFacade @Inject constructor(
 ) {
     fun registerUser(userDTO: UserDTO): UserResponseDTO {
         val user = userService.registerUser(userDTO)
-        return UserResponseDTO(user.id!!, user.email, user.role, user.phone, user.email)
+        return UserResponseDTO(user.id, user.email, user.role, user.phone, user.email)
     }
 
     fun listUsers(): List<UserResponseDTO> {
