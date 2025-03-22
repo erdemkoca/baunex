@@ -3,8 +3,10 @@ package ch.baunex.user.test
 import ch.baunex.user.dto.UserDTO
 import ch.baunex.user.model.Role
 import ch.baunex.user.repository.UserRepository
-import ch.baunex.user.service.UserService
+import ch.baunex.user.facade.UserFacade
 import io.quarkus.test.junit.QuarkusTest
+import io.quarkus.test.junit.QuarkusTestProfile
+import io.quarkus.test.junit.TestProfile
 import io.restassured.RestAssured.given
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -12,13 +14,13 @@ import org.hamcrest.CoreMatchers.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.*
 
 @QuarkusTest
+@TestProfile(TestConfig::class)
 class UserRegistrationTest {
 
     @Inject
-    lateinit var userService: UserService
+    lateinit var userFacade: UserFacade
 
     @Inject
     lateinit var userRepository: UserRepository
@@ -26,13 +28,13 @@ class UserRegistrationTest {
     @BeforeEach
     @Transactional
     fun setup() {
-        userRepository.deleteAll() // Clean DB before each test
+        userRepository.deleteAll()
     }
 
     @AfterEach
     @Transactional
     fun cleanup() {
-        userRepository.deleteAll() // Ensure clean state after test
+        userRepository.deleteAll()
     }
 
     @Test
@@ -58,7 +60,7 @@ class UserRegistrationTest {
     @Test
     fun `should not allow duplicate email registration`() {
         val userDTO = UserDTO("duplicate@example.com", "password123", Role.USER)
-        userService.registerUser(userDTO)  // First registration
+        userFacade.registerUser(userDTO)  // First registration
 
         val requestBody = """
             {
@@ -93,6 +95,7 @@ class UserRegistrationTest {
             .post("/api/users")
             .then()
             .statusCode(400) // Expecting Bad Request
+            .body("message", equalTo("Email and password are required"))
     }
 
     @Test
@@ -111,5 +114,12 @@ class UserRegistrationTest {
             .post("/api/users")
             .then()
             .statusCode(400) // Expecting Bad Request
+            .body("message", equalTo("Email and password are required"))
+    }
+}
+
+class TestConfig : QuarkusTestProfile {
+    override fun getConfigOverrides(): Map<String, String> {
+        return mapOf("quarkus.profile" to "test")
     }
 }

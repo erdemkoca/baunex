@@ -6,6 +6,7 @@ import ch.baunex.user.dto.UserResponseDTO
 import ch.baunex.user.model.UserModel
 import ch.baunex.user.repository.UserRepository
 import ch.baunex.security.utils.PasswordUtil
+import ch.baunex.user.model.Role
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -62,6 +63,22 @@ class UserService @Inject constructor(
         return userRepository.findById(userId)
     }
 
+    fun getUserByMail(mail: String): UserModel? {
+        return userRepository.findByEmail(mail)
+    }
+
+    fun deleteUserByMail(mail: String): UserModel? {
+        val user = getUserByMail(mail) // Get the user before deletion
+        user?.let { userRepository.delete(it) } // Delete if exists
+        return user // Return the deleted user
+    }
+
+    fun deleteUserById(id: Long) {
+        val user = getUserById(id)
+        user?.let { userRepository.delete(it) }
+    }
+
+
     @Transactional
     fun updateUser(userId: Long, updateDTO: UpdateUserDTO): UserModel? {
         val user = userRepository.findById(userId) ?: return null  // User not found
@@ -98,4 +115,25 @@ class UserService @Inject constructor(
         userRepository.updateUser(user)
         return user
     }
+
+    @Transactional
+    fun updateUserRole(userId: Long, role: Role): UserResponseDTO? {
+        val user = userRepository.findById(userId) ?: return null
+
+        user.role = role
+        userRepository.updateUser(user)
+
+        return UserResponseDTO(user.id!!, user.email, user.role, user.phone, user.street)
+    }
+
+    @Transactional
+    fun deleteAllUsers() {
+        userRepository.deleteAll()
+    }
+
+    @Transactional
+    fun deleteAllUsersExceptSuperadmin() {
+        userRepository.delete("email != ?1", "superadmin@example.com")
+    }
+
 }

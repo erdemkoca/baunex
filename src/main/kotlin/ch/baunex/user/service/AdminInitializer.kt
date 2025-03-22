@@ -32,7 +32,7 @@ class AdminInitializer @Inject constructor(
             val superAdmin = UserModel().apply {
                 email = "superadmin@example.com"
                 password = hashedPassword
-                role = Role.SUPERADMIN
+                role = Role.ADMIN
             }
             userRepository.persist(superAdmin)
             println("Superadmin created successfully")

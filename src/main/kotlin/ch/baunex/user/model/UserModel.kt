@@ -17,6 +17,9 @@ class UserModel() : PanacheEntity() {
     @Column(nullable = false)
     lateinit var role: Role
 
+    @Column(nullable = true)
+    var refreshToken: String? = null
+
     // OPTIONAL ATTRIBUTES
 
     @Column(unique = true)

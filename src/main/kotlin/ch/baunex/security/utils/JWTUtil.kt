@@ -1,7 +1,6 @@
 package ch.baunex.security.utils
 
-import io.jsonwebtoken.Claims
-import io.jsonwebtoken.Jwts
+import io.jsonwebtoken.*
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.security.KeyFactory
@@ -13,32 +12,48 @@ import java.util.*
 
 object JWTUtil {
     private val privateKey: PrivateKey = loadPrivateKey()
-    private val publicKey: PublicKey = loadPublicKey() // ✅ Load public key
+    private val publicKey: PublicKey = loadPublicKey()
 
-    private const val EXPIRATION_TIME: Long = 1000 * 60 * 60 * 24
+    private const val EXPIRATION_TIME: Long = 1000 * 60 * 60 * 24 // 24 hours
 
-    fun generateToken(email: String, userId: Long, role: String): String {
-        val claims = mapOf(
-            "sub" to email,
-            "id" to userId,
-            "role" to role
-        )
+    fun generateToken(email: String, userId: Long, role: String, expirationMillis: Long = EXPIRATION_TIME): String {
+        val issuedAt = Date(System.currentTimeMillis())
+        val expiration = Date(System.currentTimeMillis() + expirationMillis)
 
-        return Jwts.builder()
-            .setClaims(claims)
+        val token = Jwts.builder()
+            .setSubject(email)
+            .claim("id", userId)
+            .claim("role", role)
             .setIssuer("baunex")
-            .setExpiration(Date(System.currentTimeMillis() + EXPIRATION_TIME))
-            .setIssuedAt(Date(System.currentTimeMillis()))
-            .signWith(privateKey, io.jsonwebtoken.SignatureAlgorithm.RS256)
+            .setIssuedAt(issuedAt)
+            .setExpiration(expiration)
+            .signWith(privateKey, SignatureAlgorithm.RS256)
             .compact()
+
+        println("🔑 Generated Token for $email (Role: $role, Expiration: $expirationMillis ms): $token")
+        return token
     }
 
     fun parseToken(token: String): Claims {
-        return Jwts.parserBuilder()
-            .setSigningKey(publicKey)
-            .build()
-            .parseClaimsJws(token)
-            .body
+        return try {
+            val claims = Jwts.parserBuilder()
+                .setSigningKey(publicKey)
+                .build()
+                .parseClaimsJws(token)
+                .body
+
+            println("✅ Parsed Token: email=${claims.subject}, id=${claims["id"]}, role=${claims["role"]}, exp=${claims.expiration}")
+            claims
+        } catch (e: ExpiredJwtException) {
+            println("❌ Token Expired: ${e.message}")
+            throw e
+        } catch (e: SignatureException) {
+            println("❌ Invalid Token Signature: ${e.message}")
+            throw e
+        } catch (e: Exception) {
+            println("❌ JWT Parsing Failed: ${e.message}")
+            throw e
+        }
     }
 
     private fun loadPrivateKey(): PrivateKey {
