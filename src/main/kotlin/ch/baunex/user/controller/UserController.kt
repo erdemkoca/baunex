@@ -68,7 +68,6 @@ class UserController @Inject constructor(
 
     @PUT
     @Path("/me")
-    @RolesAllowed("USER") // 🔒 Restrict only to logged-in users
     @Transactional
     fun updateCurrentUser(updateDTO: UpdateUserDTO, @Context securityContext: SecurityContext): Response {
         val email = securityContext.userPrincipal?.name
@@ -77,8 +76,12 @@ class UserController @Inject constructor(
         val user = userFacade.getUserByMail(email)
             ?: return Response.status(Response.Status.NOT_FOUND).build()
 
+        if (updateDTO.email.isNullOrBlank() || updateDTO.password.isNullOrBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST).build()
+        }
+
         // 🔍 Prevent email duplication
-        if (updateDTO.email != null && updateDTO.email != user.email) {
+        if (updateDTO.email != user.email) {
             val existingUser = userFacade.getUserByMail(updateDTO.email)
             if (existingUser != null) {
                 return Response.status(Response.Status.CONFLICT)

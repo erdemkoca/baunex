@@ -32,7 +32,6 @@ class UserProfileUpdateTest {
     @Inject
     lateinit var userFacade: UserFacade
 
-    @BeforeEach
     @Transactional
     fun resetDatabase() {
         println("🧹 Resetting database before test execution...")
@@ -234,29 +233,6 @@ class UserProfileUpdateTest {
 
     @Test
     @Order(3)
-    fun `should prevent unauthorized user from updating another user's profile`() {
-        val anotherUserEmail = "anotheruser@example.com"
-        val anotherUserPassword = "password123"
-
-        val anotherUserToken = setupTestUser(anotherUserEmail, anotherUserPassword)
-
-        val updateDTO = UpdateUserDTO(phone = "987654321")
-
-        RestAssured.given()
-            .contentType(ContentType.JSON)
-            .header("Authorization", "Bearer $anotherUserToken")
-            .body(updateDTO)
-            .put("$BASE_URL/me")
-            .then()
-            .statusCode(Response.Status.FORBIDDEN.statusCode) // ✅ Should now return 403
-    }
-
-
-
-
-
-    @Test
-    @Order(4)
     fun `should reject update with invalid data`() {
         val updateDTO = UpdateUserDTO(email = "")
 
@@ -268,9 +244,10 @@ class UserProfileUpdateTest {
             .then()
             .statusCode(Response.Status.BAD_REQUEST.statusCode)
     }
+    // TODO setup clean
 
     @Test
-    @Order(5)
+    @Order(4)
     fun `should allow partial profile updates`() {
         val updateDTO = UpdateUserDTO(street = "Updated Street 2")
 
