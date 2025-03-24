@@ -2,8 +2,6 @@ package ch.baunex.user.controller
 
 import ch.baunex.user.dto.*
 import ch.baunex.user.facade.UserFacade
-import ch.baunex.security.utils.RoleUtil
-import jakarta.annotation.security.RolesAllowed
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.*
@@ -15,7 +13,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty
 @Consumes(MediaType.APPLICATION_JSON)
 class UserController @Inject constructor(
     private val userFacade: UserFacade,
-    private val roleUtil: RoleUtil,
 
     @ConfigProperty(name = "quarkus.security.enabled")
     private val securityEnabled: Boolean
