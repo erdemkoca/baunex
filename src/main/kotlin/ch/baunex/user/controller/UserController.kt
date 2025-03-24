@@ -76,13 +76,13 @@ class UserController @Inject constructor(
         val user = userFacade.getUserByMail(email)
             ?: return Response.status(Response.Status.NOT_FOUND).build()
 
-        if (updateDTO.email.isNullOrBlank() || updateDTO.password.isNullOrBlank()) {
-            return Response.status(Response.Status.BAD_REQUEST).build()
-        }
+//        if (updateDTO.email.isNullOrBlank()) { //|| updateDTO.password.isNullOrBlank(
+//            return Response.status(Response.Status.BAD_REQUEST).build()
+//        } //gives error, since sometimes you just want to update the street for instance, you dont send it via dto.
 
         // 🔍 Prevent email duplication
         if (updateDTO.email != user.email) {
-            val existingUser = userFacade.getUserByMail(updateDTO.email)
+            val existingUser = updateDTO.email?.let { userFacade.getUserByMail(it) }
             if (existingUser != null) {
                 return Response.status(Response.Status.CONFLICT)
                     .entity(MessageResponse("Email is already in use."))

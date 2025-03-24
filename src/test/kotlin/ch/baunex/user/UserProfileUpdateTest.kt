@@ -5,7 +5,6 @@ import ch.baunex.user.dto.LoginDTO
 import ch.baunex.user.dto.UpdateUserDTO
 import ch.baunex.user.dto.UserDTO
 import ch.baunex.user.model.Role
-import ch.baunex.user.test.TestConfig
 import io.quarkus.test.junit.QuarkusTest
 import io.quarkus.test.junit.TestProfile
 import io.restassured.RestAssured
@@ -26,20 +25,15 @@ class UserProfileUpdateTest {
 
     companion object {
         private const val BASE_URL = "/api/users"
-        private lateinit var userToken: String
-        private lateinit var anotherUserToken: String
+        private lateinit var superAdminToken: String
     }
     @Inject
     lateinit var userFacade: UserFacade
 
     @Transactional
     fun resetDatabase() {
-        println("🧹 Resetting database before test execution...")
+        //userFacade.deleteAllUsersExceptSuperadmin()
 
-        // Step 1: Delete all users not superadmin
-        userFacade.deleteAllUsersExceptSuperadmin()
-
-        // Step 2: Check if Superadmin exists
         val existingSuperadmin = userFacade.getUserByMail("superadmin@example.com")
         if (existingSuperadmin == null) {
             println("🔍 Superadmin does not exist. Creating...")
@@ -62,7 +56,7 @@ class UserProfileUpdateTest {
 
     @BeforeEach
     fun setup() {
-        resetDatabase() // Ensure clean state
+        resetDatabase()
 
         val superAdminEmail = "superadmin@example.com"
         val superAdminPassword = "superadminpassword"
@@ -78,31 +72,13 @@ class UserProfileUpdateTest {
             .response()
 
         if (loginResponse.statusCode == Response.Status.OK.statusCode) {
-            userToken = loginResponse.jsonPath().getString("accessToken")
+            superAdminToken = loginResponse.jsonPath().getString("accessToken")
                 ?: throw RuntimeException("🚨 Login response did not contain a valid access token!")
 
-            println("✅ Superadmin login successful. Token: $userToken")
+            println("✅ Superadmin login successful. Token: $superAdminToken")
         } else {
             throw RuntimeException("🚨 Failed to log in as Superadmin. Response: ${loginResponse.body.asString()}")
         }
-
-        setupAnotherUser() // Ensure existinguser@example.com is present **after reset**
-
-        // 🔥 **Modify superadmin to verify DB access**
-        val updateSuperadmin = UpdateUserDTO(street = "Test Street 123456")
-        println("🔄 Updating Superadmin street to: ${updateSuperadmin.street}")
-
-        RestAssured.given()
-            .contentType(ContentType.JSON)
-            .header("Authorization", "Bearer $userToken")
-            .body(updateSuperadmin)
-            .put("$BASE_URL/me")
-            .then()
-            .statusCode(Response.Status.OK.statusCode)
-
-        // 🔥 **Verify Superadmin's street before test**
-        val superadminAfterUpdate = userFacade.getUserByMail(superAdminEmail)
-        println("✅ Superadmin's street in DB before test: ${superadminAfterUpdate?.street}")
     }
 
     fun loginAndGetToken(email: String, password: String): String {
@@ -137,51 +113,16 @@ class UserProfileUpdateTest {
         return loginAndGetToken(email, password)
     }
 
-
-
-    private fun setupAnotherUser() {
-        val anotherUserDTO = UserDTO(
-            email = "existinguser@example.com",
-            password = "password123",
-            role = Role.USER
-        )
-
-        println("🛠 Ensuring test DB contains ${anotherUserDTO.email}")
-
-        // Check if user already exists
-        val existingUser = userFacade.getUserByMail(anotherUserDTO.email)
-
-        if (existingUser == null) {
-            println("✅ Creating test user: ${anotherUserDTO.email}")
-            userFacade.registerUser(anotherUserDTO)
-        } else {
-            println("⚠️ Test user already exists, skipping creation.")
-        }
-
-        // **🔍 Fetch & Print ALL Users to Verify DB State**
-        val allUsers = userFacade.getAllUsers()
-        println("📋 Users in DB after inserting ${anotherUserDTO.email}:")
-        allUsers.forEach { println("   - ${it.email} (Role: ${it.role}, Street: ${it.street})") }
-    }
-
-
-
-
-
-
-
-
-
     @Test
     @Order(1)
     fun `should update user profile successfully`() {
-        val updateDTO = UpdateUserDTO(phone = "123456789", street = "Updated Street 1")
+        val updateDTO = UpdateUserDTO(email= "superadmin@example.com", phone = "123456789", street = "Updated Street 1")
 
         println("🔄 Sending update request: $updateDTO")
 
         val response = RestAssured.given()
             .contentType(ContentType.JSON)
-            .header("Authorization", "Bearer $userToken")
+            .header("Authorization", "Bearer $superAdminToken")
             .body(updateDTO)
             .put("$BASE_URL/me")
             .then()
@@ -213,7 +154,7 @@ class UserProfileUpdateTest {
 
         val response = RestAssured.given()
             .contentType(ContentType.JSON)
-            .header("Authorization", "Bearer $userToken") // superadmin
+            .header("Authorization", "Bearer $superAdminToken") // superadmin
             .body(updateDTO)
             .put("$BASE_URL/me")
             .then()
@@ -227,33 +168,14 @@ class UserProfileUpdateTest {
             .statusCode(Response.Status.CONFLICT.statusCode)
     }
 
-
-
-
-
     @Test
     @Order(3)
-    fun `should reject update with invalid data`() {
-        val updateDTO = UpdateUserDTO(email = "")
-
-        RestAssured.given()
-            .contentType(ContentType.JSON)
-            .header("Authorization", "Bearer $userToken")
-            .body(updateDTO)
-            .put("$BASE_URL/me")
-            .then()
-            .statusCode(Response.Status.BAD_REQUEST.statusCode)
-    }
-    // TODO setup clean
-
-    @Test
-    @Order(4)
     fun `should allow partial profile updates`() {
         val updateDTO = UpdateUserDTO(street = "Updated Street 2")
 
         RestAssured.given()
             .contentType(ContentType.JSON)
-            .header("Authorization", "Bearer $userToken")
+            .header("Authorization", "Bearer $superAdminToken")
             .body(updateDTO)
             .put("$BASE_URL/me")
             .then()
