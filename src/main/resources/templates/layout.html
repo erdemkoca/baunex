@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{#insert title}Baunex Business Management{/}</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAABDdJREFUWEe9l1tMHFUYx//nzOzO7MIul4VdWGAXKLSUQrnZcm1Lm5qmJk1jNDFqTB/0yQcfTHwxPvhiYmL0xWh8MdE0Jk1jTBOFQrm0SFugUKCwXJbLsiy7y+7O7MzxTJcSQspld6Z+L5Mz55z/9/vP5TuHwzrH5/MZJUl6GcBzAB4BYAVQBuAOgF8A/CiK4s/r2eO0LvT7/S8AeBvALgAGABwAFYAEQAHgB/ARgK8FQYjei4drAh6P5zEAnwHYsVYQgAjgbQDvC4IQWWvNqgBut3srgC8BbF8nwPK0KwDeEgQhvNqCFQHcbrcJwDEAz98nwPK0nwC8KAhCfKWFdwG43e6nAXwNYMsGAZanXQTwnCAIf9/Nxl0AHo/nKIBPAZg3EWB56jEArwmCcGflfHsAl8tlVlX1BIBnNhFgeeoxjuOOWK3W0HKAOwCpVOoIgK8AmDUEIAAfGwwGIZlM/gYgD8AJoA7AQQCPawgRBfCiKIrfLwfgAcDr9b4K4AsAJg0BvtN1utccDkdkYWEhYzKZdvb19XUCeBrAIQ0hEgBeEkXxm+UAOgB+v/8QgO8B6LUCyGQyRFXVl5xO5/dL9mZnZ3WRSKSrp6enE8DTWkEA+EAQhHcWAXgA8Pl8jQBOAtBpBRCPx7lgMPiE2+0+s2QvGo1yoVBoV3d3dyeAZ7WCAHBUEISjiwBut9sO4DSAei0AUqkUFwgEnnS5XKeWbCWTSS4cDu/s6urqAvCCVhAAPhUE4Q0eALxe7wEA3wEwaQGQTqe5qamp/Q6H4+clO5lMhpuZmdnR2dnZDeAlrSAAfCEIwms8APh8vk8AvKUVQKFQ4CYmJna7XK5fluwUCgVufHy8paWlpQ/AO1pBAPhdEIRneADwer1fAXhVK4ByucyNjY21uN3uP5bslMtlbnR0tLm5ubkfwHtaQQA4JQjCYR4AfD7ftwBe1gqgUqlwIyMjTR6P5+ySHUVRuJGRkabGxsYBAB9oBQHgrCAIh3gA8Hq9PwJ4USsAVVW54eHhRq/Xe37JjqqquuHh4YaGhoZBAJ9oBQHgvCAIB3kA8Hq9vwB4XisAQgjX399f7/P5/lqyQwjh+vr66urr64cAfKYVBICLgiDs5wHA6/WeAvCUVgCEEK6np8fj9/uvLNkhhHDd3d01Xq93GMDnWkEAuCwIwl4eALxe71kAj2sFQAjhurq6qgOBwLUlO4QQrrOzs8rj8YwA+FIrCABXBUHYzQOA1+u9AGCPVgCEEK6jo6MiGAzeWLJDCOHa29vLq6urxwB8pRUEgOuCIOziAcDr9V4FsEsrgH8Bozg7YCaO+hIAAAAASUVORK5CYII="
+    />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/dashboard">
+          <i class="bi bi-building me-2"></i>
+          Baunex Business Management
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/dashboard">
+                <i class="bi bi-speedometer2 me-1"></i> Dashboard
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/projects">
+                <i class="bi bi-briefcase me-1"></i> Projects
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/workers">
+                <i class="bi bi-people me-1"></i> Workers
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-2 sidebar">
+          <div class="d-flex flex-column mt-4">
+            <a
+              href="/dashboard"
+              class="nav-link py-2 {#if activeMenu == 'dashboard'}active{/}"
+            >
+              <i class="bi bi-speedometer2 me-2"></i> Dashboard
+            </a>
+            <a
+              href="/projects"
+              class="nav-link py-2 {#if activeMenu == 'projects'}active{/}"
+            >
+              <i class="bi bi-briefcase me-2"></i> Projects
+            </a>
+            <a
+              href="/workers"
+              class="nav-link py-2 {#if activeMenu == 'workers'}active{/}"
+            >
+              <i class="bi bi-people me-2"></i> Workers
+            </a>
+          </div>
+        </div>
+        <div class="col-md-10 content">
+          <div
+            class="d-flex justify-content-between align-items-center mt-4 mb-4"
+          >
+            <h2 class="mb-0">{#insert header}Page Title{/}</h2>
+            <div class="d-flex align-items-center">
+              <div class="text-muted me-3">
+                <i class="bi bi-calendar3 me-1"></i>
+                {currentDate}
+              </div>
+            </div>
+          </div>
+          {#insert content}Default content{/}
+        </div>
+      </div>
+    </div>
+
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+      <div class="container">
+        <p class="mb-0">
+          © 2023 Baunex Business Management. All rights reserved.
+        </p>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/app.js"></script>
+  </body>
+</html>

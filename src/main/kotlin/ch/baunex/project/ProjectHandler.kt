@@ -19,6 +19,26 @@ class ProjectHandler {
     fun getAllProjects(): List<ProjectRequest> {
         return projectRepo.findAll().list()
     }
+    
+    @Transactional
+    fun deleteProject(id: Long) {
+        projectRepo.deleteById(id)
+    }
+    
+    fun getProjectById(id: Long): ProjectRequest? {
+        return projectRepo.findById(id)
+    }
+    
+    @Transactional
+    fun updateProject(id: Long, dto: ProjectRequest): Boolean {
+        val existingProject = projectRepo.findById(id) ?: return false
+        existingProject.name = dto.name
+        existingProject.budget = dto.budget
+        existingProject.client = dto.client
+        existingProject.contact = dto.contact
+        projectRepo.persist(existingProject)
+        return true
+    }
 
     // Keep the original method for backward compatibility if needed
     // fun saveProject(project: Project) {
