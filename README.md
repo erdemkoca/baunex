@@ -70,3 +70,17 @@ If you want to learn more about building native executables, please consult <htt
 Easily start your REST Web Services
 
 [Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+
+
+## Assign fixed port to docker
+Instead of letting Docker assign a random port like 55395, you can explicitly bind 5432:5432 like:
+
+```shell script
+docker run -d \
+  -p 5432:5432 \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=baunex \
+  postgres:17
+
+```
