@@ -1,8 +1,8 @@
 package ch.baunex.web
 
-import ch.baunex.user.UserHandler
 import ch.baunex.user.dto.UpdateUserDTO
 import ch.baunex.user.dto.UserDTO
+import ch.baunex.user.facade.UserFacade
 import ch.baunex.user.model.Role
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
@@ -15,14 +15,14 @@ import java.time.LocalDate
 class WebUserController {
 
     @Inject
-    lateinit var userHandler: UserHandler
+    lateinit var userFacade: UserFacade
 
     private fun getCurrentDate(): LocalDate = LocalDate.now()
 
     @GET
     @Produces(MediaType.TEXT_HTML)
     fun users(): Response {
-        val users = userHandler.getAllUsers()
+        val users = userFacade.getAllUsers()
         val template = WebController.Templates.users(users, getCurrentDate(), "users")
         return Response.ok(template.render()).build()
     }
@@ -43,11 +43,11 @@ class WebUserController {
             val dto = UserDTO(
                 email = email,
                 password = password,
-                role = role?.let { Role.valueOf(it) },
+                role = role?.let { Role.valueOf(it) } ?: Role.USER,
                 phone = phone,
                 street = street
             )
-            userHandler.saveUser(dto)
+            userFacade.registerUser(dto)
         } else {
             // Update existing
             val dto = UpdateUserDTO(
@@ -57,7 +57,7 @@ class WebUserController {
                 phone = phone,
                 street = street
             )
-            userHandler.updateUser(id, dto)
+            userFacade.updateUser(id, dto)
         }
 
         return Response.seeOther(URI("/users")).build()
@@ -77,7 +77,7 @@ class WebUserController {
     @GET
     @Path("/{id}/delete")
     fun deleteUser(@PathParam("id") id: Long): Response {
-        userHandler.deleteUser(id)
+        userFacade.deleteUserById(id)
         return Response.seeOther(URI("/users")).build()
     }
 
@@ -85,7 +85,7 @@ class WebUserController {
     @Path("/{id}/edit")
     @Produces(MediaType.TEXT_HTML)
     fun editUser(@PathParam("id") id: Long): Response {
-        val user = userHandler.getUserById(id)
+        val user = userFacade.getUserById(id)
         if (user == null) {
             return Response.status(Response.Status.NOT_FOUND).build()
         }

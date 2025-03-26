@@ -3,7 +3,6 @@ package ch.baunex.web
 import ch.baunex.project.ProjectHandler
 import ch.baunex.project.dto.ProjectRequest
 import ch.baunex.project.model.ProjectModel
-import ch.baunex.user.UserHandler
 import ch.baunex.user.dto.UserResponseDTO
 import ch.baunex.worker.WorkerHandler
 import ch.baunex.worker.dto.WorkerRequest

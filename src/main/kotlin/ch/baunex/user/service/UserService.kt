@@ -29,7 +29,7 @@ class UserService @Inject constructor(
         val newUser = UserModel().apply {
             email = userDTO.email ?: throw IllegalArgumentException("Email is required")
             password = hashedPassword
-            //role = userDTO.role
+            role = userDTO.role
         }
 
         userDTO::class.declaredMemberProperties.forEach { property ->
