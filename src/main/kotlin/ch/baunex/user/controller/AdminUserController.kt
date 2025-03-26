@@ -1,5 +1,6 @@
 package ch.baunex.user.controller
 
+import ch.baunex.security.exception.MessageResponse
 import ch.baunex.user.dto.*
 import ch.baunex.user.facade.UserFacade
 import jakarta.inject.Inject
