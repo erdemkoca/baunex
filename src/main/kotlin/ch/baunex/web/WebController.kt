@@ -2,6 +2,7 @@ package ch.baunex.web
 
 import ch.baunex.project.ProjectHandler
 import ch.baunex.project.dto.ProjectRequest
+import ch.baunex.project.model.ProjectModel
 import ch.baunex.user.UserHandler
 import ch.baunex.user.dto.UserResponseDTO
 import ch.baunex.worker.WorkerHandler
@@ -13,6 +14,8 @@ import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import java.time.LocalDate
+import ch.baunex.project.model.toDTO
+
 
 @Path("/")
 class WebController {
@@ -22,9 +25,6 @@ class WebController {
 
     @Inject
     lateinit var workerHandler: WorkerHandler
-
-    @Inject
-    lateinit var userHandler: UserHandler
 
 
     private fun getCurrentDate(): LocalDate {
@@ -61,12 +61,14 @@ class WebController {
     fun index(): Response {
         return Response.seeOther(java.net.URI("/dashboard")).build()
     }
-    
+
     @GET
     @Path("/dashboard")
     @Produces(MediaType.TEXT_HTML)
     fun dashboard(): Response {
-        val template = Templates.index(projectHandler.getAllProjects(), workerHandler.getAllWorkers(), getCurrentDate(), "dashboard")
+        val projects = projectHandler.getAllProjects().map { it.toDTO() }
+        val workers = workerHandler.getAllWorkers()
+        val template = Templates.index(projects, workers, getCurrentDate(), "dashboard")
         return Response.ok(template.render()).build()
     }
 
@@ -74,9 +76,11 @@ class WebController {
     @Path("/projects")
     @Produces(MediaType.TEXT_HTML)
     fun projects(): Response {
-        val template = Templates.projects(projectHandler.getAllProjects(), getCurrentDate(), "projects")
+        val projects = projectHandler.getAllProjects().map { it.toDTO() }
+        val template = Templates.projects(projects, getCurrentDate(), "projects")
         return Response.ok(template.render()).build()
     }
+
 
     @GET
     @Path("/projects/new")
@@ -90,7 +94,7 @@ class WebController {
     @Path("/projects/{id}/edit")
     @Produces(MediaType.TEXT_HTML)
     fun editProject(@PathParam("id") id: Long): Response {
-        val project = projectHandler.getProjectById(id)
+        val project = projectHandler.getProjectById(id)?.toDTO()
         val template = Templates.projectForm(project, getCurrentDate(), "projects")
         return Response.ok(template.render()).build()
     }

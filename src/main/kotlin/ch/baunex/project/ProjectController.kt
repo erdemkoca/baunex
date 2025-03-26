@@ -23,9 +23,19 @@ class ProjectController {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     fun getAllProjects(): Response {
-        return Response.ok(ProjectResponse(projectHandler.getAllProjects())).build()
+        val models = projectHandler.getAllProjects()
+        val dtos = models.map {
+            ProjectRequest(
+                id = it.id,
+                name = it.name,
+                budget = it.budget,
+                client = it.client,
+                contact = it.contact
+            )
+        }
+        return Response.ok(ProjectResponse(dtos)).build()
     }
-    
+
     @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)

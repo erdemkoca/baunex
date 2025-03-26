@@ -1,7 +1,8 @@
 package ch.baunex.project
 
 import ch.baunex.project.dto.ProjectRequest
-import io.quarkus.hibernate.orm.panache.kotlin.PanacheQuery
+import ch.baunex.project.model.ProjectModel
+import ch.baunex.project.repository.ProjectRepository
 import jakarta.enterprise.context.RequestScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -13,22 +14,41 @@ class ProjectHandler {
 
     @Transactional
     fun saveProject(dto: ProjectRequest) {
-        projectRepo.persist(dto)
+        val project = ProjectModel().apply {
+            name = dto.name
+            budget = dto.budget
+            client = dto.client
+            contact = dto.contact
+        }
+        projectRepo.persist(project)
     }
 
-    fun getAllProjects(): List<ProjectRequest> {
+
+
+    fun getAllProjects(): List<ProjectModel> {
         return projectRepo.findAll().list()
     }
-    
+
     @Transactional
     fun deleteProject(id: Long) {
         projectRepo.deleteById(id)
     }
-    
-    fun getProjectById(id: Long): ProjectRequest? {
+
+    fun getProjectById(id: Long): ProjectModel? {
         return projectRepo.findById(id)
     }
-    
+
+    @Transactional
+    fun updateProject2(id: Long, dto: ProjectRequest): Boolean {
+        val existingProject = projectRepo.findById(id) ?: return false
+        existingProject.name = dto.name
+        existingProject.budget = dto.budget
+        existingProject.client = dto.client
+        existingProject.contact = dto.contact
+        projectRepo.persist(existingProject)
+        return true
+    }
+
     @Transactional
     fun updateProject(id: Long, dto: ProjectRequest): Boolean {
         val existingProject = projectRepo.findById(id) ?: return false
@@ -36,7 +56,6 @@ class ProjectHandler {
         existingProject.budget = dto.budget
         existingProject.client = dto.client
         existingProject.contact = dto.contact
-        projectRepo.persist(existingProject)
         return true
     }
 
