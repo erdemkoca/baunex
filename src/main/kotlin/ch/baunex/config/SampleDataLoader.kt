@@ -1,6 +1,5 @@
 package ch.baunex.config
 
-import ch.baunex.project.ProjectHandler
 import ch.baunex.project.dto.ProjectRequest
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.worker.WorkerHandler

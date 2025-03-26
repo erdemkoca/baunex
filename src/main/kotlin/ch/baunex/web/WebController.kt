@@ -1,9 +1,7 @@
 package ch.baunex.web
 
-import ch.baunex.project.ProjectHandler
 import ch.baunex.project.dto.ProjectRequest
 import ch.baunex.project.facade.ProjectFacade
-import ch.baunex.project.model.ProjectModel
 import ch.baunex.user.dto.UserResponseDTO
 import ch.baunex.worker.WorkerHandler
 import ch.baunex.worker.dto.WorkerRequest
@@ -19,9 +17,6 @@ import ch.baunex.project.model.toDTO
 
 @Path("/")
 class WebController {
-
-    @Inject
-    lateinit var projectHandler: ProjectHandler
 
     @Inject
     lateinit var workerHandler: WorkerHandler

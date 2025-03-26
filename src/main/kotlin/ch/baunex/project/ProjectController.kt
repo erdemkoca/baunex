@@ -14,8 +14,6 @@ import jakarta.ws.rs.core.Response
 @Path("/project")
 class ProjectController {
 
-    @Inject lateinit var projectHandler: ProjectHandler
-
     @Inject lateinit var projectFacade: ProjectFacade
 
 //    @POST
