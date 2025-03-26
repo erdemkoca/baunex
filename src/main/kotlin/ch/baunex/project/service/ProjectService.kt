@@ -1,5 +1,6 @@
 package ch.baunex.project.service
 
+import ch.baunex.project.dto.ProjectRequest
 import ch.baunex.project.model.ProjectModel
 import ch.baunex.project.repository.ProjectRepository
 import jakarta.enterprise.context.ApplicationScoped
@@ -15,9 +16,19 @@ class ProjectService @Inject constructor(
         return projectRepository.findById(id)
     }
 
-    fun getAllProjects(): List<ProjectModel> {
-        return projectRepository.listAll()
+    @Transactional
+    fun createProject(dto: ProjectRequest): ProjectModel {
+        val project = ProjectModel().apply {
+            name = dto.name
+            budget = dto.budget
+            client = dto.client
+            contact = dto.contact
+        }
+        projectRepository.persist(project)
+        return project
     }
+
+    fun getAllProjects(): List<ProjectModel> = projectRepository.listAll()
 
     @Transactional
     fun deleteProject(id: Long): Boolean {

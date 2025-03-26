@@ -2,6 +2,7 @@ package ch.baunex.web
 
 import ch.baunex.project.ProjectHandler
 import ch.baunex.project.dto.ProjectRequest
+import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.project.model.ProjectModel
 import ch.baunex.user.dto.UserResponseDTO
 import ch.baunex.worker.WorkerHandler
@@ -24,6 +25,9 @@ class WebController {
 
     @Inject
     lateinit var workerHandler: WorkerHandler
+
+    @Inject
+    lateinit var projectFacade: ProjectFacade
 
 
     private fun getCurrentDate(): LocalDate {
@@ -65,7 +69,7 @@ class WebController {
     @Path("/dashboard")
     @Produces(MediaType.TEXT_HTML)
     fun dashboard(): Response {
-        val projects = projectHandler.getAllProjects().map { it.toDTO() }
+        val projects = projectFacade.getAllProjects().map { it.toDTO() }
         val workers = workerHandler.getAllWorkers()
         val template = Templates.index(projects, workers, getCurrentDate(), "dashboard")
         return Response.ok(template.render()).build()
@@ -75,7 +79,7 @@ class WebController {
     @Path("/projects")
     @Produces(MediaType.TEXT_HTML)
     fun projects(): Response {
-        val projects = projectHandler.getAllProjects().map { it.toDTO() }
+        val projects = projectFacade.getAllProjects().map { it.toDTO() }
         val template = Templates.projects(projects, getCurrentDate(), "projects")
         return Response.ok(template.render()).build()
     }
@@ -93,7 +97,7 @@ class WebController {
     @Path("/projects/{id}/edit")
     @Produces(MediaType.TEXT_HTML)
     fun editProject(@PathParam("id") id: Long): Response {
-        val project = projectHandler.getProjectById(id)?.toDTO()
+        val project = projectFacade.getProjectById(id)?.toDTO()
         val template = Templates.projectForm(project, getCurrentDate(), "projects")
         return Response.ok(template.render()).build()
     }
@@ -111,9 +115,9 @@ class WebController {
         val project = ProjectRequest(name, budget, client, contact, id)
         
         if (id == null || id == 0L) {
-            projectHandler.saveProject(project)
+            projectFacade.createProject(project)
         } else {
-            projectHandler.updateProject(id, project)
+            projectFacade.updateProject(id, project)
         }
         
         return Response.seeOther(java.net.URI("/projects")).build()
@@ -122,7 +126,7 @@ class WebController {
     @GET
     @Path("/projects/{id}/delete")
     fun deleteProject(@PathParam("id") id: Long): Response {
-        projectHandler.deleteProject(id)
+        projectFacade.deleteProject(id)
         return Response.seeOther(java.net.URI("/projects")).build()
     }
 
