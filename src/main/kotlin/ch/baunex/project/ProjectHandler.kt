@@ -39,17 +39,6 @@ class ProjectHandler {
     }
 
     @Transactional
-    fun updateProject2(id: Long, dto: ProjectRequest): Boolean {
-        val existingProject = projectRepo.findById(id) ?: return false
-        existingProject.name = dto.name
-        existingProject.budget = dto.budget
-        existingProject.client = dto.client
-        existingProject.contact = dto.contact
-        projectRepo.persist(existingProject)
-        return true
-    }
-
-    @Transactional
     fun updateProject(id: Long, dto: ProjectRequest): Boolean {
         val existingProject = projectRepo.findById(id) ?: return false
         existingProject.name = dto.name
