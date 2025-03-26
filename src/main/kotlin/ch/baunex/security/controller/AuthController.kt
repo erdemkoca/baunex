@@ -17,6 +17,7 @@ import jakarta.ws.rs.core.Response
 import ch.baunex.user.dto.*
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.*
+import ch.baunex.security.exception.MessageResponse
 
 @Path("/api/auth")
 @Produces(MediaType.APPLICATION_JSON)
