@@ -2,6 +2,7 @@ package ch.baunex.config
 
 import ch.baunex.project.ProjectHandler
 import ch.baunex.project.dto.ProjectRequest
+import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.worker.WorkerHandler
 import ch.baunex.worker.dto.WorkerRequest
 import io.quarkus.runtime.StartupEvent
@@ -14,7 +15,7 @@ import jakarta.transaction.Transactional
 class SampleDataLoader {
 
     @Inject
-    lateinit var projectHandler: ProjectHandler
+    lateinit var projectFacade: ProjectFacade
 
     @Inject
     lateinit var workerHandler: WorkerHandler
@@ -22,7 +23,7 @@ class SampleDataLoader {
     @Transactional
     fun loadSampleData(@Observes event: StartupEvent) {
         // Only load sample data if no projects exist
-        if (projectHandler.getAllProjects().isEmpty()) {
+        if (projectFacade.getAllProjects().isEmpty()) {
             // Create sample projects
             val projects = listOf(
                 ProjectRequest(
@@ -58,7 +59,7 @@ class SampleDataLoader {
             )
 
             // Save sample projects
-            projects.forEach { projectHandler.saveProject(it) }
+            projects.forEach { projectFacade.createProject(it) }
 
             // Create sample workers
             val workers = listOf(
