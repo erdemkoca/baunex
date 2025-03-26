@@ -11,7 +11,7 @@ import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 
-@Path("/project")
+@Path("/api/project")
 class ProjectController {
 
     @Inject lateinit var projectFacade: ProjectFacade
