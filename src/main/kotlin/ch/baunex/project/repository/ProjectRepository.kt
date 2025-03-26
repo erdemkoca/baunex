@@ -8,6 +8,3 @@ import jakarta.enterprise.context.ApplicationScoped
 
 @ApplicationScoped
 class ProjectRepository : PanacheRepository<ProjectModel>
-
-//TODO
-// findById(), listAll(), persist(), and deleteById()
