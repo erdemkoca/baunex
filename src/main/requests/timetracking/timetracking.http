@@ -1,0 +1,22 @@
+### 🟣 1️⃣ Login as Superadmin and get a JWT token
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "superadmin@example.com",
+  "password": "superadminpassword"
+}
+
+
+### Log working time
+POST http://localhost:8080/api/time-tracking
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJzdXBlcmFkbWluQGV4YW1wbGUuY29tIiwiaWQiOjEsInJvbGUiOiJBRE1JTiIsImlzcyI6ImJhdW5leCIsImlhdCI6MTc0MzAyMzk5MSwiZXhwIjoxNzQzMTEwMzkxfQ.nbxQ4djDOIGMkk0ba745757NsdULnU3DwOv3byI_pKb4kvKIkP3BcR6ibZorCZ_hBts54-e8QLPZbLI4B6otPASazyyY66GYVlOLX9yj3n9kXYDn3YxSL4o3DiqDj-jEUwLAooj1d02Fxl0cYeEgBKAb2dg4EoQ5o8XR-mw6752EUIc3lUFl6DjQP6cQLL04vEKeq2GZBlc696FG8G7vrNmFv4tMHBbjw0sxjJROQ8Zki2v-DOHUfi-pC4EoeuK__csbPN0iUO-2RhkJE1OxSqu4u2hvCbwJ7ynMI_xz0pwt-C0EcP-_6ML45F7ARLOhn-2Sls0RL4B88zQlEZ0vdQ
+
+{
+  "userId": 1,
+  "projectId": 301,
+  "date": "2025-03-26",
+  "hoursWorked": 8.0,
+  "note": "Worked on foundation"
+}
