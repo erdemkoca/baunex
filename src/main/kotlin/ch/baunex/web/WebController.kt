@@ -2,6 +2,8 @@ package ch.baunex.web
 
 import ch.baunex.project.ProjectHandler
 import ch.baunex.project.dto.ProjectRequest
+import ch.baunex.user.UserHandler
+import ch.baunex.user.dto.UserResponseDTO
 import ch.baunex.worker.WorkerHandler
 import ch.baunex.worker.dto.WorkerRequest
 import io.quarkus.qute.CheckedTemplate
@@ -20,6 +22,10 @@ class WebController {
 
     @Inject
     lateinit var workerHandler: WorkerHandler
+
+    @Inject
+    lateinit var userHandler: UserHandler
+
 
     private fun getCurrentDate(): LocalDate {
         return LocalDate.now()
@@ -41,6 +47,13 @@ class WebController {
         
         @JvmStatic
         external fun workerForm(worker: WorkerRequest?, currentDate: LocalDate, activeMenu: String): TemplateInstance
+
+        @JvmStatic
+        external fun users(users: List<UserResponseDTO>, currentDate: LocalDate, activeMenu: String): TemplateInstance
+
+        @JvmStatic
+        external fun userForm(user: UserResponseDTO?, currentDate: LocalDate, activeMenu: String, roles: List<String>): TemplateInstance
+
     }
 
     @GET

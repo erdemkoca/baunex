@@ -1,0 +1,109 @@
+### Admin token: eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlkIjo0NTEsInJvbGUiOiJBRE1JTiIsImlzcyI6ImJhdW5leCIsImlhdCI6MTc0MjQyMzM1OSwiZXhwIjoxNzQyNTA5NzU5fQ.kopdM76gdYjEKmKU3YxbuFyDupbB3oqQPObva0vOMrOJoCDeJOk3oxl8pUcxrBEGpKpYGZizjUpqlzuh9EEAakcUCx9xDJGPAJ2lilgaaLyb5kUhCglfhzgKaqQiGtyn6guEnJPn-mlOnCfRDwmlIPyksUEr0aaWri162negHuWNCE-DkO7f403ibGIpS3VB2i0Y3p7DpUcC4ke1DcN0htQSD3b5EATxqaBCO5ucI4N6qgwGaGfVkos87_eJZb6v3ilBynAeNdE5V2oSYBfFmlvTyOeiEeutHJo0MkK_n8CXBOOkPyeI-WSJtrigXZ7ogDN3ivr50loy0IeVh3iJ7Q
+
+### 🟣 1️⃣ Login as Superadmin and get a JWT token
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "superadmin@example.com",
+  "password": "superadminpassword"
+}
+
+### 🔵 2️⃣ Create an Admin User
+POST http://localhost:8080/api/users
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJzdXBlcmFkbWluQGV4YW1wbGUuY29tIiwiaWQiOjQwMSwicm9sZSI6IlNVUEVSQURNSU4iLCJpc3MiOiJiYXVuZXgiLCJpYXQiOjE3NDI0MjMyMzMsImV4cCI6MTc0MjUwOTYzM30.u3B97pp1n72xx7zHcxt8hQExnA2No_VT90o5H0-vOT_i0Kw5V-wkpJ8nAzFzkRpuOfhNU0h9vuiX_Sf0En5PL__cQ_JSq66WWUKFYq87GtE8QiXsFMdm_lL-dEt5uklXRYK-BQFCxMJXxccWzD_B7rxjiveidXIrAHZARDi1HlI-fjCmNQxT7egBd9mL9LK5i5FFH1UJeHMWY6AFpa9Bbt0aax8pdl-o2UMm5Bpp_sVXUldASf3qbIGpZkyGKMmM5MxCvvEf8iBt5AoANYQ961zJLf2q4hSmPv5F8NVn-G9e12iG9msxOAQGDN4sgAJN6gaPRtf7hYK4kcbE1thvyg
+
+{
+  "email": "admin@example.com",
+  "password": "adminpassword",
+  "role": "ADMIN"
+}
+
+### 🟣 3️⃣ Login as Admin and get a JWT token
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "adminpassword"
+}
+
+### 👥 4️⃣ Fetch All Users (Admin-Only)
+GET http://localhost:8080/api/admin/users/all
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlkIjo0NTEsInJvbGUiOiJBRE1JTiIsImlzcyI6ImJhdW5leCIsImlhdCI6MTc0MjQyNjE2OSwiZXhwIjoxNzQyNTEyNTY5fQ.uIMqXVM5KKdvF21kJzCiLaJY8iV-y3nVoZZQmH1juMvrCjGeQnnZhoAoDqYd1mzAnR2XuMOQAMXVfPgBEqRDNBdl5mbzEssu7ytuZ0MjQDadd3xAV27hxJpwh0i0ZwjH6Ch6SBUeTpPlAK97pq-C1nHJjcbsslO8yUlmx4HNx5kqRgAfRgYY_JiXtXzWr1BYRPDoiRBEkO1NbAwL-zd2ZE0GgKKCW521TdC5b-VZVZUj1ORXP68GtPyt5l4SHdFxbmVRnyv-0-sElLjlFOdio6nVDRk6w4PuB33IFPRpVmpQeGTNVEssSMT2DE16JZhmVO_JH1eMR6lzHuWCotFbcA
+
+### 🔍 5️⃣ Get User by ID (Admin-Only)
+GET http://localhost:8080/api/admin/users/451
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlkIjo0NTEsInJvbGUiOiJBRE1JTiIsImlzcyI6ImJhdW5leCIsImlhdCI6MTc0MjQyNjE2OSwiZXhwIjoxNzQyNTEyNTY5fQ.uIMqXVM5KKdvF21kJzCiLaJY8iV-y3nVoZZQmH1juMvrCjGeQnnZhoAoDqYd1mzAnR2XuMOQAMXVfPgBEqRDNBdl5mbzEssu7ytuZ0MjQDadd3xAV27hxJpwh0i0ZwjH6Ch6SBUeTpPlAK97pq-C1nHJjcbsslO8yUlmx4HNx5kqRgAfRgYY_JiXtXzWr1BYRPDoiRBEkO1NbAwL-zd2ZE0GgKKCW521TdC5b-VZVZUj1ORXP68GtPyt5l4SHdFxbmVRnyv-0-sElLjlFOdio6nVDRk6w4PuB33IFPRpVmpQeGTNVEssSMT2DE16JZhmVO_JH1eMR6lzHuWCotFbcA
+
+### 🟢 6️⃣ Create a Normal User
+POST http://localhost:8080/api/users
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlkIjo0NTEsInJvbGUiOiJBRE1JTiIsImlzcyI6ImJhdW5leCIsImlhdCI6MTc0MjQyNjE2OSwiZXhwIjoxNzQyNTEyNTY5fQ.uIMqXVM5KKdvF21kJzCiLaJY8iV-y3nVoZZQmH1juMvrCjGeQnnZhoAoDqYd1mzAnR2XuMOQAMXVfPgBEqRDNBdl5mbzEssu7ytuZ0MjQDadd3xAV27hxJpwh0i0ZwjH6Ch6SBUeTpPlAK97pq-C1nHJjcbsslO8yUlmx4HNx5kqRgAfRgYY_JiXtXzWr1BYRPDoiRBEkO1NbAwL-zd2ZE0GgKKCW521TdC5b-VZVZUj1ORXP68GtPyt5l4SHdFxbmVRnyv-0-sElLjlFOdio6nVDRk6w4PuB33IFPRpVmpQeGTNVEssSMT2DE16JZhmVO_JH1eMR6lzHuWCotFbcA
+
+{
+  "email": "testuser@example.com",
+  "password": "securepassword",
+  "role": "USER",
+  "phone": "+123456789",
+  "street": "123 Main St",
+  "city": "Zurich"
+}
+
+### 🔄 7️⃣ Login as Normal User
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "securepassword"
+}
+
+### 🚫 8️⃣ Try Accessing Admin Endpoint as User (Should Fail)
+GET http://localhost:8080/api/admin/users/all
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlckBleGFtcGxlLmNvbSIsImlkIjo1MDEsInJvbGUiOiJVU0VSIiwiaXNzIjoiYmF1bmV4IiwiaWF0IjoxNzQyNDI2Njk0LCJleHAiOjE3NDI1MTMwOTR9.DUxYdE_Q1D_xr07t1OMRK-Iy2ls2WAiDDJOQNUXPl72f4sbwAmQ12KMPVxiq7hhCoCEbYN9RPv6svQc-B32756ZPG8FsJ5KOfUyoe5sODBJM-fffQkovemJUwrS_7Xx12mlelJCsJsRxDLTLkz56yoe3ReefNMQiAorsdc3bP8ADFe7w5LISKqlreF73FcLiowf_l4CQfu7DvJdfvgsRXCpyhPqzIQDXWCgWnClc5aS1mE92PBYs2naryEbFRTJtqFEg4BxK8m3BfZUheHTpG8V18zsSi-SiviaYP6r4sC4GMhz_ImDA9y6dWqndjAj-WLPvmu-8RgJaS3OZus8T7Q
+
+### 🛠 9️⃣ Update User by ID (Admin-Only)
+PUT http://localhost:8080/api/admin/users/51
+Content-Type: application/json
+Authorization: Bearer <ADMIN_TOKEN>
+
+{
+  "email": "updatedemail@example.com",
+  "phone": "+491234567890",
+  "password": "newpassword123"
+}
+
+### 🔄 🔟 Update User Role (Admin-Only)
+PUT http://localhost:8080/api/admin/users/51/role
+Content-Type: application/json
+Authorization: Bearer <ADMIN_TOKEN>
+
+{
+  "role": "SUPERADMIN"
+}
+
+### 🗑️ 1️⃣1️⃣ Delete a User (Admin-Only)
+DELETE http://localhost:8080/api/admin/users/51
+Content-Type: application/json
+Authorization: Bearer <ADMIN_TOKEN>
+
+### ♻️ 1️⃣2️⃣ Refresh Token
+POST http://localhost:8080/api/auth/refresh-token
+Content-Type: application/json
+
+{
+  "refreshToken": "<YOUR_REFRESH_TOKEN>"
+}
+
+### 🚨 1️⃣3️⃣ Try Accessing with Expired Token (Should Fail)
+GET http://localhost:8080/api/admin/users/all
+Content-Type: application/json
+Authorization: Bearer <EXPIRED_TOKEN>
+
+### ✅ 1️⃣4️⃣ Health Check (Check if Server is Running)
+GET http://localhost:8080/q/health
