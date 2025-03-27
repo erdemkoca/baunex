@@ -1,8 +1,10 @@
 package ch.baunex.timetracking.dto
 
 import ch.baunex.timetracking.model.TimeEntryModel
+import kotlinx.serialization.Serializable
 import java.time.LocalDate
 
+@Serializable
 data class TimeEntryResponseDTO(
     val id: Long?,
     val userId: Long,

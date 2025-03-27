@@ -16,14 +16,6 @@ class ProjectController {
 
     @Inject lateinit var projectFacade: ProjectFacade
 
-//    @POST
-//    @Produces(MediaType.APPLICATION_JSON)
-//    @Consumes(MediaType.APPLICATION_JSON)
-//    fun addProject2(dto: ProjectRequest): Response {
-//        projectHandler.saveProject(dto)
-//        return Response.ok().build()
-//    }
-
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)

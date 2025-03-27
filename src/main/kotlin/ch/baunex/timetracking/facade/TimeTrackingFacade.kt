@@ -4,6 +4,7 @@ import ch.baunex.project.service.ProjectService
 import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.timetracking.model.TimeEntryModel
+import ch.baunex.timetracking.model.toResponseDTO
 import ch.baunex.timetracking.repository.TimeEntryRepository
 import ch.baunex.timetracking.service.TimeTrackingService
 import ch.baunex.user.service.UserService
@@ -21,7 +22,7 @@ class TimeTrackingFacade @Inject constructor(
 ) {
 
     @Transactional
-    fun logTime(dto: TimeEntryDTO): TimeEntryModel {
+    fun logTime(dto: TimeEntryDTO): TimeEntryResponseDTO {
         val user = userService.getUserById(dto.userId)
             ?: throw IllegalArgumentException("User not found")
         val project = projectService.getProjectById(dto.projectId)
@@ -36,7 +37,7 @@ class TimeTrackingFacade @Inject constructor(
         }
 
         timeEntryRepository.persist(entry)
-        return entry
+        return entry.toResponseDTO()
     }
 
     fun getAllTimeEntries(): List<TimeEntryResponseDTO> {

@@ -1,6 +1,7 @@
 package ch.baunex.timetracking.model
 
 import ch.baunex.project.model.ProjectModel
+import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.user.model.UserModel
 import io.quarkus.hibernate.orm.panache.PanacheEntity
 import jakarta.persistence.*
@@ -33,4 +34,7 @@ class TimeEntryModel : PanacheEntity() {
 
     @Column(name = "updated_at", nullable = false)
     var updatedAt: LocalDateTime = LocalDateTime.now()
+
+    fun TimeEntryModel.toResponseDTO(): TimeEntryResponseDTO = TimeEntryResponseDTO.fromModel(this)
+
 }
