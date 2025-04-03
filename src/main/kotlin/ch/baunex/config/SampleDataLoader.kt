@@ -1,6 +1,6 @@
 package ch.baunex.config
 
-import ch.baunex.project.dto.ProjectRequest
+import ch.baunex.project.dto.ProjectDTO
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.worker.WorkerHandler
 import ch.baunex.worker.dto.WorkerRequest
@@ -25,31 +25,31 @@ class SampleDataLoader {
         if (projectFacade.getAllProjects().isEmpty()) {
             // Create sample projects
             val projects = listOf(
-                ProjectRequest(
+                ProjectDTO(
                     name = "Office Renovation",
                     budget = 25000,
                     client = "ABC Corporation",
                     contact = "John Smith, john.smith@abc.com"
                 ),
-                ProjectRequest(
+                ProjectDTO(
                     name = "Website Redesign",
                     budget = 15000,
                     client = "XYZ Industries",
                     contact = "Jane Doe, jane.doe@xyz.com"
                 ),
-                ProjectRequest(
+                ProjectDTO(
                     name = "Marketing Campaign",
                     budget = 35000,
                     client = "Global Enterprises",
                     contact = "Michael Johnson, mjohnson@global.com"
                 ),
-                ProjectRequest(
+                ProjectDTO(
                     name = "Software Implementation",
                     budget = 50000,
                     client = "Tech Solutions Inc.",
                     contact = "Sarah Williams, swilliams@techsolutions.com"
                 ),
-                ProjectRequest(
+                ProjectDTO(
                     name = "Product Launch Event",
                     budget = 20000,
                     client = "Innovative Products",

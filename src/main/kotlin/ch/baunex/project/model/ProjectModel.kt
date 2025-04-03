@@ -1,6 +1,6 @@
 package ch.baunex.project.model
 
-import ch.baunex.project.dto.ProjectRequest
+import ch.baunex.project.dto.ProjectDTO
 import io.quarkus.hibernate.orm.panache.PanacheEntity
 import jakarta.persistence.*
 import java.time.LocalDate
@@ -31,7 +31,7 @@ class ProjectModel : PanacheEntity() {
 
 }
 
-fun ProjectModel.toDTO(): ProjectRequest = ProjectRequest(
+fun ProjectModel.toDTO(): ProjectDTO = ProjectDTO(
     id = this.id,
     name = this.name,
     budget = this.budget,

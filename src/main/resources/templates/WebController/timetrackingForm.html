@@ -1,0 +1,62 @@
+{#include layout}
+  {#title}{#if entry}Edit Time Entry{#else}Log Time{/if} - Baunex{/title}
+  {#header}{#if entry}Edit Time Entry{#else}Log Time{/if}{/header}
+  {#content}
+    <div class="card">
+      <div class="card-header">{#if entry}Edit Entry{#else}New Entry{/if}</div>
+      <div class="card-body">
+        <form action="/timetracking/save" method="post">
+          {#if entry}
+            <input type="hidden" name="id" value="{entry.id}" />
+          {/if}
+
+          <div class="mb-3">
+            <label for="userId" class="form-label">User</label>
+            <select class="form-select" id="userId" name="userId" required>
+              {#for user in users}
+                <option value="{user.id}" {#if entry != null && entry.userId == user.id}selected{/if}>
+                  {user.email}
+                </option>
+              {/for}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="projectId" class="form-label">Project</label>
+            <select class="form-select" id="projectId" name="projectId" required>
+              {#for project in projects}
+                <option value="{project.id}" {#if entry != null && entry.projectId == project.id}selected{/if}>
+                  {project.name}
+                </option>
+              {/for}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="date" class="form-label">Date</label>
+            <input type="date" class="form-control" id="date" name="date"
+                   value="{#if entry}{entry.date}{#else}{currentDate}{/if}" required />
+          </div>
+
+          <div class="mb-3">
+            <label for="hoursWorked" class="form-label">Hours Worked</label>
+            <input type="number" class="form-control" id="hoursWorked" name="hoursWorked" step="0.1" min="0"
+                   value="{#if entry}{entry.hoursWorked}{/if}" required />
+          </div>
+
+          <div class="mb-3">
+            <label for="note" class="form-label">Note</label>
+            <textarea class="form-control" id="note" name="note" rows="3">{#if entry}{entry.notes}{/if}</textarea>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save me-2"></i>{#if entry}Update{#else}Log{/if} Time
+            </button>
+            <a href="/timetracking" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  {/content}
+{/include}

@@ -4,5 +4,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ProjectResponse(
-    var projects: List<ProjectRequest>
+    var projects: List<ProjectDTO>
 )

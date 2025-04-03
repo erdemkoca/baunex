@@ -1,10 +1,13 @@
 package ch.baunex.web
 
-import ch.baunex.project.dto.ProjectRequest
+import ch.baunex.project.dto.ProjectDTO
 import ch.baunex.project.facade.ProjectFacade
+import ch.baunex.project.model.ProjectModel
 import ch.baunex.user.dto.UserResponseDTO
 import ch.baunex.worker.WorkerHandler
 import ch.baunex.worker.dto.WorkerRequest
+import ch.baunex.timetracking.dto.TimeEntryResponseDTO
+import ch.baunex.timetracking.facade.TimeTrackingFacade
 import io.quarkus.qute.CheckedTemplate
 import io.quarkus.qute.TemplateInstance
 import jakarta.inject.Inject
@@ -24,6 +27,8 @@ class WebController {
     @Inject
     lateinit var projectFacade: ProjectFacade
 
+    @Inject
+    lateinit var timeTrackingFacade: TimeTrackingFacade
 
     private fun getCurrentDate(): LocalDate {
         return LocalDate.now()
@@ -32,13 +37,13 @@ class WebController {
     @CheckedTemplate
     object Templates {
         @JvmStatic
-        external fun index(projects: List<ProjectRequest>, workers: List<WorkerRequest>, currentDate: LocalDate, activeMenu: String): TemplateInstance
+        external fun index(projects: List<ProjectDTO>, workers: List<WorkerRequest>, currentDate: LocalDate, activeMenu: String, timeEntries: List<TimeEntryResponseDTO>): TemplateInstance
+
+        @JvmStatic
+        external fun projects(projects: List<ProjectDTO>, currentDate: LocalDate, activeMenu: String): TemplateInstance
         
         @JvmStatic
-        external fun projects(projects: List<ProjectRequest>, currentDate: LocalDate, activeMenu: String): TemplateInstance
-        
-        @JvmStatic
-        external fun projectForm(project: ProjectRequest?, currentDate: LocalDate, activeMenu: String): TemplateInstance
+        external fun projectForm(project: ProjectDTO?, currentDate: LocalDate, activeMenu: String): TemplateInstance
         
         @JvmStatic
         external fun workers(workers: List<WorkerRequest>, currentDate: LocalDate, activeMenu: String): TemplateInstance
@@ -52,6 +57,22 @@ class WebController {
         @JvmStatic
         external fun userForm(user: UserResponseDTO?, currentDate: LocalDate, activeMenu: String, roles: List<String>): TemplateInstance
 
+        @JvmStatic
+        external fun timetracking(
+            activeMenu: String,
+            timeEntries: List<TimeEntryResponseDTO>,
+            currentDate: String,
+            users: List<UserResponseDTO>,
+            projects: List<ProjectModel>,
+            entry: TimeEntryResponseDTO? = null): TemplateInstance
+
+        @JvmStatic
+        external fun timetrackingForm(
+            entry: TimeEntryResponseDTO?,
+            users: List<UserResponseDTO>,
+            projects: List<ProjectModel>,
+            currentDate: String,
+            activeMenu: String): TemplateInstance
     }
 
     @GET
@@ -66,7 +87,8 @@ class WebController {
     fun dashboard(): Response {
         val projects = projectFacade.getAllProjects().map { it.toDTO() }
         val workers = workerHandler.getAllWorkers()
-        val template = Templates.index(projects, workers, getCurrentDate(), "dashboard")
+        val timeEntries = timeTrackingFacade.getAllTimeEntries()
+        val template = Templates.index(projects, workers, LocalDate.now(), "dashboard", timeEntries)
         return Response.ok(template.render()).build()
     }
 
@@ -107,7 +129,7 @@ class WebController {
         @FormParam("client") client: String,
         @FormParam("contact") contact: String?
     ): Response {
-        val project = ProjectRequest(name, budget, client, contact, id)
+        val project = ProjectDTO(name, budget, client, contact, id)
         
         if (id == null || id == 0L) {
             projectFacade.createProject(project)

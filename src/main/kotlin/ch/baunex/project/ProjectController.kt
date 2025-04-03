@@ -1,10 +1,8 @@
 package ch.baunex.project
 
-import ch.baunex.project.dto.ProjectRequest
-import ch.baunex.project.dto.ProjectResponse
+import ch.baunex.project.dto.ProjectDTO
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.project.model.toDTO
-import io.vertx.ext.web.client.WebClient
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import jakarta.ws.rs.*
@@ -19,14 +17,14 @@ class ProjectController {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    fun addProject(dto: ProjectRequest): Response {
+    fun addProject(dto: ProjectDTO): Response {
         val created = projectFacade.createProject(dto)
         return Response.status(Response.Status.CREATED).entity(created.toDTO()).build()
     }
 
-    fun getAllProjects(): List<ProjectRequest> {
+    fun getAllProjects(): List<ProjectDTO> {
         return projectFacade.getAllProjects().map {
-            ProjectRequest(
+            ProjectDTO(
                 id = it.id,
                 name = it.name,
                 budget = it.budget,
@@ -36,9 +34,9 @@ class ProjectController {
         }
     }
 
-    fun getProjectById(id: Long): ProjectRequest? {
+    fun getProjectById(id: Long): ProjectDTO? {
         return projectFacade.getProjectById(id)?.let {
-            ProjectRequest(
+            ProjectDTO(
                 id = it.id,
                 name = it.name,
                 budget = it.budget,
@@ -49,7 +47,7 @@ class ProjectController {
     }
 
     @Transactional
-    fun updateProject(id: Long, dto: ProjectRequest): Boolean {
+    fun updateProject(id: Long, dto: ProjectDTO): Boolean {
         val project = projectFacade.getProjectById(id) ?: return false
         project.name = dto.name
         project.budget = dto.budget

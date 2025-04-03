@@ -1,6 +1,6 @@
 package ch.baunex.project.facade
 
-import ch.baunex.project.dto.ProjectRequest
+import ch.baunex.project.dto.ProjectDTO
 import ch.baunex.project.model.ProjectModel
 import ch.baunex.project.service.ProjectService
 import jakarta.enterprise.context.ApplicationScoped
@@ -11,7 +11,7 @@ import jakarta.transaction.Transactional
 class ProjectFacade @Inject constructor(
     private val projectService: ProjectService
 ) {
-    fun createProject(dto: ProjectRequest): ProjectModel {
+    fun createProject(dto: ProjectDTO): ProjectModel {
         return projectService.createProject(dto)
     }
 
@@ -22,7 +22,7 @@ class ProjectFacade @Inject constructor(
     fun deleteProject(id: Long) { projectService.deleteProject(id)}
 
     @Transactional
-    fun updateProject(id: Long, dto: ProjectRequest): Boolean {
+    fun updateProject(id: Long, dto: ProjectDTO): Boolean {
         val project = projectService.getProjectById(id) ?: return false
 
         project.name = dto.name

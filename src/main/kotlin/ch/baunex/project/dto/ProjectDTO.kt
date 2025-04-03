@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 
 @Entity
 @Serializable
-data class ProjectRequest(
+data class ProjectDTO(
         var name: String = "",
         var budget: Int = 0,
         var client: String = "",

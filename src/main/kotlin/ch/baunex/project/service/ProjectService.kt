@@ -1,6 +1,6 @@
 package ch.baunex.project.service
 
-import ch.baunex.project.dto.ProjectRequest
+import ch.baunex.project.dto.ProjectDTO
 import ch.baunex.project.model.ProjectModel
 import ch.baunex.project.repository.ProjectRepository
 import jakarta.enterprise.context.ApplicationScoped
@@ -17,7 +17,7 @@ class ProjectService @Inject constructor(
     }
 
     @Transactional
-    fun createProject(dto: ProjectRequest): ProjectModel {
+    fun createProject(dto: ProjectDTO): ProjectModel {
         val project = ProjectModel().apply {
             name = dto.name
             budget = dto.budget
