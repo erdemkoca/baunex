@@ -69,7 +69,7 @@ class WebUserController {
     @Path("new")
     @Produces(MediaType.TEXT_HTML)
     fun newUser(): Response {
-        val roles = listOf("USER", "ADMIN", "PROJECT_MANAGER", "EMPLOYEE", "CLIENT", "SUPERADMIN")
+        val roles = Role.entries.map { it.name }
         val template = WebController.Templates.userForm(null, getCurrentDate(), "users", roles)
         return Response.ok(template.render()).build()
     }
@@ -90,7 +90,7 @@ class WebUserController {
             return Response.status(Response.Status.NOT_FOUND).build()
         }
 
-        val roles = listOf("USER", "ADMIN", "PROJECT_MANAGER", "EMPLOYEE", "CLIENT", "SUPERADMIN")
+        val roles = Role.entries.map { it.name }
         val template = WebController.Templates.userForm(user, getCurrentDate(), "users", roles)
         return Response.ok(template.render()).build()
     }

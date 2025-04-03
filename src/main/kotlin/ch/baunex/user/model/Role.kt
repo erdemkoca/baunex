@@ -5,7 +5,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 enum class Role {
-    @SerialName("SUPERADMIN") SUPERADMIN,
     @SerialName("ADMIN") ADMIN,
     @SerialName("PROJECT_MANAGER") PROJECT_MANAGER,
     @SerialName("EMPLOYEE") EMPLOYEE,
