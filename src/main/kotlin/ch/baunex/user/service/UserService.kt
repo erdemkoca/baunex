@@ -1,12 +1,9 @@
 package ch.baunex.user.service
 
-import ch.baunex.user.dto.UpdateUserDTO
-import ch.baunex.user.dto.UserDTO
-import ch.baunex.user.dto.UserResponseDTO
+import ch.baunex.user.model.Role
 import ch.baunex.user.model.UserModel
 import ch.baunex.user.repository.UserRepository
 import ch.baunex.security.utils.PasswordUtil
-import ch.baunex.user.model.Role
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -19,111 +16,71 @@ class UserService @Inject constructor(
     private val userRepository: UserRepository
 ) {
     @Transactional
-    fun registerUser(userDTO: UserDTO): UserModel {
-        if (userDTO.email?.let { userRepository.findByEmail(it) } != null) {
+    fun registerUser(user: UserModel): UserModel {
+        if (userRepository.findByEmail(user.email) != null) {
             throw IllegalArgumentException("Email already in use")
         }
 
-        val hashedPassword = PasswordUtil.hashPassword(userDTO.password ?: throw IllegalArgumentException("Password is required"))
-
-        val newUser = UserModel().apply {
-            email = userDTO.email ?: throw IllegalArgumentException("Email is required")
-            password = hashedPassword
-            role = userDTO.role
-        }
-
-        userDTO::class.declaredMemberProperties.forEach { property ->
-            val value = property.getter.call(userDTO)
-            val fieldName = property.name
-
-            if (value != null && fieldName !in listOf("email", "password", "role")) {
-                val userField = UserModel::class.declaredMemberProperties.find { it.name == fieldName }
-                if (userField is kotlin.reflect.KMutableProperty1<*, *>) {
-                    userField.setter.call(newUser, value)
-                }
-            }
-        }
-
-        userRepository.persist(newUser)
-        return newUser
+        user.password = PasswordUtil.hashPassword(user.password)
+        userRepository.persist(user)
+        return user
     }
 
-    fun listUsers(): List<UserResponseDTO> {
+    fun getAllUsers(): List<UserModel> = userRepository.listAll()
 
-        return userRepository.listAll().map { user ->
-            UserResponseDTO(user.id!!, user.email, user.role, user.phone, user.street)
-        }
-    }
+    fun getUserById(userId: Long): UserModel? = userRepository.findById(userId)
 
-    fun getAllUsers(): List<UserModel> {
-        return userRepository.listAll()
-    }
-
-    fun getUserById(userId: Long): UserModel? {
-        return userRepository.findById(userId)
-    }
-
-    fun getUserByMail(mail: String): UserModel? {
-        return userRepository.findByEmail(mail)
-    }
+    fun getUserByMail(mail: String): UserModel? = userRepository.findByEmail(mail)
 
     fun deleteUserByMail(mail: String): UserModel? {
-        val user = getUserByMail(mail) // Get the user before deletion
-        user?.let { userRepository.delete(it) } // Delete if exists
-        return user // Return the deleted user
+        val user = getUserByMail(mail)
+        user?.let { userRepository.delete(it) }
+        return user
     }
 
     fun deleteUserById(id: Long) {
-        val user = getUserById(id)
-        user?.let { userRepository.delete(it) }
+        getUserById(id)?.let { userRepository.delete(it) }
     }
 
-
     @Transactional
-    fun updateUser(userId: Long, updateDTO: UpdateUserDTO): UserModel? {
-        val user = userRepository.findById(userId) ?: return null  // User not found
+    fun updateUser(userId: Long, updated: UserModel): UserModel? {
+        val user = userRepository.findById(userId) ?: return null
 
-        // Get Unique Fields
-        val uniqueFields = UserModel::class.declaredMemberProperties
-            .filter { prop ->
-                prop.javaField?.getAnnotation(Column::class.java)?.unique == true
+        // Enforce unique constraints
+        if (updated.email != user.email && userRepository.findByEmail(updated.email) != null) {
+            throw IllegalArgumentException("Email is already in use")
+        }
+
+        if (updated.phone != null && updated.phone != user.phone) {
+            val existing = userRepository.findUniqueField("phone", updated.phone!!)
+            if (existing != null && existing.id != userId) {
+                throw IllegalArgumentException("Phone number is already in use")
             }
-            .map { it.name }
+        }
 
-        updateDTO::class.declaredMemberProperties.forEach { property ->
-            val value = property.getter.call(updateDTO) // Get field value dynamically
+        // Update fields manually (preferred over reflection)
+        user.email = updated.email
+        user.role = updated.role
+        user.street = updated.street
+        user.city = updated.city
+        user.phone = updated.phone
 
-            if (value != null) { // Update only if field is provided
-                val fieldName = property.name
-
-                // Check Uniqueness Dynamically
-                if (fieldName in uniqueFields) {
-                    val existingUser = userRepository.findUniqueField(fieldName, value.toString())
-                    if (existingUser != null && existingUser.id != userId) {
-                        throw IllegalArgumentException("$fieldName is already in use")
-                    }
-                }
-
-                // Update Field Dynamically
-                val userField = UserModel::class.declaredMemberProperties.find { it.name == fieldName }
-                if (userField is kotlin.reflect.KMutableProperty1<*, *>) {
-                    userField.setter.call(user, value)
-                }
-            }
+        // Optional: only update password if a new one is provided
+        if (!updated.password.isNullOrBlank()) {
+            user.password = PasswordUtil.hashPassword(updated.password)
         }
 
         userRepository.updateUser(user)
         return user
     }
 
-    @Transactional
-    fun updateUserRole(userId: Long, role: Role): UserResponseDTO? {
-        val user = userRepository.findById(userId) ?: return null
 
+    @Transactional
+    fun updateUserRole(userId: Long, role: Role): UserModel? {
+        val user = userRepository.findById(userId) ?: return null
         user.role = role
         userRepository.updateUser(user)
-
-        return UserResponseDTO(user.id!!, user.email, user.role, user.phone, user.street)
+        return user
     }
 
     @Transactional
@@ -135,5 +92,4 @@ class UserService @Inject constructor(
     fun deleteAllUsersExceptSuperadmin() {
         userRepository.delete("email != ?1", "superadmin@example.com")
     }
-
 }

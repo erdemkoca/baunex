@@ -13,27 +13,6 @@ data class UserDTO(
     val city: String? = null
 )
 
-@Serializable
-data class UserResponseDTO(
-    val id: Long?,
-    val email: String,
-    val role: Role,
-    val phone: String?,
-    val street: String?
-)
-
-@Serializable
-data class UserResponseDTOList(
-    var allClients: List<UserResponseDTO>
-)
-
 
 @Serializable
 data class LoginDTO(val email: String, val password: String)
-
-@Serializable
-data class TokenResponse(
-    val token: String,
-    val id: Long,
-    val role: Role
-)

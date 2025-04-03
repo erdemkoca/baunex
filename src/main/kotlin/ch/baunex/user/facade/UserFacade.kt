@@ -1,11 +1,12 @@
 package ch.baunex.user.facade
 
 import ch.baunex.user.dto.*
-import ch.baunex.user.model.UserModel
 import ch.baunex.user.repository.UserRepository
 import ch.baunex.security.service.AuthService
 import ch.baunex.user.service.UserService
 import ch.baunex.security.utils.PasswordUtil
+import ch.baunex.user.mapping.toModel
+import ch.baunex.user.mapping.toResponseDTO
 import ch.baunex.user.model.Role
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
@@ -16,33 +17,22 @@ class UserFacade @Inject constructor(
     private val userService: UserService,
     private val authService: AuthService,
     private val userRepository: UserRepository
-
 ) {
     fun registerUser(userDTO: UserDTO): UserResponseDTO {
-        val user = userService.registerUser(userDTO)
-        return UserResponseDTO(user.id, user.email, user.role, user.phone, user.email)
+        val user = userService.registerUser(userDTO.toModel())
+        return user.toResponseDTO()
     }
 
     fun listUsers(): List<UserResponseDTO> {
-        return userService.listUsers()
+        return userService.getAllUsers().map { it.toResponseDTO() }
     }
 
     fun getAllUsers(): List<UserResponseDTO> {
-        return userService.getAllUsers().map { user ->
-            UserResponseDTO(
-                id = user.id,
-                email = user.email,
-                role = user.role,
-                phone = user.phone,
-                street = user.street
-            )
-        }
+        return userService.getAllUsers().map { it.toResponseDTO() }
     }
 
-
-    fun authenticate(loginDTO: LoginDTO): Pair <String, String>? {
+    fun authenticate(loginDTO: LoginDTO): Pair<String, String>? {
         val user = userRepository.findByEmail(loginDTO.email) ?: return null
-
         return if (PasswordUtil.verifyPassword(loginDTO.password, user.password)) {
             authService.authenticate(user.email, user.password)
         } else {
@@ -51,33 +41,30 @@ class UserFacade @Inject constructor(
     }
 
     fun updateUser(userId: Long, updateDTO: UpdateUserDTO): UserResponseDTO? {
-        val user = userService.updateUser(userId, updateDTO) ?: return null
-        return UserResponseDTO(user.id, user.email, user.role, user.phone, user.street)
+        val updatedModel = updateDTO.toModel()
+        val updatedUser = userService.updateUser(userId, updatedModel)
+        return updatedUser?.toResponseDTO()
     }
 
+
     fun getUserById(userId: Long): UserResponseDTO? {
-        val user = userService.getUserById(userId) ?: return null
-        return UserResponseDTO(user.id, user.email, user.role, user.phone, user.street)
+        return userService.getUserById(userId)?.toResponseDTO()
     }
 
     fun getUserByMail(mail: String): UserResponseDTO? {
-        val user = userService.getUserByMail(mail) ?: return null
-        return UserResponseDTO(user.id, user.email, user.role, user.phone, user.street)
+        return userService.getUserByMail(mail)?.toResponseDTO()
     }
-
 
     fun deleteUserByMail(mail: String): UserResponseDTO? {
-        val user = userService.deleteUserByMail(mail) ?: return null
-        return UserResponseDTO(user.id, user.email, user.role, user.phone, user.street)
+        return userService.deleteUserByMail(mail)?.toResponseDTO()
     }
 
-
     fun deleteUserById(userId: Long) {
-        return userService.deleteUserById(userId)
+        userService.deleteUserById(userId)
     }
 
     fun updateUserRole(userId: Long, role: Role): UserResponseDTO? {
-        return userService.updateUserRole(userId, role)
+        return userService.updateUserRole(userId, role)?.toResponseDTO()
     }
 
     @Transactional
@@ -88,7 +75,4 @@ class UserFacade @Inject constructor(
     fun deleteAllUsersExceptSuperadmin() {
         userService.deleteAllUsersExceptSuperadmin()
     }
-
-
-
 }
