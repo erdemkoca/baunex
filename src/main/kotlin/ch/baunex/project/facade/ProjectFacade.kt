@@ -19,9 +19,6 @@ class ProjectFacade @Inject constructor(
         return projectService.getProjectById(id)?.toDTO()
     }
 
-//    fun getAllProjects(): List<ProjectDTO> {
-//        return projectService.getAllProjects().map { it.toDTO() }
-//    }
     fun getAllProjects(): List<ProjectDTO> {
         return projectService.getAllProjects().map { it.toDTO() }
     }
