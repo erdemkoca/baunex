@@ -5,8 +5,6 @@ import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.project.model.ProjectModel
 import ch.baunex.project.model.ProjectStatus
 import ch.baunex.user.dto.UserResponseDTO
-import ch.baunex.worker.WorkerHandler
-import ch.baunex.worker.dto.WorkerRequest
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.timetracking.facade.TimeTrackingFacade
 import io.quarkus.qute.CheckedTemplate
@@ -23,9 +21,6 @@ import ch.baunex.project.model.toDTO
 class WebController {
 
     @Inject
-    lateinit var workerHandler: WorkerHandler
-
-    @Inject
     lateinit var projectFacade: ProjectFacade
 
     @Inject
@@ -38,7 +33,7 @@ class WebController {
     @CheckedTemplate
     object Templates {
         @JvmStatic
-        external fun index(projects: List<ProjectDTO>, workers: List<WorkerRequest>, currentDate: LocalDate, activeMenu: String, timeEntries: List<TimeEntryResponseDTO>): TemplateInstance
+        external fun index(projects: List<ProjectDTO>, currentDate: LocalDate, activeMenu: String, timeEntries: List<TimeEntryResponseDTO>): TemplateInstance
 
         @JvmStatic
         external fun projects(projects: List<ProjectDTO>, currentDate: LocalDate, activeMenu: String): TemplateInstance
@@ -81,9 +76,8 @@ class WebController {
     @Produces(MediaType.TEXT_HTML)
     fun dashboard(): Response {
         val projects = projectFacade.getAllProjects().map { it }
-        val workers = workerHandler.getAllWorkers()
         val timeEntries = timeTrackingFacade.getAllTimeEntries()
-        val template = Templates.index(projects, workers, LocalDate.now(), "dashboard", timeEntries)
+        val template = Templates.index(projects, LocalDate.now(), "dashboard", timeEntries)
         return Response.ok(template.render()).build()
     }
 

@@ -2,8 +2,6 @@ package ch.baunex.config
 
 import ch.baunex.project.dto.ProjectDTO
 import ch.baunex.project.facade.ProjectFacade
-import ch.baunex.worker.WorkerHandler
-import ch.baunex.worker.dto.WorkerRequest
 import io.quarkus.runtime.StartupEvent
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.enterprise.event.Observes
@@ -16,8 +14,6 @@ class SampleDataLoader {
     @Inject
     lateinit var projectFacade: ProjectFacade
 
-    @Inject
-    lateinit var workerHandler: WorkerHandler
 
     @Transactional
     fun loadSampleData(@Observes event: StartupEvent) {
@@ -60,52 +56,7 @@ class SampleDataLoader {
             // Save sample projects
             projects.forEach { projectFacade.createProject(it) }
 
-            // Create sample workers
-            val workers = listOf(
-                WorkerRequest(
-                    firstName = "David",
-                    lastName = "Miller",
-                    email = "david.miller@baunex.ch",
-                    phone = "+41 76 123 4567",
-                    position = "Project Manager",
-                    hourlyRate = 85.0
-                ),
-                WorkerRequest(
-                    firstName = "Emma",
-                    lastName = "Wilson",
-                    email = "emma.wilson@baunex.ch",
-                    phone = "+41 76 234 5678",
-                    position = "Software Developer",
-                    hourlyRate = 75.0
-                ),
-                WorkerRequest(
-                    firstName = "Thomas",
-                    lastName = "Anderson",
-                    email = "thomas.anderson@baunex.ch",
-                    phone = "+41 76 345 6789",
-                    position = "UI/UX Designer",
-                    hourlyRate = 70.0
-                ),
-                WorkerRequest(
-                    firstName = "Olivia",
-                    lastName = "Martinez",
-                    email = "olivia.martinez@baunex.ch",
-                    phone = "+41 76 456 7890",
-                    position = "Marketing Specialist",
-                    hourlyRate = 65.0
-                ),
-                WorkerRequest(
-                    firstName = "James",
-                    lastName = "Taylor",
-                    email = "james.taylor@baunex.ch",
-                    phone = "+41 76 567 8901",
-                    position = "Business Analyst",
-                    hourlyRate = 80.0
-                )
-            )
 
-            // Save sample workers
-            workers.forEach { workerHandler.saveWorker(it) }
         }
     }
 } 

@@ -15,15 +15,6 @@
   <div class="col-md-3">
     <div class="card stats-card">
       <div class="card-body">
-        <i class="bi bi-people"></i>
-        <div class="stats-value">{workers.size()}</div>
-        <div class="stats-label">Total Workers</div>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="card stats-card">
-      <div class="card-body">
         <i class="bi bi-currency-dollar"></i>
         <div class="stats-value">
           {#if projects.isEmpty()} $0 {#else} {#set totalBudget=0} {#for project
@@ -91,44 +82,6 @@
       </div>
     </div>
   </div>
-
-  {!<div class="col-md-6">!}
-    {!<div class="card">!}
-      {!<div!}
-        {!class="card-header d-flex justify-content-between align-items-center"!}
-      {!>!}
-        {!<span><i class="bi bi-people me-2"></i>Workers</span>!}
-        {!<a href="/workers" class="btn btn-sm btn-outline-primary">View All</a>!}
-      {!</div>!}
-      {!<div class="card-body">!}
-        {!{#if workers.isEmpty()}!}
-        {!<p class="text-muted">No workers found.</p>!}
-        {!{#else}!}
-        {!<div class="table-responsive">!}
-          {!<table class="table table-hover">!}
-            {!<thead>!}
-              {!<tr>!}
-                {!<th>Name</th>!}
-                {!<th>Position</th>!}
-                {!<th>Hourly Rate</th>!}
-              {!</tr>!}
-            {!</thead>!}
-            {!<tbody>!}
-              {!{#for worker in workers} {#if worker_index < 5}!}
-              {!<tr>!}
-                {!<td>{worker.firstName} {worker.lastName}</td>!}
-                {!<td>{worker.position}</td>!}
-                {!<td>${worker.hourlyRate}/hr</td>!}
-              {!</tr>!}
-              {!{/if} {/for}!}
-            {!</tbody>!}
-          {!</table>!}
-        {!</div>!}
-        {!{/if}!}
-      {!</div>!}
-    {!</div>!}
-  {!</div>!}
-
   <div class="col-md-12 mt-4">
   <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
@@ -179,9 +132,6 @@
         <div class="d-flex gap-3">
           <a href="/projects/new" class="btn btn-primary">
             <i class="bi bi-plus-circle me-2"></i>New Project
-          </a>
-          <a href="/workers/new" class="btn btn-primary">
-            <i class="bi bi-plus-circle me-2"></i>New Worker
           </a>
         </div>
       </div>
