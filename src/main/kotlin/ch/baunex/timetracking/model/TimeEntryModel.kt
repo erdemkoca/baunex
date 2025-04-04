@@ -1,12 +1,11 @@
 package ch.baunex.timetracking.model
 
 import ch.baunex.project.model.ProjectModel
-import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.user.model.UserModel
 import io.quarkus.hibernate.orm.panache.PanacheEntity
 import jakarta.persistence.*
 import java.time.LocalDate
-import java.time.LocalDateTime
+//TODO Change from String to LocalDate
 
 @Entity
 @Table(name = "time_entries")
@@ -23,18 +22,26 @@ class TimeEntryModel : PanacheEntity() {
     @Column(nullable = false)
     lateinit var date: String
 
-    @Column(nullable = false)
+    @Column(name = "hours_worked", nullable = false)
     var hoursWorked: Double = 0.0
 
     @Column(columnDefinition = "TEXT")
     var note: String? = null
 
-    @Column(name = "created_at", nullable = false)
-    var createdAt: LocalDateTime = LocalDateTime.now()
+    // --- Optional enhancements ---
 
-    @Column(name = "updated_at", nullable = false)
-    var updatedAt: LocalDateTime = LocalDateTime.now()
+    @Column(name = "hourly_rate")
+    var hourlyRate: Double? = null  // useful if user/project rate is different over time
 
-    fun TimeEntryModel.toResponseDTO(): TimeEntryResponseDTO = TimeEntryResponseDTO.fromModel(this)
+    @Column(name = "billable", nullable = false)
+    var billable: Boolean = true  // helps with reporting and invoice generation
 
+    @Column(name = "invoiced", nullable = false)
+    var invoiced: Boolean = false  // track if this entry has been invoiced
+
+    @Column(name = "catalog_item_description")
+    var catalogItemDescription: String? = null  // e.g., "Electrical Socket Replacement"
+
+    @Column(name = "catalog_item_price")
+    var catalogItemPrice: Double? = null  // price from catalog per hour or fixed
 }

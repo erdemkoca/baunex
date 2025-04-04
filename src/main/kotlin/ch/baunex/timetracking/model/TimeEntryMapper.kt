@@ -10,5 +10,10 @@ fun TimeEntryModel.toResponseDTO(): TimeEntryResponseDTO = TimeEntryResponseDTO(
     projectName = this.project.name,
     date = this.date,
     hoursWorked = this.hoursWorked,
-    notes = this.note
+    notes = this.note,
+    hourlyRate = this.hourlyRate,
+    billable = this.billable,
+    invoiced = this.invoiced,
+    catalogItemDescription = this.catalogItemDescription,
+    catalogItemPrice = this.catalogItemPrice
 )

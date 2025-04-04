@@ -12,31 +12,10 @@ data class TimeEntryResponseDTO(
     val projectName: String,
     val date: String,
     val hoursWorked: Double,
-    val notes: String?
-) {
-    companion object {
-        fun fromModel(model: TimeEntryModel): TimeEntryResponseDTO {
-            return TimeEntryResponseDTO(
-                id = model.id,
-                userId = model.user.id!!,
-                userEmail = model.user.email,
-                projectId = model.project.id!!,
-                projectName = model.project.name,
-                date = model.date,
-                hoursWorked = model.hoursWorked,
-                notes = model.note
-            )
-        }
-    }
-
-    constructor(model: TimeEntryModel) : this(
-        id = model.id,
-        userId = model.user.id,
-        userEmail = model.user.email,
-        projectId = model.project.id,
-        projectName = model.project.name,
-        date = model.date,
-        hoursWorked = model.hoursWorked,
-        notes = model.note
-    )
-}
+    val notes: String?,
+    val hourlyRate: Double?,
+    val billable: Boolean,
+    val invoiced: Boolean,
+    val catalogItemDescription: String?,
+    val catalogItemPrice: Double?
+)

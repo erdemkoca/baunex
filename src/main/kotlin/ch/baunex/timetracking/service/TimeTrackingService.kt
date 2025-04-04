@@ -6,6 +6,7 @@ import ch.baunex.project.service.ProjectService
 import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.timetracking.model.TimeEntryModel
+import ch.baunex.timetracking.model.toResponseDTO
 import ch.baunex.timetracking.repository.TimeEntryRepository
 import ch.baunex.user.model.UserModel
 import ch.baunex.user.service.UserService
@@ -51,7 +52,7 @@ class TimeTrackingService {
 
     fun getAllTimeEntries(): List<TimeEntryResponseDTO> {
         return timeEntryRepository.listAll()
-            .map { TimeEntryResponseDTO.fromModel(it) }
+            .map { it.toResponseDTO() }
     }
 
     fun getTimeEntryById(id: Long): TimeEntryModel? {

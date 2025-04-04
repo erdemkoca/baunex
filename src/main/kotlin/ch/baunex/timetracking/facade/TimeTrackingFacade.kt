@@ -45,30 +45,30 @@ class TimeTrackingFacade @Inject constructor(
     }
 
     fun getTimeEntryById(id: Long): TimeEntryResponseDTO? {
-        return timeTrackingService.getTimeEntryById(id)?.let { TimeEntryResponseDTO.fromModel(it) }
+        return timeTrackingService.getTimeEntryById(id)?.toResponseDTO()
     }
 
     fun updateTimeEntry(id: Long, dto: TimeEntryDTO): TimeEntryResponseDTO? {
-        return timeTrackingService.updateTimeEntry(id, dto)?.let { TimeEntryResponseDTO.fromModel(it) }
+        return timeTrackingService.updateTimeEntry(id, dto)?.toResponseDTO()
     }
 
 
     fun getTimeEntriesForUser(userId: Long): List<TimeEntryResponseDTO> {
         return timeEntryRepository.find("user.id", userId).list<TimeEntryModel>().map {
-            TimeEntryResponseDTO(it)
+            it.toResponseDTO()
         }
     }
 
     fun getTimeEntriesForProject(projectId: Long): List<TimeEntryResponseDTO> {
         return timeEntryRepository.find("project.id", projectId).list<TimeEntryModel>().map {
-            TimeEntryResponseDTO(it)
+            it.toResponseDTO()
         }
     }
 
     fun getTimeEntriesByDateRange(start: LocalDate, end: LocalDate): List<TimeEntryResponseDTO> {
         return timeEntryRepository.find("date >= ?1 AND date <= ?2", start, end)
             .list<TimeEntryModel>().map {
-                TimeEntryResponseDTO(it)
+                it.toResponseDTO()
             }
     }
 

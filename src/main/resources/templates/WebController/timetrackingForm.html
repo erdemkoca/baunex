@@ -55,6 +55,36 @@
             </button>
             <a href="/timetracking" class="btn btn-outline-secondary">Cancel</a>
           </div>
+
+          <div class="mb-3">
+            <label for="hourlyRate" class="form-label">Hourly Rate</label>
+            <input type="number" class="form-control" id="hourlyRate" name="hourlyRate" step="0.01"
+                   value="{#if entry}{entry.hourlyRate}{/if}" />
+          </div>
+
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="billable" name="billable"
+                   {#if entry && entry.billable}checked{/if}>
+            <label class="form-check-label" for="billable">Billable</label>
+          </div>
+
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="invoiced" name="invoiced"
+                   {#if entry && entry.invoiced}checked{/if}>
+            <label class="form-check-label" for="invoiced">Invoiced</label>
+          </div>
+
+          <div class="mb-3">
+            <label for="catalogItemDescription" class="form-label">Catalog Description</label>
+            <input type="text" class="form-control" id="catalogItemDescription" name="catalogItemDescription"
+                   value="{#if entry}{entry.catalogItemDescription}{/if}" />
+          </div>
+
+          <div class="mb-3">
+            <label for="catalogItemPrice" class="form-label">Catalog Price</label>
+            <input type="number" class="form-control" id="catalogItemPrice" name="catalogItemPrice" step="0.01"
+                   value="{#if entry}{entry.catalogItemPrice}{/if}" />
+          </div>
         </form>
       </div>
     </div>

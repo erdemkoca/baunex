@@ -8,9 +8,13 @@ import java.time.LocalDate
 data class TimeEntryDTO(
     val userId: Long,
     val projectId: Long,
-    //@Contextual val date: LocalDate,
-    //TODO didnt work with LocalDate, for now working with straight String
     val date: String,
     val hoursWorked: Double,
-    val note: String? = null
+    val note: String? = null,
+    val hourlyRate: Double? = null,
+    val billable: Boolean = false,
+    val invoiced: Boolean = false,
+    val catalogItemDescription: String? = null,
+    val catalogItemPrice: Double? = null
 )
+
