@@ -33,4 +33,9 @@ class ProjectFacade @Inject constructor(
         val updated = projectService.updateProject(id, dto)
         return updated != null
     }
+
+    fun getProjectWithDetails(id: Long): ProjectDTO? {
+        return projectService.getProjectWithEntries(id)?.toDTO()
+    }
+
 }

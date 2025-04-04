@@ -3,6 +3,7 @@ package ch.baunex.web
 import ch.baunex.project.dto.ProjectDTO
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.project.model.ProjectModel
+import ch.baunex.project.model.ProjectStatus
 import ch.baunex.user.dto.UserResponseDTO
 import ch.baunex.worker.WorkerHandler
 import ch.baunex.worker.dto.WorkerRequest
@@ -41,15 +42,9 @@ class WebController {
 
         @JvmStatic
         external fun projects(projects: List<ProjectDTO>, currentDate: LocalDate, activeMenu: String): TemplateInstance
-        
+
         @JvmStatic
-        external fun projectForm(project: ProjectDTO?, currentDate: LocalDate, activeMenu: String): TemplateInstance
-        
-        @JvmStatic
-        external fun workers(workers: List<WorkerRequest>, currentDate: LocalDate, activeMenu: String): TemplateInstance
-        
-        @JvmStatic
-        external fun workerForm(worker: WorkerRequest?, currentDate: LocalDate, activeMenu: String): TemplateInstance
+        external fun projectDetail(project: ProjectDTO, activeMenu: String, currentDate: LocalDate): TemplateInstance
 
         @JvmStatic
         external fun users(users: List<UserResponseDTO>, currentDate: LocalDate, activeMenu: String): TemplateInstance
@@ -106,7 +101,26 @@ class WebController {
     @Path("/projects/new")
     @Produces(MediaType.TEXT_HTML)
     fun newProject(): Response {
-        val template = Templates.projectForm(null, getCurrentDate(), "projects")
+        val emptyProject = ProjectDTO(
+            id = null,
+            name = "",
+            client = "",
+            budget = 0,
+            contact = "",
+            startDate = null,
+            endDate = null,
+            description = "",
+            status = ProjectStatus.PLANNED,
+            street = "",
+            city = ""
+        )
+
+        val template = Templates.projectDetail(
+            project = emptyProject,
+            activeMenu = "projects",
+            currentDate = getCurrentDate()
+        )
+
         return Response.ok(template.render()).build()
     }
 
@@ -114,8 +128,8 @@ class WebController {
     @Path("/projects/{id}/edit")
     @Produces(MediaType.TEXT_HTML)
     fun editProject(@PathParam("id") id: Long): Response {
-        val project = projectFacade.getProjectById(id)
-        val template = Templates.projectForm(project, getCurrentDate(), "projects")
+        val project = projectFacade.getProjectById(id) ?: return Response.status(Response.Status.NOT_FOUND).build()
+        val template = Templates.projectDetail(project, "projects", getCurrentDate())
         return Response.ok(template.render()).build()
     }
 
@@ -125,20 +139,39 @@ class WebController {
     fun saveProject(
         @FormParam("id") id: Long?,
         @FormParam("name") name: String,
-        @FormParam("budget") budget: Int,
         @FormParam("client") client: String,
-        @FormParam("contact") contact: String?
+        @FormParam("budget") budget: Int,
+        @FormParam("contact") contact: String?,
+        @FormParam("startDate") startDate: LocalDate?,
+        @FormParam("endDate") endDate: LocalDate?,
+        @FormParam("description") description: String?,
+        @FormParam("status") status: ProjectStatus?,
+        @FormParam("street") street: String?,
+        @FormParam("city") city: String?
     ): Response {
-        val project = ProjectDTO(name, budget, client, contact, id)
-        
+        val dto = ProjectDTO(
+            id = id,
+            name = name,
+            client = client,
+            budget = budget,
+            contact = contact,
+            startDate = startDate,
+            endDate = endDate,
+            description = description,
+            status = status ?: ProjectStatus.PLANNED,
+            street = street,
+            city = city
+        )
+
         if (id == null || id == 0L) {
-            projectFacade.createProject(project)
+            projectFacade.createProject(dto)
         } else {
-            projectFacade.updateProject(id, project)
+            projectFacade.updateProject(id, dto)
         }
-        
+
         return Response.seeOther(java.net.URI("/projects")).build()
     }
+
 
     @GET
     @Path("/projects/{id}/delete")
@@ -148,57 +181,12 @@ class WebController {
     }
 
     @GET
-    @Path("/workers")
+    @Path("/projects/{id}")
     @Produces(MediaType.TEXT_HTML)
-    fun workers(): Response {
-        val template = Templates.workers(workerHandler.getAllWorkers(), getCurrentDate(), "workers")
+    fun viewProject(@PathParam("id") id: Long): Response {
+        val project = projectFacade.getProjectWithDetails(id) ?: return Response.status(404).build()
+        val template = Templates.projectDetail(project, "projects", getCurrentDate())
         return Response.ok(template.render()).build()
     }
 
-    @GET
-    @Path("/workers/new")
-    @Produces(MediaType.TEXT_HTML)
-    fun newWorker(): Response {
-        val template = Templates.workerForm(null, getCurrentDate(), "workers")
-        return Response.ok(template.render()).build()
-    }
-
-    @GET
-    @Path("/workers/{id}/edit")
-    @Produces(MediaType.TEXT_HTML)
-    fun editWorker(@PathParam("id") id: Long): Response {
-        val worker = workerHandler.getWorkerById(id)
-        val template = Templates.workerForm(worker, getCurrentDate(), "workers")
-        return Response.ok(template.render()).build()
-    }
-
-    @POST
-    @Path("/workers/save")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    fun saveWorker(
-        @FormParam("id") id: Long?,
-        @FormParam("firstName") firstName: String,
-        @FormParam("lastName") lastName: String,
-        @FormParam("email") email: String,
-        @FormParam("phone") phone: String,
-        @FormParam("position") position: String,
-        @FormParam("hourlyRate") hourlyRate: Double
-    ): Response {
-        val worker = WorkerRequest(firstName, lastName, email, phone, position, hourlyRate, id)
-        
-        if (id == null || id == 0L) {
-            workerHandler.saveWorker(worker)
-        } else {
-            workerHandler.updateWorker(id, worker)
-        }
-        
-        return Response.seeOther(java.net.URI("/workers")).build()
-    }
-
-    @GET
-    @Path("/workers/{id}/delete")
-    fun deleteWorker(@PathParam("id") id: Long): Response {
-        workerHandler.deleteWorker(id)
-        return Response.seeOther(java.net.URI("/workers")).build()
-    }
 } 

@@ -46,15 +46,16 @@ class ProjectController {
         }
     }
 
-    @Transactional
-    fun updateProject(id: Long, dto: ProjectDTO): Boolean {
-        val project = projectFacade.getProjectById(id) ?: return false
-        project.name = dto.name
-        project.budget = dto.budget
-        project.client = dto.client
-        project.contact = dto.contact
-        return true
-    }
+//    TODO: add all dto
+//    @Transactional
+//    fun updateProject(id: Long, dto: ProjectDTO): Boolean {
+//        val project = projectFacade.getProjectById(id) ?: return false
+//        project.name = dto.name
+//        project.budget = dto.budget
+//        project.client = dto.client
+//        project.contact = dto.contact
+//        return true
+//    }
 
     @Transactional
     fun deleteProject(id: Long) {

@@ -43,4 +43,10 @@ class ProjectService @Inject constructor(
     fun deleteProject(id: Long): Boolean {
         return projectRepository.deleteById(id)
     }
+
+    fun getProjectWithEntries(id: Long): ProjectModel? {
+        return projectRepository.findByIdWithTimeEntries(id)
+    }
+
+
 }

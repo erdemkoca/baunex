@@ -40,15 +40,6 @@ class ProjectModel : PanacheEntity() {
 
     // --- RELATIONS ---
 
-    // Assigned workers
-    @ManyToMany
-    @JoinTable(
-        name = "project_workers",
-        joinColumns = [JoinColumn(name = "project_id")],
-        inverseJoinColumns = [JoinColumn(name = "user_id")]
-    )
-    var assignedWorkers: MutableList<UserModel> = mutableListOf()
-
     // Time entries
     @OneToMany(mappedBy = "project", cascade = [CascadeType.ALL], orphanRemoval = true)
     var timeEntries: MutableList<TimeEntryModel> = mutableListOf()
