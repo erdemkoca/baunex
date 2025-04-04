@@ -63,14 +63,14 @@ class WebController {
             timeEntries: List<TimeEntryResponseDTO>,
             currentDate: String,
             users: List<UserResponseDTO>,
-            projects: List<ProjectModel>,
+            projects: List<ProjectDTO>,
             entry: TimeEntryResponseDTO? = null): TemplateInstance
 
         @JvmStatic
         external fun timetrackingForm(
             entry: TimeEntryResponseDTO?,
             users: List<UserResponseDTO>,
-            projects: List<ProjectModel>,
+            projects: List<ProjectDTO>,
             currentDate: String,
             activeMenu: String): TemplateInstance
     }
@@ -85,7 +85,7 @@ class WebController {
     @Path("/dashboard")
     @Produces(MediaType.TEXT_HTML)
     fun dashboard(): Response {
-        val projects = projectFacade.getAllProjects().map { it.toDTO() }
+        val projects = projectFacade.getAllProjects().map { it }
         val workers = workerHandler.getAllWorkers()
         val timeEntries = timeTrackingFacade.getAllTimeEntries()
         val template = Templates.index(projects, workers, LocalDate.now(), "dashboard", timeEntries)
@@ -96,7 +96,7 @@ class WebController {
     @Path("/projects")
     @Produces(MediaType.TEXT_HTML)
     fun projects(): Response {
-        val projects = projectFacade.getAllProjects().map { it.toDTO() }
+        val projects = projectFacade.getAllProjects().map { it }
         val template = Templates.projects(projects, getCurrentDate(), "projects")
         return Response.ok(template.render()).build()
     }
@@ -114,7 +114,7 @@ class WebController {
     @Path("/projects/{id}/edit")
     @Produces(MediaType.TEXT_HTML)
     fun editProject(@PathParam("id") id: Long): Response {
-        val project = projectFacade.getProjectById(id)?.toDTO()
+        val project = projectFacade.getProjectById(id)
         val template = Templates.projectForm(project, getCurrentDate(), "projects")
         return Response.ok(template.render()).build()
     }

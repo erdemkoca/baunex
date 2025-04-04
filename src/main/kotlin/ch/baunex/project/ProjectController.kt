@@ -19,7 +19,7 @@ class ProjectController {
     @Consumes(MediaType.APPLICATION_JSON)
     fun addProject(dto: ProjectDTO): Response {
         val created = projectFacade.createProject(dto)
-        return Response.status(Response.Status.CREATED).entity(created.toDTO()).build()
+        return Response.status(Response.Status.CREATED).entity(created).build()
     }
 
     fun getAllProjects(): List<ProjectDTO> {
