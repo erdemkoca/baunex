@@ -1,7 +1,7 @@
 package ch.baunex.project.facade
 
 import ch.baunex.project.dto.ProjectDTO
-import ch.baunex.project.model.ProjectModel
+import ch.baunex.project.model.toDTO
 import ch.baunex.project.service.ProjectService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
@@ -11,27 +11,25 @@ import jakarta.transaction.Transactional
 class ProjectFacade @Inject constructor(
     private val projectService: ProjectService
 ) {
-    fun createProject(dto: ProjectDTO): ProjectModel {
-        return projectService.createProject(dto)
+    fun createProject(dto: ProjectDTO): ProjectDTO {
+        return projectService.createProject(dto).toDTO()
     }
 
-    fun getProjectById(id: Long): ProjectModel? = projectService.getProjectById(id)
+    fun getProjectById(id: Long): ProjectDTO? {
+        return projectService.getProjectById(id)?.toDTO()
+    }
 
-    fun getAllProjects(): List<ProjectModel> = projectService.getAllProjects()
+    fun getAllProjects(): List<ProjectDTO> {
+        return projectService.getAllProjects().map { it.toDTO() }
+    }
 
-    fun deleteProject(id: Long) { projectService.deleteProject(id)}
+    fun deleteProject(id: Long) {
+        projectService.deleteProject(id)
+    }
 
     @Transactional
     fun updateProject(id: Long, dto: ProjectDTO): Boolean {
-        val project = projectService.getProjectById(id) ?: return false
-
-        project.name = dto.name
-        project.budget = dto.budget
-        project.client = dto.client
-        project.contact = dto.contact
-
-        // Optional: validate or enrich before save
-        projectService.saveProject(project)
-        return true
+        val updated = projectService.updateProject(id, dto)
+        return updated != null
     }
 }

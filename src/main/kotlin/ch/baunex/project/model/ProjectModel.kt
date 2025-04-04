@@ -30,11 +30,3 @@ class ProjectModel : PanacheEntity() {
     var description: String? = null
 
 }
-
-fun ProjectModel.toDTO(): ProjectDTO = ProjectDTO(
-    id = this.id,
-    name = this.name,
-    budget = this.budget,
-    client = this.client,
-    contact = this.contact
-)

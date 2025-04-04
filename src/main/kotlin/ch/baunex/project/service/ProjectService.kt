@@ -2,6 +2,8 @@ package ch.baunex.project.service
 
 import ch.baunex.project.dto.ProjectDTO
 import ch.baunex.project.model.ProjectModel
+import ch.baunex.project.model.toDTO
+import ch.baunex.project.model.toModel
 import ch.baunex.project.repository.ProjectRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
@@ -16,30 +18,29 @@ class ProjectService @Inject constructor(
         return projectRepository.findById(id)
     }
 
+    fun getAllProjects(): List<ProjectModel> = projectRepository.listAll()
+
     @Transactional
     fun createProject(dto: ProjectDTO): ProjectModel {
-        val project = ProjectModel().apply {
-            name = dto.name
-            budget = dto.budget
-            client = dto.client
-            contact = dto.contact
-        }
+        val project = dto.toModel()
         projectRepository.persist(project)
         return project
     }
 
-    fun getAllProjects(): List<ProjectModel> = projectRepository.listAll()
+    @Transactional
+    fun updateProject(id: Long, dto: ProjectDTO): ProjectModel? {
+        val existing = projectRepository.findById(id) ?: return null
+
+        existing.name = dto.name
+        existing.budget = dto.budget
+        existing.client = dto.client
+        existing.contact = dto.contact
+
+        return existing
+    }
 
     @Transactional
     fun deleteProject(id: Long): Boolean {
         return projectRepository.deleteById(id)
     }
-
-    @Transactional
-    fun saveProject(project: ProjectModel): ProjectModel {
-        projectRepository.persist(project)
-        return project
-    }
-
-    // You can add update logic or mapping with DTOs later as needed
 }
