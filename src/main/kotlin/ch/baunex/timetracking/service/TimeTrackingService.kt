@@ -6,6 +6,7 @@ import ch.baunex.project.service.ProjectService
 import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.timetracking.model.TimeEntryModel
+import ch.baunex.timetracking.model.toModel
 import ch.baunex.timetracking.model.toResponseDTO
 import ch.baunex.timetracking.repository.TimeEntryRepository
 import ch.baunex.user.model.UserModel
@@ -29,26 +30,17 @@ class TimeTrackingService {
 
 
     @Transactional
-    fun logTime(
-        user: UserModel,
-        project: ProjectModel,
-        date: String,
-        hours: Double,
-        notes: String?
-    ): TimeEntryModel {
-        if (hours <= 0) throw IllegalArgumentException("Worked hours must be positive")
+    fun logTime(dto: TimeEntryDTO): TimeEntryModel {
+        val user = userService.getUserById(dto.userId)
+            ?: throw IllegalArgumentException("User not found")
+        val project = projectService.getProjectById(dto.projectId)
+            ?: throw IllegalArgumentException("Project not found")
 
-        val entry = TimeEntryModel().apply {
-            this.user = user
-            this.project = project
-            this.date = date
-            this.hoursWorked = hours
-            this.note = notes
-        }
-
-        timeEntryRepository.persist(entry)
-        return entry
+        val model = dto.toModel(user, project)
+        timeEntryRepository.persist(model)
+        return model
     }
+
 
     fun getAllTimeEntries(): List<TimeEntryResponseDTO> {
         return timeEntryRepository.listAll()
@@ -72,6 +64,11 @@ class TimeTrackingService {
         entry.date = dto.date
         entry.hoursWorked = dto.hoursWorked
         entry.note = dto.note
+        entry.hourlyRate = dto.hourlyRate
+        entry.billable = dto.billable
+        entry.invoiced = dto.invoiced
+        entry.catalogItemDescription = dto.catalogItemDescription
+        entry.catalogItemPrice = dto.catalogItemPrice
 
         return entry
     }

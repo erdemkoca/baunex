@@ -60,11 +60,16 @@ class WebTimeTrackingController {
         @FormParam("id") id: Long?,
         @FormParam("userId") userId: Long,
         @FormParam("projectId") projectId: Long,
-        @FormParam("date") date: String,
+        @FormParam("date") date: LocalDate,
         @FormParam("hoursWorked") hoursWorked: Double,
-        @FormParam("note") note: String?
+        @FormParam("note") note: String?,
+        @FormParam("hourlyRate") hourlyRate: Double?,
+        @FormParam("billable") billable: Boolean,
+        @FormParam("invoiced") invoiced: Boolean,
+        @FormParam("catalogItemDescription") catalogItemDescription: String?,
+        @FormParam("catalogItemPrice") catalogItemPrice: Double?
     ): Response {
-        val dto = TimeEntryDTO(userId, projectId, date, hoursWorked, note)
+        val dto = TimeEntryDTO(userId, projectId, date, hoursWorked, note, hourlyRate, billable, invoiced, catalogItemDescription, catalogItemPrice)
 
         if (id == null) {
             timeTrackingFacade.logTime(dto)

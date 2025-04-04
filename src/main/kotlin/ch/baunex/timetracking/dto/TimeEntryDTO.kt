@@ -8,7 +8,7 @@ import java.time.LocalDate
 data class TimeEntryDTO(
     val userId: Long,
     val projectId: Long,
-    val date: String,
+    @Contextual val date: LocalDate,
     val hoursWorked: Double,
     val note: String? = null,
     val hourlyRate: Double? = null,

@@ -20,7 +20,7 @@ class TimeEntryModel : PanacheEntity() {
     lateinit var project: ProjectModel
 
     @Column(nullable = false)
-    lateinit var date: String
+    lateinit var date: LocalDate
 
     @Column(name = "hours_worked", nullable = false)
     var hoursWorked: Double = 0.0
