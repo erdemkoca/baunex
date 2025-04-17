@@ -2,10 +2,6 @@ package ch.baunex.project.dto
 
 import ch.baunex.project.model.ProjectStatus
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
-import ch.baunex.timetracking.model.TimeEntryModel
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.Id
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
