@@ -1,6 +1,7 @@
 package ch.baunex.project.model
 
 import ch.baunex.project.dto.ProjectDTO
+import ch.baunex.timetracking.model.toResponseDTO
 
 fun ProjectModel.toDTO(): ProjectDTO = ProjectDTO(
     id = this.id,
@@ -13,7 +14,8 @@ fun ProjectModel.toDTO(): ProjectDTO = ProjectDTO(
     description = this.description,
     status = this.status,
     street = this.street,
-    city = this.city
+    city = this.city,
+    timeEntries = this.timeEntries.sortedBy { it.date }.map { it.toResponseDTO() }
 )
 
 fun ProjectDTO.toModel(): ProjectModel = ProjectModel().apply {

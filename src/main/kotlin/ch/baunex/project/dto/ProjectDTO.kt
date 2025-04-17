@@ -1,6 +1,8 @@
 package ch.baunex.project.dto
 
 import ch.baunex.project.model.ProjectStatus
+import ch.baunex.timetracking.dto.TimeEntryResponseDTO
+import ch.baunex.timetracking.model.TimeEntryModel
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Id
@@ -20,5 +22,6 @@ data class ProjectDTO(
         val description: String? = null,
         val status: ProjectStatus = ProjectStatus.PLANNED,
         val street: String? = null,
-        val city: String? = null
+        val city: String? = null,
+        val timeEntries: List<TimeEntryResponseDTO> = emptyList()
 )
