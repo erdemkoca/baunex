@@ -1,82 +1,135 @@
 {#include layout}
-    {#title}{#if project.id}Edit Project - {project.name}{#else}New Project{/if}{/title}
-    {#header}{#if project.id}Edit Project{#else}New Project{/if}{/header}
+    {#title}{#if project.id}Project - {project.name}{#else}New Project{/if}{/title}
+    {#header}{#if project.id}Project Overview{#else}New Project{/if}{/header}
     {#content}
-        <form action="/projects/save" method="post">
+
+        <!-- Tab Navigation -->
+        <ul class="nav nav-tabs mb-3" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#overview" role="tab">Overview</a>
+            </li>
             {#if project.id}
-                <input type="hidden" name="id" value="{project.id}" />
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#timelogs" role="tab">Time Logs</a>
+                </li>
             {/if}
+        </ul>
 
-            <div class="card mb-4">
-                <div class="card-header">Project Overview</div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Project Name</label>
-                        <input type="text" class="form-control" id="name" name="name" value="{project.name ?: ''}" required />
-                    </div>
+        <!-- Tab Content -->
+        <div class="tab-content">
 
-                    <div class="mb-3">
-                        <label for="client" class="form-label">Client</label>
-                        <input type="text" class="form-control" id="client" name="client" value="{project.client ?: ''}" required />
-                    </div>
+            <!-- Overview Tab -->
+            <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                <form action="/projects/save" method="post">
+                    {#if project.id}
+                        <input type="hidden" name="id" value="{project.id}" />
+                    {/if}
 
-                    <div class="mb-3">
-                        <label for="contact" class="form-label">Contact Information</label>
-                        <input type="text" class="form-control" id="contact" name="contact" value="{project.contact ?: ''}" />
-                        <div class="form-text">Optional contact information for the client</div>
-                    </div>
+                    <div class="card mb-4">
+                        <div class="card-header">Edit Project</div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Project Name</label>
+                                <input type="text" class="form-control" id="name" name="name" value="{project.name ?: ''}" required />
+                            </div>
 
-                    <div class="mb-3">
-                        <label for="budget" class="form-label">Budget</label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input type="number" class="form-control" id="budget" name="budget" value="{project.budget ?: 0}" required min="0" />
+                            <div class="mb-3">
+                                <label for="client" class="form-label">Client</label>
+                                <input type="text" class="form-control" id="client" name="client" value="{project.client ?: ''}" required />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="contact" class="form-label">Contact Information</label>
+                                <input type="text" class="form-control" id="contact" name="contact" value="{project.contact ?: ''}" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="budget" class="form-label">Budget</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="budget" name="budget" value="{project.budget ?: 0}" required min="0" />
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="status" class="form-label">Status</label>
+                                <select id="status" name="status" class="form-select">
+                                    <option value="PLANNED" {#if project.status == 'PLANNED'}selected{/if}>Planned</option>
+                                    <option value="IN_PROGRESS" {#if project.status == 'IN_PROGRESS'}selected{/if}>In Progress</option>
+                                    <option value="COMPLETED" {#if project.status == 'COMPLETED'}selected{/if}>Completed</option>
+                                    <option value="CANCELLED" {#if project.status == 'CANCELLED'}selected{/if}>Cancelled</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea class="form-control" id="description" name="description" rows="3">{project.description ?: ''}</textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="startDate" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="startDate" name="startDate" value="{project.startDate ?: ''}" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="endDate" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="endDate" name="endDate" value="{project.endDate ?: ''}" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="street" class="form-label">Street</label>
+                                <input type="text" class="form-control" id="street" name="street" value="{project.street ?: ''}" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="city" class="form-label">City</label>
+                                <input type="text" class="form-control" id="city" name="city" value="{project.city ?: ''}" />
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save me-2"></i>{#if project.id}Update Project{#else}Create Project{/if}
+                                </button>
+                                <a href="/projects" class="btn btn-outline-secondary">Cancel</a>
+                            </div>
                         </div>
                     </div>
+                </form>
+            </div>
 
-                    <div class="mb-3">
-                        <label for="status" class="form-label">Status</label>
-                        <select id="status" name="status" class="form-select">
-                            <option value="PLANNED" {#if project.status == 'PLANNED'}selected{/if}>Planned</option>
-                            <option value="IN_PROGRESS" {#if project.status == 'IN_PROGRESS'}selected{/if}>In Progress</option>
-                            <option value="COMPLETED" {#if project.status == 'COMPLETED'}selected{/if}>Completed</option>
-                            <option value="CANCELLED" {#if project.status == 'CANCELLED'}selected{/if}>Cancelled</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea class="form-control" id="description" name="description" rows="3">{project.description ?: ''}</textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="startDate" class="form-label">Start Date</label>
-                        <input type="date" class="form-control" id="startDate" name="startDate" value="{project.startDate ?: ''}" />
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="endDate" class="form-label">End Date</label>
-                        <input type="date" class="form-control" id="endDate" name="endDate" value="{project.endDate ?: ''}" />
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="street" class="form-label">Street</label>
-                        <input type="text" class="form-control" id="street" name="street" value="{project.street ?: ''}" />
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="city" class="form-label">City</label>
-                        <input type="text" class="form-control" id="city" name="city" value="{project.city ?: ''}" />
-                    </div>
-
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-save me-2"></i>{#if project.id}Update Project{#else}Create Project{/if}
-                        </button>
-                        <a href="/projects" class="btn btn-outline-secondary">Cancel</a>
+            <!-- Time Logs Tab -->
+            <div class="tab-pane fade" id="timelogs" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Time Logs</h5>
+                        {#if project.timeEntries.isEmpty()}
+                            <p class="text-muted">No time logs for this project.</p>
+                        {#else}
+                            <table class="table table-striped">
+                                <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Date</th>
+                                    <th>Hours</th>
+                                    <th>Note</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {#for entry in project.timeEntries}
+                                    <tr>
+                                        <td>{entry.userId}</td>
+                                        <td>{entry.date}</td>
+                                        <td>{entry.hoursWorked}</td>
+                                        <td>{entry.notes ?: '—'}</td>
+                                    </tr>
+                                {/for}
+                                </tbody>
+                            </table>
+                        {/if}
                     </div>
                 </div>
             </div>
-        </form>
+
+        </div>
     {/content}
 {/include}
