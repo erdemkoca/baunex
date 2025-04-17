@@ -46,7 +46,7 @@ class ProjectController {
         }
     }
 
-//    TODO: add all dto
+//    TODO: add all dto.
 //    @Transactional
 //    fun updateProject(id: Long, dto: ProjectDTO): Boolean {
 //        val project = projectFacade.getProjectById(id) ?: return false
