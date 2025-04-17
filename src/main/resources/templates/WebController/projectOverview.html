@@ -1,9 +1,9 @@
 {#include layout}
-  {#title}{#if project?.id}Edit Project - {project.name}{#else}New Project{/if}{/title}
+  {#title}{#if project.id}Edit Project - {project.name}{#else}New Project{/if}{/title}
   {#header}Project Overview{/header}
   {#content}
     <form action="/projects/save" method="post">
-      {#if project?.id}
+      {#if project.id}
         <input type="hidden" name="id" value="{project.id}">
       {/if}
 
@@ -12,41 +12,39 @@
           <div class="mb-3">
             <label for="name">Project Name</label>
             <input type="text" class="form-control" name="name" id="name"
-                   value="{project?.name ?: ''}" required>
+                   value="{project.name ?: ''}" required>
           </div>
 
           <div class="mb-3">
             <label for="client">Client</label>
             <input type="text" class="form-control" name="client" id="client"
-                   value="{project?.client ?: ''}" required>
+                   value="{project.client ?: ''}" required>
           </div>
 
           <div class="mb-3">
             <label for="budget">Budget ($)</label>
             <input type="number" class="form-control" name="budget" id="budget"
-                   value="{project?.budget ?: 0}" required>
+                   value="{project.budget ?: 0}" required>
           </div>
 
           <div class="mb-3">
             <label for="contact">Contact</label>
             <input type="text" class="form-control" name="contact" id="contact"
-                   value="{project?.contact ?: ''}">
+                   value="{project.contact ?: ''}">
           </div>
 
           <div class="mb-3">
             <label for="status">Status</label>
             <select name="status" class="form-select">
-              <option value="PLANNED" {#if project?.status == 'PLANNED'}selected{/if}>Planned</option>
-              <option value="IN_PROGRESS" {#if project?.status == 'IN_PROGRESS'}selected{/if}>In Progress</option>
-              <option value="COMPLETED" {#if project?.status == 'COMPLETED'}selected{/if}>Completed</option>
+              <option value="PLANNED" {#if project.status == 'PLANNED'}selected{/if}>Planned</option>
+              <option value="IN_PROGRESS" {#if project.status == 'IN_PROGRESS'}selected{/if}>In Progress</option>
+              <option value="COMPLETED" {#if project.status == 'COMPLETED'}selected{/if}>Completed</option>
             </select>
           </div>
 
-          <!-- ... add street, city, startDate, endDate, description ... -->
-
           <div class="d-flex gap-2">
             <button type="submit" class="btn btn-primary">
-              <i class="bi bi-save me-2"></i>{#if project?.id}Update Project{#else}Create Project{/if}
+              <i class="bi bi-save me-2"></i>{#if project.id}Update Project{#else}Create Project{/if}
             </button>
             <a href="/projects" class="btn btn-outline-secondary">Cancel</a>
           </div>
