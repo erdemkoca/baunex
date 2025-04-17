@@ -63,8 +63,6 @@ class WebUserController {
         return Response.seeOther(URI("/users")).build()
     }
 
-
-
     @GET
     @Path("new")
     @Produces(MediaType.TEXT_HTML)
@@ -94,9 +92,4 @@ class WebUserController {
         val template = WebController.Templates.userForm(user, getCurrentDate(), "users", roles)
         return Response.ok(template.render()).build()
     }
-
-
-
-
-
 }
