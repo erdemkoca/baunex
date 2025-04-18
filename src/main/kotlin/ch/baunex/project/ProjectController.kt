@@ -2,7 +2,6 @@ package ch.baunex.project
 
 import ch.baunex.project.dto.ProjectDTO
 import ch.baunex.project.facade.ProjectFacade
-import ch.baunex.project.model.toDTO
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import jakarta.ws.rs.*
