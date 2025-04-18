@@ -13,6 +13,11 @@
                     <a class="nav-link" data-bs-toggle="tab" href="#timelogs" role="tab">Time Logs</a>
                 </li>
             {/if}
+            {#if project.id}
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#catalog" role="tab">Catalog</a>
+                </li>
+            {/if}
         </ul>
 
         <!-- Tab Content -->
@@ -126,6 +131,94 @@
                                 </tbody>
                             </table>
                         {/if}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Catalog Tab -->
+            <div class="tab-pane fade" id="catalog" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Catalog Items</h5>
+
+                        <form action="/projects/{project.id}/catalog/save" method="post" class="row g-3 mb-4">
+                            <input type="hidden" name="id" value="" />
+
+                            <div class="col-md-4">
+                                <label class="form-label">Select Catalog Item (optional)</label>
+                                <select name="catalogItemId" class="form-select">
+                                    <option value="">-- Select from Catalog --</option>
+                                    {#for item in catalogItems}
+                                        <option value="{item.id}" data-price="{item.unitPrice}">
+                                            {item.name} ({item.unitPrice} CHF)
+                                        </option>
+                                    {/for}
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Or Add Custom Item</label>
+                                <input type="text" class="form-control" name="itemName" placeholder="Item Name" />
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label">Quantity</label>
+                                <input type="number" class="form-control" name="quantity" value="1" min="1" required />
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label">Unit Price</label>
+                                <input type="number" class="form-control" name="unitPrice" step="0.01" required />
+                            </div>
+
+                            <div class="col-md-2 mt-4">
+                                <button type="submit" class="btn btn-success w-100">Add</button>
+                            </div>
+                        </form>
+
+                        {#if project.catalogItems.isEmpty()}
+                            <p class="text-muted">No items added yet.</p>
+                        {#else}
+                            <table class="table table-bordered">
+                                <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Qty</th>
+                                    <th>Unit Price</th>
+                                    <th>Total</th>
+                                    <th></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {#for item in project.catalogItems}
+                                    <tr>
+                                        <td>{item.itemName}</td>
+                                        <td>{item.quantity}</td>
+                                        <td>{item.unitPrice}</td>
+                                        <td>{item.totalPrice}</td>
+                                        <td>
+                                            <a href="/projects/{project.id}/catalog/{item.id}/delete" class="btn btn-sm btn-outline-danger">Delete</a>
+                                        </td>
+                                    </tr>
+                                {/for}
+                                </tbody>
+                            </table>
+                        {/if}
+
+                        <script>
+                            document.addEventListener("DOMContentLoaded", function () {
+                                const select = document.querySelector('select[name="catalogItemId"]');
+                                const priceInput = document.querySelector('input[name="unitPrice"]');
+
+                                select.addEventListener("change", function () {
+                                    const selectedOption = select.options[select.selectedIndex];
+                                    const price = selectedOption.getAttribute("data-price");
+                                    if (price) {
+                                        priceInput.value = price;
+                                    }
+                                });
+                            });
+                        </script>
                     </div>
                 </div>
             </div>

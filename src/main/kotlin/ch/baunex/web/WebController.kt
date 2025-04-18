@@ -1,5 +1,6 @@
 package ch.baunex.web
 
+import ch.baunex.catalog.dto.CatalogItemDTO
 import ch.baunex.project.dto.ProjectDTO
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.user.dto.UserResponseDTO
@@ -31,7 +32,7 @@ class WebController {
         external fun projects(projects: List<ProjectDTO>, currentDate: LocalDate, activeMenu: String): TemplateInstance
 
         @JvmStatic
-        external fun projectDetail(project: ProjectDTO, activeMenu: String, currentDate: LocalDate): TemplateInstance
+        external fun projectDetail(project: ProjectDTO, activeMenu: String, currentDate: LocalDate, catalogItems: List<CatalogItemDTO>): TemplateInstance
 
         @JvmStatic
         external fun users(users: List<UserResponseDTO>, currentDate: LocalDate, activeMenu: String): TemplateInstance

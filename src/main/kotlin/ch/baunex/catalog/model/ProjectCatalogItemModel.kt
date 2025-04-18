@@ -12,6 +12,10 @@ class ProjectCatalogItemModel : PanacheEntity() {
     @JoinColumn(name = "project_id")
     lateinit var project: ProjectModel
 
+    @ManyToOne
+    @JoinColumn(name = "catalog_item_id")
+    var catalogItem: CatalogItemModel? = null
+
     @Column(nullable = false)
     lateinit var itemName: String
 

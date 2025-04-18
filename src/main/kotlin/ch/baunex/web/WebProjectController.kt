@@ -1,5 +1,7 @@
 package ch.baunex.web
 
+import ch.baunex.catalog.dto.CatalogItemDTO
+import ch.baunex.catalog.facade.CatalogFacade
 import ch.baunex.project.dto.ProjectDTO
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.project.model.ProjectStatus
@@ -15,6 +17,9 @@ class WebProjectController {
 
     @Inject
     lateinit var projectFacade: ProjectFacade
+
+    @Inject
+    lateinit var catalogFacade: CatalogFacade
 
     private fun getCurrentDate() = LocalDate.now()
 
@@ -47,7 +52,8 @@ class WebProjectController {
         val template = Templates.projectDetail(
             project = emptyProject,
             activeMenu = "projects",
-            currentDate = getCurrentDate()
+            currentDate = getCurrentDate(),
+            catalogItems = emptyList<CatalogItemDTO>()
         )
 
         return Response.ok(template.render()).build()
@@ -58,7 +64,8 @@ class WebProjectController {
     @Produces(MediaType.TEXT_HTML)
     fun view(@PathParam("id") id: Long): Response {
         val project = projectFacade.getProjectWithDetails(id) ?: return Response.status(404).build()
-        val template = Templates.projectDetail(project, "projects", getCurrentDate())
+        val catalogItems = catalogFacade.getAllItems()
+        val template = Templates.projectDetail(project, "projects", getCurrentDate(), catalogItems)
         return Response.ok(template.render()).build()
     }
 
@@ -67,7 +74,8 @@ class WebProjectController {
     @Produces(MediaType.TEXT_HTML)
     fun edit(@PathParam("id") id: Long): Response {
         val project = projectFacade.getProjectById(id) ?: return Response.status(404).build()
-        val template = Templates.projectDetail(project, "projects", getCurrentDate())
+        val catalogItems = catalogFacade.getAllItems()
+        val template = Templates.projectDetail(project, "projects", getCurrentDate(), catalogItems)
         return Response.ok(template.render()).build()
     }
 
