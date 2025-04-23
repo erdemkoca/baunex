@@ -74,6 +74,11 @@ class UserService @Inject constructor(
         return user
     }
 
+    //TODO is transactional necessary here?
+    fun existsByEmail(email: String): Boolean {
+        return userRepository.findByEmail(email) != null
+    }
+
 
     @Transactional
     fun updateUserRole(userId: Long, role: Role): UserModel? {

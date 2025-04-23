@@ -67,6 +67,11 @@ class UserFacade @Inject constructor(
         return userService.updateUserRole(userId, role)?.toResponseDTO()
     }
 
+    fun existsByEmail(email: String): Boolean {
+        return userService.existsByEmail(email)
+    }
+
+
     @Transactional
     fun deleteAllUsers() {
         userService.deleteAllUsers()

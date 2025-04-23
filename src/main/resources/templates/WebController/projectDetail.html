@@ -149,7 +149,7 @@
                                 <select name="catalogItemId" class="form-select">
                                     <option value="">-- Select from Catalog --</option>
                                     {#for item in catalogItems}
-                                        <option value="{item.id}" data-price="{item.unitPrice}">
+                                        <option value="{item.id}" data-price="{item.unitPrice}" data-name="{item.name}">
                                             {item.name} ({item.unitPrice} CHF)
                                         </option>
                                     {/for}
@@ -209,12 +209,19 @@
                             document.addEventListener("DOMContentLoaded", function () {
                                 const select = document.querySelector('select[name="catalogItemId"]');
                                 const priceInput = document.querySelector('input[name="unitPrice"]');
+                                const nameInput = document.querySelector('input[name="itemName"]');
 
                                 select.addEventListener("change", function () {
                                     const selectedOption = select.options[select.selectedIndex];
                                     const price = selectedOption.getAttribute("data-price");
+                                    const name = selectedOption.getAttribute("data-name");
+
                                     if (price) {
                                         priceInput.value = price;
+                                    }
+
+                                    if (name) {
+                                        nameInput.value = name;
                                     }
                                 });
                             });
