@@ -25,16 +25,13 @@
         </thead>
         <tbody>
           {#for project in projects}
-          <tr>
+          <tr class="project-row" data-href="/projects/{project.id}" style="cursor:pointer;">
             <td>{project.name}</td>
             <td>{project.client}</td>
             <td>{project.contact ?: 'N/A'}</td>
             <td>${project.budget}</td>
             <td>
               <div class="btn-group">
-                <a href="/projects/{project.id}" class="btn btn-sm btn-outline-info">
-                  <i class="bi bi-eye"></i>
-                </a>
                 <a href="/projects/{project.id}/delete" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')">
                   <i class="bi bi-trash"></i>
                 </a>
@@ -49,3 +46,16 @@
   </div>
 </div>
 {/content} {/include}
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".project-row").forEach(row => {
+      row.addEventListener("click", function (e) {
+        // Don’t trigger navigation if a button inside was clicked
+        if (!e.target.closest("a")) {
+          window.location.href = row.dataset.href;
+        }
+      });
+    });
+  });
+</script>
