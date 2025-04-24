@@ -31,5 +31,8 @@ class UserModel() : PanacheEntity() {
     @Column(nullable = true)
     var city: String? = null
 
+    @Column
+    var hourlyRate: Double? = 150.0
+
 
 }

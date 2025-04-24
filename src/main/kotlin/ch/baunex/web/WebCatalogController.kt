@@ -1,5 +1,6 @@
 package ch.baunex.web
 
+import ch.baunex.billing.facade.BillingFacade
 import ch.baunex.catalog.dto.CatalogItemDTO
 import ch.baunex.catalog.dto.ProjectCatalogItemDTO
 import ch.baunex.catalog.facade.CatalogFacade
@@ -24,12 +25,17 @@ class WebCatalogController {
     @Inject
     lateinit var catalogFacade: CatalogFacade
 
+    @Inject
+    lateinit var billingFacade: BillingFacade
+
     @GET
     @Produces(MediaType.TEXT_HTML)
     fun list(@PathParam("projectId") projectId: Long): Response {
         val project = projectFacade.getProjectWithDetails(projectId) ?: return Response.status(404).build()
         val catalogItems = catalogFacade.getAllItems()
-        val template = Templates.projectDetail(project, "projects", java.time.LocalDate.now(), catalogItems)
+        val billing = project.id?.let { billingFacade.getBillingForProject(it) }
+            ?: return Response.status(500).entity("Project ID is missing.").build()
+        val template = Templates.projectDetail(project, "projects", java.time.LocalDate.now(), catalogItems, billing)
         return Response.ok(template.render()).build()
     }
 

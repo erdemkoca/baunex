@@ -31,10 +31,10 @@ class TimeEntryModel : PanacheEntity() {
     // --- Optional enhancements ---
 
     @Column(name = "hourly_rate")
-    var hourlyRate: Double? = null  // useful if user/project rate is different over time
+    var hourlyRate: Double = 0.0
 
     @Column(name = "billable", nullable = false)
-    var billable: Boolean = true  // helps with reporting and invoice generation
+    var billable: Boolean = true
 
     @Column(name = "invoiced", nullable = false)
     var invoiced: Boolean = false  // track if this entry has been invoiced

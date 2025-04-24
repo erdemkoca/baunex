@@ -15,6 +15,7 @@ fun TimeEntryModel.toResponseDTO(): TimeEntryResponseDTO = TimeEntryResponseDTO(
     hoursWorked = this.hoursWorked,
     notes = this.note,
     hourlyRate = this.hourlyRate,
+    cost = this.hoursWorked * this.hourlyRate,
     billable = this.billable,
     invoiced = this.invoiced,
     catalogItemDescription = this.catalogItemDescription,
@@ -28,7 +29,7 @@ fun TimeEntryDTO.toModel(user: UserModel, project: ProjectModel): TimeEntryModel
         this.date = this@toModel.date
         this.hoursWorked = this@toModel.hoursWorked
         this.note = this@toModel.note
-        this.hourlyRate = this@toModel.hourlyRate
+        this.hourlyRate = user.hourlyRate ?: 0.0
         this.billable = this@toModel.billable
         this.invoiced = this@toModel.invoiced
         this.catalogItemDescription = this@toModel.catalogItemDescription

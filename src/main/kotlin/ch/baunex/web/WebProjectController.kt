@@ -1,5 +1,7 @@
 package ch.baunex.web
 
+import ch.baunex.billing.dto.BillingDTO
+import ch.baunex.billing.facade.BillingFacade
 import ch.baunex.catalog.dto.CatalogItemDTO
 import ch.baunex.catalog.facade.CatalogFacade
 import ch.baunex.project.dto.ProjectDTO
@@ -20,6 +22,9 @@ class WebProjectController {
 
     @Inject
     lateinit var catalogFacade: CatalogFacade
+
+    @Inject
+    lateinit var billingFacade: BillingFacade
 
     private fun getCurrentDate() = LocalDate.now()
 
@@ -49,15 +54,26 @@ class WebProjectController {
             city = ""
         )
 
+        val emptyBilling = BillingDTO(
+            projectId = null,
+            materials = emptyList(),
+            timeEntries = emptyList(),
+            materialTotal = 0.0,
+            timeTotal = 0.0,
+            total = 0.0
+        )
+
         val template = Templates.projectDetail(
             project = emptyProject,
             activeMenu = "projects",
             currentDate = getCurrentDate(),
-            catalogItems = emptyList<CatalogItemDTO>()
+            catalogItems = emptyList(),
+            billing = emptyBilling
         )
 
         return Response.ok(template.render()).build()
     }
+
 
     @GET
     @Path("/{id}")
@@ -65,7 +81,9 @@ class WebProjectController {
     fun view(@PathParam("id") id: Long): Response {
         val project = projectFacade.getProjectWithDetails(id) ?: return Response.status(404).build()
         val catalogItems = catalogFacade.getAllItems()
-        val template = Templates.projectDetail(project, "projects", getCurrentDate(), catalogItems)
+        val billing = project.id?.let { billingFacade.getBillingForProject(it) }
+            ?: return Response.status(500).entity("Project ID is missing.").build()
+        val template = Templates.projectDetail(project, "projects", getCurrentDate(), catalogItems, billing)
         return Response.ok(template.render()).build()
     }
 
@@ -75,7 +93,9 @@ class WebProjectController {
     fun edit(@PathParam("id") id: Long): Response {
         val project = projectFacade.getProjectById(id) ?: return Response.status(404).build()
         val catalogItems = catalogFacade.getAllItems()
-        val template = Templates.projectDetail(project, "projects", getCurrentDate(), catalogItems)
+        val billing = project.id?.let { billingFacade.getBillingForProject(it) }
+            ?: return Response.status(500).entity("Project ID is missing.").build()
+        val template = Templates.projectDetail(project, "projects", getCurrentDate(), catalogItems, billing)
         return Response.ok(template.render()).build()
     }
 
@@ -124,4 +144,16 @@ class WebProjectController {
         projectFacade.deleteProject(id)
         return Response.seeOther(java.net.URI("/projects")).build()
     }
+
+    @GET
+    @Path("/{id}/billing")
+    @Produces(MediaType.TEXT_HTML)
+    fun billing(@PathParam("id") id: Long): Response {
+        val project = projectFacade.getProjectWithDetails(id) ?: return Response.status(404).build()
+        val billing = billingFacade.getBillingForProject(id)
+        val catalogItems = catalogFacade.getAllItems()
+        val template = Templates.projectDetail(project, "projects", getCurrentDate(), catalogItems, billing)
+        return Response.ok(template.render()).build()
+    }
+
 }

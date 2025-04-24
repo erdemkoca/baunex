@@ -64,7 +64,7 @@ class TimeTrackingService {
         entry.date = dto.date
         entry.hoursWorked = dto.hoursWorked
         entry.note = dto.note
-        entry.hourlyRate = dto.hourlyRate
+        entry.hourlyRate = dto.hourlyRate ?: user.hourlyRate ?: 0.0
         entry.billable = dto.billable
         entry.invoiced = dto.invoiced
         entry.catalogItemDescription = dto.catalogItemDescription

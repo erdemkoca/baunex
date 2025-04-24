@@ -28,13 +28,13 @@ class WebTimeTrackingController {
     @GET
     @Produces(MediaType.TEXT_HTML)
     fun view(): Response {
+        val timeEntries = timeTrackingFacade.getAllTimeEntries()
         val template = WebController.Templates.timetracking(
-            timeEntries = timeTrackingFacade.getAllTimeEntries(),
+            timeEntries = timeEntries, // Pass the timeEntries here
             users = userFacade.getAllUsers(),
             projects = projectFacade.getAllProjects(),
             currentDate = getCurrentDate(),
-            activeMenu = "timetracking",
-            entry = null
+            activeMenu = "timetracking"
         )
         return Response.ok(template.render()).build()
     }
@@ -44,11 +44,30 @@ class WebTimeTrackingController {
     @Produces(MediaType.TEXT_HTML)
     fun newEntry(): Response {
         val template = WebController.Templates.timetrackingForm(
-            entry = null,
+            entry = null, // No entry here since it's a new entry
             users = userFacade.getAllUsers(),
             projects = projectFacade.getAllProjects(),
             currentDate = getCurrentDate(),
             activeMenu = "timetracking"
+            // No timeEntries needed for new entry
+        )
+        return Response.ok(template.render()).build()
+    }
+
+    @GET
+    @Path("/{id}/edit")
+    @Produces(MediaType.TEXT_HTML)
+    fun edit(@PathParam("id") id: Long): Response {
+        val entry = timeTrackingFacade.getTimeEntryById(id)
+            ?: return Response.status(Response.Status.NOT_FOUND).build()
+
+        val template = WebController.Templates.timetrackingForm(
+            entry = entry, // Pass the entry for editing
+            users = userFacade.getAllUsers(),
+            projects = projectFacade.getAllProjects(),
+            currentDate = getCurrentDate(),
+            activeMenu = "timetracking"
+            // No timeEntries needed for editing a single entry
         )
         return Response.ok(template.render()).build()
     }
@@ -78,23 +97,6 @@ class WebTimeTrackingController {
         }
 
         return Response.seeOther(URI("/timetracking")).build()
-    }
-
-    @GET
-    @Path("/{id}/edit")
-    @Produces(MediaType.TEXT_HTML)
-    fun edit(@PathParam("id") id: Long): Response {
-        val entry = timeTrackingFacade.getTimeEntryById(id)
-            ?: return Response.status(Response.Status.NOT_FOUND).build()
-
-        val template = WebController.Templates.timetrackingForm(
-            entry = entry,
-            users = userFacade.getAllUsers(),
-            projects = projectFacade.getAllProjects(),
-            currentDate = getCurrentDate(),
-            activeMenu = "timetracking"
-        )
-        return Response.ok(template.render()).build()
     }
 
     @GET

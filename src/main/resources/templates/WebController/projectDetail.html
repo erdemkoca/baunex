@@ -18,6 +18,11 @@
                     <a class="nav-link" data-bs-toggle="tab" href="#catalog" role="tab">Catalog</a>
                 </li>
             {/if}
+            {#if project.id}
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#billing" role="tab">Billing</a>
+                </li>
+            {/if}
         </ul>
 
         <!-- Tab Content -->
@@ -226,6 +231,76 @@
                                 });
                             });
                         </script>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Billing Tab -->
+            <div class="tab-pane fade" id="billing" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="mb-4">Materials</h5>
+                        {#if billing.materials.isEmpty()}
+                            <p class="text-muted">No materials recorded.</p>
+                        {#else}
+                            <table class="table table-bordered">
+                                <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price (CHF)</th>
+                                    <th>Total (CHF)</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {#for item in billing.materials}
+                                    <tr>
+                                        <td>{item.itemName}</td>
+                                        <td>{item.quantity}</td>
+                                        <td>{item.unitPrice}</td>
+                                        <td>{item.totalPrice}</td>
+                                    </tr>
+                                {/for}
+                                </tbody>
+                            </table>
+                        {/if}
+
+                        <div class="mt-5">
+                            <p><strong>Material Total:</strong> CHF {billing.materialTotal}</p>
+                        </div>
+
+                        <h5 class="mt-5 mb-4">Service</h5>
+                        {#if billing.timeEntries.isEmpty()}
+                            <p class="text-muted">No time logs recorded.</p>
+                        {#else}
+                            <table class="table table-striped">
+                                <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Date</th>
+                                    <th>Hours</th>
+                                    <th>Hourly Rate (CHF)</th>
+                                    <th>Cost (CHF)</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {#for entry in billing.timeEntries}
+                                    <tr>
+                                        <td>{entry.userEmail}</td>
+                                        <td>{entry.date}</td>
+                                        <td>{entry.hoursWorked}</td>
+                                        <td>{entry.hourlyRate}</td>
+                                        <td>{entry.cost}</td>
+                                    </tr>
+                                {/for}
+                                </tbody>
+                            </table>
+                        {/if}
+
+                        <div class="mt-5">
+                            <p><strong>Time Total:</strong> CHF {billing.timeTotal}</p>
+                            <p><strong>Grand Total:</strong> CHF {billing.total}</p>
+                        </div>
                     </div>
                 </div>
             </div>
