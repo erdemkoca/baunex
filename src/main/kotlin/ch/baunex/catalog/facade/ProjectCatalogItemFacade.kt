@@ -1,6 +1,8 @@
 package ch.baunex.catalog.facade
 
 import ch.baunex.catalog.dto.ProjectCatalogItemDTO
+import ch.baunex.catalog.mapper.toProjectCatalogItemDTO
+import ch.baunex.catalog.mapper.toProjectCatalogItemModel
 import ch.baunex.catalog.service.ProjectCatalogItemService
 import ch.baunex.project.service.ProjectService
 import jakarta.enterprise.context.ApplicationScoped
@@ -12,16 +14,16 @@ class ProjectCatalogItemFacade @Inject constructor(
     private val projectService: ProjectService
 ) {
     fun getItemsForProject(projectId: Long): List<ProjectCatalogItemDTO> =
-        service.getByProjectId(projectId).map { it.toDTO() }
+        service.getByProjectId(projectId).map { it.toProjectCatalogItemDTO() }
 
     fun addItemToProject(projectId: Long, dto: ProjectCatalogItemDTO) {
         val project = projectService.getProjectById(projectId) ?: throw IllegalArgumentException("Project not found")
-        service.save(dto.toModel(project))
+        service.save(dto.toProjectCatalogItemModel(project))
     }
 
     fun updateItem(id: Long, dto: ProjectCatalogItemDTO) {
         val project = projectService.getProjectById(dto.projectId) ?: throw IllegalArgumentException("Project not found")
-        service.update(id, dto.toModel(project))
+        service.update(id, dto.toProjectCatalogItemModel(project))
     }
 
     fun deleteItem(id: Long) {

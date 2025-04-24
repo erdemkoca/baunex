@@ -2,9 +2,7 @@ package ch.baunex.config
 
 import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.timetracking.facade.TimeTrackingFacade
-import io.quarkus.runtime.StartupEvent
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.enterprise.event.Observes
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import java.time.LocalDate

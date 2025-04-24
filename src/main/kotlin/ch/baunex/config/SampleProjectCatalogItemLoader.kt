@@ -4,9 +4,7 @@ import ch.baunex.catalog.dto.ProjectCatalogItemDTO
 import ch.baunex.catalog.facade.CatalogFacade
 import ch.baunex.catalog.facade.ProjectCatalogItemFacade
 import ch.baunex.project.facade.ProjectFacade
-import io.quarkus.runtime.StartupEvent
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.enterprise.event.Observes
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 

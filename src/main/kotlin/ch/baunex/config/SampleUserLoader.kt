@@ -3,9 +3,7 @@ package ch.baunex.config
 import ch.baunex.user.dto.UserDTO
 import ch.baunex.user.facade.UserFacade
 import ch.baunex.user.model.Role
-import io.quarkus.runtime.StartupEvent
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.enterprise.event.Observes
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 

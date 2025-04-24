@@ -2,9 +2,7 @@ package ch.baunex.config
 
 import ch.baunex.catalog.dto.CatalogItemDTO
 import ch.baunex.catalog.facade.CatalogFacade
-import io.quarkus.runtime.StartupEvent
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.enterprise.event.Observes
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 

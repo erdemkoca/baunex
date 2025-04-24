@@ -1,6 +1,7 @@
 package ch.baunex.billing.service
 
 import ch.baunex.billing.dto.BillingDTO
+import ch.baunex.catalog.mapper.toProjectCatalogItemDTO
 import ch.baunex.catalog.model.ProjectCatalogItemModel
 import ch.baunex.timetracking.model.TimeEntryModel
 import ch.baunex.timetracking.mapper.toTimeEntryResponseDTO
@@ -27,7 +28,7 @@ class BillingService {
             timeEntryRepository.find("project.id", projectId).list()
 
         // Map to DTOs
-        val materialDTOs = materialModels.map { item -> item.toDTO() }
+        val materialDTOs = materialModels.map { item -> item.toProjectCatalogItemDTO() }
         val timeEntryDTOs = timeEntryModels.map { entry -> entry.toTimeEntryResponseDTO() }
 
         // Totals

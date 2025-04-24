@@ -2,7 +2,6 @@ package ch.baunex.web
 
 import ch.baunex.billing.dto.BillingDTO
 import ch.baunex.billing.facade.BillingFacade
-import ch.baunex.catalog.dto.CatalogItemDTO
 import ch.baunex.catalog.facade.CatalogFacade
 import ch.baunex.project.dto.ProjectDTO
 import ch.baunex.project.facade.ProjectFacade

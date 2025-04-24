@@ -7,9 +7,6 @@ import ch.baunex.security.utils.PasswordUtil
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
-import kotlin.reflect.full.declaredMemberProperties
-import jakarta.persistence.Column
-import kotlin.reflect.jvm.javaField
 
 @ApplicationScoped
 class UserService @Inject constructor(

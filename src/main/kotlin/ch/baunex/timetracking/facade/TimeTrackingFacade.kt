@@ -16,8 +16,6 @@ import java.time.LocalDate
 @ApplicationScoped
 class TimeTrackingFacade @Inject constructor(
     private val timeEntryRepository: TimeEntryRepository,
-    private val userService: UserService,
-    private val projectService: ProjectService,
     private val timeTrackingService: TimeTrackingService
 ) {
 
