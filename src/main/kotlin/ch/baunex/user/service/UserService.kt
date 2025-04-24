@@ -19,7 +19,6 @@ class UserService @Inject constructor(
         }
 
         user.password = PasswordUtil.hashPassword(user.password)
-        val rate = user.hourlyRate ?: 150.0
         userRepository.persist(user)
         return user
     }

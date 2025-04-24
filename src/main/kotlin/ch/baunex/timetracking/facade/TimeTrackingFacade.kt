@@ -1,13 +1,11 @@
 package ch.baunex.timetracking.facade
 
-import ch.baunex.project.service.ProjectService
 import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.timetracking.model.TimeEntryModel
 import ch.baunex.timetracking.mapper.toTimeEntryResponseDTO
 import ch.baunex.timetracking.repository.TimeEntryRepository
 import ch.baunex.timetracking.service.TimeTrackingService
-import ch.baunex.user.service.UserService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
