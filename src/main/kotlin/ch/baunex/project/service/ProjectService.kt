@@ -2,8 +2,7 @@ package ch.baunex.project.service
 
 import ch.baunex.project.dto.ProjectDTO
 import ch.baunex.project.model.ProjectModel
-import ch.baunex.project.model.toDTO
-import ch.baunex.project.model.toModel
+import ch.baunex.project.mapper.toProjectModel
 import ch.baunex.project.repository.ProjectRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
@@ -22,7 +21,7 @@ class ProjectService @Inject constructor(
 
     @Transactional
     fun createProject(dto: ProjectDTO): ProjectModel {
-        val project = dto.toModel()
+        val project = dto.toProjectModel()
         projectRepository.persist(project)
         return project
     }

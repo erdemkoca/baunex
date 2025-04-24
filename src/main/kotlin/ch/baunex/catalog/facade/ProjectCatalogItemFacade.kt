@@ -1,8 +1,6 @@
 package ch.baunex.catalog.facade
 
 import ch.baunex.catalog.dto.ProjectCatalogItemDTO
-import ch.baunex.catalog.model.toDTO
-import ch.baunex.catalog.model.toModel
 import ch.baunex.catalog.service.ProjectCatalogItemService
 import ch.baunex.project.service.ProjectService
 import jakarta.enterprise.context.ApplicationScoped

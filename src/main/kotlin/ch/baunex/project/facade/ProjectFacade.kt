@@ -1,7 +1,7 @@
 package ch.baunex.project.facade
 
 import ch.baunex.project.dto.ProjectDTO
-import ch.baunex.project.model.toDTO
+import ch.baunex.project.mapper.toDTO
 import ch.baunex.project.service.ProjectService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject

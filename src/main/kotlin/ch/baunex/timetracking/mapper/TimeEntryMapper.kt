@@ -1,11 +1,12 @@
-package ch.baunex.timetracking.model
+package ch.baunex.timetracking.mapper
 
 import ch.baunex.project.model.ProjectModel
 import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
+import ch.baunex.timetracking.model.TimeEntryModel
 import ch.baunex.user.model.UserModel
 
-fun TimeEntryModel.toResponseDTO(): TimeEntryResponseDTO = TimeEntryResponseDTO(
+fun TimeEntryModel.toTimeEntryResponseDTO(): TimeEntryResponseDTO = TimeEntryResponseDTO(
     id = this.id,
     userId = this.user.id!!,
     userEmail = this.user.email,
@@ -22,18 +23,18 @@ fun TimeEntryModel.toResponseDTO(): TimeEntryResponseDTO = TimeEntryResponseDTO(
     catalogItemPrice = this.catalogItemPrice
 )
 
-fun TimeEntryDTO.toModel(user: UserModel, project: ProjectModel): TimeEntryModel {
+fun TimeEntryDTO.toTimeEntryModel(user: UserModel, project: ProjectModel): TimeEntryModel {
     return TimeEntryModel().apply {
         this.user = user
         this.project = project
-        this.date = this@toModel.date
-        this.hoursWorked = this@toModel.hoursWorked
-        this.note = this@toModel.note
+        this.date = this@toTimeEntryModel.date
+        this.hoursWorked = this@toTimeEntryModel.hoursWorked
+        this.note = this@toTimeEntryModel.note
         this.hourlyRate = user.hourlyRate ?: 0.0
-        this.billable = this@toModel.billable
-        this.invoiced = this@toModel.invoiced
-        this.catalogItemDescription = this@toModel.catalogItemDescription
-        this.catalogItemPrice = this@toModel.catalogItemPrice
+        this.billable = this@toTimeEntryModel.billable
+        this.invoiced = this@toTimeEntryModel.invoiced
+        this.catalogItemDescription = this@toTimeEntryModel.catalogItemDescription
+        this.catalogItemPrice = this@toTimeEntryModel.catalogItemPrice
     }
 }
 

@@ -1,20 +1,17 @@
 // TimeTrackingService.kt
 package ch.baunex.timetracking.service
 
-import ch.baunex.project.model.ProjectModel
 import ch.baunex.project.service.ProjectService
 import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.timetracking.model.TimeEntryModel
-import ch.baunex.timetracking.model.toModel
-import ch.baunex.timetracking.model.toResponseDTO
+import ch.baunex.timetracking.mapper.toTimeEntryModel
+import ch.baunex.timetracking.mapper.toTimeEntryResponseDTO
 import ch.baunex.timetracking.repository.TimeEntryRepository
-import ch.baunex.user.model.UserModel
 import ch.baunex.user.service.UserService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
-import java.time.LocalDate
 
 @ApplicationScoped
 class TimeTrackingService {
@@ -36,7 +33,7 @@ class TimeTrackingService {
         val project = projectService.getProjectById(dto.projectId)
             ?: throw IllegalArgumentException("Project not found")
 
-        val model = dto.toModel(user, project)
+        val model = dto.toTimeEntryModel(user, project)
         timeEntryRepository.persist(model)
         return model
     }
@@ -44,7 +41,7 @@ class TimeTrackingService {
 
     fun getAllTimeEntries(): List<TimeEntryResponseDTO> {
         return timeEntryRepository.listAll()
-            .map { it.toResponseDTO() }
+            .map { it.toTimeEntryResponseDTO() }
     }
 
     fun getTimeEntryById(id: Long): TimeEntryModel? {

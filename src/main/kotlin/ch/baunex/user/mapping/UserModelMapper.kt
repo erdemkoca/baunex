@@ -5,7 +5,7 @@ import ch.baunex.user.dto.UserDTO
 import ch.baunex.user.dto.UserResponseDTO
 import ch.baunex.user.model.UserModel
 
-fun UserModel.toResponseDTO() = UserResponseDTO(
+fun UserModel.toUserResponseDTO() = UserResponseDTO(
     id = this.id!!,
     email = this.email,
     role = this.role,
@@ -13,24 +13,23 @@ fun UserModel.toResponseDTO() = UserResponseDTO(
     street = this.street
 )
 
-fun UserDTO.toModel(): UserModel {
+fun UserDTO.toUserModel(): UserModel {
     return UserModel().apply {
-        email = this@toModel.email
-        password = this@toModel.password ?: ""
-        role = this@toModel.role
-        phone = this@toModel.phone
-        street = this@toModel.street
-        city = this@toModel.city
+        email = this@toUserModel.email
+        password = this@toUserModel.password ?: ""
+        role = this@toUserModel.role
+        phone = this@toUserModel.phone
+        street = this@toUserModel.street
+        city = this@toUserModel.city
     }
 }
 
-fun UpdateUserDTO.toModel(): UserModel {
+fun UpdateUserDTO.toUserModel(): UserModel {
     val user = UserModel()
     this.email?.let { user.email = it }
     this.password?.let { user.password = it }
     this.role?.let { user.role = it }
     this.phone?.let { user.phone = it }
     this.street?.let { user.street = it }
-    //this.city?.let { user.city = it }
     return user
 }

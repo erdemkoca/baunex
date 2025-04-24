@@ -5,8 +5,8 @@ import ch.baunex.user.repository.UserRepository
 import ch.baunex.security.service.AuthService
 import ch.baunex.user.service.UserService
 import ch.baunex.security.utils.PasswordUtil
-import ch.baunex.user.mapping.toModel
-import ch.baunex.user.mapping.toResponseDTO
+import ch.baunex.user.mapping.toUserModel
+import ch.baunex.user.mapping.toUserResponseDTO
 import ch.baunex.user.model.Role
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
@@ -19,16 +19,16 @@ class UserFacade @Inject constructor(
     private val userRepository: UserRepository
 ) {
     fun registerUser(userDTO: UserDTO): UserResponseDTO {
-        val user = userService.registerUser(userDTO.toModel())
-        return user.toResponseDTO()
+        val user = userService.registerUser(userDTO.toUserModel())
+        return user.toUserResponseDTO()
     }
 
     fun listUsers(): List<UserResponseDTO> {
-        return userService.getAllUsers().map { it.toResponseDTO() }
+        return userService.getAllUsers().map { it.toUserResponseDTO() }
     }
 
     fun getAllUsers(): List<UserResponseDTO> {
-        return userService.getAllUsers().map { it.toResponseDTO() }
+        return userService.getAllUsers().map { it.toUserResponseDTO() }
     }
 
     fun authenticate(loginDTO: LoginDTO): Pair<String, String>? {
@@ -41,22 +41,22 @@ class UserFacade @Inject constructor(
     }
 
     fun updateUser(userId: Long, updateDTO: UpdateUserDTO): UserResponseDTO? {
-        val updatedModel = updateDTO.toModel()
+        val updatedModel = updateDTO.toUserModel()
         val updatedUser = userService.updateUser(userId, updatedModel)
-        return updatedUser?.toResponseDTO()
+        return updatedUser?.toUserResponseDTO()
     }
 
 
     fun getUserById(userId: Long): UserResponseDTO? {
-        return userService.getUserById(userId)?.toResponseDTO()
+        return userService.getUserById(userId)?.toUserResponseDTO()
     }
 
     fun getUserByMail(mail: String): UserResponseDTO? {
-        return userService.getUserByMail(mail)?.toResponseDTO()
+        return userService.getUserByMail(mail)?.toUserResponseDTO()
     }
 
     fun deleteUserByMail(mail: String): UserResponseDTO? {
-        return userService.deleteUserByMail(mail)?.toResponseDTO()
+        return userService.deleteUserByMail(mail)?.toUserResponseDTO()
     }
 
     fun deleteUserById(userId: Long) {
@@ -64,7 +64,7 @@ class UserFacade @Inject constructor(
     }
 
     fun updateUserRole(userId: Long, role: Role): UserResponseDTO? {
-        return userService.updateUserRole(userId, role)?.toResponseDTO()
+        return userService.updateUserRole(userId, role)?.toUserResponseDTO()
     }
 
     fun existsByEmail(email: String): Boolean {

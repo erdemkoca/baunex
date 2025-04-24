@@ -4,8 +4,7 @@ import ch.baunex.project.service.ProjectService
 import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.timetracking.model.TimeEntryModel
-import ch.baunex.timetracking.model.toResponseDTO
-import ch.baunex.timetracking.model.toModel
+import ch.baunex.timetracking.mapper.toTimeEntryResponseDTO
 import ch.baunex.timetracking.repository.TimeEntryRepository
 import ch.baunex.timetracking.service.TimeTrackingService
 import ch.baunex.user.service.UserService
@@ -23,7 +22,7 @@ class TimeTrackingFacade @Inject constructor(
 ) {
 
     fun logTime(dto: TimeEntryDTO): TimeEntryResponseDTO {
-        return timeTrackingService.logTime(dto).toResponseDTO()
+        return timeTrackingService.logTime(dto).toTimeEntryResponseDTO()
     }
 
     fun getAllTimeEntries(): List<TimeEntryResponseDTO> {
@@ -31,30 +30,30 @@ class TimeTrackingFacade @Inject constructor(
     }
 
     fun getTimeEntryById(id: Long): TimeEntryResponseDTO? {
-        return timeTrackingService.getTimeEntryById(id)?.toResponseDTO()
+        return timeTrackingService.getTimeEntryById(id)?.toTimeEntryResponseDTO()
     }
 
     fun updateTimeEntry(id: Long, dto: TimeEntryDTO): TimeEntryResponseDTO? {
-        return timeTrackingService.updateTimeEntry(id, dto)?.toResponseDTO()
+        return timeTrackingService.updateTimeEntry(id, dto)?.toTimeEntryResponseDTO()
     }
 
 
     fun getTimeEntriesForUser(userId: Long): List<TimeEntryResponseDTO> {
         return timeEntryRepository.find("user.id", userId).list<TimeEntryModel>().map {
-            it.toResponseDTO()
+            it.toTimeEntryResponseDTO()
         }
     }
 
     fun getTimeEntriesForProject(projectId: Long): List<TimeEntryResponseDTO> {
         return timeEntryRepository.find("project.id", projectId).list<TimeEntryModel>().map {
-            it.toResponseDTO()
+            it.toTimeEntryResponseDTO()
         }
     }
 
     fun getTimeEntriesByDateRange(start: LocalDate, end: LocalDate): List<TimeEntryResponseDTO> {
         return timeEntryRepository.find("date >= ?1 AND date <= ?2", start, end)
             .list<TimeEntryModel>().map {
-                it.toResponseDTO()
+                it.toTimeEntryResponseDTO()
             }
     }
 
