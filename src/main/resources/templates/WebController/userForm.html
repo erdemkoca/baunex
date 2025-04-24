@@ -1,10 +1,10 @@
 {#include layout}
-  {#title}{#if user}Edit User{#else}New User{/if} - Baunex Business Management{/title}
-  {#header}{#if user}Edit User{#else}New User{/if}{/header}
+  {#title}{#if user}Edit Worker{#else}New Worker{/if} - Baunex Business Management{/title}
+  {#header}{#if user}Edit Worker{#else}New Worker{/if}{/header}
   {#content}
     <div class="card">
       <div class="card-header">
-        {#if user}Edit User Details{#else}Create New User{/if}
+        {#if user}Edit Worker Details{#else}Create New Worker{/if}
       </div>
       <div class="card-body">
         <form action="/users/save" method="post">
