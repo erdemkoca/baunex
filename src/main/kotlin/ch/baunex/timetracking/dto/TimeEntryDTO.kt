@@ -6,7 +6,7 @@ import java.time.LocalDate
 
 @Serializable
 data class TimeEntryDTO(
-    val userId: Long,
+    val employeeId: Long,
     val projectId: Long,
     @Contextual val date: LocalDate,
     val hoursWorked: Double,

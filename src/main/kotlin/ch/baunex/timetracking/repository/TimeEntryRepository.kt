@@ -7,20 +7,20 @@ import jakarta.enterprise.context.ApplicationScoped
 @ApplicationScoped
 class TimeEntryRepository : PanacheRepository<TimeEntryModel> {
 
-    fun findByUserId(userId: Long): List<TimeEntryModel> {
-        return find("user.id", userId).list()
+    fun findByUserId(employeeId: Long): List<TimeEntryModel> {
+        return find("employee.id", employeeId).list()
     }
 
     fun findByProjectId(projectId: Long): List<TimeEntryModel> {
         return find("project.id", projectId).list()
     }
 
-    fun findByUserIdAndDate(userId: Long, date: java.time.LocalDate): List<TimeEntryModel> {
-        return find("user.id = ?1 and date = ?2", userId, date).list()
+    fun findByUserIdAndDate(employeeId: Long, date: java.time.LocalDate): List<TimeEntryModel> {
+        return find("employee.id = ?1 and date = ?2", employeeId, date).list()
     }
 
-    fun deleteAllByUserId(userId: Long): Long {
-        return delete("user.id", userId)
+    fun deleteAllByUserId(employeeId: Long): Long {
+        return delete("employee.id", employeeId)
     }
 
     fun deleteAllByProjectId(projectId: Long): Long {

@@ -127,7 +127,7 @@
                                 <tbody>
                                 {#for entry in project.timeEntries}
                                     <tr>
-                                        <td>{entry.userId}</td>
+                                        <td>{entry.employeeId}</td>
                                         <td>{entry.date}</td>
                                         <td>{entry.hoursWorked}</td>
                                         <td>{entry.notes ?: '—'}</td>
@@ -286,7 +286,7 @@
                                 <tbody>
                                 {#for entry in billing.timeEntries}
                                     <tr>
-                                        <td>{entry.userEmail}</td>
+                                        <td>{entry.employeeEmail}</td>
                                         <td>{entry.date}</td>
                                         <td>{entry.hoursWorked}</td>
                                         <td>{entry.hourlyRate}</td>

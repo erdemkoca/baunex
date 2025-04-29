@@ -17,7 +17,7 @@ class SampleTimeEntryLoader {
     fun load() {
         val sampleEntries = listOf(
             TimeEntryDTO(
-                userId = 1,
+                employeeId = 1,
                 projectId = 1,
                 date = LocalDate.now().minusDays(2),
                 hoursWorked = 7.5,
@@ -29,7 +29,7 @@ class SampleTimeEntryLoader {
                 catalogItemPrice = 120.0
             ),
             TimeEntryDTO(
-                userId = 2,
+                employeeId = 2,
                 projectId = 1,
                 date = LocalDate.now().minusDays(1),
                 hoursWorked = 8.0,
@@ -41,7 +41,7 @@ class SampleTimeEntryLoader {
                 catalogItemPrice = 90.0
             ),
             TimeEntryDTO(
-                userId = 3,
+                employeeId = 3,
                 projectId = 2,
                 date = LocalDate.now(),
                 hoursWorked = 6.0,

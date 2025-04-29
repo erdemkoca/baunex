@@ -1,7 +1,7 @@
 package ch.baunex.timetracking.model
 
 import ch.baunex.project.model.ProjectModel
-import ch.baunex.user.model.UserModel
+import ch.baunex.user.model.EmployeeModel
 import io.quarkus.hibernate.orm.panache.PanacheEntity
 import jakarta.persistence.*
 import java.time.LocalDate
@@ -12,8 +12,8 @@ import java.time.LocalDate
 class TimeEntryModel : PanacheEntity() {
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "user_id")
-    lateinit var user: UserModel
+    @JoinColumn(name = "employee_id")
+    lateinit var employee: EmployeeModel
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "project_id")

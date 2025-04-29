@@ -11,11 +11,11 @@
           {/if}
 
           <div class="mb-3">
-            <label for="userId" class="form-label">User</label>
-            <select class="form-select" id="userId" name="userId" required>
-              {#for user in users}
-                <option value="{user.id}" {#if entry != null && entry.userId == user.id}selected{/if}>
-                  {user.email}
+            <label for="employeeId" class="form-label">Employee</label>
+            <select class="form-select" id="employeeId" name="employeeId" required>
+              {#for employee in employees}
+                <option value="{employee.id}" {#if entry != null && entry.employeeId == employee.id}selected{/if}>
+                  {employee.email}
                 </option>
               {/for}
             </select>

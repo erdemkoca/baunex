@@ -34,8 +34,8 @@ class TimeTrackingFacade @Inject constructor(
     }
 
 
-    fun getTimeEntriesForUser(userId: Long): List<TimeEntryResponseDTO> {
-        return timeEntryRepository.find("user.id", userId).list<TimeEntryModel>().map {
+    fun getTimeEntriesForEmployee(employeeId: Long): List<TimeEntryResponseDTO> {
+        return timeEntryRepository.find("employee.id", employeeId).list<TimeEntryModel>().map {
             it.toTimeEntryResponseDTO()
         }
     }

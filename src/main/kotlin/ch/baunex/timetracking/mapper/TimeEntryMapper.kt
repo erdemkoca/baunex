@@ -4,12 +4,12 @@ import ch.baunex.project.model.ProjectModel
 import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.timetracking.model.TimeEntryModel
-import ch.baunex.user.model.UserModel
+import ch.baunex.user.model.EmployeeModel
 
 fun TimeEntryModel.toTimeEntryResponseDTO(): TimeEntryResponseDTO = TimeEntryResponseDTO(
     id = this.id,
-    userId = this.user.id!!,
-    userEmail = this.user.email,
+    employeeId = this.employee.id!!,
+    employeeEmail = this.employee.email,
     projectId = this.project.id!!,
     projectName = this.project.name,
     date = this.date,
@@ -23,14 +23,14 @@ fun TimeEntryModel.toTimeEntryResponseDTO(): TimeEntryResponseDTO = TimeEntryRes
     catalogItemPrice = this.catalogItemPrice
 )
 
-fun TimeEntryDTO.toTimeEntryModel(user: UserModel, project: ProjectModel): TimeEntryModel {
+fun TimeEntryDTO.toTimeEntryModel(employee: EmployeeModel, project: ProjectModel): TimeEntryModel {
     return TimeEntryModel().apply {
-        this.user = user
+        this.employee = employee
         this.project = project
         this.date = this@toTimeEntryModel.date
         this.hoursWorked = this@toTimeEntryModel.hoursWorked
         this.note = this@toTimeEntryModel.note
-        this.hourlyRate = user.hourlyRate ?: 0.0
+        this.hourlyRate = employee.hourlyRate ?: 0.0
         this.billable = this@toTimeEntryModel.billable
         this.invoiced = this@toTimeEntryModel.invoiced
         this.catalogItemDescription = this@toTimeEntryModel.catalogItemDescription

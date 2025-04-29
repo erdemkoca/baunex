@@ -1,4 +1,3 @@
-// TimeTrackingService.kt
 package ch.baunex.timetracking.service
 
 import ch.baunex.project.service.ProjectService
@@ -8,7 +7,7 @@ import ch.baunex.timetracking.model.TimeEntryModel
 import ch.baunex.timetracking.mapper.toTimeEntryModel
 import ch.baunex.timetracking.mapper.toTimeEntryResponseDTO
 import ch.baunex.timetracking.repository.TimeEntryRepository
-import ch.baunex.user.service.UserService
+import ch.baunex.user.service.EmployeeService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -20,48 +19,45 @@ class TimeTrackingService {
     lateinit var timeEntryRepository: TimeEntryRepository
 
     @Inject
-    lateinit var userService: UserService
+    lateinit var employeeService: EmployeeService
 
     @Inject
     lateinit var projectService: ProjectService
 
-
     @Transactional
     fun logTime(dto: TimeEntryDTO): TimeEntryModel {
-        val user = userService.getUserById(dto.userId)
-            ?: throw IllegalArgumentException("User not found")
+        val employee = employeeService.findEmployeeById(dto.employeeId)
+            ?: throw IllegalArgumentException("Employee not found")
         val project = projectService.getProjectById(dto.projectId)
             ?: throw IllegalArgumentException("Project not found")
 
-        val model = dto.toTimeEntryModel(user, project)
+        val model = dto.toTimeEntryModel(employee, project)
         timeEntryRepository.persist(model)
         return model
     }
 
-
-    fun getAllTimeEntries(): List<TimeEntryResponseDTO> {
-        return timeEntryRepository.listAll()
+    fun getAllTimeEntries(): List<TimeEntryResponseDTO> =
+        timeEntryRepository.listAll()
             .map { it.toTimeEntryResponseDTO() }
-    }
 
-    fun getTimeEntryById(id: Long): TimeEntryModel? {
-        return timeEntryRepository.findById(id)
-    }
+    fun getTimeEntryById(id: Long): TimeEntryModel? =
+        timeEntryRepository.findById(id)
 
     @Transactional
     fun updateTimeEntry(id: Long, dto: TimeEntryDTO): TimeEntryModel? {
         val entry = timeEntryRepository.findById(id) ?: return null
 
-        val user = userService.getUserById(dto.userId) ?: throw IllegalArgumentException("User not found")
-        val project =
-            projectService.getProjectById(dto.projectId) ?: throw IllegalArgumentException("Project not found")
+        val employee = employeeService.findEmployeeById(dto.employeeId)
+            ?: throw IllegalArgumentException("Employee not found")
+        val project = projectService.getProjectById(dto.projectId)
+            ?: throw IllegalArgumentException("Project not found")
 
-        entry.user = user
+        entry.employee = employee
         entry.project = project
         entry.date = dto.date
         entry.hoursWorked = dto.hoursWorked
         entry.note = dto.note
-        entry.hourlyRate = dto.hourlyRate ?: user.hourlyRate ?: 0.0
+        entry.hourlyRate = dto.hourlyRate ?: employee.hourlyRate
         entry.billable = dto.billable
         entry.invoiced = dto.invoiced
         entry.catalogItemDescription = dto.catalogItemDescription
@@ -70,17 +66,13 @@ class TimeTrackingService {
         return entry
     }
 
+    fun getEntriesForEmployee(employeeId: Long): List<TimeEntryModel> =
+        timeEntryRepository.list("employee.id", employeeId)
 
-    fun getEntriesForUser(userId: Long): List<TimeEntryModel> {
-        return timeEntryRepository.list("user.id", userId)
-    }
-
-    fun getEntriesForProject(projectId: Long): List<TimeEntryModel> {
-        return timeEntryRepository.list("project.id", projectId)
-    }
+    fun getEntriesForProject(projectId: Long): List<TimeEntryModel> =
+        timeEntryRepository.list("project.id", projectId)
 
     @Transactional
-    fun deleteEntry(id: Long): Boolean {
-        return timeEntryRepository.deleteById(id)
-    }
+    fun deleteEntry(id: Long): Boolean =
+        timeEntryRepository.deleteById(id)
 }

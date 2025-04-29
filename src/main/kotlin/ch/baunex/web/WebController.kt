@@ -53,14 +53,14 @@ class WebController {
             activeMenu: String,
             timeEntries: List<TimeEntryResponseDTO>,
             currentDate: String,
-            users: List<UserResponseDTO>,
+            employees: List<EmployeeDTO>,
             projects: List<ProjectDTO>,
             entry: TimeEntryResponseDTO? = null): TemplateInstance
 
         @JvmStatic
         external fun timetrackingForm(
             entry: TimeEntryResponseDTO?,
-            users: List<UserResponseDTO>,
+            employees: List<EmployeeDTO>,
             projects: List<ProjectDTO>,
             currentDate: String,
             activeMenu: String

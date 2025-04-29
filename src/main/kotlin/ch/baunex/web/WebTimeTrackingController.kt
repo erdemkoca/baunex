@@ -3,7 +3,7 @@ package ch.baunex.web
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.timetracking.facade.TimeTrackingFacade
-import ch.baunex.user.facade.UserFacade
+import ch.baunex.user.facade.EmployeeFacade
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
@@ -18,7 +18,7 @@ class WebTimeTrackingController {
     lateinit var timeTrackingFacade: TimeTrackingFacade
 
     @Inject
-    lateinit var userFacade: UserFacade
+    lateinit var employeeFacade: EmployeeFacade
 
     @Inject
     lateinit var projectFacade: ProjectFacade
@@ -29,12 +29,15 @@ class WebTimeTrackingController {
     @Produces(MediaType.TEXT_HTML)
     fun view(): Response {
         val timeEntries = timeTrackingFacade.getAllTimeEntries()
+        val employees   = employeeFacade.listAll()
+        val projects    = projectFacade.getAllProjects()
         val template = WebController.Templates.timetracking(
-            timeEntries = timeEntries, // Pass the timeEntries here
-            users = userFacade.getAllUsers(),
-            projects = projectFacade.getAllProjects(),
+            activeMenu  = "timetracking",
+            timeEntries = timeEntries,
             currentDate = getCurrentDate(),
-            activeMenu = "timetracking"
+            employees   = employees,
+            projects    = projects,
+            entry       = null
         )
         return Response.ok(template.render()).build()
     }
@@ -43,13 +46,14 @@ class WebTimeTrackingController {
     @Path("/new")
     @Produces(MediaType.TEXT_HTML)
     fun newEntry(): Response {
+        val employees = employeeFacade.listAll()
+        val projects  = projectFacade.getAllProjects()
         val template = WebController.Templates.timetrackingForm(
-            entry = null, // No entry here since it's a new entry
-            users = userFacade.getAllUsers(),
-            projects = projectFacade.getAllProjects(),
+            entry       = null,
+            employees   = employees,
+            projects    = projects,
             currentDate = getCurrentDate(),
-            activeMenu = "timetracking"
-            // No timeEntries needed for new entry
+            activeMenu  = "timetracking"
         )
         return Response.ok(template.render()).build()
     }
@@ -58,16 +62,16 @@ class WebTimeTrackingController {
     @Path("/{id}/edit")
     @Produces(MediaType.TEXT_HTML)
     fun edit(@PathParam("id") id: Long): Response {
-        val entry = timeTrackingFacade.getTimeEntryById(id)
+        val entry     = timeTrackingFacade.getTimeEntryById(id)
             ?: return Response.status(Response.Status.NOT_FOUND).build()
-
+        val employees = employeeFacade.listAll()
+        val projects  = projectFacade.getAllProjects()
         val template = WebController.Templates.timetrackingForm(
-            entry = entry, // Pass the entry for editing
-            users = userFacade.getAllUsers(),
-            projects = projectFacade.getAllProjects(),
+            entry       = entry,
+            employees   = employees,
+            projects    = projects,
             currentDate = getCurrentDate(),
-            activeMenu = "timetracking"
-            // No timeEntries needed for editing a single entry
+            activeMenu  = "timetracking"
         )
         return Response.ok(template.render()).build()
     }
@@ -77,7 +81,7 @@ class WebTimeTrackingController {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     fun saveEntry(
         @FormParam("id") id: Long?,
-        @FormParam("userId") userId: Long,
+        @FormParam("employeeId") employeeId: Long,
         @FormParam("projectId") projectId: Long,
         @FormParam("date") date: LocalDate,
         @FormParam("hoursWorked") hoursWorked: Double,
@@ -88,7 +92,18 @@ class WebTimeTrackingController {
         @FormParam("catalogItemDescription") catalogItemDescription: String?,
         @FormParam("catalogItemPrice") catalogItemPrice: Double?
     ): Response {
-        val dto = TimeEntryDTO(userId, projectId, date, hoursWorked, note, hourlyRate, billable, invoiced, catalogItemDescription, catalogItemPrice)
+        val dto = TimeEntryDTO(
+            employeeId              = employeeId,
+            projectId               = projectId,
+            date                    = date,
+            hoursWorked             = hoursWorked,
+            note                    = note,
+            hourlyRate              = hourlyRate,
+            billable                = billable,
+            invoiced                = invoiced,
+            catalogItemDescription  = catalogItemDescription,
+            catalogItemPrice        = catalogItemPrice
+        )
 
         if (id == null) {
             timeTrackingFacade.logTime(dto)

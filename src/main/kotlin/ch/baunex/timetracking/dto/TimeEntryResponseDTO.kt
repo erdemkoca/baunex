@@ -7,8 +7,8 @@ import java.time.LocalDate
 @Serializable
 data class TimeEntryResponseDTO(
     val id: Long?,
-    val userId: Long,
-    val userEmail: String,
+    val employeeId: Long,
+    val employeeEmail: String,
     val projectId: Long,
     val projectName: String,
     @Contextual val date: LocalDate,

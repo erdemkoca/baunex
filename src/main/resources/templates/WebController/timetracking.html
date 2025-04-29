@@ -19,7 +19,7 @@
               <thead>
               <tr>
                 <th>Date</th>
-                <th>User</th>
+                <th>Employee</th>
                 <th>Project</th>
                 <th>Hours</th>
                 <th>Note</th>
@@ -30,7 +30,7 @@
               {#for entry in timeEntries}
                 <tr style="cursor: pointer;" onclick="window.location.href='/timetracking/{entry.id}/edit';">
                   <td>{entry.date}</td>
-                  <td>{entry.userEmail}</td>
+                  <td>{entry.employeeEmail}</td>
                   <td>{entry.projectName}</td>
                   <td>{entry.hoursWorked}</td>
                   <td>{entry.notes ?: '—'}</td>
