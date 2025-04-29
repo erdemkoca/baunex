@@ -43,27 +43,29 @@
                         <input type="text" id="name" name="name" class="form-control"
                                value="{project.name}" required />
                     </div>
-                    <!-- Customer -->
-                    <div class="mb-3">
-                        <label for="customerId" class="form-label">Customer</label>
-                        <select id="customerId" name="customerId" class="form-select" required>
-                            <option value="" disabled {#if project.customerId == 0}selected{/if}>
-                                -- Select customer --
-                            </option>
-                            {#for cust in customers}
-                            <option value="{cust.id}"
-                                    {#if project.customerId == cust.id}selected{/if}>
-                                {cust.companyName ?: (cust.firstName + " " + cust.lastName)}
-                            </option>
-                            {/for}
-                        </select>
-                    </div>
                     <!-- Contact -->
                     <div class="mb-3">
                         <label for="contact" class="form-label">Contact</label>
-                        <input type="text" id="contact" name="contact" class="form-control"
-                               value="{project.contact ?: ""}" />
+                        <input
+                                type="text"
+                                id="contact"
+                                name="contact"
+                                class="form-control"
+                                value="{project.contact ?: ''}"
+                        />
                     </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea
+                                id="description"
+                                name="description"
+                                class="form-control"
+                                rows="3"
+                        >{project.description ?: ''}</textarea>
+                    </div>
+
                     <!-- Budget & Status -->
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
