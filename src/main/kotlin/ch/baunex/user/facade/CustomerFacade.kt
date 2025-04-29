@@ -25,6 +25,8 @@ class CustomerFacade {
         customerService.listAllCustomers()
             .map { it.toCustomerDTO() }
 
+    fun getAllCustomers(): List<CustomerDTO> = listAll()
+
     @Transactional
     fun create(dto: CustomerCreateDTO): CustomerDTO {
         val saved = customerService.createCustomer(dto.toCustomerModel())

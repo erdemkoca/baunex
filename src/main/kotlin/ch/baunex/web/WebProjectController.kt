@@ -1,19 +1,29 @@
+// File: ch/baunex/web/WebProjectController.kt
 package ch.baunex.web
 
 import ch.baunex.billing.dto.BillingDTO
 import ch.baunex.billing.facade.BillingFacade
 import ch.baunex.catalog.facade.CatalogFacade
-import ch.baunex.project.dto.ProjectDTO
+import ch.baunex.project.dto.ProjectCreateDTO
+import ch.baunex.project.dto.ProjectDetailDTO
+import ch.baunex.project.dto.ProjectListDTO
+import ch.baunex.project.dto.ProjectUpdateDTO
 import ch.baunex.project.facade.ProjectFacade
-import ch.baunex.project.model.ProjectStatus
-import ch.baunex.web.WebController.Templates
+import ch.baunex.project.service.ProjectService
+import ch.baunex.user.dto.CustomerContactDTO
+import ch.baunex.user.dto.CustomerDTO
+import ch.baunex.user.facade.CustomerFacade
 import jakarta.inject.Inject
+import jakarta.transaction.Transactional
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
+import java.net.URI
 import java.time.LocalDate
 
 @Path("/projects")
+@Produces(MediaType.TEXT_HTML)
+@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 class WebProjectController {
 
     @Inject
@@ -25,134 +35,115 @@ class WebProjectController {
     @Inject
     lateinit var billingFacade: BillingFacade
 
+    @Inject
+    lateinit var customerFacade: CustomerFacade
+
     private fun getCurrentDate() = LocalDate.now()
 
     @GET
-    @Produces(MediaType.TEXT_HTML)
     fun list(): Response {
-        val projects = projectFacade.getAllProjects()
-        val template = Templates.projects(projects, getCurrentDate(), "projects")
+        val projects: List<ProjectListDTO> = projectFacade.getAllProjects()
+        val template = WebController.Templates
+            .projects(projects, getCurrentDate(), "projects")
         return Response.ok(template.render()).build()
     }
 
     @GET
     @Path("/new")
-    @Produces(MediaType.TEXT_HTML)
     fun newProject(): Response {
-        val emptyProject = ProjectDTO(
-            id = null,
-            name = "",
-            client = "",
-            budget = 0,
-            contact = "",
-            startDate = null,
-            endDate = null,
-            description = "",
-            status = ProjectStatus.PLANNED,
-            street = "",
-            city = ""
+        // Für das „Neue Projekt“-Formular baust Du am besten ein CreateDTO oder DetailDTO
+        val emptyDetail = ProjectDetailDTO(
+            id             = 0,
+            name           = "",
+            customerId     = 0,
+            customerName   = "",
+            budget         = 0,
+            contact        = null,
+            startDate      = null,
+            endDate        = null,
+            description    = null,
+            status         = ch.baunex.project.model.ProjectStatus.PLANNED,
+            street         = null,
+            city           = null,
+            timeEntries    = emptyList(),
+            catalogItems   = emptyList(),
+            contacts   = emptyList(),
         )
-
-        val emptyBilling = BillingDTO(
-            projectId = null,
-            materials = emptyList(),
-            timeEntries = emptyList(),
-            materialTotal = 0.0,
-            timeTotal = 0.0,
-            total = 0.0
-        )
-
-        val template = Templates.projectDetail(
-            project = emptyProject,
-            activeMenu = "projects",
-            currentDate = getCurrentDate(),
-            catalogItems = emptyList(),
-            billing = emptyBilling
-        )
-
+        val template = WebController.Templates
+            .projectDetail(emptyDetail, "projects", getCurrentDate(),
+                catalogItems = emptyList(), billing = BillingDTO(0, emptyList(), emptyList(), 0.0, 0.0, 0.0), contacts = emptyList(), customers = emptyList()
+            )
         return Response.ok(template.render()).build()
     }
-
 
     @GET
     @Path("/{id}")
-    @Produces(MediaType.TEXT_HTML)
     fun view(@PathParam("id") id: Long): Response {
-        val project = projectFacade.getProjectWithDetails(id) ?: return Response.status(404).build()
+        val detail: ProjectDetailDTO = projectFacade
+            .getProjectWithDetails(id)
+            ?: return Response.status(404).build()
         val catalogItems = catalogFacade.getAllItems()
-        val billing = project.id?.let { billingFacade.getBillingForProject(it) }
-            ?: return Response.status(500).entity("Project ID is missing.").build()
-        val template = Templates.projectDetail(project, "projects", getCurrentDate(), catalogItems, billing)
-        return Response.ok(template.render()).build()
-    }
-
-    @GET
-    @Path("/{id}/edit")
-    @Produces(MediaType.TEXT_HTML)
-    fun edit(@PathParam("id") id: Long): Response {
-        val project = projectFacade.getProjectById(id) ?: return Response.status(404).build()
-        val catalogItems = catalogFacade.getAllItems()
-        val billing = project.id?.let { billingFacade.getBillingForProject(it) }
-            ?: return Response.status(500).entity("Project ID is missing.").build()
-        val template = Templates.projectDetail(project, "projects", getCurrentDate(), catalogItems, billing)
+        val billing: BillingDTO = billingFacade.getBillingForProject(id)
+        val contacts: List<CustomerContactDTO> = detail.contacts
+        val customers: List<CustomerDTO> = customerFacade.listAll()
+        val template = WebController.Templates
+            .projectDetail(detail, "projects", getCurrentDate(), catalogItems, billing, contacts, customers)
         return Response.ok(template.render()).build()
     }
 
     @POST
     @Path("/save")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Transactional
     fun saveProject(
         @FormParam("id") id: Long?,
         @FormParam("name") name: String,
-        @FormParam("client") client: String,
+        @FormParam("customerId") customerId: Long,
         @FormParam("budget") budget: Int,
         @FormParam("contact") contact: String?,
         @FormParam("startDate") startDate: LocalDate?,
         @FormParam("endDate") endDate: LocalDate?,
         @FormParam("description") description: String?,
-        @FormParam("status") status: ProjectStatus?,
+        @FormParam("status") status: ch.baunex.project.model.ProjectStatus?,
         @FormParam("street") street: String?,
         @FormParam("city") city: String?
     ): Response {
-        val dto = ProjectDTO(
-            id = id,
-            name = name,
-            client = client,
-            budget = budget,
-            contact = contact,
-            startDate = startDate,
-            endDate = endDate,
-            description = description,
-            status = status ?: ProjectStatus.PLANNED,
-            street = street,
-            city = city
-        )
-
         if (id == null || id == 0L) {
-            projectFacade.createProject(dto)
+            val createDto = ProjectCreateDTO(
+                name        = name,
+                customerId  = customerId,
+                budget      = budget,
+                contact     = contact,
+                startDate   = startDate ?: getCurrentDate(),
+                endDate     = endDate   ?: getCurrentDate(),
+                description = description,
+                status      = status    ?: ch.baunex.project.model.ProjectStatus.PLANNED,
+                street      = street,
+                city        = city
+            )
+            projectFacade.createProject(createDto)
         } else {
-            projectFacade.updateProject(id, dto)
+            val updateDto = ProjectUpdateDTO(
+                name        = name,
+                customerId  = customerId,
+                budget      = budget,
+                contact     = contact,
+                startDate   = startDate,
+                endDate     = endDate,
+                description = description,
+                status      = status,
+                street      = street,
+                city        = city
+            )
+            projectFacade.updateProject(id, updateDto)
         }
-
-        return Response.seeOther(java.net.URI("/projects")).build()
+        return Response.seeOther(URI("/projects")).build()
     }
 
     @GET
     @Path("/{id}/delete")
+    @Transactional
     fun delete(@PathParam("id") id: Long): Response {
         projectFacade.deleteProject(id)
-        return Response.seeOther(java.net.URI("/projects")).build()
+        return Response.seeOther(URI("/projects")).build()
     }
-
-    @GET
-    @Path("/{id}/billing")
-    @Produces(MediaType.TEXT_HTML)
-    fun billing(@PathParam("id") id: Long): Response {
-        val project = projectFacade.getProjectWithDetails(id) ?: return Response.status(404).build()
-        val billing = billingFacade.getBillingForProject(id)
-        val catalogItems = catalogFacade.getAllItems()
-        val template = Templates.projectDetail(project, "projects", getCurrentDate(), catalogItems, billing)
-        return Response.ok(template.render()).build()
-    }
-
 }

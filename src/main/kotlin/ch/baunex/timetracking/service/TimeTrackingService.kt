@@ -28,7 +28,7 @@ class TimeTrackingService {
     fun logTime(dto: TimeEntryDTO): TimeEntryModel {
         val employee = employeeService.findEmployeeById(dto.employeeId)
             ?: throw IllegalArgumentException("Employee not found")
-        val project = projectService.getProjectById(dto.projectId)
+        val project = projectService.getProjectWithEntries(dto.projectId)
             ?: throw IllegalArgumentException("Project not found")
 
         val model = dto.toTimeEntryModel(employee, project)
@@ -49,7 +49,7 @@ class TimeTrackingService {
 
         val employee = employeeService.findEmployeeById(dto.employeeId)
             ?: throw IllegalArgumentException("Employee not found")
-        val project = projectService.getProjectById(dto.projectId)
+        val project = projectService.getProjectWithEntries(dto.projectId)
             ?: throw IllegalArgumentException("Project not found")
 
         entry.employee = employee

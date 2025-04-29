@@ -2,11 +2,14 @@ package ch.baunex.web
 
 import ch.baunex.billing.dto.BillingDTO
 import ch.baunex.catalog.dto.CatalogItemDTO
-import ch.baunex.project.dto.ProjectDTO
+import ch.baunex.project.dto.ProjectDetailDTO
+import ch.baunex.project.dto.ProjectListDTO
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.user.dto.UserResponseDTO
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.timetracking.facade.TimeTrackingFacade
+import ch.baunex.user.dto.CustomerContactDTO
+import ch.baunex.user.dto.CustomerDTO
 import ch.baunex.user.dto.EmployeeDTO
 import io.quarkus.qute.CheckedTemplate
 import io.quarkus.qute.TemplateInstance
@@ -28,13 +31,22 @@ class WebController {
     @CheckedTemplate
     object Templates {
         @JvmStatic
-        external fun index(projects: List<ProjectDTO>, currentDate: LocalDate, activeMenu: String, timeEntries: List<TimeEntryResponseDTO>): TemplateInstance
+        external fun index(projects: List<ProjectListDTO>, currentDate: LocalDate, activeMenu: String, timeEntries: List<TimeEntryResponseDTO>): TemplateInstance
 
         @JvmStatic
-        external fun projects(projects: List<ProjectDTO>, currentDate: LocalDate, activeMenu: String): TemplateInstance
+        external fun projects(projects: List<ProjectListDTO>, currentDate: LocalDate, activeMenu: String): TemplateInstance
 
         @JvmStatic
-        external fun projectDetail(project: ProjectDTO, activeMenu: String, currentDate: LocalDate, catalogItems: List<CatalogItemDTO>, billing: BillingDTO): TemplateInstance
+        external fun projectDetail(
+            project: ProjectDetailDTO,
+            activeMenu: String,
+            currentDate: LocalDate,
+            catalogItems: List<CatalogItemDTO>,
+            billing: BillingDTO,
+            contacts: List<CustomerContactDTO>,
+            customers: List<CustomerDTO>
+        ): TemplateInstance
+
 
         @JvmStatic
         external fun users(users: List<UserResponseDTO>, currentDate: LocalDate, activeMenu: String): TemplateInstance
@@ -54,14 +66,14 @@ class WebController {
             timeEntries: List<TimeEntryResponseDTO>,
             currentDate: String,
             employees: List<EmployeeDTO>,
-            projects: List<ProjectDTO>,
+            projects: List<ProjectListDTO>,
             entry: TimeEntryResponseDTO? = null): TemplateInstance
 
         @JvmStatic
         external fun timetrackingForm(
             entry: TimeEntryResponseDTO?,
             employees: List<EmployeeDTO>,
-            projects: List<ProjectDTO>,
+            projects: List<ProjectListDTO>,
             currentDate: String,
             activeMenu: String
         ): TemplateInstance

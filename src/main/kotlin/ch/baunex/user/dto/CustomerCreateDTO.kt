@@ -5,12 +5,12 @@ import java.math.BigDecimal
 data class CustomerCreateDTO(
     val firstName: String,
     val lastName: String,
+    val email: String?,
     val street: String?,
     val city: String?,
     val zipCode: String?,
     val country: String?,
     val phone: String?,
-    val email: String?,
     val customerNumber: String,
     val companyName: String?,
     val paymentTerms: String?,

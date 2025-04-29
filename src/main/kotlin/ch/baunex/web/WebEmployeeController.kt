@@ -42,7 +42,6 @@ class WebEmployeeController {
     @Produces(MediaType.TEXT_HTML)
     fun editForm(@PathParam("id") id: Long): Response {
         val employee = employeeFacade.findById(id)
-            ?: return Response.status(Response.Status.NOT_FOUND).build()
         val roles = listOf(Role.ADMIN, Role.PROJECT_MANAGER, Role.EMPLOYEE, Role.ELECTRICIAN, Role.ACCOUNTANT)
             .map { it.name }
         val template = WebController.Templates.employeeForm(employee, now(), "employees", roles)

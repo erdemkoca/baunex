@@ -21,6 +21,13 @@ class CustomerModel : PanacheEntityBase() {
     @JoinColumn(name = "person_id")
     lateinit var person: PersonModel
 
+    @OneToMany(
+        mappedBy = "customer",
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true
+    )
+    var contacts: MutableList<CustomerContact> = mutableListOf()
+
     @Column(nullable = false, unique = true)
     lateinit var customerNumber: String
 

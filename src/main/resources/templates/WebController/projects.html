@@ -1,57 +1,74 @@
-{#include layout} {#title}Projects - Baunex Business Management{/title}
-{#header}Projects{/header} {#content}
-<div class="mb-4">
-  <a href="/projects/new" class="btn btn-primary">
-    <i class="bi bi-plus-circle me-2"></i>New Project
-  </a>
-</div>
-
-<div class="card">
-  <div class="card-header">All Projects</div>
-  <div class="card-body">
-    {#if projects.isEmpty()}
-    <p class="text-muted">No projects found.</p>
-    {#else}
-    <div class="table-responsive">
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Client</th>
-            <th>Contact</th>
-            <th>Budget</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#for project in projects}
-          <tr class="project-row" data-href="/projects/{project.id}" style="cursor:pointer;">
-            <td>{project.name}</td>
-            <td>{project.client}</td>
-            <td>{project.contact ?: 'N/A'}</td>
-            <td>${project.budget}</td>
-            <td>
-              <div class="btn-group">
-                <a href="/projects/{project.id}/delete" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')">
-                  <i class="bi bi-trash"></i>
-                </a>
-              </div>
-            </td>
-          </tr>
-          {/for}
-        </tbody>
-      </table>
+{#include layout}
+  {#title}Projects - Baunex Business Management{/title}
+  {#header}Projects{/header}
+  {#content}
+    <div class="mb-4">
+      <a href="/projects/new" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>New Project
+      </a>
     </div>
-    {/if}
-  </div>
-</div>
-{/content} {/include}
+
+    <div class="card">
+      <div class="card-header">All Projects</div>
+      <div class="card-body">
+        {#if projects.isEmpty()}
+          <p class="text-muted">No projects found.</p>
+        {#else}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead>
+              <tr>
+                <th>Name</th>
+                <th>Customer</th>
+                <th>Budget</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+              </thead>
+              <tbody>
+              {#for project in projects}
+                <tr class="project-row" data-href="/projects/{project.id}" style="cursor:pointer;">
+                  <td>{project.name}</td>
+                  <td>{project.customerName ?: "—"}</td>
+                  <td>${project.budget}</td>
+                  <td>
+                    <span class="badge bg-secondary">{project.status}</span>
+                  </td>
+                  <td>
+                    <div class="btn-group">
+                      <a
+                              href="/projects/{project.id}/edit"
+                              title="Edit"
+                              class="btn btn-sm btn-outline-primary"
+                      >
+                        <i class="bi bi-pencil"></i>
+                      </a>
+                      <a
+                              href="/projects/{project.id}/delete"
+                              title="Delete"
+                              class="btn btn-sm btn-outline-danger"
+                              onclick="return confirm('Are you sure you want to delete this project?');"
+                      >
+                        <i class="bi bi-trash"></i>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              {/for}
+              </tbody>
+            </table>
+          </div>
+        {/if}
+      </div>
+    </div>
+  {/content}
+{/include}
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".project-row").forEach(row => {
       row.addEventListener("click", function (e) {
-        // Don’t trigger navigation if a button inside was clicked
+        // Navigation nicht ausloesen, wenn auf einen Link geklickt wird
         if (!e.target.closest("a")) {
           window.location.href = row.dataset.href;
         }

@@ -1,310 +1,344 @@
 {#include layout}
-    {#title}{#if project.id}Project - {project.name}{#else}New Project{/if}{/title}
-    {#header}{#if project.id}Project Overview{#else}New Project{/if}{/header}
-    {#content}
+{#title}{#if project.id}Project – {project.name}{#else}New Project{/if}{/title}
+{#header}{#if project.id}Project Overview{#else}New Project{/if}{/header}
+{#content}
 
-        <!-- Tab Navigation -->
-        <ul class="nav nav-tabs mb-3" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link active" data-bs-toggle="tab" href="#overview" role="tab">Overview</a>
-            </li>
+<!-- Tab Navigation -->
+<ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link active" data-bs-toggle="tab" href="#overview" role="tab">Overview</a>
+    </li>
+    {#if project.id}
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#timelogs" role="tab">Time Logs</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#catalog" role="tab">Catalog</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#contacts" role="tab">Contacts</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#billing" role="tab">Billing</a>
+    </li>
+    {/if}
+</ul>
+
+<div class="tab-content">
+
+    <!-- Overview Tab -->
+    <div class="tab-pane fade show active" id="overview" role="tabpanel">
+        <form action="/projects/save" method="post">
             {#if project.id}
-                <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="tab" href="#timelogs" role="tab">Time Logs</a>
-                </li>
+            <input type="hidden" name="id" value="{project.id}" />
             {/if}
-            {#if project.id}
-                <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="tab" href="#catalog" role="tab">Catalog</a>
-                </li>
-            {/if}
-            {#if project.id}
-                <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="tab" href="#billing" role="tab">Billing</a>
-                </li>
-            {/if}
-        </ul>
-
-        <!-- Tab Content -->
-        <div class="tab-content">
-
-            <!-- Overview Tab -->
-            <div class="tab-pane fade show active" id="overview" role="tabpanel">
-                <form action="/projects/save" method="post">
-                    {#if project.id}
-                        <input type="hidden" name="id" value="{project.id}" />
-                    {/if}
-
-                    <div class="card mb-4">
-                        <div class="card-header">Edit Project</div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label for="name" class="form-label">Project Name</label>
-                                <input type="text" class="form-control" id="name" name="name" value="{project.name ?: ''}" required />
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="client" class="form-label">Client</label>
-                                <input type="text" class="form-control" id="client" name="client" value="{project.client ?: ''}" required />
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="contact" class="form-label">Contact Information</label>
-                                <input type="text" class="form-control" id="contact" name="contact" value="{project.contact ?: ''}" />
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="budget" class="form-label">Budget</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" id="budget" name="budget" value="{project.budget ?: 0}" required min="0" />
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="status" class="form-label">Status</label>
-                                <select id="status" name="status" class="form-select">
-                                    <option value="PLANNED" {#if project.status == 'PLANNED'}selected{/if}>Planned</option>
-                                    <option value="IN_PROGRESS" {#if project.status == 'IN_PROGRESS'}selected{/if}>In Progress</option>
-                                    <option value="COMPLETED" {#if project.status == 'COMPLETED'}selected{/if}>Completed</option>
-                                    <option value="CANCELLED" {#if project.status == 'CANCELLED'}selected{/if}>Cancelled</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="description" class="form-label">Description</label>
-                                <textarea class="form-control" id="description" name="description" rows="3">{project.description ?: ''}</textarea>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="startDate" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="startDate" name="startDate" value="{project.startDate ?: ''}" />
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="endDate" class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="endDate" name="endDate" value="{project.endDate ?: ''}" />
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="street" class="form-label">Street</label>
-                                <input type="text" class="form-control" id="street" name="street" value="{project.street ?: ''}" />
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="city" class="form-label">City</label>
-                                <input type="text" class="form-control" id="city" name="city" value="{project.city ?: ''}" />
-                            </div>
-
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-save me-2"></i>{#if project.id}Update Project{#else}Create Project{/if}
-                                </button>
-                                <a href="/projects" class="btn btn-outline-secondary">Cancel</a>
+            <div class="card mb-4">
+                <div class="card-header">
+                    {#if project.id}Edit Project{#else}Create New Project{/if}
+                </div>
+                <div class="card-body">
+                    <!-- Name -->
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" id="name" name="name" class="form-control"
+                               value="{project.name}" required />
+                    </div>
+                    <!-- Customer -->
+                    <div class="mb-3">
+                        <label for="customerId" class="form-label">Customer</label>
+                        <select id="customerId" name="customerId" class="form-select" required>
+                            <option value="" disabled {#if project.customerId == 0}selected{/if}>
+                                -- Select customer --
+                            </option>
+                            {#for cust in customers}
+                            <option value="{cust.id}"
+                                    {#if project.customerId == cust.id}selected{/if}>
+                                {cust.companyName ?: (cust.firstName + " " + cust.lastName)}
+                            </option>
+                            {/for}
+                        </select>
+                    </div>
+                    <!-- Contact -->
+                    <div class="mb-3">
+                        <label for="contact" class="form-label">Contact</label>
+                        <input type="text" id="contact" name="contact" class="form-control"
+                               value="{project.contact ?: ""}" />
+                    </div>
+                    <!-- Budget & Status -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="budget" class="form-label">Budget (CHF)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">CHF</span>
+                                <input type="number" id="budget" name="budget"
+                                       class="form-control" value="{project.budget}"
+                                       min="0" required />
                             </div>
                         </div>
+                        <div class="col-md-6">
+                            <label for="status" class="form-label">Status</label>
+                            <select id="status" name="status" class="form-select">
+                                <option value="PLANNED"
+                                        {#if project.status.name == "PLANNED"}selected{/if}>
+                                    Planned
+                                </option>
+                                <option value="IN_PROGRESS"
+                                        {#if project.status.name == "IN_PROGRESS"}selected{/if}>
+                                    In Progress
+                                </option>
+                                <option value="COMPLETED"
+                                        {#if project.status.name == "COMPLETED"}selected{/if}>
+                                    Completed
+                                </option>
+                                <option value="CANCELLED"
+                                        {#if project.status.name == "CANCELLED"}selected{/if}>
+                                    Cancelled
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea id="description" name="description"
+                                  class="form-control" rows="3">
+              {project.description ?: ""}
+            </textarea>
+                    </div>
+                    <!-- Dates -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="startDate" class="form-label">Start Date</label>
+                            <input type="date" id="startDate" name="startDate"
+                                   class="form-control" value="{project.startDate ?: ""}" />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="endDate" class="form-label">End Date</label>
+                            <input type="date" id="endDate" name="endDate"
+                                   class="form-control" value="{project.endDate ?: ""}" />
+                        </div>
+                    </div>
+                    <!-- Location -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="street" class="form-label">Street</label>
+                            <input type="text" id="street" name="street"
+                                   class="form-control" value="{project.street ?: ""}" />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="city" class="form-label">City</label>
+                            <input type="text" id="city" name="city"
+                                   class="form-control" value="{project.city ?: ""}" />
+                        </div>
+                    </div>
+                    <!-- Buttons -->
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-2"></i>
+                            {#if project.id}Update Project{#else}Create Project{/if}
+                        </button>
+                        <a href="/projects" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Time Logs Tab -->
+    <div class="tab-pane fade" id="timelogs" role="tabpanel">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5>Time Logs</h5>
+                {#if project.timeEntries.isEmpty()}
+                <p class="text-muted">No time logs for this project.</p>
+                {#else}
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Date</th>
+                        <th>Hours</th>
+                        <th>Note</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {#for entry in project.timeEntries}
+                    <tr>
+                        <td>{entry.employeeEmail}</td>
+                        <td>{entry.date}</td>
+                        <td>{entry.hoursWorked}</td>
+                        <td>{entry.notes ?: "—"}</td>
+                    </tr>
+                    {/for}
+                    </tbody>
+                </table>
+                {/if}
+            </div>
+        </div>
+    </div>
+
+    <!-- Catalog Tab -->
+    <div class="tab-pane fade" id="catalog" role="tabpanel">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5>Catalog Items</h5>
+                <form action="/projects/{project.id}/catalog/save"
+                      method="post" class="row g-3 mb-4">
+                    <input type="hidden" name="id" value="" />
+                    <div class="col-md-4">
+                        <label class="form-label">Select Catalog Item (optional)</label>
+                        <select name="catalogItemId" class="form-select">
+                            <option value="">-- Select from Catalog --</option>
+                            {#for item in catalogItems}
+                            <option value="{item.id}"
+                                    data-price="{item.unitPrice}"
+                                    data-name="{item.name}">
+                                {item.name} ({item.unitPrice} CHF)
+                            </option>
+                            {/for}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Or Add Custom Item</label>
+                        <input type="text" name="itemName" class="form-control"
+                               placeholder="Item Name" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" name="quantity" class="form-control"
+                               value="1" min="1" required />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Unit Price (CHF)</label>
+                        <input type="number" name="unitPrice" class="form-control"
+                               step="0.01" required />
+                    </div>
+                    <div class="col-md-2 mt-4">
+                        <button type="submit" class="btn btn-success w-100">Add</button>
                     </div>
                 </form>
+                {#if project.catalogItems.isEmpty()}
+                <p class="text-muted">No items added yet.</p>
+                {#else}
+                <table class="table table-bordered">
+                    <thead>
+                    <tr><th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                    {#for item in project.catalogItems}
+                    <tr>
+                        <td>{item.itemName}</td>
+                        <td>{item.quantity}</td>
+                        <td>{item.unitPrice}</td>
+                        <td>{item.totalPrice}</td>
+                        <td>
+                            <a href="/projects/{project.id}/catalog/{item.id}/delete"
+                               class="btn btn-sm btn-outline-danger">Delete</a>
+                        </td>
+                    </tr>
+                    {/for}
+                    </tbody>
+                </table>
+                {/if}
+                <script>
+                    document.addEventListener("DOMContentLoaded", function () {
+                        const select = document.querySelector('select[name="catalogItemId"]');
+                        const priceInput = document.querySelector('input[name="unitPrice"]');
+                        const nameInput  = document.querySelector('input[name="itemName"]');
+                        select.addEventListener("change", function () {
+                            const opt = select.options[select.selectedIndex];
+                            priceInput.value = opt.getAttribute("data-price") || '';
+                            nameInput.value  = opt.getAttribute("data-name")  || '';
+                        });
+                    });
+                </script>
             </div>
-
-            <!-- Time Logs Tab -->
-            <div class="tab-pane fade" id="timelogs" role="tabpanel">
-                <div class="card">
-                    <div class="card-body">
-                        <h5>Time Logs</h5>
-                        {#if project.timeEntries.isEmpty()}
-                            <p class="text-muted">No time logs for this project.</p>
-                        {#else}
-                            <table class="table table-striped">
-                                <thead>
-                                <tr>
-                                    <th>User</th>
-                                    <th>Date</th>
-                                    <th>Hours</th>
-                                    <th>Note</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {#for entry in project.timeEntries}
-                                    <tr>
-                                        <td>{entry.employeeId}</td>
-                                        <td>{entry.date}</td>
-                                        <td>{entry.hoursWorked}</td>
-                                        <td>{entry.notes ?: '—'}</td>
-                                    </tr>
-                                {/for}
-                                </tbody>
-                            </table>
-                        {/if}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Catalog Tab -->
-            <div class="tab-pane fade" id="catalog" role="tabpanel">
-                <div class="card">
-                    <div class="card-body">
-                        <h5>Catalog Items</h5>
-
-                        <form action="/projects/{project.id}/catalog/save" method="post" class="row g-3 mb-4">
-                            <input type="hidden" name="id" value="" />
-
-                            <div class="col-md-4">
-                                <label class="form-label">Select Catalog Item (optional)</label>
-                                <select name="catalogItemId" class="form-select">
-                                    <option value="">-- Select from Catalog --</option>
-                                    {#for item in catalogItems}
-                                        <option value="{item.id}" data-price="{item.unitPrice}" data-name="{item.name}">
-                                            {item.name} ({item.unitPrice} CHF)
-                                        </option>
-                                    {/for}
-                                </select>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label">Or Add Custom Item</label>
-                                <input type="text" class="form-control" name="itemName" placeholder="Item Name" />
-                            </div>
-
-                            <div class="col-md-2">
-                                <label class="form-label">Quantity</label>
-                                <input type="number" class="form-control" name="quantity" value="1" min="1" required />
-                            </div>
-
-                            <div class="col-md-2">
-                                <label class="form-label">Unit Price</label>
-                                <input type="number" class="form-control" name="unitPrice" step="0.01" required />
-                            </div>
-
-                            <div class="col-md-2 mt-4">
-                                <button type="submit" class="btn btn-success w-100">Add</button>
-                            </div>
-                        </form>
-
-                        {#if project.catalogItems.isEmpty()}
-                            <p class="text-muted">No items added yet.</p>
-                        {#else}
-                            <table class="table table-bordered">
-                                <thead>
-                                <tr>
-                                    <th>Item</th>
-                                    <th>Qty</th>
-                                    <th>Unit Price</th>
-                                    <th>Total</th>
-                                    <th></th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {#for item in project.catalogItems}
-                                    <tr>
-                                        <td>{item.itemName}</td>
-                                        <td>{item.quantity}</td>
-                                        <td>{item.unitPrice}</td>
-                                        <td>{item.totalPrice}</td>
-                                        <td>
-                                            <a href="/projects/{project.id}/catalog/{item.id}/delete" class="btn btn-sm btn-outline-danger">Delete</a>
-                                        </td>
-                                    </tr>
-                                {/for}
-                                </tbody>
-                            </table>
-                        {/if}
-
-                        <script>
-                            document.addEventListener("DOMContentLoaded", function () {
-                                const select = document.querySelector('select[name="catalogItemId"]');
-                                const priceInput = document.querySelector('input[name="unitPrice"]');
-                                const nameInput = document.querySelector('input[name="itemName"]');
-
-                                select.addEventListener("change", function () {
-                                    const selectedOption = select.options[select.selectedIndex];
-                                    const price = selectedOption.getAttribute("data-price");
-                                    const name = selectedOption.getAttribute("data-name");
-
-                                    if (price) {
-                                        priceInput.value = price;
-                                    }
-
-                                    if (name) {
-                                        nameInput.value = name;
-                                    }
-                                });
-                            });
-                        </script>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Billing Tab -->
-            <div class="tab-pane fade" id="billing" role="tabpanel">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="mb-4">Materials</h5>
-                        {#if billing.materials.isEmpty()}
-                            <p class="text-muted">No materials recorded.</p>
-                        {#else}
-                            <table class="table table-bordered">
-                                <thead>
-                                <tr>
-                                    <th>Item</th>
-                                    <th>Quantity</th>
-                                    <th>Unit Price (CHF)</th>
-                                    <th>Total (CHF)</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {#for item in billing.materials}
-                                    <tr>
-                                        <td>{item.itemName}</td>
-                                        <td>{item.quantity}</td>
-                                        <td>{item.unitPrice}</td>
-                                        <td>{item.totalPrice}</td>
-                                    </tr>
-                                {/for}
-                                </tbody>
-                            </table>
-                        {/if}
-
-                        <div class="mt-5">
-                            <p><strong>Material Total:</strong> CHF {billing.materialTotal}</p>
-                        </div>
-
-                        <h5 class="mt-5 mb-4">Service</h5>
-                        {#if billing.timeEntries.isEmpty()}
-                            <p class="text-muted">No time logs recorded.</p>
-                        {#else}
-                            <table class="table table-striped">
-                                <thead>
-                                <tr>
-                                    <th>User</th>
-                                    <th>Date</th>
-                                    <th>Hours</th>
-                                    <th>Hourly Rate (CHF)</th>
-                                    <th>Cost (CHF)</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {#for entry in billing.timeEntries}
-                                    <tr>
-                                        <td>{entry.employeeEmail}</td>
-                                        <td>{entry.date}</td>
-                                        <td>{entry.hoursWorked}</td>
-                                        <td>{entry.hourlyRate}</td>
-                                        <td>{entry.cost}</td>
-                                    </tr>
-                                {/for}
-                                </tbody>
-                            </table>
-                        {/if}
-
-                        <div class="mt-5">
-                            <p><strong>Time Total:</strong> CHF {billing.timeTotal}</p>
-                            <p><strong>Grand Total:</strong> CHF {billing.total}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </div>
-    {/content}
+    </div>
+
+    <!-- Contacts Tab -->
+    <div class="tab-pane fade" id="contacts" role="tabpanel">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5>Customer Contacts</h5>
+                {#if contacts.isEmpty()}
+                <p class="text-muted">No contacts for this customer.</p>
+                {#else}
+                <ul class="list-group">
+                    {#for c in contacts}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{c.role ?: "Contact"}</strong> – {c.personName}
+                        </div>
+                        {#if c.isPrimary}
+                        <span class="badge bg-primary">Primary</span>
+                        {/if}
+                    </li>
+                    {/for}
+                </ul>
+                {/if}
+            </div>
+        </div>
+    </div>
+
+    <!-- Billing Tab -->
+    <div class="tab-pane fade" id="billing" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-4">Materials</h5>
+                {#if billing.materials.isEmpty()}
+                <p class="text-muted">No materials recorded.</p>
+                {#else}
+                <table class="table table-bordered">
+                    <thead>
+                    <tr><th>Item</th><th>Qty</th><th>Unit Price (CHF)</th><th>Total (CHF)</th></tr>
+                    </thead>
+                    <tbody>
+                    {#for m in billing.materials}
+                    <tr>
+                        <td>{m.itemName}</td>
+                        <td>{m.quantity}</td>
+                        <td>{m.unitPrice}</td>
+                        <td>{m.totalPrice}</td>
+                    </tr>
+                    {/for}
+                    </tbody>
+                </table>
+                {/if}
+            <div class="mt-4">
+                <p><strong>Material Total:</strong> CHF {billing.materialTotal}</p>
+            </div>
+
+            <h5 class="mt-5 mb-4">Service</h5>
+                {#if billing.timeEntries.isEmpty()}
+            <p class="text-muted">No time logs recorded.</p>
+                {#else}
+                <table class="table table-striped">
+                    <thead>
+                    <tr><th>User</th><th>Date</th><th>Hours</th><th>Rate (CHF)</th><th>Cost (CHF)</th></tr>
+                    </thead>
+                    <tbody>
+                    {#for e in billing.timeEntries}
+                    <tr>
+                        <td>{e.employeeEmail}</td>
+                        <td>{e.date}</td>
+                        <td>{e.hoursWorked}</td>
+                        <td>{e.hourlyRate}</td>
+                        <td>{e.cost}</td>
+                    </tr>
+                    {/for}
+                    </tbody>
+                </table>
+                {/if}
+                <div class="mt-4">
+                    <p><strong>Time Total:</strong> CHF {billing.timeTotal}</p>
+                    <p><strong>Grand Total:</strong> CHF {billing.total}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{/content}
 {/include}

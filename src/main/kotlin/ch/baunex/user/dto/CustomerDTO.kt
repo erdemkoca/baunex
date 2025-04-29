@@ -8,6 +8,11 @@ data class CustomerDTO(
     val firstName: String,
     val lastName: String,
     val email: String?,
+    val street: String?,
+    val city: String?,
+    val zipCode: String?,
+    val country: String?,
+    val phone: String?,
     val customerNumber: String,
     val companyName: String?,
     val paymentTerms: String?,
@@ -18,5 +23,6 @@ data class CustomerDTO(
     val marketingConsent: Boolean,
     val taxId: String?,
     val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime
+    val updatedAt: LocalDateTime,
+    val contacts: List<CustomerContactDTO> = emptyList()
 )

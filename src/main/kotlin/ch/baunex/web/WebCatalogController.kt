@@ -6,12 +6,16 @@ import ch.baunex.catalog.dto.ProjectCatalogItemDTO
 import ch.baunex.catalog.facade.CatalogFacade
 import ch.baunex.catalog.facade.ProjectCatalogItemFacade
 import ch.baunex.project.facade.ProjectFacade
+import ch.baunex.user.dto.CustomerContactDTO
+import ch.baunex.user.dto.CustomerDTO
+import ch.baunex.user.facade.CustomerFacade
 import ch.baunex.web.WebController.Templates
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import java.net.URI
+import java.time.LocalDate
 
 @Path("/projects/{projectId}/catalog")
 class WebCatalogController {
@@ -28,16 +32,33 @@ class WebCatalogController {
     @Inject
     lateinit var billingFacade: BillingFacade
 
+    @Inject
+    lateinit var customerFacade: CustomerFacade
+
     @GET
+    @Path("/{projectId}")
     @Produces(MediaType.TEXT_HTML)
-    fun list(@PathParam("projectId") projectId: Long): Response {
-        val project = projectFacade.getProjectWithDetails(projectId) ?: return Response.status(404).build()
+    fun viewProject(@PathParam("projectId") projectId: Long): Response {
+        val projectDetail = projectFacade
+            .getProjectWithDetails(projectId)
+            ?: return Response.status(Response.Status.NOT_FOUND).build()
         val catalogItems = catalogFacade.getAllItems()
-        val billing = project.id?.let { billingFacade.getBillingForProject(it) }
-            ?: return Response.status(500).entity("Project ID is missing.").build()
-        val template = Templates.projectDetail(project, "projects", java.time.LocalDate.now(), catalogItems, billing)
+        val billing = billingFacade.getBillingForProject(projectId)
+        val contacts: List<CustomerContactDTO> = projectDetail.contacts
+        val customers: List<CustomerDTO> = customerFacade.listAll()
+        val template = Templates.projectDetail(
+            project     = projectDetail,
+            activeMenu  = "projects",
+            currentDate = LocalDate.now(),
+            catalogItems= catalogItems,
+            billing     = billing,
+            contacts    = contacts,
+            customers   = customers
+        )
+
         return Response.ok(template.render()).build()
     }
+
 
     @POST
     @Path("/save")

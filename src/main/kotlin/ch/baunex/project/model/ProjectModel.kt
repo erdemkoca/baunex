@@ -2,6 +2,7 @@ package ch.baunex.project.model
 
 import ch.baunex.catalog.model.ProjectCatalogItemModel
 import ch.baunex.timetracking.model.TimeEntryModel
+import ch.baunex.user.model.CustomerModel
 import ch.baunex.user.model.UserModel
 import io.quarkus.hibernate.orm.panache.PanacheEntity
 import jakarta.persistence.*
@@ -11,11 +12,12 @@ import java.time.LocalDate
 @Table(name = "projects")
 class ProjectModel : PanacheEntity() {
 
-    @Column(nullable = false)
-    lateinit var name: String
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "customer_id")
+    lateinit var customer: CustomerModel
 
     @Column(nullable = false)
-    lateinit var client: String
+    lateinit var name: String
 
     @Column(nullable = false)
     var budget: Int = 0

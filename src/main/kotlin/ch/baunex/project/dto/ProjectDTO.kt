@@ -21,5 +21,7 @@ data class ProjectDTO(
         val street: String? = null,
         val city: String? = null,
         val timeEntries: List<TimeEntryResponseDTO> = emptyList(),
-        val catalogItems: List<ProjectCatalogItemDTO> = emptyList()
+        val catalogItems: List<ProjectCatalogItemDTO> = emptyList(),
+        val customerId: Long,
+        val customerName: String
 )

@@ -14,15 +14,19 @@ class ProjectCatalogItemFacade @Inject constructor(
     private val projectService: ProjectService
 ) {
     fun getItemsForProject(projectId: Long): List<ProjectCatalogItemDTO> =
-        service.getByProjectId(projectId).map { it.toProjectCatalogItemDTO() }
+        service.getByProjectId(projectId)
+            .map { it.toProjectCatalogItemDTO() }
 
     fun addItemToProject(projectId: Long, dto: ProjectCatalogItemDTO) {
-        val project = projectService.getProjectById(projectId) ?: throw IllegalArgumentException("Project not found")
+        val project = projectService.getProjectWithEntries(projectId)
+            ?: throw IllegalArgumentException("Project mit ID $projectId nicht gefunden")
         service.save(dto.toProjectCatalogItemModel(project))
     }
 
     fun updateItem(id: Long, dto: ProjectCatalogItemDTO) {
-        val project = projectService.getProjectById(dto.projectId) ?: throw IllegalArgumentException("Project not found")
+        val projId = dto.projectId
+        val project = projectService.getProjectWithEntries(projId)
+            ?: throw IllegalArgumentException("Project mit ID $projId nicht gefunden")
         service.update(id, dto.toProjectCatalogItemModel(project))
     }
 

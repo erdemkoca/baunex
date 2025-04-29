@@ -30,7 +30,7 @@ fun TimeEntryDTO.toTimeEntryModel(employee: EmployeeModel, project: ProjectModel
         this.date = this@toTimeEntryModel.date
         this.hoursWorked = this@toTimeEntryModel.hoursWorked
         this.note = this@toTimeEntryModel.note
-        this.hourlyRate = employee.hourlyRate ?: 0.0
+        this.hourlyRate = employee.hourlyRate
         this.billable = this@toTimeEntryModel.billable
         this.invoiced = this@toTimeEntryModel.invoiced
         this.catalogItemDescription = this@toTimeEntryModel.catalogItemDescription

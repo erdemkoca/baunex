@@ -1,7 +1,9 @@
 package ch.baunex.user.mapper
 
+import ch.baunex.user.dto.CustomerContactDTO
 import ch.baunex.user.dto.CustomerCreateDTO
 import ch.baunex.user.dto.CustomerDTO
+import ch.baunex.user.model.CustomerContact
 import ch.baunex.user.model.CustomerModel
 import ch.baunex.user.model.PersonModel
 import ch.baunex.user.model.PersonDetails
@@ -11,6 +13,11 @@ fun CustomerModel.toCustomerDTO(): CustomerDTO = CustomerDTO(
     firstName       = this.person.firstName,
     lastName        = this.person.lastName,
     email           = this.person.email,
+    street = this.person.details.street,
+    city = this.person.details.city,
+    zipCode = this.person.details.zipCode,
+    country = this.person.details.country,
+    phone = this.person.details.phone,
     customerNumber  = this.customerNumber,
     companyName     = this.companyName,
     paymentTerms    = this.paymentTerms,
@@ -21,7 +28,8 @@ fun CustomerModel.toCustomerDTO(): CustomerDTO = CustomerDTO(
     marketingConsent  = this.marketingConsent,
     taxId             = this.taxId,
     createdAt         = this.createdAt,
-    updatedAt         = this.updatedAt
+    updatedAt         = this.updatedAt,
+    contacts         = this.contacts.map { it.toContactDTO() }
 )
 
 fun CustomerCreateDTO.toCustomerModel(): CustomerModel {
@@ -77,3 +85,13 @@ fun CustomerCreateDTO.applyTo(customer: CustomerModel): CustomerModel {
 
     return customer
 }
+
+fun CustomerContact.toContactDTO(): CustomerContactDTO = CustomerContactDTO(
+    id          = this.id!!,
+    personId    = this.contactPerson.id!!,
+    personName  = "${this.contactPerson.firstName} ${this.contactPerson.lastName}",
+    role        = this.role,
+    isPrimary   = this.isPrimary,
+    createdAt   = this.createdAt,
+    updatedAt   = this.updatedAt
+)

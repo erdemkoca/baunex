@@ -1,5 +1,6 @@
 package ch.baunex.config
 
+import ch.baunex.config.sample.SampleCustomerAndContactsLoader
 import ch.baunex.config.sample.SampleProjectCatalogItemLoader
 import ch.baunex.config.sample.SampleProjectLoader
 import io.quarkus.runtime.StartupEvent
@@ -17,15 +18,17 @@ class SampleDataLoader {
     @Inject lateinit var employeeLoader: SampleEmployeeLoader
     @Inject lateinit var timeEntryLoader: SampleTimeEntryLoader
     @Inject lateinit var projectCatalogLoader: SampleProjectCatalogItemLoader
+    @Inject lateinit var customerAndContactsLoader: SampleCustomerAndContactsLoader
 
     @Transactional
     fun load(@Observes event: StartupEvent) {
-        projectLoader.load()
         catalogLoader.load()
         userLoader.load()
         employeeLoader.load()
-        timeEntryLoader.load()
         projectCatalogLoader.load()
+        customerAndContactsLoader.load()
+        projectLoader.load()
+        timeEntryLoader.load()
     }
 }
 

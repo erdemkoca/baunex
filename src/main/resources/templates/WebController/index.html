@@ -1,141 +1,134 @@
-{#include layout} {#title}Dashboard - Baunex Business Management{/title}
-{#header}Dashboard{/header} {#content}
+{#include layout}
+    {#title}Dashboard – Baunex Business Management{/title}
+    {#header}Dashboard{/header}
+    {#content}
 
-<!-- Statistics Cards -->
-<div class="row mb-4">
-  <div class="col-md-3">
-    <div class="card stats-card">
-      <div class="card-body">
-        <i class="bi bi-briefcase"></i>
-        <div class="stats-value">{projects.size()}</div>
-        <div class="stats-label">Total Projects</div>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="card stats-card">
-      <div class="card-body">
-        <i class="bi bi-currency-dollar"></i>
-        <div class="stats-value">
-          {#if projects.isEmpty()} $0 {#else} {#set totalBudget=0} {#for project
-          in projects} {#set totalBudget+=project.budget} {/for} ${totalBudget}
-          {/if}
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card stats-card">
+                    <div class="card-body">
+                        <i class="bi bi-briefcase"></i>
+                        <div class="stats-value">{projects.size()}</div>
+                        <div class="stats-label">Total Projects</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stats-card">
+                    <div class="card-body">
+                        <i class="bi bi-calendar-check"></i>
+                        <div class="stats-value">{currentDate}</div>
+                        <div class="stats-label">Today's Date</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stats-card">
+                    <div class="card-body">
+                        <i class="bi bi-clock-history"></i>
+                        <div class="stats-value">{timeEntries.size()}</div>
+                        <div class="stats-label">Time Logs</div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="stats-label">Total Budget</div>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="card stats-card">
-      <div class="card-body">
-        <i class="bi bi-calendar-check"></i>
-        <div class="stats-value">{currentDate}</div>
-        <div class="stats-label">Today's Date</div>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-3">
-  <div class="card stats-card">
-    <div class="card-body">
-      <i class="bi bi-clock-history"></i>
-      <div class="stats-value">{timeEntries.size()}</div>
-      <div class="stats-label">Time Logs</div>
-    </div>
-  </div>
-  </div>
-</div>
 
-<div class="row">
-  <div class="col-md-6">
-    <div class="card">
-      <div
-        class="card-header d-flex justify-content-between align-items-center"
-      >
-        <span><i class="bi bi-briefcase me-2"></i>Recent Projects</span>
-        <a href="/projects" class="btn btn-sm btn-outline-primary">View All</a>
-      </div>
-      <div class="card-body">
-        {#if projects.isEmpty()}
-        <p class="text-muted">No projects found.</p>
-        {#else}
-        <div class="table-responsive">
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Client</th>
-                <th>Budget</th>
-              </tr>
-            </thead>
-            <tbody>
-              {#for project in projects} {#if project_index < 5}
-              <tr>
-                <td>{project.name}</td>
-                <td>{project.client}</td>
-                <td>${project.budget}</td>
-              </tr>
-              {/if} {/for}
-            </tbody>
-          </table>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-briefcase me-2"></i>Recent Projects</span>
+                        <a href="/projects" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                    <div class="card-body">
+                        {#if projects.isEmpty()}
+                            <p class="text-muted">No projects found.</p>
+                        {#else}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Client</th>
+                                        <th>Budget</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {#for project in projects}
+                                        {#if project_index < 5}
+                                            <tr>
+                                                <td>{project.name}</td>
+                                                <td>{project.customerName}</td>
+                                                <td>${project.budget}</td>
+                                            </tr>
+                                        {/if}
+                                    {/for}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {/if}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12 mt-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-clock me-2"></i>Recent Time Logs</span>
+                        <a href="/timetracking" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                    <div class="card-body">
+                        {#if timeEntries.isEmpty()}
+                            <p class="text-muted">No time logs found.</p>
+                        {#else}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                    <tr>
+                                        <th>Worker</th>
+                                        <th>Project</th>
+                                        <th>Date</th>
+                                        <th>Hours</th>
+                                        <th>Note</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {#for entry in timeEntries}
+                                        {#if entry_index < 5}
+                                            <tr>
+                                                <td>{entry.employeeEmail}</td>
+                                                <td>{entry.projectName}</td>
+                                                <td>{entry.date}</td>
+                                                <td>{entry.hoursWorked}</td>
+                                                <td>{entry.notes ?: '—'}</td>
+                                            </tr>
+                                        {/if}
+                                    {/for}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {/if}
+                    </div>
+                </div>
+            </div>
         </div>
-        {/if}
-      </div>
-    </div>
-  </div>
-  <div class="col-md-12 mt-4">
-  <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <span><i class="bi bi-clock me-2"></i>Recent Time Logs</span>
-      <a href="/timetracking" class="btn btn-sm btn-outline-primary">View All</a>
-    </div>
-    <div class="card-body">
-      {#if timeEntries.isEmpty()}
-        <p class="text-muted">No time logs found.</p>
-      {#else}
-        <div class="table-responsive">
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th>Worker</th>
-                <th>Project</th>
-                <th>Date</th>
-                <th>Hours</th>
-                <th>Note</th>
-              </tr>
-            </thead>
-            <tbody>
-              {#for entry in timeEntries} {#if entry_index < 5}
-              <tr>
-                <td>{entry.employeeId}</td>
-                <td>{entry.projectId}</td>
-                <td>{entry.date}</td>
-                <td>{entry.hoursWorked}</td>
-                <td>{entry.notes ?: '—'}</td>
-              </tr>
-              {/if} {/for}
-            </tbody>
-          </table>
-        </div>
-      {/if}
-    </div>
-  </div>
-</div>
-</div>
 
-<div class="row mt-4">
-  <div class="col-md-12">
-    <div class="card">
-      <div class="card-header">
-        <i class="bi bi-lightning-charge me-2"></i>Quick Actions
-      </div>
-      <div class="card-body">
-        <div class="d-flex gap-3">
-          <a href="/projects/new" class="btn btn-primary">
-            <i class="bi bi-plus-circle me-2"></i>New Project
-          </a>
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-lightning-charge me-2"></i>Quick Actions
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex gap-3">
+                            <a href="/projects/new" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-2"></i>New Project
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  </div>
-</div>
-{/content} {/include}
+
+    {/content}
+{/include}

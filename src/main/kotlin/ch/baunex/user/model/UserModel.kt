@@ -5,7 +5,7 @@ import jakarta.persistence.*
 
 @Entity
 @Table(name = "users")
-class UserModel() : PanacheEntity() {
+class UserModel : PanacheEntity() {
 
     @Column(nullable = false, unique = true)
     lateinit var email: String

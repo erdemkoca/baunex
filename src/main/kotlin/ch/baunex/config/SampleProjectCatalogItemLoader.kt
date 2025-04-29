@@ -37,7 +37,7 @@ class SampleProjectCatalogItemLoader {
         val automat = catalogItems.find { it.name.contains("Sicherungsautomat") }
 
         if (efhProject != null && steckdose != null && schalter != null && kabel != null) {
-            val efhProjectId = efhProject.id ?: return
+            val efhProjectId = efhProject.id
             listOf(
                 ProjectCatalogItemDTO(
                     projectId = efhProjectId,
@@ -67,7 +67,7 @@ class SampleProjectCatalogItemLoader {
         }
 
         if (garageProject != null && automat != null && ledPanel != null) {
-            val garageProjectId = garageProject.id ?: return
+            val garageProjectId = garageProject.id
             listOf(
                 ProjectCatalogItemDTO(
                     projectId = garageProjectId,
