@@ -5,8 +5,8 @@ import ch.baunex.user.repository.UserRepository
 import ch.baunex.security.service.AuthService
 import ch.baunex.user.service.UserService
 import ch.baunex.security.utils.PasswordUtil
-import ch.baunex.user.mapping.toUserModel
-import ch.baunex.user.mapping.toUserResponseDTO
+import ch.baunex.user.mapper.toUserModel
+import ch.baunex.user.mapper.toUserResponseDTO
 import ch.baunex.user.model.Role
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject

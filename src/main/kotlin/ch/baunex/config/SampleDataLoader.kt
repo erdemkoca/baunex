@@ -14,6 +14,7 @@ class SampleDataLoader {
     @Inject lateinit var projectLoader: SampleProjectLoader
     @Inject lateinit var catalogLoader: SampleCatalogLoader
     @Inject lateinit var userLoader: SampleUserLoader
+    @Inject lateinit var employeeLoader: SampleEmployeeLoader
     @Inject lateinit var timeEntryLoader: SampleTimeEntryLoader
     @Inject lateinit var projectCatalogLoader: SampleProjectCatalogItemLoader
 
@@ -22,6 +23,7 @@ class SampleDataLoader {
         projectLoader.load()
         catalogLoader.load()
         userLoader.load()
+        employeeLoader.load()
         timeEntryLoader.load()
         projectCatalogLoader.load()
     }

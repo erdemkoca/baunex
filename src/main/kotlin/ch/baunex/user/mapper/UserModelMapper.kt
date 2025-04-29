@@ -1,4 +1,4 @@
-package ch.baunex.user.mapping
+package ch.baunex.user.mapper
 
 import ch.baunex.user.dto.UpdateUserDTO
 import ch.baunex.user.dto.UserDTO
