@@ -7,6 +7,7 @@ import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.user.dto.UserResponseDTO
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.timetracking.facade.TimeTrackingFacade
+import ch.baunex.user.dto.EmployeeDTO
 import io.quarkus.qute.CheckedTemplate
 import io.quarkus.qute.TemplateInstance
 import jakarta.inject.Inject
@@ -40,6 +41,12 @@ class WebController {
 
         @JvmStatic
         external fun userForm(user: UserResponseDTO?, currentDate: LocalDate, activeMenu: String, roles: List<String>): TemplateInstance
+
+        @JvmStatic
+        external fun employees(employees: List<EmployeeDTO>, currentDate: LocalDate, activeMenu: String): TemplateInstance
+
+        @JvmStatic
+        external fun employeeForm(employee: EmployeeDTO?, currentDate: LocalDate, activeMenu: String, roles: List<String>): TemplateInstance
 
         @JvmStatic
         external fun timetracking(

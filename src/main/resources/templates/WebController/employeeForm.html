@@ -1,0 +1,136 @@
+{#include layout}
+  {#title}{#if employee}Edit Worker{#else}New Worker{/if} – Baunex Business Management{/title}
+  {#header}{#if employee}Edit Worker{#else}New Worker{/if}{/header}
+  {#content}
+    <div class="card">
+      <div class="card-header">
+        {#if employee}Edit Worker Details{#else}Create New Worker{/if}
+      </div>
+      <div class="card-body">
+        <form action="/employees/save" method="post">
+          {#if employee}
+            <input type="hidden" name="id" value="{employee.id}" />
+          {/if}
+
+          <div class="row gx-3">
+            <div class="col-md-6 mb-3">
+              <label for="firstName" class="form-label">First Name</label>
+              <input
+                      type="text" class="form-control" id="firstName" name="firstName"
+                      value="{#if employee}{employee.firstName}{/if}" required
+              />
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="lastName" class="form-label">Last Name</label>
+              <input
+                      type="text" class="form-control" id="lastName" name="lastName"
+                      value="{#if employee}{employee.lastName}{/if}" required
+              />
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input
+                    type="email" class="form-control" id="email" name="email"
+                    value="{#if employee}{employee.email}{/if}" required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input
+                    type="password" class="form-control" id="password" name="password"
+                    {#if !employee}required{/if}
+            />
+            {#if employee}
+              <div class="form-text">Leave empty to keep current password.</div>
+            {/if}
+          </div>
+
+          <div class="mb-3">
+            <label for="role" class="form-label">Role</label>
+            <select class="form-select" id="role" name="role" required>
+              {#for r in roles}
+                <option value="{r}" {#if employee && employee.role == r}selected{/if}>{r}</option>
+              {/for}
+            </select>
+          </div>
+
+          <div class="row gx-3">
+            <div class="col-md-4 mb-3">
+              <label for="ahvNumber" class="form-label">AHV Number</label>
+              <input
+                      type="text" class="form-control" id="ahvNumber" name="ahvNumber"
+                      value="{#if employee}{employee.ahvNumber}{/if}" required
+              />
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="bankIban" class="form-label">Bank IBAN</label>
+              <input
+                      type="text" class="form-control" id="bankIban" name="bankIban"
+                      value="{#if employee}{employee.bankIban}{/if}"
+              />
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="hourlyRate" class="form-label">Hourly Rate</label>
+              <input
+                      type="number" step="0.01" class="form-control" id="hourlyRate" name="hourlyRate"
+                      value="{#if employee}{employee.hourlyRate}{#else}150.0{/if}" required
+              />
+            </div>
+          </div>
+
+          <div class="row gx-3">
+            <div class="col-md-6 mb-3">
+              <label for="street" class="form-label">Street</label>
+              <input
+                      type="text" class="form-control" id="street" name="street"
+                      value="{#if employee}{employee.street}{/if}"
+              />
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="city" class="form-label">City</label>
+              <input
+                      type="text" class="form-control" id="city" name="city"
+                      value="{#if employee}{employee.city}{/if}"
+              />
+            </div>
+          </div>
+
+          <div class="row gx-3 mb-4">
+            <div class="col-md-6">
+              <label for="zipCode" class="form-label">Zip Code</label>
+              <input
+                      type="text" class="form-control" id="zipCode" name="zipCode"
+                      value="{#if employee}{employee.zipCode}{/if}"
+              />
+            </div>
+            <div class="col-md-6">
+              <label for="country" class="form-label">Country</label>
+              <input
+                      type="text" class="form-control" id="country" name="country"
+                      value="{#if employee}{employee.country}{/if}"
+              />
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label for="phone" class="form-label">Phone</label>
+            <input
+                    type="text" class="form-control" id="phone" name="phone"
+                    value="{#if employee}{employee.phone}{/if}"
+            />
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save me-2"></i>{#if employee}Update Worker{#else}Create Worker{/if}
+            </button>
+            <a href="/employees" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  {/content}
+{/include}

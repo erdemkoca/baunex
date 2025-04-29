@@ -11,6 +11,11 @@ data class EmployeeDTO(
     val ahvNumber: String,
     val bankIban: String?,
     val hourlyRate: Double,
+    val street: String?,
+    val city: String?,
+    val zipCode: String?,
+    val country: String?,
+    val phone: String?,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime
 )

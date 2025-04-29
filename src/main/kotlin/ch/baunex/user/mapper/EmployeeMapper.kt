@@ -16,6 +16,11 @@ fun EmployeeModel.toEmployeeDTO(): EmployeeDTO = EmployeeDTO(
     ahvNumber = this.ahvNumber,
     bankIban = this.bankIban,
     hourlyRate = this.hourlyRate,
+    street     = this.person.details.street,
+    city       = this.person.details.city,
+    zipCode    = this.person.details.zipCode,
+    country    = this.person.details.country,
+    phone      = this.person.details.phone,
     createdAt = this.createdAt,
     updatedAt = this.updatedAt
 )

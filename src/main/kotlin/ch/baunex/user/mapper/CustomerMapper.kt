@@ -5,7 +5,6 @@ import ch.baunex.user.dto.CustomerDTO
 import ch.baunex.user.model.CustomerModel
 import ch.baunex.user.model.PersonModel
 import ch.baunex.user.model.PersonDetails
-import java.time.LocalDateTime
 
 fun CustomerModel.toCustomerDTO(): CustomerDTO = CustomerDTO(
     id              = this.id!!,
