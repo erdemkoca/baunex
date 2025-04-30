@@ -93,20 +93,22 @@ class WebController {
             currentDate: LocalDate,
             activeMenu: String
         ): TemplateInstance
-//
-//        @JvmStatic
-//        external fun customerContacts(
-//            contacts: List<CustomerContactDTO>,
-//            customerId: Long,
-//            activeMenu: String
-//        ): TemplateInstance
-//
-//        @JvmStatic
-//        external fun customerContactForm(
-//            contact: CustomerContactDTO?,
-//            customerId: Long,
-//            activeMenu: String
-//        ): TemplateInstance
+
+        @JvmStatic
+        external fun customerContacts(
+            contacts: List<CustomerContactDTO>,
+            customerId: Long,
+            currentDate: LocalDate,
+            activeMenu: String
+        ): TemplateInstance
+
+        @JvmStatic
+        external fun customerContactForm(
+            contact: CustomerContactDTO?,
+            customerId: Long,
+            currentDate: LocalDate,
+            activeMenu: String
+        ): TemplateInstance
     }
 
     @GET

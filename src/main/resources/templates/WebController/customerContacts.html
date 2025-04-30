@@ -1,0 +1,45 @@
+{#include layout}
+
+    {#title}Customer Contacts{/title}
+    {#header}Contacts{/header}
+
+    {#content}
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Contacts</span>
+                <a href="/customers/{customerId}/contacts/new" class="btn btn-sm btn-success">
+                    <i class="bi bi-plus-circle me-1"></i>Add Contact
+                </a>
+            </div>
+            <div class="card-body">
+                {#if contacts.isEmpty()}
+                    <p class="text-muted">No contacts for this customer.</p>
+                {#else}
+                    <ul class="list-group">
+                        {#for contact in contacts}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>
+                                        {#if contact.role}{contact.role}{#else}Contact{/if}
+                                    </strong>
+                                    – {contact.personName}
+                                </div>
+                                <div class="btn-group">
+                                    <a href="/customers/{customerId}/contacts/{contact.id}/edit"
+                                       class="btn btn-sm btn-outline-primary" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="/customers/{customerId}/contacts/{contact.id}/delete"
+                                       class="btn btn-sm btn-outline-danger" title="Delete"
+                                       onclick="return confirm('Delete this contact?');">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </li>
+                        {/for}
+                    </ul>
+                {/if}
+            </div>
+        </div>
+    {/content}
+{/include}

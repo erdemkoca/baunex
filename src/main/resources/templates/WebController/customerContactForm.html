@@ -1,0 +1,60 @@
+{#include layout}
+
+  {#title}{#if contact}Edit Contact{#else}New Contact{/if}{/title}
+  {#header}{#if contact}Edit Contact{#else}New Contact{/if}{/header}
+
+{#content}
+  <div class="card mb-4">
+    <div class="card-header">
+      {#if contact}Edit Contact{#else}New Contact{/if}
+    </div>
+    <div class="card-body">
+      <form action="/customers/{customerId}/contacts/save" method="post">
+        {#if contact}
+          <!-- editing existing -->
+          <input type="hidden" name="id" value="{contact.id}" />
+          <input type="hidden" name="personId" value="{contact.personId}" />
+          <div class="mb-3">
+            <label for="role" class="form-label">Role</label>
+            <input type="text"
+                   id="role"
+                   name="role"
+                   class="form-control"
+                   value="{contact.role}" />
+          </div>
+          <div class="form-check mb-3">
+            <input type="checkbox"
+                   id="isPrimary"
+                   name="isPrimary"
+                   class="form-check-input"
+                   {#if contact.isPrimary}checked{/if} />
+            <label for="isPrimary" class="form-check-label">Primary</label>
+          </div>
+        {#else}
+          <!-- creating new -->
+          <input type="hidden" name="personId" value="" />
+          <div class="mb-3">
+            <label for="role" class="form-label">Role</label>
+            <input type="text"
+                   id="role"
+                   name="role"
+                   class="form-control"
+                   value="" />
+          </div>
+          <div class="form-check mb-3">
+            <input type="checkbox"
+                   id="isPrimary"
+                   name="isPrimary"
+                   class="form-check-input" />
+            <label for="isPrimary" class="form-check-label">Primary</label>
+          </div>
+        {/if}
+
+        <button type="submit" class="btn btn-primary">
+          {#if contact}Update{#else}Create{/if}
+        </button>
+        <a href="/customers/{customerId}" class="btn btn-secondary">Cancel</a>
+      </form>
+    </div>
+  </div>
+{/content}
