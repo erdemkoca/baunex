@@ -29,6 +29,7 @@ class WebController {
     lateinit var timeTrackingFacade: TimeTrackingFacade
 
     @CheckedTemplate
+    //@CheckedTemplate(requireTypeSafeExpressions = false)
     object Templates {
         @JvmStatic
         external fun index(projects: List<ProjectListDTO>, currentDate: LocalDate, activeMenu: String, timeEntries: List<TimeEntryResponseDTO>): TemplateInstance
@@ -77,6 +78,35 @@ class WebController {
             currentDate: String,
             activeMenu: String
         ): TemplateInstance
+
+        @JvmStatic
+        external fun customers(
+            customers: List<CustomerDTO>,
+            currentDate: LocalDate,
+            activeMenu: String
+        ): TemplateInstance
+
+        @JvmStatic
+        external fun customerDetail(
+            customer: CustomerDTO,
+            contacts: List<CustomerContactDTO>,
+            currentDate: LocalDate,
+            activeMenu: String
+        ): TemplateInstance
+//
+//        @JvmStatic
+//        external fun customerContacts(
+//            contacts: List<CustomerContactDTO>,
+//            customerId: Long,
+//            activeMenu: String
+//        ): TemplateInstance
+//
+//        @JvmStatic
+//        external fun customerContactForm(
+//            contact: CustomerContactDTO?,
+//            customerId: Long,
+//            activeMenu: String
+//        ): TemplateInstance
     }
 
     @GET
