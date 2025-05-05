@@ -1,4 +1,3 @@
-// File: ch/baunex/config/sample/SampleCustomerAndContactsLoader.kt
 package ch.baunex.config.sample
 
 import ch.baunex.user.dto.CustomerCreateDTO
@@ -26,14 +25,95 @@ class SampleCustomerAndContactsLoader {
         if (customerFacade.listAll().isNotEmpty()) return
 
         // Hilfsfunktion, um Kontakt-Personen einfach zu erzeugen und zu persistieren
-        fun mkPerson(fn: String, ln: String, email: String, street: String, city: String, zip: String, country: String, phone: String): PersonModel =
+        fun mkPerson(
+            fn: String, ln: String, email: String,
+            street: String, city: String, zip: String, country: String, phone: String
+        ): PersonModel =
             PersonModel().apply {
-                firstName = fn; lastName = ln; this.email = email
+                firstName = fn
+                lastName  = ln
+                this.email = email
                 details = PersonDetails(street, city, zip, country, phone)
                 persist()
             }
 
-        // Hilfsfunktion, um Customer + einen Dummy-Kontakt anzulegen
+        //
+        // 1) Elektro Meier AG mit vier Kontakten
+        //
+        val hansDto = CustomerCreateDTO(
+            firstName        = "Hans",
+            lastName         = "Meier",
+            email            = "h.meier@elektromeier.ch",
+            street           = "Weinbergstrasse 12",
+            city             = "Zürich",
+            zipCode          = "8001",
+            country          = "Switzerland",
+            phone            = "0441234567",
+            customerNumber   = "EM-001",
+            companyName      = "Elektro Meier AG",
+            paymentTerms     = "30 Tage",
+            creditLimit      = BigDecimal(20_000),
+            industry         = "Elektrotechnik",
+            discountRate     = 0.0,
+            preferredLanguage= "DE",
+            marketingConsent = false,
+            taxId            = "CHE-000.000.000"
+        )
+        // Anlage des Kunden
+        val savedHans = customerFacade.create(hansDto)
+        // Hole das JPA‐Entity, um Contacts anzuhängen
+        val hansCustomer = customerService.findCustomerById(savedHans.id)
+            ?: throw IllegalStateException("Kunde EM-001 nicht gefunden")
+
+        // 1a) Primary-Kontakt (derselbe wie Hans Meier)
+        val primary = mkPerson(
+            "Hans", "Meier", "h.meier@elektromeier.ch",
+            "Weinbergstrasse 12", "Zürich", "8001", "Switzerland", "0441234567"
+        )
+        CustomerContact().apply {
+            customer      = hansCustomer
+            contactPerson = primary
+            role          = "Primary"
+            isPrimary     = true
+        }.persist()
+
+        // 1b) Drei weitere Sekundärkontakte
+        val anna = mkPerson(
+            "Anna", "Müller", "a.mueller@elektromeier.ch",
+            "Bahnhofstrasse 1", "Zürich", "8001", "Switzerland", "0447654321"
+        )
+        CustomerContact().apply {
+            customer      = hansCustomer
+            contactPerson = anna
+            role          = "Sales"
+            isPrimary     = false
+        }.persist()
+
+        val beat = mkPerson(
+            "Beat", "Beispiel", "b.beispiel@elektromeier.ch",
+            "Lindenweg 5", "Zürich", "8002", "Switzerland", "0442345678"
+        )
+        CustomerContact().apply {
+            customer      = hansCustomer
+            contactPerson = beat
+            role          = "Support"
+            isPrimary     = false
+        }.persist()
+
+        val sarah = mkPerson(
+            "Sarah", "Fischer", "s.fischer@elektromeier.ch",
+            "Seestrasse 20", "Zürich", "8003", "Switzerland", "0448765432"
+        )
+        CustomerContact().apply {
+            customer      = hansCustomer
+            contactPerson = sarah
+            role          = "Billing"
+            isPrimary     = false
+        }.persist()
+
+        //
+        // 2–5) Die übrigen vier Kunden wie gehabt
+        //
         fun createCust(
             firstName: String, lastName: String, email: String,
             street: String, city: String, zip: String, country: String, phone: String,
@@ -59,9 +139,10 @@ class SampleCustomerAndContactsLoader {
                 taxId            = "CHE-000.000.000"
             )
             val saved = customerFacade.create(dto)
-
-            // lege einen Default-Kontakt an (derselbe wie der Kunde selbst)
-            val person = mkPerson(firstName, lastName, email, street, city, zip, country, phone)
+            val person = mkPerson(
+                firstName, lastName, email,
+                street, city, zip, country, phone
+            )
             CustomerContact().apply {
                 customer      = customerService.findCustomerById(saved.id)!!
                 contactPerson = person
@@ -70,12 +151,6 @@ class SampleCustomerAndContactsLoader {
             }.persist()
         }
 
-        // Jetzt alle 5 anlegen:
-        createCust(
-            firstName = "Hans", lastName = "Meier", email = "h.meier@elektromeier.ch",
-            street="Weinbergstrasse 12", city="Zürich", zip="8001", country="Switzerland", phone="0441234567",
-            custNo="EM-001", company="Elektro Meier AG"
-        )
         createCust(
             firstName = "Stefan", lastName = "Burri", email = "s.burri@emobility.ch",
             street="Steinenvorstadt 99", city="Basel", zip="4051", country="Switzerland", phone="0617654321",

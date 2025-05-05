@@ -1,7 +1,10 @@
 package ch.baunex.web
 
+import ch.baunex.user.dto.CustomerContactDTO
 import ch.baunex.user.dto.CustomerDTO
+import ch.baunex.user.facade.CustomerContactFacade
 import ch.baunex.user.facade.CustomerFacade
+import ch.baunex.web.forms.CustomerForm
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import jakarta.ws.rs.*
@@ -19,9 +22,11 @@ class WebCustomerController {
     @Inject
     lateinit var customerFacade: CustomerFacade
 
+    @Inject
+    lateinit var customerContactFacade: CustomerContactFacade
+
     private fun getCurrentDate() = LocalDate.now()
 
-    /** Kunden-Liste anzeigen */
     @GET
     fun list(): Response {
         val customers: List<CustomerDTO> = customerFacade.listAll()
@@ -30,7 +35,6 @@ class WebCustomerController {
         return Response.ok(template.render()).build()
     }
 
-    /** Leeres Formular für neuen Kunden */
     @GET
     @Path("/new")
     fun newCustomer(): Response {
@@ -59,7 +63,7 @@ class WebCustomerController {
             contacts         = emptyList()
         )
         val template = WebController.Templates
-            .customerDetail(empty, contacts = emptyList(), getCurrentDate(), "customers")
+            .customerDetail(empty, emptyList(), getCurrentDate(), "customers")
         return Response.ok(template.render()).build()
     }
 
@@ -77,13 +81,13 @@ class WebCustomerController {
         return Response.seeOther(URI("/customers")).build()
     }
 
-
     @GET
     @Path("/{id}")
     fun view(@PathParam("id") id: Long): Response {
         val customer = customerFacade.findById(id)
+        val contacts: List<CustomerContactDTO> = customerContactFacade.listByCustomer(id)
         val template = WebController.Templates
-            .customerDetail(customer, contacts = emptyList(), getCurrentDate(), "customers") // contacts will be loaded by sub-controller/tab
+            .customerDetail(customer, contacts, getCurrentDate(), "customers")
         return Response.ok(template.render()).build()
     }
 

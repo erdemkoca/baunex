@@ -6,7 +6,7 @@ import ch.baunex.user.dto.CustomerContactUpdateDTO
 import ch.baunex.user.model.CustomerContact
 import ch.baunex.user.model.CustomerModel
 import ch.baunex.user.model.PersonModel
-import ch.baunex.web.CustomerContactForm
+import ch.baunex.web.forms.CustomerContactForm
 
 fun CustomerContact.toDTO(): CustomerContactDTO = CustomerContactDTO(
     id = this.id!!,

@@ -1,4 +1,4 @@
-package ch.baunex.web
+package ch.baunex.web.forms
 
 import ch.baunex.user.dto.CustomerContactCreateDTO
 import ch.baunex.user.dto.CustomerContactUpdateDTO

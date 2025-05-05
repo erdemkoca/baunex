@@ -2,7 +2,7 @@ package ch.baunex.web
 
 import ch.baunex.user.dto.CustomerContactDTO
 import ch.baunex.user.facade.CustomerContactFacade
-import ch.baunex.user.mapper.toUpdateDTO
+import ch.baunex.web.forms.CustomerContactForm
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import jakarta.ws.rs.*
