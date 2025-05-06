@@ -25,9 +25,9 @@ class SampleDataLoader {
         catalogLoader.load()
         userLoader.load()
         employeeLoader.load()
-        projectCatalogLoader.load()
         customerAndContactsLoader.load()
         projectLoader.load()
+        projectCatalogLoader.load()
         timeEntryLoader.load()
     }
 }
