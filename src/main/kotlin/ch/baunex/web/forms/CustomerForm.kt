@@ -43,7 +43,7 @@ class CustomerForm {
     var paymentTerms: String? = null
 
     @FormParam("creditLimit")
-    var creditLimit: BigDecimal? = null
+    var creditLimit: Double? = null
 
     @FormParam("industry")
     var industry: String? = null
@@ -60,9 +60,7 @@ class CustomerForm {
     @FormParam("taxId")
     var taxId: String? = null
 
-    /** Baut ein CustomerCreateDTO für create/update */
     fun toCreateDTO(): CustomerCreateDTO {
-        // Hier gehen wir davon aus, dass firstName, lastName und customerNumber zwingend sind:
         return CustomerCreateDTO(
             firstName        = firstName!!,
             lastName         = lastName!!,

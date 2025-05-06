@@ -14,7 +14,7 @@ data class CustomerCreateDTO(
     val customerNumber: String,
     val companyName: String?,
     val paymentTerms: String?,
-    val creditLimit: BigDecimal?,
+    val creditLimit: Double?,
     val industry: String?,
     val discountRate: Double?,
     val preferredLanguage: String?,

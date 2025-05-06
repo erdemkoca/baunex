@@ -22,8 +22,6 @@ class ProjectModel : PanacheEntity() {
     @Column(nullable = false)
     var budget: Int = 0
 
-    var contact: String? = "No Info"
-
     @Column(name = "start_date")
     var startDate: LocalDate? = null
 

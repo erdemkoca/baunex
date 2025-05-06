@@ -1,6 +1,7 @@
 package ch.baunex.project.dto
 
 import ch.baunex.project.model.ProjectStatus
+import ch.baunex.user.dto.CustomerDTO
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
@@ -16,5 +17,4 @@ data class ProjectCreateDTO(
     val status: ProjectStatus = ProjectStatus.PLANNED,
     val street: String? = null,
     val city: String? = null,
-    val contact: String? = null
 )

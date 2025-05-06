@@ -1,4 +1,3 @@
-// File: ch/baunex/web/WebProjectController.kt
 package ch.baunex.web
 
 import ch.baunex.billing.dto.BillingDTO
@@ -9,9 +8,8 @@ import ch.baunex.project.dto.ProjectDetailDTO
 import ch.baunex.project.dto.ProjectListDTO
 import ch.baunex.project.dto.ProjectUpdateDTO
 import ch.baunex.project.facade.ProjectFacade
-import ch.baunex.project.service.ProjectService
-import ch.baunex.user.dto.CustomerContactDTO
 import ch.baunex.user.dto.CustomerDTO
+import ch.baunex.user.dto.CustomerContactDTO
 import ch.baunex.user.facade.CustomerFacade
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -20,6 +18,7 @@ import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import java.net.URI
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Path("/projects")
 @Produces(MediaType.TEXT_HTML)
@@ -51,28 +50,59 @@ class WebProjectController {
     @GET
     @Path("/new")
     fun newProject(): Response {
-        // Für das „Neue Projekt“-Formular baust Du am besten ein CreateDTO oder DetailDTO
-        val emptyDetail = ProjectDetailDTO(
-            id             = 0,
-            name           = "",
-            customerId     = 0,
-            customerName   = "",
-            budget         = 0,
-            contact        = null,
-            startDate      = null,
-            endDate        = null,
-            description    = null,
-            status         = ch.baunex.project.model.ProjectStatus.PLANNED,
-            street         = null,
-            city           = null,
-            timeEntries    = emptyList(),
-            catalogItems   = emptyList(),
-            contacts   = emptyList(),
+        // Build a dummy CustomerDTO to satisfy the non-null parameter in ProjectDetailDTO
+        val now = LocalDateTime.now()
+        val emptyCustomer = CustomerDTO(
+            id               = 0L,
+            firstName        = "",
+            lastName         = "",
+            email            = null,
+            street           = null,
+            city             = null,
+            zipCode          = null,
+            country          = null,
+            phone            = null,
+            customerNumber   = "",
+            companyName      = null,
+            paymentTerms     = null,
+            creditLimit      = null,
+            industry         = null,
+            discountRate     = null,
+            preferredLanguage= null,
+            marketingConsent = false,
+            taxId            = null,
+            createdAt        = now,
+            updatedAt        = now,
+            contacts         = emptyList()
         )
-        val template = WebController.Templates
-            .projectDetail(emptyDetail, "projects", getCurrentDate(),
-                catalogItems = emptyList(), billing = BillingDTO(0, emptyList(), emptyList(), 0.0, 0.0, 0.0), contacts = emptyList(), customers = emptyList()
-            )
+        val emptyDetail = ProjectDetailDTO(
+            id           = 0,
+            name         = "",
+            customerId   = 0,
+            customerName = "",
+            budget       = 0,
+            customer     = emptyCustomer,
+            startDate    = null,
+            endDate      = null,
+            description  = null,
+            status       = ch.baunex.project.model.ProjectStatus.PLANNED,
+            street       = null,
+            city         = null,
+            timeEntries  = emptyList(),
+            catalogItems = emptyList(),
+            contacts     = emptyList()
+        )
+        // Preload all customers so the dropdown can be populated
+        val customers = customerFacade.listAll()
+        val template = WebController.Templates.projectDetail(
+            emptyDetail,
+            "projects",
+            getCurrentDate(),
+            catalogItems = emptyList(),
+            billing      = BillingDTO(0, emptyList(), emptyList(), 0.0, 0.0, 0.0),
+            contacts     = emptyList(),
+            customers    = customers
+        )
         return Response.ok(template.render()).build()
     }
 
@@ -86,8 +116,15 @@ class WebProjectController {
         val billing: BillingDTO = billingFacade.getBillingForProject(id)
         val contacts: List<CustomerContactDTO> = detail.contacts
         val customers: List<CustomerDTO> = customerFacade.listAll()
-        val template = WebController.Templates
-            .projectDetail(detail, "projects", getCurrentDate(), catalogItems, billing, contacts, customers)
+        val template = WebController.Templates.projectDetail(
+            detail,
+            "projects",
+            getCurrentDate(),
+            catalogItems,
+            billing,
+            contacts,
+            customers
+        )
         return Response.ok(template.render()).build()
     }
 
@@ -95,46 +132,46 @@ class WebProjectController {
     @Path("/save")
     @Transactional
     fun saveProject(
-        @FormParam("id") id: Long?,
-        @FormParam("name") name: String,
+        @FormParam("id")         id: Long?,
+        @FormParam("name")       name: String,
         @FormParam("customerId") customerId: Long,
-        @FormParam("budget") budget: Int,
-        @FormParam("contact") contact: String?,
-        @FormParam("startDate") startDate: LocalDate?,
-        @FormParam("endDate") endDate: LocalDate?,
-        @FormParam("description") description: String?,
-        @FormParam("status") status: ch.baunex.project.model.ProjectStatus?,
-        @FormParam("street") street: String?,
-        @FormParam("city") city: String?
+        @FormParam("budget")     budget: Int,
+        @FormParam("startDate")  startDate: LocalDate?,
+        @FormParam("endDate")    endDate: LocalDate?,
+        @FormParam("description")description: String?,
+        @FormParam("status")     status: ch.baunex.project.model.ProjectStatus?,
+        @FormParam("street")     street: String?,
+        @FormParam("city")       city: String?
     ): Response {
         if (id == null || id == 0L) {
-            val createDto = ProjectCreateDTO(
-                name        = name,
-                customerId  = customerId,
-                budget      = budget,
-                contact     = contact,
-                startDate   = startDate ?: getCurrentDate(),
-                endDate     = endDate   ?: getCurrentDate(),
-                description = description,
-                status      = status    ?: ch.baunex.project.model.ProjectStatus.PLANNED,
-                street      = street,
-                city        = city
+            projectFacade.createProject(
+                ProjectCreateDTO(
+                    name        = name,
+                    customerId  = customerId,
+                    budget      = budget,
+                    startDate   = startDate ?: getCurrentDate(),
+                    endDate     = endDate   ?: getCurrentDate(),
+                    description = description,
+                    status      = status    ?: ch.baunex.project.model.ProjectStatus.PLANNED,
+                    street      = street,
+                    city        = city
+                )
             )
-            projectFacade.createProject(createDto)
         } else {
-            val updateDto = ProjectUpdateDTO(
-                name        = name,
-                customerId  = customerId,
-                budget      = budget,
-                contact     = contact,
-                startDate   = startDate,
-                endDate     = endDate,
-                description = description,
-                status      = status,
-                street      = street,
-                city        = city
+            projectFacade.updateProject(
+                id,
+                ProjectUpdateDTO(
+                    name        = name,
+                    customerId  = customerId,
+                    budget      = budget,
+                    startDate   = startDate,
+                    endDate     = endDate,
+                    description = description,
+                    status      = status,
+                    street      = street,
+                    city        = city
+                )
             )
-            projectFacade.updateProject(id, updateDto)
         }
         return Response.seeOther(URI("/projects")).build()
     }

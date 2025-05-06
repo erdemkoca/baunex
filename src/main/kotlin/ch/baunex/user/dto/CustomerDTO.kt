@@ -1,8 +1,10 @@
 package ch.baunex.user.dto
 
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import java.time.LocalDateTime
-import java.math.BigDecimal
 
+@Serializable
 data class CustomerDTO(
     val id: Long,
     val firstName: String,
@@ -16,13 +18,13 @@ data class CustomerDTO(
     val customerNumber: String,
     val companyName: String?,
     val paymentTerms: String?,
-    val creditLimit: BigDecimal?,
+    val creditLimit: Double?,
     val industry: String?,
     val discountRate: Double?,
     val preferredLanguage: String?,
     val marketingConsent: Boolean,
     val taxId: String?,
-    val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime,
+    @Contextual val createdAt: LocalDateTime,
+    @Contextual val updatedAt: LocalDateTime,
     val contacts: List<CustomerContactDTO> = emptyList()
 )

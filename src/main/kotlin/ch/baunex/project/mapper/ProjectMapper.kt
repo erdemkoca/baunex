@@ -6,6 +6,7 @@ import ch.baunex.project.model.ProjectModel
 import ch.baunex.timetracking.mapper.toTimeEntryResponseDTO
 import ch.baunex.user.dto.CustomerContactDTO
 import ch.baunex.user.mapper.toContactDTO
+import ch.baunex.user.mapper.toCustomerDTO
 import ch.baunex.user.model.CustomerContact
 
 fun ProjectModel.toListDTO() = ProjectListDTO(
@@ -22,7 +23,7 @@ fun ProjectModel.toDetailDTO() = ProjectDetailDTO(
     customerId   = this.customer.id!!,
     customerName = this.customer.companyName ?: "",
     budget       = this.budget,
-    contact      = this.contact,
+    customer      = this.customer.toCustomerDTO(),
     startDate    = this.startDate,
     endDate      = this.endDate,
     description  = this.description,
@@ -38,7 +39,6 @@ fun ProjectCreateDTO.toModel(customer: ch.baunex.user.model.CustomerModel) = Pro
     name        = this@toModel.name
     this.customer = customer
     budget      = this@toModel.budget
-    contact     = this@toModel.contact
     startDate   = this@toModel.startDate
     endDate     = this@toModel.endDate
     description = this@toModel.description
@@ -50,7 +50,6 @@ fun ProjectCreateDTO.toModel(customer: ch.baunex.user.model.CustomerModel) = Pro
 fun ProjectUpdateDTO.applyTo(model: ProjectModel) {
     name        ?.let { model.name        = it }
     budget      ?.let { model.budget      = it }
-    contact     ?.let { model.contact     = it }
     startDate   ?.let { model.startDate   = it }
     endDate     ?.let { model.endDate     = it }
     description ?.let { model.description = it }

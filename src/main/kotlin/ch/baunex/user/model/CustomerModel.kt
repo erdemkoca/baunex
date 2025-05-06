@@ -39,7 +39,7 @@ class CustomerModel : PanacheEntityBase() {
 
     @Contextual
     @Column(nullable = true)
-    var creditLimit: BigDecimal? = null
+    var creditLimit: Double? = null
 
     @Column(nullable = true)
     var industry: String? = null
