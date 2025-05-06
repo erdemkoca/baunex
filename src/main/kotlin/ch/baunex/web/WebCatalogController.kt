@@ -11,6 +11,7 @@ import ch.baunex.user.dto.CustomerDTO
 import ch.baunex.user.facade.CustomerFacade
 import ch.baunex.web.WebController.Templates
 import jakarta.inject.Inject
+import jakarta.transaction.Transactional
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
@@ -18,6 +19,8 @@ import java.net.URI
 import java.time.LocalDate
 
 @Path("/projects/{projectId}/catalog")
+@Produces(MediaType.TEXT_HTML)
+@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 class WebCatalogController {
 
     @Inject
@@ -36,62 +39,54 @@ class WebCatalogController {
     lateinit var customerFacade: CustomerFacade
 
     @GET
-    @Path("/{projectId}")
-    @Produces(MediaType.TEXT_HTML)
+    @Path("")  // e.g. /projects/1/catalog
     fun viewProject(@PathParam("projectId") projectId: Long): Response {
         val projectDetail = projectFacade
             .getProjectWithDetails(projectId)
             ?: return Response.status(Response.Status.NOT_FOUND).build()
         val catalogItems = catalogFacade.getAllItems()
-        val billing = billingFacade.getBillingForProject(projectId)
+        val billing      = billingFacade.getBillingForProject(projectId)
         val contacts: List<CustomerContactDTO> = projectDetail.contacts
-        val customers: List<CustomerDTO> = customerFacade.listAll()
-        val template = Templates.projectDetail(
-            project     = projectDetail,
-            activeMenu  = "projects",
-            currentDate = LocalDate.now(),
-            catalogItems= catalogItems,
-            billing     = billing,
-            contacts    = contacts,
-            customers   = customers
+        val customers: List<CustomerDTO>         = customerFacade.listAll()
+
+        val tpl = Templates.projectDetail(
+            project      = projectDetail,
+            activeMenu   = "projects",
+            currentDate  = LocalDate.now(),
+            catalogItems = catalogItems,
+            billing      = billing,
+            contacts     = contacts,
+            customers    = customers
         )
-
-        return Response.ok(template.render()).build()
+        return Response.ok(tpl.render()).build()
     }
-
 
     @POST
     @Path("/save")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Transactional
     fun save(
         @PathParam("projectId") projectId: Long,
-        @FormParam("id") id: Long?,
-        @FormParam("itemName") itemName: String,
-        @FormParam("quantity") quantity: Int,
-        @FormParam("unitPrice") unitPrice: Double,
+        @FormParam("id")           id: Long?,
+        @FormParam("itemName")     itemName: String,
+        @FormParam("quantity")     quantity: Int,
+        @FormParam("unitPrice")    unitPrice: Double,
         @FormParam("catalogItemId") catalogItemId: Long?
     ): Response {
-
-        // If no catalogItemId is provided, this is a new custom item
+        // decide whether to attach existing catalog entry or create new
         val actualCatalogItemId = if (catalogItemId == null) {
-            // Create a new catalog item in the catalog table
-            val newCatalogItem = CatalogItemDTO(
-                id = null,
-                name = itemName,
-                unitPrice = unitPrice
-            )
-            catalogFacade.createItem(newCatalogItem).id // <-- return newly created ID
+            val newCatalogItem = CatalogItemDTO(id = null, name = itemName, unitPrice = unitPrice)
+            catalogFacade.createItem(newCatalogItem).id!!
         } else {
             catalogItemId
         }
 
         val dto = ProjectCatalogItemDTO(
-            id = id,
-            projectId = projectId,
-            itemName = itemName,
-            quantity = quantity,
-            unitPrice = unitPrice,
-            totalPrice = quantity * unitPrice,
+            id            = id,
+            projectId     = projectId,
+            itemName      = itemName,
+            quantity      = quantity,
+            unitPrice     = unitPrice,
+            totalPrice    = quantity * unitPrice,
             catalogItemId = actualCatalogItemId
         )
 
@@ -100,14 +95,42 @@ class WebCatalogController {
         } else {
             projectCatalogItemFacade.updateItem(id, dto)
         }
+        // back to Billing tab
+        return Response.seeOther(URI("/projects/$projectId#billing")).build()
+    }
 
-        return Response.seeOther(URI("/projects/$projectId")).build()
+    @POST
+    @Path("/{itemId}/update")
+    @Transactional
+    fun updateItem(
+        @PathParam("projectId") projectId: Long,
+        @PathParam("itemId")    itemId: Long,
+        @FormParam("itemName")  itemName: String,
+        @FormParam("quantity")  quantity: Int,
+        @FormParam("unitPrice") unitPrice: Double
+    ): Response {
+        // reuse your facade's update logic
+        val dto = ProjectCatalogItemDTO(
+            id            = itemId,
+            projectId     = projectId,
+            itemName      = itemName,
+            quantity      = quantity,
+            unitPrice     = unitPrice,
+            totalPrice    = quantity * unitPrice,
+            catalogItemId = null // not changing the underlying catalog template here
+        )
+        projectCatalogItemFacade.updateItem(itemId, dto)
+        return Response.seeOther(URI("/projects/$projectId#billing")).build()
     }
 
     @GET
     @Path("/{itemId}/delete")
-    fun delete(@PathParam("projectId") projectId: Long, @PathParam("itemId") itemId: Long): Response {
+    @Transactional
+    fun delete(
+        @PathParam("projectId") projectId: Long,
+        @PathParam("itemId")    itemId: Long
+    ): Response {
         projectCatalogItemFacade.deleteItem(itemId)
-        return Response.seeOther(URI("/projects/$projectId")).build()
+        return Response.seeOther(URI("/projects/$projectId#billing")).build()
     }
 }
