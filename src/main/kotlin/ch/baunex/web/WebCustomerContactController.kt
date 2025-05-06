@@ -20,16 +20,11 @@ class WebCustomerContactController {
     @Inject
     lateinit var contactFacade: CustomerContactFacade
 
-    @Inject
-    lateinit var customerFacade: CustomerContactFacade
-
     private fun getCurrentDate() = LocalDate.now()
 
     @GET
-    @Path("/{customerId}/contacts")
     fun list(@PathParam("customerId") customerId: Long): Response {
-        val contacts: List<CustomerContactDTO> = contactFacade.listByCustomer(customerId)
-        val customerId = customerFacade.findById(customerId).id
+        val contacts = contactFacade.listByCustomer(customerId)
         val tpl = WebController.Templates
             .customerContacts(contacts, customerId, getCurrentDate(), "customers")
         return Response.ok(tpl.render()).build()
@@ -39,23 +34,36 @@ class WebCustomerContactController {
     @Path("/new")
     fun newContact(@PathParam("customerId") customerId: Long): Response {
         val now = LocalDateTime.now()
-        val emptyContact = CustomerContactDTO(
-            id          = 0L,
-            personId    = 0L,
-            personName  = "",
-            role        = null,
-            isPrimary   = false,
-            createdAt   = now,
-            updatedAt   = now
+        val blank = CustomerContactDTO(
+            id         = 0L,
+            personId   = 0L,
+            firstName  = "",
+            lastName   = "",
+            email      = null,
+            street     = null,
+            city       = null,
+            zipCode    = null,
+            country    = null,
+            phone      = null,
+            role       = null,
+            isPrimary  = false,
+            createdAt  = now,
+            updatedAt  = now
         )
-
         val tpl = WebController.Templates
-            .customerContactForm(
-                emptyContact,
-                customerId,
-                getCurrentDate(),
-                "customers",
-            )
+            .customerContactForm(blank, customerId, getCurrentDate(), "customers")
+        return Response.ok(tpl.render()).build()
+    }
+
+    @GET
+    @Path("/{contactId}/edit")
+    fun editContact(
+        @PathParam("customerId") customerId: Long,
+        @PathParam("contactId") contactId: Long
+    ): Response {
+        val contact = contactFacade.findById(contactId)
+        val tpl = WebController.Templates
+            .customerContactForm(contact, customerId, getCurrentDate(), "customers")
         return Response.ok(tpl.render()).build()
     }
 
@@ -71,7 +79,8 @@ class WebCustomerContactController {
         } else {
             contactFacade.update(form.id!!, form.toUpdateDTO())
         }
-        return Response.seeOther(URI("/customers/$customerId")).build()
+        // redirect back to the contacts list
+        return Response.seeOther(URI("/customers/$customerId/contacts")).build()
     }
 
     @GET

@@ -8,10 +8,16 @@ import java.time.LocalDateTime
 data class CustomerContactDTO(
     val id: Long,
     val personId: Long,
-    val personName: String,     // oder ein kleines PersonDTO
+    val firstName: String,
+    val lastName: String,
+    val email: String?,
+    val street: String?,
+    val city: String?,
+    val zipCode: String?,
+    val country: String?,
+    val phone: String?,
     val role: String?,
     val isPrimary: Boolean,
     @Contextual val createdAt: LocalDateTime,
     @Contextual val updatedAt: LocalDateTime
 )
-

@@ -4,29 +4,70 @@ import ch.baunex.user.dto.CustomerContactCreateDTO
 import ch.baunex.user.dto.CustomerContactUpdateDTO
 import jakarta.ws.rs.FormParam
 
-class CustomerContactForm {
-    @FormParam("id")
-    var id: Long? = null
+data class CustomerContactForm(
+    @field:FormParam("id")
+    val id: Long?,
 
-    @FormParam("personId")
-    var personId: Long? = null
+    @field:FormParam("personId")
+    val personId: Long?,
 
-    @FormParam("role")
-    var role: String? = null
+    // Person fields
+    @field:FormParam("firstName")
+    val firstName: String?,
 
-    @FormParam("isPrimary")
-    var isPrimary: Boolean? = false
+    @field:FormParam("lastName")
+    val lastName: String?,
 
-    fun toCreateDTO(): CustomerContactCreateDTO =
-        CustomerContactCreateDTO(
-            personId   = personId!!,
-            role       = role,
-            isPrimary  = isPrimary ?: false
-        )
+    @field:FormParam("email")
+    val email: String?,
 
-    fun toUpdateDTO(): CustomerContactUpdateDTO =
-        CustomerContactUpdateDTO(
-            role       = role,
-            isPrimary  = isPrimary ?: false
-        )
+    @field:FormParam("street")
+    val street: String?,
+
+    @field:FormParam("city")
+    val city: String?,
+
+    @field:FormParam("zipCode")
+    val zipCode: String?,
+
+    @field:FormParam("country")
+    val country: String?,
+
+    @field:FormParam("phone")
+    val phone: String?,
+
+    // Contact‐specific
+    @field:FormParam("role")
+    val role: String?,
+
+    @field:FormParam("isPrimary")
+    val isPrimary: Boolean?
+) {
+
+    fun toCreateDTO() = CustomerContactCreateDTO(
+        firstName = firstName!!,
+        lastName  = lastName!!,
+        email     = email,
+        street    = street,
+        city      = city,
+        zipCode   = zipCode,
+        country   = country,
+        phone     = phone,
+        role      = role,
+        isPrimary = isPrimary ?: false
+    )
+
+    fun toUpdateDTO() = CustomerContactUpdateDTO(
+        personId  = personId!!,
+        firstName = firstName!!,
+        lastName  = lastName!!,
+        email     = email,
+        street    = street,
+        city      = city,
+        zipCode   = zipCode,
+        country   = country,
+        phone     = phone,
+        role      = role,
+        isPrimary = isPrimary ?: false
+    )
 }

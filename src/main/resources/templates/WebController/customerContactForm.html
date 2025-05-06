@@ -4,57 +4,214 @@
   {#header}{#if contact}Edit Contact{#else}New Contact{/if}{/header}
 
 {#content}
-  <div class="card mb-4">
-    <div class="card-header">
-      {#if contact}Edit Contact{#else}New Contact{/if}
-    </div>
-    <div class="card-body">
-      <form action="/customers/{customerId}/contacts/save" method="post">
-        {#if contact}
-          <!-- editing existing -->
-          <input type="hidden" name="id" value="{contact.id}" />
-          <input type="hidden" name="personId" value="{contact.personId}" />
-          <div class="mb-3">
-            <label for="role" class="form-label">Role</label>
-            <input type="text"
-                   id="role"
-                   name="role"
-                   class="form-control"
-                   value="{contact.role}" />
-          </div>
-          <div class="form-check mb-3">
-            <input type="checkbox"
-                   id="isPrimary"
-                   name="isPrimary"
-                   class="form-check-input"
-                   {#if contact.isPrimary}checked{/if} />
-            <label for="isPrimary" class="form-check-label">Primary</label>
-          </div>
-        {#else}
-          <!-- creating new -->
-          <input type="hidden" name="personId" value="" />
-          <div class="mb-3">
-            <label for="role" class="form-label">Role</label>
-            <input type="text"
-                   id="role"
-                   name="role"
-                   class="form-control"
-                   value="" />
-          </div>
-          <div class="form-check mb-3">
-            <input type="checkbox"
-                   id="isPrimary"
-                   name="isPrimary"
-                   class="form-check-input" />
-            <label for="isPrimary" class="form-check-label">Primary</label>
-          </div>
-        {/if}
+  <form action="/customers/{customerId}/contacts/save" method="post">
+    {#if contact}
+      <!-- editing existing -->
+      <input type="hidden" name="id"       value="{contact.id}" />
+      <input type="hidden" name="personId" value="{contact.personId}" />
 
-        <button type="submit" class="btn btn-primary">
-          {#if contact}Update{#else}Create{/if}
-        </button>
-        <a href="/customers/{customerId}" class="btn btn-secondary">Cancel</a>
-      </form>
-    </div>
-  </div>
+      <!-- Person fields -->
+      <div class="mb-3">
+        <label for="firstName" class="form-label">First Name</label>
+        <input
+          name="firstName"
+          id="firstName"
+          class="form-control"
+          value="{contact.firstName}"
+          required
+        />
+      </div>
+      <div class="mb-3">
+        <label for="lastName" class="form-label">Last Name</label>
+        <input
+          name="lastName"
+          id="lastName"
+          class="form-control"
+          value="{contact.lastName}"
+          required
+        />
+      </div>
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input
+          name="email"
+          id="email"
+          type="email"
+          class="form-control"
+          value="{contact.email}"
+        />
+      </div>
+      <div class="mb-3">
+        <label for="street" class="form-label">Street</label>
+        <input
+          name="street"
+          id="street"
+          class="form-control"
+          value="{contact.street}"
+        />
+      </div>
+      <div class="mb-3">
+        <label for="city" class="form-label">City</label>
+        <input
+          name="city"
+          id="city"
+          class="form-control"
+          value="{contact.city}"
+        />
+      </div>
+      <div class="mb-3">
+        <label for="zipCode" class="form-label">ZIP Code</label>
+        <input
+          name="zipCode"
+          id="zipCode"
+          class="form-control"
+          value="{contact.zipCode}"
+        />
+      </div>
+      <div class="mb-3">
+        <label for="country" class="form-label">Country</label>
+        <input
+          name="country"
+          id="country"
+          class="form-control"
+          value="{contact.country}"
+        />
+      </div>
+      <div class="mb-3">
+        <label for="phone" class="form-label">Phone</label>
+        <input
+          name="phone"
+          id="phone"
+          class="form-control"
+          value="{contact.phone}"
+        />
+      </div>
+
+      <!-- Contact‐specific fields -->
+      <div class="mb-3">
+        <label for="role" class="form-label">Role</label>
+        <input
+          name="role"
+          id="role"
+          class="form-control"
+          value="{contact.role}"
+        />
+      </div>
+      <div class="form-check mb-3">
+        <input
+          name="isPrimary"
+          id="isPrimary"
+          class="form-check-input"
+          type="checkbox"
+          {#if contact.isPrimary}checked{/if}
+        />
+        <label for="isPrimary" class="form-check-label">Primary</label>
+      </div>
+    {#else}
+      <!-- creating new -->
+      <input type="hidden" name="personId" value="" />
+
+      <!-- Person fields -->
+      <div class="mb-3">
+        <label for="firstName" class="form-label">First Name</label>
+        <input
+          name="firstName"
+          id="firstName"
+          class="form-control"
+          value=""
+          required
+        />
+      </div>
+      <div class="mb-3">
+        <label for="lastName" class="form-label">Last Name</label>
+        <input
+          name="lastName"
+          id="lastName"
+          class="form-control"
+          value=""
+          required
+        />
+      </div>
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input
+          name="email"
+          id="email"
+          type="email"
+          class="form-control"
+          value=""
+        />
+      </div>
+      <div class="mb-3">
+        <label for="street" class="form-label">Street</label>
+        <input
+          name="street"
+          id="street"
+          class="form-control"
+          value=""
+        />
+      </div>
+      <div class="mb-3">
+        <label for="city" class="form-label">City</label>
+        <input
+          name="city"
+          id="city"
+          class="form-control"
+          value=""
+        />
+      </div>
+      <div class="mb-3">
+        <label for="zipCode" class="form-label">ZIP Code</label>
+        <input
+          name="zipCode"
+          id="zipCode"
+          class="form-control"
+          value=""
+        />
+      </div>
+      <div class="mb-3">
+        <label for="country" class="form-label">Country</label>
+        <input
+          name="country"
+          id="country"
+          class="form-control"
+          value=""
+        />
+      </div>
+      <div class="mb-3">
+        <label for="phone" class="form-label">Phone</label>
+        <input
+          name="phone"
+          id="phone"
+          class="form-control"
+          value=""
+        />
+      </div>
+
+      <!-- Contact‐specific fields -->
+      <div class="mb-3">
+        <label for="role" class="form-label">Role</label>
+        <input
+          name="role"
+          id="role"
+          class="form-control"
+          value=""
+        />
+      </div>
+      <div class="form-check mb-3">
+        <input
+          name="isPrimary"
+          id="isPrimary"
+          class="form-check-input"
+          type="checkbox"
+        />
+        <label for="isPrimary" class="form-check-label">Primary</label>
+      </div>
+    {/if}
+
+    <button type="submit" class="btn btn-primary">
+      {#if contact}Update{#else}Create{/if}
+    </button>
+    <a href="/customers/{customerId}" class="btn btn-secondary">Cancel</a>
+  </form>
 {/content}

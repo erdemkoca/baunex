@@ -6,6 +6,9 @@ import ch.baunex.user.dto.CustomerContactUpdateDTO
 import ch.baunex.user.mapper.toDTO
 import ch.baunex.user.mapper.toModel
 import ch.baunex.user.mapper.applyTo
+import ch.baunex.user.model.CustomerContact
+import ch.baunex.user.model.PersonDetails
+import ch.baunex.user.model.PersonModel
 import ch.baunex.user.service.CustomerContactService
 import ch.baunex.user.service.CustomerService
 import ch.baunex.user.service.PersonService
@@ -37,21 +40,45 @@ class CustomerContactFacade {
 
     @Transactional
     fun create(customerId: Long, dto: CustomerContactCreateDTO): CustomerContactDTO {
-        val customer = customerService.findCustomerById(customerId)
-            ?: throw NotFoundException("Kunde mit ID $customerId nicht gefunden")
-        val person = personService.findPersonById(dto.personId)
-            ?: throw NotFoundException("Person mit ID ${dto.personId} nicht gefunden")
-        val model = dto.toModel(customer, person)
-        return service.create(model).toDTO()
+        val cust = customerService.findCustomerById(customerId)!!
+        // create a new PersonModel from dto
+        val person = PersonModel().apply {
+            firstName = dto.firstName
+            lastName  = dto.lastName
+            email     = dto.email
+            details   = PersonDetails(dto.street, dto.city, dto.zipCode, dto.country, dto.phone)
+            persist()
+        }
+        val contact = CustomerContact().apply {
+            customer      = cust
+            contactPerson = person
+            role          = dto.role
+            isPrimary     = dto.isPrimary
+            persist()
+        }
+        return contact.toDTO()
     }
+
 
     @Transactional
     fun update(id: Long, dto: CustomerContactUpdateDTO): CustomerContactDTO {
-        val entity = service.findById(id)
-            ?: throw NotFoundException("Kontakt mit ID $id nicht gefunden")
-        dto.applyTo(entity)
-        return entity.toDTO()
+        val contact = service.findById(id)!!
+        val person  = personService.findPersonById(dto.personId)!!
+        // merge into person:
+        person.apply {
+            firstName = dto.firstName; lastName = dto.lastName
+            email     = dto.email
+            details   = PersonDetails(dto.street, dto.city, dto.zipCode, dto.country, dto.phone)
+            persist()
+        }
+        contact.apply {
+            role      = dto.role
+            isPrimary = dto.isPrimary
+            persist()
+        }
+        return contact.toDTO()
     }
+
 
     @Transactional
     fun delete(id: Long) {

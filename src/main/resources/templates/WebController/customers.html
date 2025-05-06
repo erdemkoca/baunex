@@ -40,20 +40,13 @@
                   <td>{cust.city ?: '—'}</td>
                   <td>
                     {#if !cust.contacts.isEmpty()}
-                      {cust.contacts[0].personName}
+                      {cust.contacts[0].firstName} {cust.contacts[0].lastName}
                     {#else}
                       <span class="text-muted">—</span>
                     {/if}
                   </td>
                   <td>
                     <div class="btn-group">
-                      <a
-                              href="/customers/{cust.id}"
-                              title="Edit"
-                              class="btn btn-sm btn-outline-primary"
-                      >
-                        <i class="bi bi-pencil"></i>
-                      </a>
                       <a
                               href="/customers/{cust.id}/delete"
                               title="Delete"

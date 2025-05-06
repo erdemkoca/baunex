@@ -86,12 +86,20 @@ fun CustomerCreateDTO.applyTo(customer: CustomerModel): CustomerModel {
     return customer
 }
 
-fun CustomerContact.toContactDTO(): CustomerContactDTO = CustomerContactDTO(
-    id          = this.id!!,
-    personId    = this.contactPerson.id!!,
-    personName  = "${this.contactPerson.firstName} ${this.contactPerson.lastName}",
-    role        = this.role,
-    isPrimary   = this.isPrimary,
-    createdAt   = this.createdAt,
-    updatedAt   = this.updatedAt
-)
+fun CustomerContact.toContactDTO(): CustomerContactDTO =
+    CustomerContactDTO(
+        id         = this.id!!,
+        personId   = this.contactPerson.id!!,
+        firstName  = this.contactPerson.firstName,
+        lastName   = this.contactPerson.lastName,
+        email      = this.contactPerson.email,
+        street     = this.contactPerson.details.street,
+        city       = this.contactPerson.details.city,
+        zipCode    = this.contactPerson.details.zipCode,
+        country    = this.contactPerson.details.country,
+        phone      = this.contactPerson.details.phone,
+        role       = this.role,
+        isPrimary  = this.isPrimary,
+        createdAt  = this.createdAt,
+        updatedAt  = this.updatedAt
+    )

@@ -270,7 +270,7 @@
                     {#for c in contacts}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <div>
-                            <strong>{c.role ?: "Contact"}</strong> – {c.personName}
+                            <strong>{c.role ?: "Contact"}</strong> – {c.firstName} {c.lastName}
                         </div>
                         {#if c.isPrimary}
                         <span class="badge bg-primary">Primary</span>
