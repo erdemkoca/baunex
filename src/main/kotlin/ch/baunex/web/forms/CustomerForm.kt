@@ -2,7 +2,6 @@ package ch.baunex.web.forms
 
 import ch.baunex.user.dto.CustomerCreateDTO
 import jakarta.ws.rs.FormParam
-import java.math.BigDecimal
 
 class CustomerForm {
 

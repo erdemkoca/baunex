@@ -5,7 +5,6 @@ import jakarta.persistence.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Contextual
 import java.time.LocalDateTime
-import java.math.BigDecimal
 
 @Entity
 @Table(name = "customers")

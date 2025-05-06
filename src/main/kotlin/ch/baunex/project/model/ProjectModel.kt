@@ -3,7 +3,6 @@ package ch.baunex.project.model
 import ch.baunex.catalog.model.ProjectCatalogItemModel
 import ch.baunex.timetracking.model.TimeEntryModel
 import ch.baunex.user.model.CustomerModel
-import ch.baunex.user.model.UserModel
 import io.quarkus.hibernate.orm.panache.PanacheEntity
 import jakarta.persistence.*
 import java.time.LocalDate

@@ -1,7 +1,5 @@
 package ch.baunex.user.dto
 
-import java.math.BigDecimal
-
 data class CustomerCreateDTO(
     val firstName: String,
     val lastName: String,

@@ -4,10 +4,8 @@ import ch.baunex.catalog.mapper.toProjectCatalogItemDTO
 import ch.baunex.project.dto.*
 import ch.baunex.project.model.ProjectModel
 import ch.baunex.timetracking.mapper.toTimeEntryResponseDTO
-import ch.baunex.user.dto.CustomerContactDTO
 import ch.baunex.user.mapper.toContactDTO
 import ch.baunex.user.mapper.toCustomerDTO
-import ch.baunex.user.model.CustomerContact
 
 fun ProjectModel.toListDTO() = ProjectListDTO(
     id           = this.id!!,
