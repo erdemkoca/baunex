@@ -3,6 +3,7 @@ package ch.baunex.web
 import ch.baunex.billing.dto.BillingDTO
 import ch.baunex.catalog.dto.CatalogItemDTO
 import ch.baunex.catalog.dto.ProjectCatalogItemDTO
+import ch.baunex.company.dto.CompanyDTO
 import ch.baunex.project.dto.ProjectDetailDTO
 import ch.baunex.project.dto.ProjectListDTO
 import ch.baunex.project.facade.ProjectFacade
@@ -30,8 +31,7 @@ class WebController {
     @Inject
     lateinit var timeTrackingFacade: TimeTrackingFacade
 
-    @CheckedTemplate
-    //@CheckedTemplate(requireTypeSafeExpressions = false)
+    @CheckedTemplate(requireTypeSafeExpressions = false)
     object Templates {
         @JvmStatic
         external fun index(projects: List<ProjectListDTO>, currentDate: LocalDate, activeMenu: String, timeEntries: List<TimeEntryResponseDTO>): TemplateInstance
@@ -112,6 +112,9 @@ class WebController {
             currentDate: LocalDate,
             activeMenu: String
         ): TemplateInstance
+
+        @JvmStatic
+        external fun companySettings(company: CompanyDTO?, activeMenu: String, currentDate: LocalDate): TemplateInstance
     }
 
     @GET
