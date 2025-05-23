@@ -1,25 +1,25 @@
 {#include layout}
-{#title}{#if project.id}Project – {project.name}{#else}New Project{/if}{/title}
-{#header}{#if project.id}Project Overview{#else}New Project{/if}{/header}
+{#title}{#if project.id}Projekt – {project.name}{#else}Neues Projekt{/if}{/title}
+{#header}{#if project.id}Projektübersicht{#else}Neues Projekt{/if}{/header}
 {#content}
 
 <!-- Tab Navigation -->
 <ul class="nav nav-tabs mb-3" role="tablist">
     <li class="nav-item">
-        <a class="nav-link active" data-bs-toggle="tab" href="#overview" role="tab">Overview</a>
+        <a class="nav-link active" data-bs-toggle="tab" href="#overview" role="tab">Übersicht</a>
     </li>
     {#if project.id}
     <li class="nav-item">
-        <a class="nav-link" data-bs-toggle="tab" href="#timelogs" role="tab">Time Logs</a>
+        <a class="nav-link" data-bs-toggle="tab" href="#timelogs" role="tab">Zeiterfassung</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" data-bs-toggle="tab" href="#catalog" role="tab">Catalog</a>
+        <a class="nav-link" data-bs-toggle="tab" href="#catalog" role="tab">Katalog</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" data-bs-toggle="tab" href="#contacts" role="tab">Contacts</a>
+        <a class="nav-link" data-bs-toggle="tab" href="#contacts" role="tab">Kontakte</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" data-bs-toggle="tab" href="#billing" role="tab">Billing</a>
+        <a class="nav-link" data-bs-toggle="tab" href="#billing" role="tab">Abrechnung</a>
     </li>
     {/if}
 </ul>
@@ -34,13 +34,13 @@
             {/if}
             <div class="card mb-4">
                 <div class="card-header">
-                    {#if project.id}Edit Project{#else}Create New Project{/if}
+                    {#if project.id}Projekt bearbeiten{#else}Neues Projekt erstellen{/if}
                 </div>
                 <div class="card-body">
 
                     <!-- Project Name -->
                     <div class="mb-3">
-                        <label for="name" class="form-label">Project Name</label>
+                        <label for="name" class="form-label">Projektname</label>
                         <input type="text"
                                id="name"
                                name="name"
@@ -51,13 +51,13 @@
 
                     <!-- Customer Select -->
                     <div class="mb-3">
-                        <label for="customerId" class="form-label">Customer</label>
+                        <label for="customerId" class="form-label">Kunde</label>
                         <select id="customerId"
                                 name="customerId"
                                 class="form-select"
                                 required>
                             <option value="" disabled {#if project.customerId == 0}selected{/if}>
-                                -- Select customer --
+                                -- Kunde auswählen --
                             </option>
                             {#for cust in customers}
                                 <option value="{cust.id}"
@@ -89,7 +89,7 @@
 
                     <!-- Description -->
                     <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
+                        <label for="description" class="form-label">Beschreibung</label>
                         <textarea id="description"
                                   name="description"
                                   class="form-control"
@@ -99,7 +99,7 @@
                     <!-- Dates -->
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label for="startDate" class="form-label">Start Date</label>
+                            <label for="startDate" class="form-label">Startdatum</label>
                             <input type="date"
                                    id="startDate"
                                    name="startDate"
@@ -107,7 +107,7 @@
                                    value="{project.startDate ?: ''}" />
                         </div>
                         <div class="col-md-6">
-                            <label for="endDate" class="form-label">End Date</label>
+                            <label for="endDate" class="form-label">Enddatum</label>
                             <input type="date"
                                    id="endDate"
                                    name="endDate"
@@ -119,7 +119,7 @@
                     <!-- Location -->
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label for="street" class="form-label">Street</label>
+                            <label for="street" class="form-label">Strasse</label>
                             <input type="text"
                                    id="street"
                                    name="street"
@@ -127,7 +127,7 @@
                                    value="{project.street ?: ''}" />
                         </div>
                         <div class="col-md-6">
-                            <label for="city" class="form-label">City</label>
+                            <label for="city" class="form-label">Stadt</label>
                             <input type="text"
                                    id="city"
                                    name="city"
@@ -140,9 +140,9 @@
                     <div class="mt-4 d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-save me-2"></i>
-                            {#if project.id}Update Project{#else}Create Project{/if}
+                            {#if project.id}Projekt aktualisieren{#else}Projekt erstellen{/if}
                         </button>
-                        <a href="/projects" class="btn btn-outline-secondary">Cancel</a>
+                        <a href="/projects" class="btn btn-outline-secondary">Abbrechen</a>
                     </div>
 
                 </div>
@@ -154,9 +154,9 @@
     <div class="tab-pane fade" id="timelogs" role="tabpanel">
         <div class="card mb-4">
             <div class="card-body">
-                <h5>Time Logs</h5>
+                <h5>Zeiterfassung</h5>
                 {#if project.timeEntries.isEmpty()}
-                <p class="text-muted">No time logs for this project.</p>
+                <p class="text-muted">Keine Zeiterfassungen für dieses Projekt.</p>
                 {#else}
                 <div class="accordion" id="timeEntriesAccordion">
                     {#for entry in project.timeEntries}
@@ -169,9 +169,9 @@
                                         <strong>{entry.employeeEmail}</strong> - {entry.date}
                                     </div>
                                     <div>
-                                        <span class="badge bg-primary me-2">{entry.hoursWorked} hours</span>
+                                        <span class="badge bg-primary me-2">{entry.hoursWorked} Stunden</span>
                                         {#if !entry.billable}
-                                        <span class="badge bg-secondary">Not Billable</span>
+                                        <span class="badge bg-secondary">Nicht verrechenbar</span>
                                         {/if}
                                     </div>
                                 </div>
@@ -182,15 +182,15 @@
                                 <!-- Basic Information -->
                                 <div class="row mb-3">
                                     <div class="col-md-6">
-                                        <h6>Basic Information</h6>
-                                        <p><strong>Note:</strong> {entry.notes ?: "—"}</p>
-                                        <p><strong>Hourly Rate:</strong> {entry.hourlyRate ?: "—"} CHF</p>
+                                        <h6>Grundinformationen</h6>
+                                        <p><strong>Notiz:</strong> {entry.notes ?: "—"}</p>
+                                        <p><strong>Stundensatz:</strong> {entry.hourlyRate ?: "—"} CHF</p>
                                     </div>
                                     <div class="col-md-6">
                                         <h6>Status</h6>
                                         <p>
                                             <span class="badge {#if entry.invoiced}bg-success{#else}bg-warning{/if}">
-                                                {#if entry.invoiced}Invoiced{#else}Not Invoiced{/if}
+                                                {#if entry.invoiced}Fakturiert{#else}Nicht fakturiert{/if}
                                             </span>
                                         </p>
                                     </div>
@@ -199,31 +199,31 @@
                                 <!-- Cost Breakdown -->
                                 <div class="row mb-3">
                                     <div class="col-12">
-                                        <h6>Cost Breakdown</h6>
+                                        <h6>Kostenaufschlüsselung</h6>
                                         <table class="table table-sm">
                                             <tbody>
                                                 <!-- Time Cost -->
                                                 <tr>
-                                                    <td>Time Cost</td>
+                                                    <td>Zeitkosten</td>
                                                     <td class="text-end">{entry.costBreakdown.timeCost} CHF</td>
                                                 </tr>
                                                 
                                                 <!-- Surcharges -->
                                                 {#if entry.costBreakdown.nightSurcharge != null}
                                                 <tr>
-                                                    <td>Night Surcharge</td>
+                                                    <td>Nachtzuschlag</td>
                                                     <td class="text-end">{entry.costBreakdown.nightSurcharge} CHF</td>
                                                 </tr>
                                                 {/if}
                                                 {#if entry.costBreakdown.weekendSurcharge != null}
                                                 <tr>
-                                                    <td>Weekend Surcharge</td>
+                                                    <td>Wochenendzuschlag</td>
                                                     <td class="text-end">{entry.costBreakdown.weekendSurcharge} CHF</td>
                                                 </tr>
                                                 {/if}
                                                 {#if entry.costBreakdown.holidaySurcharge != null}
                                                 <tr>
-                                                    <td>Holiday Surcharge</td>
+                                                    <td>Feiertagszuschlag</td>
                                                     <td class="text-end">{entry.costBreakdown.holidaySurcharge} CHF</td>
                                                 </tr>
                                                 {/if}
@@ -231,73 +231,30 @@
                                                 <!-- Additional Costs -->
                                                 {#if entry.costBreakdown.travelTimeCost != null}
                                                 <tr>
-                                                    <td>Travel Time ({entry.travelTimeMinutes} min)</td>
+                                                    <td>Reisezeit ({entry.travelTimeMinutes} min)</td>
                                                     <td class="text-end">{entry.costBreakdown.travelTimeCost} CHF</td>
                                                 </tr>
                                                 {/if}
                                                 {#if entry.costBreakdown.waitingTimeCost != null}
                                                 <tr>
-                                                    <td>Waiting Time ({entry.waitingTimeMinutes} min)</td>
+                                                    <td>Wartezeit ({entry.waitingTimeMinutes} min)</td>
                                                     <td class="text-end">{entry.costBreakdown.waitingTimeCost} CHF</td>
                                                 </tr>
                                                 {/if}
                                                 {#if entry.costBreakdown.disposalCost != null}
                                                 <tr>
-                                                    <td>Disposal Cost</td>
+                                                    <td>Entsorgungskosten</td>
                                                     <td class="text-end">{entry.costBreakdown.disposalCost} CHF</td>
                                                 </tr>
                                                 {/if}
 
                                                 <!-- Total Service Cost -->
                                                 <tr class="table-primary">
-                                                    <td><strong>Total Service Cost</strong></td>
+                                                    <td><strong>Gesamtkosten Dienstleistung</strong></td>
                                                     <td class="text-end"><strong>{entry.costBreakdown.totalServiceCost} CHF</strong></td>
                                                 </tr>
                                             </tbody>
                                         </table>
-                                    </div>
-                                </div>
-
-                                <!-- Catalog Items -->
-                                {#if !entry.catalogItems.isEmpty()}
-                                <div class="row">
-                                    <div class="col-12">
-                                        <h6>Catalog Items</h6>
-                                        <table class="table table-sm">
-                                            <thead>
-                                                <tr>
-                                                    <th>Item</th>
-                                                    <th>Quantity</th>
-                                                    <th>Unit Price</th>
-                                                    <th>Total</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {#for item in entry.catalogItems}
-                                                <tr>
-                                                    <td>{item.itemName}</td>
-                                                    <td>{item.quantity}</td>
-                                                    <td>{item.unitPrice} CHF</td>
-                                                    <td>{item.totalPrice} CHF</td>
-                                                </tr>
-                                                {/for}
-                                                <tr class="table-primary">
-                                                    <td colspan="3"><strong>Total Catalog Items</strong></td>
-                                                    <td class="text-end"><strong>{entry.costBreakdown.catalogItemsCost} CHF</strong></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                                {/if}
-
-                                <!-- Grand Total -->
-                                <div class="row mt-3">
-                                    <div class="col-12">
-                                        <div class="alert alert-primary mb-0">
-                                            <strong>Grand Total: </strong>
-                                            {entry.costBreakdown.grandTotal} CHF
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -314,7 +271,7 @@
     <div class="tab-pane fade" id="catalog" role="tabpanel">
         <div class="card mb-4">
             <div class="card-body">
-                <h5>Catalog Items</h5>
+                <h5>Katalogartikel</h5>
 
                 <!-- Add New Item Form -->
                 <form action="/projects/{project.id}/catalog/save"
@@ -323,30 +280,30 @@
                     <input type="hidden" name="id" value="" />
 
                     <div class="col-md-4">
-                        <label class="form-label">Select Catalog Item (optional)</label>
+                        <label class="form-label">Katalogartikel auswählen (optional)</label>
                         <select name="catalogItemId" class="form-select">
-                            <option value="">-- Select from Catalog --</option>
+                            <option value="">-- Aus Katalog auswählen --</option>
                             {#for item in catalogItems}
                                 <option value="{item.id}"
                                         data-name="{item.name}"
                                         data-price="{item.unitPrice}">
-                                    {item.name} ({item.unitPrice} CHF)
+                                    {item.name} ({item.unitPrice} CHF)
                                 </option>
                             {/for}
                         </select>
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">Or Add Custom Item</label>
+                        <label class="form-label">Oder benutzerdefinierten Artikel hinzufügen</label>
                         <input type="text"
                                name="itemName"
                                class="form-control"
-                               placeholder="Item Name"
+                               placeholder="Artikelname"
                                required />
                     </div>
 
                     <div class="col-md-2">
-                        <label class="form-label">Quantity</label>
+                        <label class="form-label">Menge</label>
                         <input type="number"
                                name="quantity"
                                class="form-control"
@@ -356,7 +313,7 @@
                     </div>
 
                     <div class="col-md-2">
-                        <label class="form-label">Unit Price (CHF)</label>
+                        <label class="form-label">Einzelpreis (CHF)</label>
                         <input type="number"
                                name="unitPrice"
                                class="form-control"
@@ -366,34 +323,18 @@
 
                     <div class="col-auto align-self-end">
                         <button type="submit" class="btn btn-success">
-                            <i class="bi bi-plus-circle me-1"></i>Add Item
+                            <i class="bi bi-plus-circle me-1"></i>Artikel hinzufügen
                         </button>
                     </div>
                 </form>
-                <!-- /Add New Item Form -->
-
-                <script>
-                    document.addEventListener("DOMContentLoaded", function() {
-                        const select = document.querySelector('select[name="catalogItemId"]');
-                        const nameInput = document.querySelector('input[name="itemName"]');
-                        const qtyInput = document.querySelector('input[name="quantity"]');
-                        const priceInput = document.querySelector('input[name="unitPrice"]');
-                        select.addEventListener("change", function() {
-                            const opt = select.options[select.selectedIndex];
-                            nameInput.value  = opt.getAttribute("data-name")  || "";
-                            priceInput.value = opt.getAttribute("data-price") || "";
-                            qtyInput.value   = 1;
-                        });
-                    });
-                </script>
 
                 {#if project.catalogItems.isEmpty()}
-                    <p class="text-muted">No items added yet.</p>
+                    <p class="text-muted">Noch keine Artikel hinzugefügt.</p>
                 {#else}
                     <table class="table table-bordered align-middle">
                         <thead>
                         <tr>
-                            <th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Actions</th>
+                            <th>Artikel</th><th>Menge</th><th>Einzelpreis</th><th>Gesamt</th><th>Aktionen</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -434,11 +375,11 @@
                                     <td style="width:10%">
                                         <button type="submit"
                                                 class="btn btn-sm btn-outline-primary me-1">
-                                            Save
+                                            Speichern
                                         </button>
                                         <a href="/projects/{project.id}/catalog/{m.id}/delete"
                                            class="btn btn-sm btn-outline-danger"
-                                           onclick="return confirm('Delete this item?');">
+                                           onclick="return confirm('Diesen Artikel löschen?');">
                                             <i class="bi bi-trash"></i>
                                         </a>
                                     </td>
@@ -457,18 +398,18 @@
     <div class="tab-pane fade" id="contacts" role="tabpanel">
         <div class="card mb-4">
             <div class="card-body">
-                <h5>Customer Contacts</h5>
+                <h5>Kundenkontakte</h5>
                 {#if contacts.isEmpty()}
-                <p class="text-muted">No contacts for this customer.</p>
+                <p class="text-muted">Keine Kontakte für diesen Kunden.</p>
                 {#else}
                 <ul class="list-group">
                     {#for c in contacts}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <div>
-                            <strong>{c.role ?: "Contact"}</strong> – {c.firstName} {c.lastName}
+                            <strong>{c.role ?: "Kontakt"}</strong> – {c.firstName} {c.lastName}
                         </div>
                         {#if c.isPrimary}
-                        <span class="badge bg-primary">Primary</span>
+                        <span class="badge bg-primary">Primär</span>
                         {/if}
                     </li>
                     {/for}
@@ -483,9 +424,9 @@
         <div class="card">
             <div class="card-body">
                 <!-- Time Entries -->
-                <h5 class="mb-4">Time Entries</h5>
+                <h5 class="mb-4">Zeiterfassungen</h5>
                 {#if billing.timeEntries.isEmpty()}
-                    <p class="text-muted">No time logs recorded.</p>
+                    <p class="text-muted">Keine Zeiterfassungen vorhanden.</p>
                 {#else}
                     <div class="accordion" id="billingTimeEntriesAccordion">
                         {#for e in billing.timeEntries}
@@ -498,13 +439,13 @@
                                                 <strong>{e.employeeEmail}</strong> - {e.date}
                                             </div>
                                             <div>
-                                                <span class="badge bg-primary me-2">{e.hoursWorked} hours</span>
+                                                <span class="badge bg-primary me-2">{e.hoursWorked} Stunden</span>
                                                 {#if !e.billable}
-                                                    <span class="badge bg-secondary">Not Billable</span>
+                                                    <span class="badge bg-secondary">Nicht verrechenbar</span>
                                                 {/if}
                                                 <span class="badge bg-success ms-2">
                                                     {#if e.costBreakdown != null}
-                                                        {e.costBreakdown.grandTotal} CHF
+                                                        {e.costBreakdown.totalServiceCost} CHF
                                                     {#else}
                                                         {e.cost} CHF
                                                     {/if}
@@ -518,15 +459,15 @@
                                         <!-- Basic Information -->
                                         <div class="row mb-3">
                                             <div class="col-md-6">
-                                                <h6>Basic Information</h6>
-                                                <p><strong>Note:</strong> {e.notes ?: "—"}</p>
-                                                <p><strong>Hourly Rate:</strong> {e.hourlyRate ?: "—"} CHF</p>
+                                                <h6>Grundinformationen</h6>
+                                                <p><strong>Notiz:</strong> {e.notes ?: "—"}</p>
+                                                <p><strong>Stundensatz:</strong> {e.hourlyRate ?: "—"} CHF</p>
                                             </div>
                                             <div class="col-md-6">
                                                 <h6>Status</h6>
                                                 <p>
                                                     <span class="badge {#if e.invoiced}bg-success{#else}bg-warning{/if}">
-                                                        {#if e.invoiced}Invoiced{#else}Not Invoiced{/if}
+                                                        {#if e.invoiced}Fakturiert{#else}Nicht fakturiert{/if}
                                                     </span>
                                                 </p>
                                             </div>
@@ -535,31 +476,31 @@
                                         <!-- Cost Breakdown -->
                                         <div class="row mb-3">
                                             <div class="col-12">
-                                                <h6>Cost Breakdown</h6>
+                                                <h6>Kostenaufschlüsselung</h6>
                                                 <table class="table table-sm">
                                                     <tbody>
                                                         <!-- Time Cost -->
                                                         <tr>
-                                                            <td>Time Cost</td>
+                                                            <td>Zeitkosten</td>
                                                             <td class="text-end">{e.costBreakdown.timeCost} CHF</td>
                                                         </tr>
                                                         
                                                         <!-- Surcharges -->
                                                         {#if e.costBreakdown.nightSurcharge != null}
                                                         <tr>
-                                                            <td>Night Surcharge</td>
+                                                            <td>Nachtzuschlag</td>
                                                             <td class="text-end">{e.costBreakdown.nightSurcharge} CHF</td>
                                                         </tr>
                                                         {/if}
                                                         {#if e.costBreakdown.weekendSurcharge != null}
                                                         <tr>
-                                                            <td>Weekend Surcharge</td>
+                                                            <td>Wochenendzuschlag</td>
                                                             <td class="text-end">{e.costBreakdown.weekendSurcharge} CHF</td>
                                                         </tr>
                                                         {/if}
                                                         {#if e.costBreakdown.holidaySurcharge != null}
                                                         <tr>
-                                                            <td>Holiday Surcharge</td>
+                                                            <td>Feiertagszuschlag</td>
                                                             <td class="text-end">{e.costBreakdown.holidaySurcharge} CHF</td>
                                                         </tr>
                                                         {/if}
@@ -567,73 +508,30 @@
                                                         <!-- Additional Costs -->
                                                         {#if e.costBreakdown.travelTimeCost != null}
                                                         <tr>
-                                                            <td>Travel Time ({e.travelTimeMinutes} min)</td>
+                                                            <td>Reisezeit ({e.travelTimeMinutes} min)</td>
                                                             <td class="text-end">{e.costBreakdown.travelTimeCost} CHF</td>
                                                         </tr>
                                                         {/if}
                                                         {#if e.costBreakdown.waitingTimeCost != null}
                                                         <tr>
-                                                            <td>Waiting Time ({e.waitingTimeMinutes} min)</td>
+                                                            <td>Wartezeit ({e.waitingTimeMinutes} min)</td>
                                                             <td class="text-end">{e.costBreakdown.waitingTimeCost} CHF</td>
                                                         </tr>
                                                         {/if}
                                                         {#if e.costBreakdown.disposalCost != null}
                                                         <tr>
-                                                            <td>Disposal Cost</td>
+                                                            <td>Entsorgungskosten</td>
                                                             <td class="text-end">{e.costBreakdown.disposalCost} CHF</td>
                                                         </tr>
                                                         {/if}
 
                                                         <!-- Total Service Cost -->
                                                         <tr class="table-primary">
-                                                            <td><strong>Total Service Cost</strong></td>
+                                                            <td><strong>Gesamtkosten Dienstleistung</strong></td>
                                                             <td class="text-end"><strong>{e.costBreakdown.totalServiceCost} CHF</strong></td>
                                                         </tr>
                                                     </tbody>
                                                 </table>
-                                            </div>
-                                        </div>
-
-                                        <!-- Catalog Items -->
-                                        {#if !e.catalogItems.isEmpty()}
-                                        <div class="row">
-                                            <div class="col-12">
-                                                <h6>Catalog Items</h6>
-                                                <table class="table table-sm">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Item</th>
-                                                            <th>Quantity</th>
-                                                            <th>Unit Price</th>
-                                                            <th>Total</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {#for item in e.catalogItems}
-                                                        <tr>
-                                                            <td>{item.itemName}</td>
-                                                            <td>{item.quantity}</td>
-                                                            <td>{item.unitPrice} CHF</td>
-                                                            <td>{item.totalPrice} CHF</td>
-                                                        </tr>
-                                                        {/for}
-                                                        <tr class="table-primary">
-                                                            <td colspan="3"><strong>Total Catalog Items</strong></td>
-                                                            <td class="text-end"><strong>{e.costBreakdown.catalogItemsCost} CHF</strong></td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                        {/if}
-
-                                        <!-- Grand Total -->
-                                        <div class="row mt-3">
-                                            <div class="col-12">
-                                                <div class="alert alert-primary mb-0">
-                                                    <strong>Grand Total: </strong>
-                                                    {e.costBreakdown.grandTotal} CHF
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -646,36 +544,36 @@
                     <div class="alert alert-info mt-3">
                         <div class="row">
                             <div class="col-md-6">
-                                <strong>Total Time Entries:</strong> {billing.timeEntries.size}
+                                <strong>Anzahl Zeiterfassungen:</strong> {billing.timeEntries.size}
                             </div>
                             <div class="col-md-6 text-end">
-                                <strong>Total Cost:</strong> {billing.timeTotal} CHF
+                                <strong>Gesamtkosten Dienstleistung:</strong> {billing.timeTotal} CHF
                             </div>
                         </div>
                     </div>
                 {/if}
 
                 <!-- All Catalog Items -->
-                <h5 class="mt-5 mb-4">All Catalog Items</h5>
+                <h5 class="mt-5 mb-4">Alle Katalogartikel</h5>
                 {#if billing.materials.isEmpty() && billing.timeEntries.isEmpty()}
-                    <p class="text-muted">No catalog items recorded.</p>
+                    <p class="text-muted">Keine Katalogartikel vorhanden.</p>
                 {#else}
                     <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Source</th>
-                                    <th>Item</th>
-                                    <th>Qty</th>
-                                    <th>Unit Price</th>
-                                    <th>Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                                    <th>Quelle</th>
+                                    <th>Artikel</th>
+                                    <th>Menge</th>
+                                    <th>Einzelpreis</th>
+                                    <th>Gesamt</th>
+                        </tr>
+                        </thead>
+                        <tbody>
                                 <!-- Project Catalog Items -->
                                 {#for m in billing.materials}
                                     <tr>
-                                        <td>Project</td>
+                                        <td>Projekt</td>
                                         <td>{m.itemName}</td>
                                         <td>{m.quantity}</td>
                                         <td>{m.unitPrice} CHF</td>
@@ -687,24 +585,24 @@
                                 {#for entry in billing.timeEntries}
                                     {#for item in entry.catalogItems}
                                         <tr>
-                                            <td>Time Entry ({entry.date})</td>
+                                            <td>Zeiterfassung ({entry.date})</td>
                                             <td>{item.itemName}</td>
                                             <td>{item.quantity}</td>
                                             <td>{item.unitPrice} CHF</td>
                                             <td>{item.totalPrice} CHF</td>
-                                        </tr>
+                            </tr>
                                     {/for}
-                                {/for}
-                            </tbody>
+                        {/for}
+                        </tbody>
                             <tfoot>
                                 <tr class="table-primary">
-                                    <td colspan="4"><strong>Total Catalog Items</strong></td>
+                                    <td colspan="4"><strong>Gesamt Katalogartikel</strong></td>
                                     <td class="text-end">
                                         <strong>{billing.costBreakdown.totalCatalogItemsAndMaterials} CHF</strong>
                                     </td>
                                 </tr>
                             </tfoot>
-                        </table>
+                    </table>
                     </div>
                 {/if}
 
@@ -713,16 +611,16 @@
                     <div class="alert alert-success">
                         <div class="row">
                             <div class="col-md-6">
-                                <strong>Service Total:</strong> {billing.timeTotal} CHF
+                                <strong>Gesamtkosten Dienstleistung:</strong> {billing.timeTotal} CHF
                             </div>
                             <div class="col-md-6">
-                                <strong>Catalog Items Total:</strong> {billing.costBreakdown.totalCatalogItemsAndMaterials} CHF
+                                <strong>Gesamtkosten Katalogartikel:</strong> {billing.costBreakdown.totalCatalogItemsAndMaterials} CHF
                             </div>
                         </div>
                         <hr>
                         <div class="row">
                             <div class="col-12">
-                                <h4 class="mb-0">Grand Total: {billing.total} CHF</h4>
+                                <h4 class="mb-0"><strong>Gesamtsumme:</strong> {billing.total} CHF</h4>
                             </div>
                         </div>
                     </div>
@@ -730,7 +628,6 @@
             </div>
         </div>
     </div>
-
 
 </div>
 
