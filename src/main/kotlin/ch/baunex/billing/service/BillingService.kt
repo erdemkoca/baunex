@@ -5,14 +5,16 @@ import ch.baunex.catalog.mapper.toProjectCatalogItemDTO
 import ch.baunex.catalog.model.ProjectCatalogItemModel
 import ch.baunex.timetracking.model.TimeEntryModel
 import ch.baunex.timetracking.mapper.toTimeEntryResponseDTO
+import ch.baunex.timetracking.service.TimeEntryCostService
 import ch.baunex.catalog.repository.ProjectCatalogItemRepository
 import ch.baunex.timetracking.repository.TimeEntryRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 
 @ApplicationScoped
-class BillingService {
-
+class BillingService @Inject constructor(
+    private val timeEntryCostService: TimeEntryCostService
+) {
     @Inject
     lateinit var projectCatalogItemRepository: ProjectCatalogItemRepository
 
@@ -43,6 +45,5 @@ class BillingService {
             timeTotal = timeTotal,
             total = materialTotal + timeTotal
         )
-
     }
 }

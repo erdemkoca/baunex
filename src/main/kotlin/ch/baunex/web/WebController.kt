@@ -2,9 +2,11 @@ package ch.baunex.web
 
 import ch.baunex.billing.dto.BillingDTO
 import ch.baunex.catalog.dto.CatalogItemDTO
+import ch.baunex.catalog.dto.ProjectCatalogItemDTO
 import ch.baunex.project.dto.ProjectDetailDTO
 import ch.baunex.project.dto.ProjectListDTO
 import ch.baunex.project.facade.ProjectFacade
+import ch.baunex.timetracking.dto.TimeEntryCatalogItemDTO
 import ch.baunex.user.dto.UserResponseDTO
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.timetracking.facade.TimeTrackingFacade
@@ -76,7 +78,8 @@ class WebController {
             employees: List<EmployeeDTO>,
             projects: List<ProjectListDTO>,
             currentDate: String,
-            activeMenu: String
+            activeMenu: String,
+            catalogItems: List<CatalogItemDTO>
         ): TemplateInstance
 
         @JvmStatic

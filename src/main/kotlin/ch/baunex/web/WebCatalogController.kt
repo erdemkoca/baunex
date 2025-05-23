@@ -1,5 +1,6 @@
 package ch.baunex.web
 
+//import ch.baunex.billing.facade.BillingFacade
 import ch.baunex.billing.facade.BillingFacade
 import ch.baunex.catalog.dto.CatalogItemDTO
 import ch.baunex.catalog.dto.ProjectCatalogItemDTO

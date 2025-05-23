@@ -3,35 +3,42 @@ package ch.baunex.project.mapper
 import ch.baunex.catalog.mapper.toProjectCatalogItemDTO
 import ch.baunex.project.dto.*
 import ch.baunex.project.model.ProjectModel
-import ch.baunex.timetracking.mapper.toTimeEntryResponseDTO
+import ch.baunex.timetracking.mapper.TimeEntryMapper
 import ch.baunex.user.mapper.toContactDTO
 import ch.baunex.user.mapper.toCustomerDTO
+import jakarta.enterprise.context.ApplicationScoped
+import jakarta.inject.Inject
 
-fun ProjectModel.toListDTO() = ProjectListDTO(
-    id           = this.id!!,
-    name         = this.name,
-    customerName = this.customer.companyName ?: "",
-    budget       = this.budget,
-    status       = this.status
-)
+@ApplicationScoped
+class ProjectMapper @Inject constructor(
+    private val timeEntryMapper: TimeEntryMapper
+) {
+    fun toListDTO(model: ProjectModel) = ProjectListDTO(
+        id           = model.id!!,
+        name         = model.name,
+        customerName = model.customer.companyName ?: "",
+        budget       = model.budget,
+        status       = model.status
+    )
 
-fun ProjectModel.toDetailDTO() = ProjectDetailDTO(
-    id           = this.id!!,
-    name         = this.name,
-    customerId   = this.customer.id!!,
-    customerName = this.customer.companyName ?: "",
-    budget       = this.budget,
-    customer      = this.customer.toCustomerDTO(),
-    startDate    = this.startDate,
-    endDate      = this.endDate,
-    description  = this.description,
-    status       = this.status,
-    street       = this.street,
-    city         = this.city,
-    timeEntries  = this.timeEntries.sortedBy { it.date }.map { it.toTimeEntryResponseDTO() },
-    catalogItems = this.usedItems.map { it.toProjectCatalogItemDTO() },
-    contacts     = this.customer.contacts.map { it.toContactDTO() }
-)
+    fun toDetailDTO(model: ProjectModel) = ProjectDetailDTO(
+        id           = model.id!!,
+        name         = model.name,
+        customerId   = model.customer.id!!,
+        customerName = model.customer.companyName ?: "",
+        budget       = model.budget,
+        customer      = model.customer.toCustomerDTO(),
+        startDate    = model.startDate,
+        endDate      = model.endDate,
+        description  = model.description,
+        status       = model.status,
+        street       = model.street,
+        city         = model.city,
+        timeEntries  = model.timeEntries.sortedBy { it.date }.map { timeEntryMapper.toTimeEntryResponseDTO(it) },
+        catalogItems = model.usedItems.map { it.toProjectCatalogItemDTO() },
+        contacts     = model.customer.contacts.map { it.toContactDTO() }
+    )
+}
 
 fun ProjectCreateDTO.toModel(customer: ch.baunex.user.model.CustomerModel) = ProjectModel().apply {
     name        = this@toModel.name

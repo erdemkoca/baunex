@@ -19,6 +19,9 @@ class TimeEntryModel : PanacheEntity() {
     @JoinColumn(name = "project_id")
     lateinit var project: ProjectModel
 
+    @OneToMany(mappedBy = "timeEntry", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var usedCatalogItems: MutableList<TimeEntryCatalogItemModel> = mutableListOf()
+
     @Column(nullable = false)
     lateinit var date: LocalDate
 
@@ -44,4 +47,27 @@ class TimeEntryModel : PanacheEntity() {
 
     @Column(name = "catalog_item_price")
     var catalogItemPrice: Double? = null  // price from catalog per hour or fixed
+
+    // --- Surcharges ---
+    @Column(name = "has_night_surcharge", nullable = false)
+    var hasNightSurcharge: Boolean = false
+
+    @Column(name = "has_weekend_surcharge", nullable = false)
+    var hasWeekendSurcharge: Boolean = false
+
+    @Column(name = "has_holiday_surcharge", nullable = false)
+    var hasHolidaySurcharge: Boolean = false
+
+    // --- Additional Costs ---
+    @Column(name = "travel_time_minutes")
+    var travelTimeMinutes: Int = 0
+
+    @Column(name = "disposal_cost")
+    var disposalCost: Double = 0.0
+
+    @Column(name = "has_waiting_time", nullable = false)
+    var hasWaitingTime: Boolean = false
+
+    @Column(name = "waiting_time_minutes")
+    var waitingTimeMinutes: Int = 0
 }

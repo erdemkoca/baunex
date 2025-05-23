@@ -1,9 +1,12 @@
 package ch.baunex.web
 
+import ch.baunex.catalog.facade.CatalogFacade
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.timetracking.dto.TimeEntryDTO
+import ch.baunex.timetracking.dto.TimeEntryCatalogItemDTO
 import ch.baunex.timetracking.facade.TimeTrackingFacade
 import ch.baunex.user.facade.EmployeeFacade
+import ch.baunex.timetracking.service.TimeEntryCostService
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
@@ -22,6 +25,12 @@ class WebTimeTrackingController {
 
     @Inject
     lateinit var projectFacade: ProjectFacade
+
+    @Inject
+    lateinit var catalogFacade: CatalogFacade
+
+    @Inject
+    lateinit var timeEntryCostService: TimeEntryCostService
 
     private fun getCurrentDate(): String = LocalDate.now().toString()
 
@@ -47,13 +56,15 @@ class WebTimeTrackingController {
     @Produces(MediaType.TEXT_HTML)
     fun newEntry(): Response {
         val employees = employeeFacade.listAll()
-        val projects  = projectFacade.getAllProjects()
+        val projects = projectFacade.getAllProjects()
+        val catalogItems = catalogFacade.getAllItems()
         val template = WebController.Templates.timetrackingForm(
-            entry       = null,
-            employees   = employees,
-            projects    = projects,
+            entry = null,
+            employees = employees,
+            projects = projects,
             currentDate = getCurrentDate(),
-            activeMenu  = "timetracking"
+            activeMenu = "timetracking",
+            catalogItems = catalogItems
         )
         return Response.ok(template.render()).build()
     }
@@ -62,16 +73,19 @@ class WebTimeTrackingController {
     @Path("/{id}/edit")
     @Produces(MediaType.TEXT_HTML)
     fun edit(@PathParam("id") id: Long): Response {
-        val entry     = timeTrackingFacade.getTimeEntryById(id)
+        val entry = timeTrackingFacade.getTimeEntryById(id)
             ?: return Response.status(Response.Status.NOT_FOUND).build()
         val employees = employeeFacade.listAll()
-        val projects  = projectFacade.getAllProjects()
+        val projects = projectFacade.getAllProjects()
+        val catalogItems = catalogFacade.getAllItems()
+        
         val template = WebController.Templates.timetrackingForm(
-            entry       = entry,
-            employees   = employees,
-            projects    = projects,
+            entry = entry,
+            employees = employees,
+            projects = projects,
             currentDate = getCurrentDate(),
-            activeMenu  = "timetracking"
+            activeMenu = "timetracking",
+            catalogItems = catalogItems
         )
         return Response.ok(template.render()).build()
     }
@@ -87,22 +101,82 @@ class WebTimeTrackingController {
         @FormParam("hoursWorked") hoursWorked: Double,
         @FormParam("note") note: String?,
         @FormParam("hourlyRate") hourlyRate: Double?,
-        @FormParam("billable") billable: Boolean,
+        @FormParam("notBillable") notBillable: Boolean = false,
         @FormParam("invoiced") invoiced: Boolean,
         @FormParam("catalogItemDescription") catalogItemDescription: String?,
-        @FormParam("catalogItemPrice") catalogItemPrice: Double?
+        @FormParam("catalogItemPrice") catalogItemPrice: Double?,
+        @FormParam("catalogItemIds") catalogItemIds: List<String>?,
+        @FormParam("catalogItemQuantities") catalogItemQuantities: List<String>?,
+        @FormParam("catalogItemNames") catalogItemNames: List<String>?,
+        @FormParam("catalogItemPrices") catalogItemPrices: List<String>?,
+        // Surcharges
+        @FormParam("hasNightSurcharge") hasNightSurcharge: Boolean = false,
+        @FormParam("hasWeekendSurcharge") hasWeekendSurcharge: Boolean = false,
+        @FormParam("hasHolidaySurcharge") hasHolidaySurcharge: Boolean = false,
+        // Additional Costs
+        @FormParam("travelTimeMinutes") travelTimeMinutes: Int = 0,
+        @FormParam("disposalCost") disposalCost: Double = 0.0,
+        @FormParam("hasWaitingTime") hasWaitingTime: Boolean = false,
+        @FormParam("waitingTimeMinutes") waitingTimeMinutes: Int = 0
     ): Response {
+        val catalogItems = if (catalogItemIds != null && catalogItemQuantities != null && 
+                             catalogItemNames != null && catalogItemPrices != null) {
+            catalogItemIds.zip(catalogItemQuantities.zip(catalogItemNames.zip(catalogItemPrices))).map { (id, rest) ->
+                val (quantity, namePrice) = rest
+                val (name, price) = namePrice
+                TimeEntryCatalogItemDTO(
+                    catalogItemId = id.toLongOrNull(),
+                    quantity = quantity.toIntOrNull() ?: 1,
+                    itemName = name,
+                    unitPrice = price.toDoubleOrNull() ?: 0.0,
+                    totalPrice = (quantity.toIntOrNull() ?: 1) * (price.toDoubleOrNull() ?: 0.0)
+                )
+            }
+        } else {
+            emptyList()
+        }
+
         val dto = TimeEntryDTO(
-            employeeId              = employeeId,
-            projectId               = projectId,
-            date                    = date,
-            hoursWorked             = hoursWorked,
-            note                    = note,
-            hourlyRate              = hourlyRate,
-            billable                = billable,
-            invoiced                = invoiced,
-            catalogItemDescription  = catalogItemDescription,
-            catalogItemPrice        = catalogItemPrice
+            employeeId = employeeId,
+            projectId = projectId,
+            date = date,
+            hoursWorked = hoursWorked,
+            note = note,
+            hourlyRate = hourlyRate,
+            billable = !notBillable,
+            invoiced = invoiced,
+            catalogItemDescription = catalogItemDescription,
+            catalogItemPrice = catalogItemPrice,
+            catalogItems = catalogItems,
+            hasNightSurcharge = hasNightSurcharge,
+            hasWeekendSurcharge = hasWeekendSurcharge,
+            hasHolidaySurcharge = hasHolidaySurcharge,
+            travelTimeMinutes = travelTimeMinutes,
+            disposalCost = disposalCost,
+            hasWaitingTime = hasWaitingTime,
+            waitingTimeMinutes = waitingTimeMinutes,
+            costBreakdown = timeEntryCostService.calculateCostBreakdown(
+                TimeEntryDTO(
+                    employeeId = employeeId,
+                    projectId = projectId,
+                    date = date,
+                    hoursWorked = hoursWorked,
+                    note = note,
+                    hourlyRate = hourlyRate,
+                    billable = !notBillable,
+                    invoiced = invoiced,
+                    catalogItemDescription = catalogItemDescription,
+                    catalogItemPrice = catalogItemPrice,
+                    catalogItems = catalogItems,
+                    hasNightSurcharge = hasNightSurcharge,
+                    hasWeekendSurcharge = hasWeekendSurcharge,
+                    hasHolidaySurcharge = hasHolidaySurcharge,
+                    travelTimeMinutes = travelTimeMinutes,
+                    disposalCost = disposalCost,
+                    hasWaitingTime = hasWaitingTime,
+                    waitingTimeMinutes = waitingTimeMinutes
+                )
+            )
         )
 
         if (id == null) {

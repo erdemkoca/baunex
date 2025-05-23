@@ -26,4 +26,11 @@ class TimeEntryRepository : PanacheRepository<TimeEntryModel> {
     fun deleteAllByProjectId(projectId: Long): Long {
         return delete("project.id", projectId)
     }
+
+    fun findByIdWithCatalogItems(id: Long): TimeEntryModel? {
+        return find(
+            "FROM TimeEntryModel t LEFT JOIN FETCH t.usedCatalogItems WHERE t.id = ?1",
+            id
+        ).firstResult()
+    }
 }

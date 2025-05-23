@@ -19,5 +19,18 @@ data class TimeEntryResponseDTO(
     val billable: Boolean,
     val invoiced: Boolean,
     val catalogItemDescription: String?,
-    val catalogItemPrice: Double?
+    val catalogItemPrice: Double?,
+    val catalogItems: List<TimeEntryCatalogItemDTO> = emptyList(),
+    
+    // Surcharges
+    val hasNightSurcharge: Boolean = false,
+    val hasWeekendSurcharge: Boolean = false,
+    val hasHolidaySurcharge: Boolean = false,
+    
+    // Additional Costs
+    val travelTimeMinutes: Int = 0,
+    val disposalCost: Double = 0.0,
+    val hasWaitingTime: Boolean = false,
+    val waitingTimeMinutes: Int = 0,
+    val costBreakdown: TimeEntryCostBreakdownDTO?
 )
