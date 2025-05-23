@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Rechnungen</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Rechnungen</h1>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rechnungsnummer</th>
+                        <th>Datum</th>
+                        <th>Fälligkeitsdatum</th>
+                        <th>Kunde</th>
+                        <th>Projekt</th>
+                        <th>Status</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {#for invoice in invoices}
+                    <tr>
+                        <td>{invoice.invoiceNumber}</td>
+                        <td>{invoice.invoiceDate}</td>
+                        <td>{invoice.dueDate}</td>
+                        <td>{invoice.customerName}</td>
+                        <td>{invoice.projectName}</td>
+                        <td>{invoice.status}</td>
+                        <td>
+                            <a href="/invoices/{invoice.id}" class="btn btn-info">Details</a>
+                            {#if invoice.status == 'ISSUED'}
+                            <button onclick="markAsPaid({invoice.id})" class="btn btn-success">Als bezahlt markieren</button>
+                            <button onclick="cancelInvoice({invoice.id})" class="btn btn-danger">Stornieren</button>
+                            {/if}
+                        </td>
+                    </tr>
+                    {/for}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function markAsPaid(id) {
+            if (confirm('Möchten Sie diese Rechnung als bezahlt markieren?')) {
+                fetch(`/invoices/${id}/mark-as-paid`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    }
+                });
+            }
+        }
+
+        function cancelInvoice(id) {
+            if (confirm('Möchten Sie diese Rechnung wirklich stornieren?')) {
+                fetch(`/invoices/${id}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html> 

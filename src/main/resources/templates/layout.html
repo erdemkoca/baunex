@@ -50,6 +50,23 @@
           </a>
         </li>
         <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="invoicesDropdown" role="button" data-bs-toggle="dropdown">
+            <i class="bi bi-receipt me-1"></i> Rechnungen
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <a class="dropdown-item" href="/invoice-drafts">
+                <i class="bi bi-file-earmark-text me-2"></i> Rechnungsentwürfe
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="/invoices">
+                <i class="bi bi-receipt me-2"></i> Rechnungen
+              </a>
+            </li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="settingsDropdown" role="button" data-bs-toggle="dropdown">
             <i class="bi bi-gear me-1"></i> Einstellungen
           </a>
@@ -116,6 +133,19 @@
         >
           <i class="bi bi-people me-2"></i> Customers
         </a>
+        <div class="dropdown-divider"></div>
+        <a
+                href="/invoice-drafts"
+                class="nav-link py-2 {#if activeMenu == 'invoice-drafts'}active{/}"
+        >
+          <i class="bi bi-file-earmark-text me-2"></i> Rechnungsentwürfe
+        </a>
+        <a
+                href="/invoices"
+                class="nav-link py-2 {#if activeMenu == 'invoices'}active{/}"
+        >
+          <i class="bi bi-receipt me-2"></i> Rechnungen
+        </a>
       </div>
     </div>
 
@@ -140,6 +170,7 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script src="/js/app.js"></script>
 </body>
 </html>

@@ -1,7 +1,9 @@
 package ch.baunex.project.service
 
 import ch.baunex.project.dto.ProjectCreateDTO
+import ch.baunex.project.dto.ProjectDTO
 import ch.baunex.project.dto.ProjectUpdateDTO
+import ch.baunex.project.mapper.ProjectMapper
 import ch.baunex.project.mapper.applyTo
 import ch.baunex.project.mapper.toModel
 import ch.baunex.project.model.ProjectModel
@@ -14,12 +16,13 @@ import jakarta.transaction.Transactional
 @ApplicationScoped
 class ProjectService @Inject constructor(
     private val projectRepository: ProjectRepository,
-    private val customerService: CustomerService
+    private val customerService: CustomerService,
+    private val mapper: ProjectMapper
 ) {
 
     @Transactional
     fun createProject(dto: ProjectCreateDTO): ProjectModel {
-        val customer = customerService.findCustomerById(dto.customerId)
+        val customer = customerService.findCustomerModelById(dto.customerId)
             ?: throw IllegalArgumentException("Kein Kunde mit ID ${dto.customerId}")
         val project = dto.toModel(customer)
         projectRepository.persist(project)
@@ -31,7 +34,7 @@ class ProjectService @Inject constructor(
         val existing = projectRepository.findById(id) ?: return null
         // Customer wechseln, falls gesetzt
         dto.customerId?.let { newCid ->
-            val cust = customerService.findCustomerById(newCid)
+            val cust = customerService.findCustomerModelById(newCid)
                 ?: throw IllegalArgumentException("Kein Kunde mit ID $newCid")
             existing.customer = cust
         }
@@ -44,4 +47,35 @@ class ProjectService @Inject constructor(
     fun getProjectWithEntries(id: Long): ProjectModel? = projectRepository.findByIdWithTimeEntries(id)
     @Transactional
     fun deleteProject(id: Long): Boolean = projectRepository.deleteById(id)
+
+    fun getAll(): List<ProjectDTO> {
+        return projectRepository.listAll().map { mapper.toDTO(it) }
+    }
+
+    fun getById(id: Long): ProjectDTO? {
+        return projectRepository.findById(id)?.let { mapper.toDTO(it) }
+    }
+
+    @Transactional
+    fun create(project: ProjectDTO): ProjectDTO {
+        val entity = mapper.toEntity(project)
+        projectRepository.persist(entity)
+        return mapper.toDTO(entity)
+    }
+
+    @Transactional
+    fun update(id: Long, project: ProjectDTO): ProjectDTO? {
+        val existing = projectRepository.findById(id) ?: return null
+        val updated = mapper.toEntity(project)
+        existing.name = updated.name
+        existing.description = updated.description
+        existing.status = updated.status
+        projectRepository.persist(existing)
+        return mapper.toDTO(existing)
+    }
+
+    @Transactional
+    fun delete(id: Long): Boolean {
+        return projectRepository.deleteById(id)
+    }
 }

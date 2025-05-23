@@ -4,6 +4,8 @@ import ch.baunex.billing.dto.BillingDTO
 import ch.baunex.catalog.dto.CatalogItemDTO
 import ch.baunex.catalog.dto.ProjectCatalogItemDTO
 import ch.baunex.company.dto.CompanyDTO
+import ch.baunex.invoice.dto.InvoiceDTO
+import ch.baunex.invoice.dto.InvoiceDraftDTO
 import ch.baunex.project.dto.ProjectDetailDTO
 import ch.baunex.project.dto.ProjectListDTO
 import ch.baunex.project.facade.ProjectFacade
@@ -49,7 +51,6 @@ class WebController {
             contacts: List<CustomerContactDTO>,
             customers: List<CustomerDTO>
         ): TemplateInstance
-
 
         @JvmStatic
         external fun users(users: List<UserResponseDTO>, currentDate: LocalDate, activeMenu: String): TemplateInstance
@@ -115,6 +116,36 @@ class WebController {
 
         @JvmStatic
         external fun companySettings(company: CompanyDTO?, activeMenu: String, currentDate: LocalDate): TemplateInstance
+
+        @JvmStatic
+        external fun invoiceList(
+            invoices: List<InvoiceDTO>,
+            currentDate: LocalDate,
+            activeMenu: String
+        ): TemplateInstance
+
+        @JvmStatic
+        external fun invoiceDetail(
+            invoice: InvoiceDTO,
+            currentDate: LocalDate,
+            activeMenu: String
+        ): TemplateInstance
+
+        @JvmStatic
+        external fun invoiceDraftList(
+            drafts: List<InvoiceDraftDTO>,
+            currentDate: LocalDate,
+            activeMenu: String
+        ): TemplateInstance
+
+        @JvmStatic
+        external fun invoiceDraftForm(
+            draft: InvoiceDraftDTO?,
+            customers: List<CustomerDTO>,
+            projects: List<ProjectListDTO>,
+            currentDate: LocalDate,
+            activeMenu: String
+        ): TemplateInstance
     }
 
     @GET

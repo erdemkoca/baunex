@@ -8,12 +8,15 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import java.time.LocalDate
+import org.jboss.logging.Logger
 
 /**
  * Lädt Beispiel-Projekte und verknüpft sie mit bestehenden Kunden aus dem CustomerFacade.
  */
 @ApplicationScoped
 class SampleProjectLoader {
+
+    private val logger = Logger.getLogger(SampleProjectLoader::class.java)
 
     @Inject
     lateinit var projectFacade: ProjectFacade
@@ -27,16 +30,24 @@ class SampleProjectLoader {
         if (projectFacade.getAllProjects().isNotEmpty()) return
 
         val customers = customerFacade.listAll()
+        logger.info("Found ${customers.size} customers: ${customers.map { it.companyName }}")
+
         val today = LocalDate.now()
 
-        fun idOf(company: String): Long =
-            customers.firstOrNull { it.companyName == company }
-                ?.id ?: error("Kein Kunde mit companyName='$company' gefunden")
+        fun idOf(company: String): Long {
+            val customer = customers.firstOrNull { it.companyName == company }
+            if (customer == null) {
+                logger.error("Customer not found: $company")
+                error("Kein Kunde mit companyName='$company' gefunden")
+            }
+            logger.info("Found customer: ${customer.companyName} with ID ${customer.id}")
+            return customer.id
+        }
 
         val samples = listOf(
             ProjectCreateDTO(
                 name        = "EFH Neubau Zürich",
-                customerId  = idOf("Elektro Meier AG"),
+                customerId  = idOf("Muster AG"),
                 budget      = 45_000,
                 startDate   = today.minusDays(30),
                 endDate     = today.plusDays(90),
@@ -47,7 +58,7 @@ class SampleProjectLoader {
             ),
             ProjectCreateDTO(
                 name        = "Ladestation Garage Basel",
-                customerId  = idOf("E-Mobility Solutions GmbH"),
+                customerId  = idOf("Beispiel GmbH"),
                 budget      = 12_000,
                 startDate   = today.minusDays(10),
                 endDate     = today.plusDays(15),
@@ -58,7 +69,7 @@ class SampleProjectLoader {
             ),
             ProjectCreateDTO(
                 name        = "Altbau-Umbau Luzern",
-                customerId  = idOf("ImmoPro AG"),
+                customerId  = idOf("Test SA"),
                 budget      = 32_000,
                 startDate   = today.minusMonths(1),
                 endDate     = today.plusMonths(1),
@@ -69,7 +80,7 @@ class SampleProjectLoader {
             ),
             ProjectCreateDTO(
                 name        = "Bürobeleuchtung Bern",
-                customerId  = idOf("BüroTrend GmbH"),
+                customerId  = idOf("Prova SRL"),
                 budget      = 8_500,
                 startDate   = today.minusDays(5),
                 endDate     = today.plusDays(7),
@@ -77,17 +88,6 @@ class SampleProjectLoader {
                 status      = ProjectStatus.PLANNED,
                 street      = "Bundesgasse 45",
                 city        = "Bern"
-            ),
-            ProjectCreateDTO(
-                name        = "Serverraum Elektro Zürich",
-                customerId  = idOf("IT Solutions AG"),
-                budget      = 19_000,
-                startDate   = today.minusDays(20),
-                endDate     = today.plusDays(10),
-                description = "USV-Anlage und Stromversorgung für Serverraum.",
-                status      = ProjectStatus.IN_PROGRESS,
-                street      = "Badenerstrasse 101",
-                city        = "Zürich"
             )
         )
 

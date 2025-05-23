@@ -1,6 +1,6 @@
 package ch.baunex.config
 
-import ch.baunex.config.sample.SampleCustomerAndContactsLoader
+import ch.baunex.config.SampleCustomerAndContactsLoader
 import ch.baunex.config.sample.SampleProjectCatalogItemLoader
 import ch.baunex.config.sample.SampleProjectLoader
 import io.quarkus.runtime.StartupEvent

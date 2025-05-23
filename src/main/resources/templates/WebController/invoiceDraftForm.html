@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>{#if draft}Rechnungsentwurf bearbeiten{#else}Neuer Rechnungsentwurf{/if}</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>{#if draft}Rechnungsentwurf bearbeiten{#else}Neuer Rechnungsentwurf{/if}</h1>
+        
+        <form action="/invoice-drafts{#if draft}/{draft.id}{/if}" method="POST">
+            <div class="form-group">
+                <label for="invoiceNumber">Rechnungsnummer:</label>
+                <input type="text" id="invoiceNumber" name="invoiceNumber" value="{draft.invoiceNumber}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="invoiceDate">Rechnungsdatum:</label>
+                <input type="date" id="invoiceDate" name="invoiceDate" value="{draft.invoiceDate}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="dueDate">Fälligkeitsdatum:</label>
+                <input type="date" id="dueDate" name="dueDate" value="{draft.dueDate}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="customerId">Kunde:</label>
+                <select id="customerId" name="customerId" required>
+                    {#for customer in customers}
+                    <option value="{customer.id}" {#if draft && draft.customerId == customer.id}selected{/if}>
+                        {customer.companyName}
+                    </option>
+                    {/for}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="projectId">Projekt:</label>
+                <select id="projectId" name="projectId" required>
+                    {#for project in projects}
+                    <option value="{project.id}" {#if draft && draft.projectId == project.id}selected{/if}>
+                        {project.name}
+                    </option>
+                    {/for}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Notizen:</label>
+                <textarea id="notes" name="notes" rows="4">{draft.notes}</textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Speichern</button>
+                <a href="/invoice-drafts" class="btn btn-secondary">Abbrechen</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html> 

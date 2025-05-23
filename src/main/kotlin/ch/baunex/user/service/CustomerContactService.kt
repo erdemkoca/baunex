@@ -1,8 +1,11 @@
 package ch.baunex.user.service
 
+import ch.baunex.user.dto.CustomerContactCreateDTO
 import ch.baunex.user.dto.CustomerContactUpdateDTO
 import ch.baunex.user.mapper.applyTo
+import ch.baunex.user.mapper.toModel
 import ch.baunex.user.model.CustomerContact
+import ch.baunex.user.model.CustomerModel
 import ch.baunex.user.repository.CustomerContactRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
@@ -18,9 +21,10 @@ class CustomerContactService {
      * Legt einen neuen Kontakt an.
      */
     @Transactional
-    fun create(entity: CustomerContact): CustomerContact {
-        contactRepo.persist(entity)
-        return entity
+    fun createContact(customer: CustomerModel, dto: CustomerContactCreateDTO): CustomerContact {
+        val contact = dto.toModel(customer)
+        contactRepo.persist(contact)
+        return contact
     }
 
     /**
@@ -32,16 +36,17 @@ class CustomerContactService {
     /**
      * Listet alle Contacts zu einem bestimmten Kunden auf.
      */
-    fun listByCustomer(customerId: Long): List<CustomerContact> =
-        contactRepo.find("customer.id", customerId).list()
+    fun getContactsForCustomer(customerId: Long): List<CustomerContact> =
+        contactRepo.listByCustomerId(customerId)
 
     /**
      * Updated einen vorhandenen Kontakt; liefert das geänderte Entity oder null, wenn nicht gefunden.
      */
     @Transactional
-    fun update(id: Long, dto: CustomerContactUpdateDTO): CustomerContact? {
-        val contact = contactRepo.findById(id) ?: return null
+    fun updateContact(id: Long, dto: CustomerContactUpdateDTO): CustomerContact {
+        val contact = contactRepo.findById(id) ?: throw IllegalArgumentException("Contact not found")
         dto.applyTo(contact)
+        contactRepo.persist(contact)
         return contact
     }
 
@@ -49,9 +54,8 @@ class CustomerContactService {
      * Löscht den Kontakt; liefert true, wenn tatsächlich gelöscht wurde.
      */
     @Transactional
-    fun delete(id: Long): Boolean {
-        val contact = contactRepo.findById(id) ?: return false
+    fun deleteContact(id: Long) {
+        val contact = contactRepo.findById(id) ?: return
         contactRepo.delete(contact)
-        return true
     }
 }

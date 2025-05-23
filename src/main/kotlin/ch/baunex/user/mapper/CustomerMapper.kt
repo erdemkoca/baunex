@@ -7,99 +7,136 @@ import ch.baunex.user.model.CustomerContact
 import ch.baunex.user.model.CustomerModel
 import ch.baunex.user.model.PersonModel
 import ch.baunex.user.model.PersonDetails
+import jakarta.enterprise.context.ApplicationScoped
 
-fun CustomerModel.toCustomerDTO(): CustomerDTO = CustomerDTO(
-    id              = this.id!!,
-    firstName       = this.person.firstName,
-    lastName        = this.person.lastName,
-    email           = this.person.email,
-    street = this.person.details.street,
-    city = this.person.details.city,
-    zipCode = this.person.details.zipCode,
-    country = this.person.details.country,
-    phone = this.person.details.phone,
-    customerNumber  = this.customerNumber,
-    companyName     = this.companyName,
-    paymentTerms    = this.paymentTerms,
-    creditLimit     = this.creditLimit,
-    industry        = this.industry,
-    discountRate    = this.discountRate,
-    preferredLanguage = this.preferredLanguage,
-    marketingConsent  = this.marketingConsent,
-    taxId             = this.taxId,
-    createdAt         = this.createdAt,
-    updatedAt         = this.updatedAt,
-    contacts         = this.contacts.map { it.toContactDTO() }
-)
-
-fun CustomerCreateDTO.toCustomerModel(): CustomerModel {
-    val person = PersonModel().apply {
-        firstName = this@toCustomerModel.firstName
-        lastName  = this@toCustomerModel.lastName
-        email     = this@toCustomerModel.email
-        details   = PersonDetails(
-            street  = this@toCustomerModel.street,
-            city    = this@toCustomerModel.city,
-            zipCode = this@toCustomerModel.zipCode,
-            country = this@toCustomerModel.country,
-            phone   = this@toCustomerModel.phone
+@ApplicationScoped
+class CustomerMapper {
+    fun toDTO(model: CustomerModel): CustomerDTO {
+        return CustomerDTO(
+            id              = model.id!!,
+            firstName       = model.person.firstName,
+            lastName        = model.person.lastName,
+            email           = model.person.email,
+            street = model.person.details.street,
+            city = model.person.details.city,
+            zipCode = model.person.details.zipCode,
+            country = model.person.details.country,
+            phone = model.person.details.phone,
+            customerNumber  = model.customerNumber,
+            companyName     = model.companyName,
+            paymentTerms    = model.paymentTerms,
+            creditLimit     = model.creditLimit,
+            industry        = model.industry,
+            discountRate    = model.discountRate,
+            preferredLanguage = model.preferredLanguage,
+            marketingConsent  = model.marketingConsent,
+            taxId             = model.taxId,
+            createdAt         = model.createdAt,
+            updatedAt         = model.updatedAt,
+            contacts         = model.contacts.map { toContactDTO(it) }
         )
     }
-    return CustomerModel().apply {
-        this.person         = person
-        this.customerNumber = this@toCustomerModel.customerNumber
-        this.companyName    = this@toCustomerModel.companyName
-        this.paymentTerms   = this@toCustomerModel.paymentTerms
-        this.creditLimit    = this@toCustomerModel.creditLimit
-        this.industry       = this@toCustomerModel.industry
-        this.discountRate   = this@toCustomerModel.discountRate
-        this.preferredLanguage = this@toCustomerModel.preferredLanguage
-        this.marketingConsent  = this@toCustomerModel.marketingConsent
-        this.taxId             = this@toCustomerModel.taxId
+
+    fun toEntity(dto: CustomerDTO): CustomerModel {
+        val person = PersonModel().apply {
+            firstName = dto.firstName
+            lastName = dto.lastName
+            email = dto.email
+            details = PersonDetails(
+                street = dto.street,
+                city = dto.city,
+                zipCode = dto.zipCode,
+                country = dto.country,
+                phone = dto.phone
+            )
+        }
+        
+        return CustomerModel().apply {
+            id = dto.id
+            this.person = person
+            customerNumber = dto.customerNumber
+            companyName = dto.companyName
+            paymentTerms = dto.paymentTerms
+            creditLimit = dto.creditLimit
+            industry = dto.industry
+            discountRate = dto.discountRate
+            preferredLanguage = dto.preferredLanguage
+            marketingConsent = dto.marketingConsent
+            taxId = dto.taxId
+        }
+    }
+
+    fun toEntity(dto: CustomerCreateDTO): CustomerModel {
+        val person = PersonModel().apply {
+            firstName = dto.firstName
+            lastName = dto.lastName
+            email = dto.email
+            details = PersonDetails(
+                street = dto.street,
+                city = dto.city,
+                zipCode = dto.zipCode,
+                country = dto.country,
+                phone = dto.phone
+            )
+        }
+        
+        return CustomerModel().apply {
+            this.person = person
+            customerNumber = dto.customerNumber
+            companyName = dto.companyName
+            paymentTerms = dto.paymentTerms
+            creditLimit = dto.creditLimit
+            industry = dto.industry
+            discountRate = dto.discountRate
+            preferredLanguage = dto.preferredLanguage
+            marketingConsent = dto.marketingConsent
+            taxId = dto.taxId
+        }
+    }
+
+    fun applyTo(dto: CustomerCreateDTO, customer: CustomerModel): CustomerModel {
+        customer.person.apply {
+            firstName = dto.firstName
+            lastName = dto.lastName
+            email = dto.email
+            details.street = dto.street
+            details.city = dto.city
+            details.zipCode = dto.zipCode
+            details.country = dto.country
+            details.phone = dto.phone
+        }
+
+        customer.apply {
+            customerNumber = dto.customerNumber
+            companyName = dto.companyName
+            paymentTerms = dto.paymentTerms
+            creditLimit = dto.creditLimit
+            industry = dto.industry
+            discountRate = dto.discountRate
+            preferredLanguage = dto.preferredLanguage
+            marketingConsent = dto.marketingConsent
+            taxId = dto.taxId
+        }
+
+        return customer
+    }
+
+    fun toContactDTO(contact: CustomerContact): CustomerContactDTO {
+        return CustomerContactDTO(
+            id         = contact.id!!,
+            personId   = contact.contactPerson.id!!,
+            firstName  = contact.contactPerson.firstName,
+            lastName   = contact.contactPerson.lastName,
+            email      = contact.contactPerson.email,
+            street     = contact.contactPerson.details.street,
+            city       = contact.contactPerson.details.city,
+            zipCode    = contact.contactPerson.details.zipCode,
+            country    = contact.contactPerson.details.country,
+            phone      = contact.contactPerson.details.phone,
+            role       = contact.role,
+            isPrimary  = contact.isPrimary,
+            createdAt  = contact.createdAt,
+            updatedAt  = contact.updatedAt
+        )
     }
 }
-
-fun CustomerCreateDTO.applyTo(customer: CustomerModel): CustomerModel {
-    customer.person.apply {
-        firstName = this@applyTo.firstName
-        lastName  = this@applyTo.lastName
-        email     = this@applyTo.email
-        details.street  = this@applyTo.street
-        details.city    = this@applyTo.city
-        details.zipCode = this@applyTo.zipCode
-        details.country = this@applyTo.country
-        details.phone   = this@applyTo.phone
-    }
-
-    customer.apply {
-        customerNumber    = this@applyTo.customerNumber
-        companyName       = this@applyTo.companyName
-        paymentTerms      = this@applyTo.paymentTerms
-        creditLimit       = this@applyTo.creditLimit
-        industry          = this@applyTo.industry
-        discountRate      = this@applyTo.discountRate
-        preferredLanguage = this@applyTo.preferredLanguage
-        marketingConsent  = this@applyTo.marketingConsent
-        taxId             = this@applyTo.taxId
-    }
-
-    return customer
-}
-
-fun CustomerContact.toContactDTO(): CustomerContactDTO =
-    CustomerContactDTO(
-        id         = this.id!!,
-        personId   = this.contactPerson.id!!,
-        firstName  = this.contactPerson.firstName,
-        lastName   = this.contactPerson.lastName,
-        email      = this.contactPerson.email,
-        street     = this.contactPerson.details.street,
-        city       = this.contactPerson.details.city,
-        zipCode    = this.contactPerson.details.zipCode,
-        country    = this.contactPerson.details.country,
-        phone      = this.contactPerson.details.phone,
-        role       = this.role,
-        isPrimary  = this.isPrimary,
-        createdAt  = this.createdAt,
-        updatedAt  = this.updatedAt
-    )
