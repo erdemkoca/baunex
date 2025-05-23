@@ -10,6 +10,14 @@
             <input type="hidden" name="id" value="{entry.id}" />
           {/if}
 
+          <!-- Hidden inputs for default values -->
+          <input type="hidden" name="hasNightSurcharge" value="false">
+          <input type="hidden" name="hasWeekendSurcharge" value="false">
+          <input type="hidden" name="hasHolidaySurcharge" value="false">
+          <input type="hidden" name="notBillable" value="false">
+          <input type="hidden" name="invoiced" value="false">
+          <input type="hidden" name="hasWaitingTime" value="false">
+
           <div class="mb-3">
             <label for="employeeId" class="form-label">Employee</label>
             <select class="form-select" id="employeeId" name="employeeId" required>
@@ -59,18 +67,18 @@
           <div class="mb-3">
             <label class="form-label">Surcharges</label>
             <div class="form-check">
-              <input type="checkbox" class="form-check-input" id="hasNightSurcharge" name="hasNightSurcharge"
-                     {#if entry && entry.hasNightSurcharge}checked{/if}>
+              <input type="checkbox" class="form-check-input" id="hasNightSurcharge" name="hasNightSurcharge" value="true"
+                     {#if entry && entry.hasNightSurcharge}checked{/if} onchange="updateHiddenInput(this)">
               <label class="form-check-label" for="hasNightSurcharge">Night Surcharge</label>
             </div>
             <div class="form-check">
-              <input type="checkbox" class="form-check-input" id="hasWeekendSurcharge" name="hasWeekendSurcharge"
-                     {#if entry && entry.hasWeekendSurcharge}checked{/if}>
+              <input type="checkbox" class="form-check-input" id="hasWeekendSurcharge" name="hasWeekendSurcharge" value="true"
+                     {#if entry && entry.hasWeekendSurcharge}checked{/if} onchange="updateHiddenInput(this)">
               <label class="form-check-label" for="hasWeekendSurcharge">Weekend Surcharge</label>
             </div>
             <div class="form-check">
-              <input type="checkbox" class="form-check-input" id="hasHolidaySurcharge" name="hasHolidaySurcharge"
-                     {#if entry && entry.hasHolidaySurcharge}checked{/if}>
+              <input type="checkbox" class="form-check-input" id="hasHolidaySurcharge" name="hasHolidaySurcharge" value="true"
+                     {#if entry && entry.hasHolidaySurcharge}checked{/if} onchange="updateHiddenInput(this)">
               <label class="form-check-label" for="hasHolidaySurcharge">Holiday Surcharge</label>
             </div>
           </div>
@@ -93,8 +101,8 @@
             <div class="row g-3 mt-2">
               <div class="col-md-6">
                 <div class="form-check">
-                  <input type="checkbox" class="form-check-input" id="hasWaitingTime" name="hasWaitingTime"
-                         {#if entry && entry.hasWaitingTime}checked{/if}>
+                  <input type="checkbox" class="form-check-input" id="hasWaitingTime" name="hasWaitingTime" value="true"
+                         {#if entry && entry.hasWaitingTime}checked{/if} onchange="updateHiddenInput(this)">
                   <label class="form-check-label" for="hasWaitingTime">Waiting Time</label>
                 </div>
               </div>
@@ -107,14 +115,14 @@
           </div>
 
           <div class="mb-3 form-check">
-            <input type="checkbox" class="form-check-input" id="notBillable" name="notBillable"
-                   {#if entry && !entry.billable}checked{/if}>
+            <input type="checkbox" class="form-check-input" id="notBillable" name="notBillable" value="true"
+                   {#if entry && !entry.billable}checked{/if} onchange="updateHiddenInput(this)">
             <label class="form-check-label" for="notBillable">Not Billable</label>
           </div>
 
           <div class="mb-3 form-check">
-            <input type="checkbox" class="form-check-input" id="invoiced" name="invoiced"
-                   {#if entry && entry.invoiced}checked{/if}>
+            <input type="checkbox" class="form-check-input" id="invoiced" name="invoiced" value="true"
+                   {#if entry && entry.invoiced}checked{/if} onchange="updateHiddenInput(this)">
             <label class="form-check-label" for="invoiced">Invoiced</label>
           </div>
 
@@ -180,6 +188,22 @@
           </div>
 
           <script>
+            function updateHiddenInput(checkbox) {
+              const name = checkbox.getAttribute('name');
+              const hiddenInput = document.querySelector('input[type="hidden"][name="' + name + '"]');
+              if (hiddenInput) {
+                hiddenInput.value = checkbox.checked ? "true" : "false";
+              }
+            }
+
+            // Initialize hidden inputs based on checkbox states
+            document.addEventListener('DOMContentLoaded', function() {
+              const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+              checkboxes.forEach(checkbox => {
+                updateHiddenInput(checkbox);
+              });
+            });
+
             let catalogItemIndex = {#if entry}{entry.catalogItems.size()}{#else}0{/if};
 
             function addCatalogItem() {
@@ -189,6 +213,12 @@
               
               if (!select.value) {
                 alert('Please select a catalog item');
+                return;
+              }
+
+              const itemId = parseInt(select.value);
+              if (isNaN(itemId)) {
+                alert('Invalid catalog item ID');
                 return;
               }
 
@@ -206,7 +236,7 @@
                 createCell(itemQuantity),
                 createCell(unitPrice + ' CHF'),
                 createCell(totalPrice + ' CHF'),
-                createActionCell(select.value, itemName, itemQuantity, unitPrice, totalPrice)
+                createActionCell(itemId, itemName, itemQuantity, unitPrice, totalPrice)
               ];
               
               cells.forEach(cell => row.appendChild(cell));

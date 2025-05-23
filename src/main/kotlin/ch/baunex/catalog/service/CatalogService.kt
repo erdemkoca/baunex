@@ -14,6 +14,9 @@ class CatalogService @Inject constructor(
 
     fun findById(id: Long): CatalogItemModel? = repo.findById(id)
 
+    // Alias for findById to match TimeTrackingService usage
+    fun getCatalogItemById(id: Long): CatalogItemModel? = findById(id)
+
     @Transactional
     fun save(item: CatalogItemModel) = repo.persist(item)
 

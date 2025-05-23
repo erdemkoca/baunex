@@ -13,9 +13,12 @@ import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import java.net.URI
 import java.time.LocalDate
+import java.util.logging.Logger
 
 @Path("/timetracking")
 class WebTimeTrackingController {
+
+    private val logger = Logger.getLogger(WebTimeTrackingController::class.java.name)
 
     @Inject
     lateinit var timeTrackingFacade: TimeTrackingFacade
@@ -101,8 +104,8 @@ class WebTimeTrackingController {
         @FormParam("hoursWorked") hoursWorked: Double,
         @FormParam("note") note: String?,
         @FormParam("hourlyRate") hourlyRate: Double?,
-        @FormParam("notBillable") notBillable: Boolean = false,
-        @FormParam("invoiced") invoiced: Boolean,
+        @FormParam("notBillable") notBillable: String?,
+        @FormParam("invoiced") invoiced: String?,
         @FormParam("catalogItemDescription") catalogItemDescription: String?,
         @FormParam("catalogItemPrice") catalogItemPrice: Double?,
         @FormParam("catalogItemIds") catalogItemIds: List<String>?,
@@ -110,15 +113,24 @@ class WebTimeTrackingController {
         @FormParam("catalogItemNames") catalogItemNames: List<String>?,
         @FormParam("catalogItemPrices") catalogItemPrices: List<String>?,
         // Surcharges
-        @FormParam("hasNightSurcharge") hasNightSurcharge: Boolean = false,
-        @FormParam("hasWeekendSurcharge") hasWeekendSurcharge: Boolean = false,
-        @FormParam("hasHolidaySurcharge") hasHolidaySurcharge: Boolean = false,
+        @FormParam("hasNightSurcharge") hasNightSurcharge: String?,
+        @FormParam("hasWeekendSurcharge") hasWeekendSurcharge: String?,
+        @FormParam("hasHolidaySurcharge") hasHolidaySurcharge: String?,
         // Additional Costs
         @FormParam("travelTimeMinutes") travelTimeMinutes: Int = 0,
         @FormParam("disposalCost") disposalCost: Double = 0.0,
-        @FormParam("hasWaitingTime") hasWaitingTime: Boolean = false,
+        @FormParam("hasWaitingTime") hasWaitingTime: String?,
         @FormParam("waitingTimeMinutes") waitingTimeMinutes: Int = 0
     ): Response {
+        // Debug logging
+        logger.info("Form parameters received:")
+        logger.info("notBillable: $notBillable")
+        logger.info("invoiced: $invoiced")
+        logger.info("hasNightSurcharge: $hasNightSurcharge")
+        logger.info("hasWeekendSurcharge: $hasWeekendSurcharge")
+        logger.info("hasHolidaySurcharge: $hasHolidaySurcharge")
+        logger.info("hasWaitingTime: $hasWaitingTime")
+
         val catalogItems = if (catalogItemIds != null && catalogItemQuantities != null && 
                              catalogItemNames != null && catalogItemPrices != null) {
             catalogItemIds.zip(catalogItemQuantities.zip(catalogItemNames.zip(catalogItemPrices))).map { (id, rest) ->
@@ -143,17 +155,17 @@ class WebTimeTrackingController {
             hoursWorked = hoursWorked,
             note = note,
             hourlyRate = hourlyRate,
-            billable = !notBillable,
-            invoiced = invoiced,
+            billable = notBillable != "true",
+            invoiced = invoiced == "true",
             catalogItemDescription = catalogItemDescription,
             catalogItemPrice = catalogItemPrice,
             catalogItems = catalogItems,
-            hasNightSurcharge = hasNightSurcharge,
-            hasWeekendSurcharge = hasWeekendSurcharge,
-            hasHolidaySurcharge = hasHolidaySurcharge,
+            hasNightSurcharge = hasNightSurcharge == "true",
+            hasWeekendSurcharge = hasWeekendSurcharge == "true",
+            hasHolidaySurcharge = hasHolidaySurcharge == "true",
             travelTimeMinutes = travelTimeMinutes,
             disposalCost = disposalCost,
-            hasWaitingTime = hasWaitingTime,
+            hasWaitingTime = hasWaitingTime == "true",
             waitingTimeMinutes = waitingTimeMinutes,
             costBreakdown = timeEntryCostService.calculateCostBreakdown(
                 TimeEntryDTO(
@@ -163,21 +175,30 @@ class WebTimeTrackingController {
                     hoursWorked = hoursWorked,
                     note = note,
                     hourlyRate = hourlyRate,
-                    billable = !notBillable,
-                    invoiced = invoiced,
+                    billable = notBillable != "true",
+                    invoiced = invoiced == "true",
                     catalogItemDescription = catalogItemDescription,
                     catalogItemPrice = catalogItemPrice,
                     catalogItems = catalogItems,
-                    hasNightSurcharge = hasNightSurcharge,
-                    hasWeekendSurcharge = hasWeekendSurcharge,
-                    hasHolidaySurcharge = hasHolidaySurcharge,
+                    hasNightSurcharge = hasNightSurcharge == "true",
+                    hasWeekendSurcharge = hasWeekendSurcharge == "true",
+                    hasHolidaySurcharge = hasHolidaySurcharge == "true",
                     travelTimeMinutes = travelTimeMinutes,
                     disposalCost = disposalCost,
-                    hasWaitingTime = hasWaitingTime,
+                    hasWaitingTime = hasWaitingTime == "true",
                     waitingTimeMinutes = waitingTimeMinutes
                 )
             )
         )
+
+        // Debug logging for DTO values
+        logger.info("DTO values:")
+        logger.info("billable: ${dto.billable}")
+        logger.info("invoiced: ${dto.invoiced}")
+        logger.info("hasNightSurcharge: ${dto.hasNightSurcharge}")
+        logger.info("hasWeekendSurcharge: ${dto.hasWeekendSurcharge}")
+        logger.info("hasHolidaySurcharge: ${dto.hasHolidaySurcharge}")
+        logger.info("hasWaitingTime: ${dto.hasWaitingTime}")
 
         if (id == null) {
             timeTrackingFacade.logTime(dto)
