@@ -19,9 +19,11 @@ class SampleDataLoader {
     @Inject lateinit var timeEntryLoader: SampleTimeEntryLoader
     @Inject lateinit var projectCatalogLoader: SampleProjectCatalogItemLoader
     @Inject lateinit var customerAndContactsLoader: SampleCustomerAndContactsLoader
+    @Inject lateinit var companyLoader: SampleCompanyLoader
 
     @Transactional
     fun load(@Observes event: StartupEvent) {
+        companyLoader.load()
         catalogLoader.load()
         userLoader.load()
         employeeLoader.load()
