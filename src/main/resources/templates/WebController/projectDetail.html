@@ -482,70 +482,251 @@
     <div class="tab-pane fade" id="billing" role="tabpanel">
         <div class="card">
             <div class="card-body">
-
-                <!-- Materials -->
-                <h5 class="mb-4">Materials</h5>
-                {#if billing.materials.isEmpty()}
-                    <p class="text-muted">No materials recorded.</p>
-                {#else}
-                    <table class="table table-bordered align-middle">
-                        <thead>
-                        <tr>
-                            <th>Item</th>
-                            <th>Qty</th>
-                            <th>Unit Price (CHF)</th>
-                            <th>Total (CHF)</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {#for m in billing.materials}
-                            <tr>
-                                <td>{m.itemName}</td>
-                                <td>{m.quantity}</td>
-                                <td>{m.unitPrice}</td>
-                                <td>{m.totalPrice}</td>
-                            </tr>
-                        {/for}
-                        </tbody>
-                    </table>
-                {/if}
-                <div class="mt-4">
-                    <p><strong>Material Total:</strong> CHF {billing.materialTotal}</p>
-                </div>
-
-                <!-- Service / Time -->
-                <h5 class="mt-5 mb-4">Service</h5>
+                <!-- Time Entries -->
+                <h5 class="mb-4">Time Entries</h5>
                 {#if billing.timeEntries.isEmpty()}
                     <p class="text-muted">No time logs recorded.</p>
                 {#else}
-                    <table class="table table-striped">
-                        <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Date</th>
-                            <th>Hours</th>
-                            <th>Rate (CHF)</th>
-                            <th>Cost (CHF)</th>
-                        </tr>
-                        </thead>
-                        <tbody>
+                    <div class="accordion" id="billingTimeEntriesAccordion">
                         {#for e in billing.timeEntries}
-                            <tr>
-                                <td>{e.employeeEmail}</td>
-                                <td>{e.date}</td>
-                                <td>{e.hoursWorked}</td>
-                                <td>{e.hourlyRate}</td>
-                                <td>{e.cost}</td>
-                            </tr>
-                        {/for}
-                        </tbody>
-                    </table>
-                {/if}
-                <div class="mt-4">
-                    <p><strong>Time Total:</strong> CHF {billing.timeTotal}</p>
-                    <p><strong>Grand Total:</strong> CHF {billing.total}</p>
-                </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                            data-bs-target="#billingEntry{e.id}" aria-expanded="false" aria-controls="billingEntry{e.id}">
+                                        <div class="d-flex justify-content-between w-100 me-3">
+                                            <div>
+                                                <strong>{e.employeeEmail}</strong> - {e.date}
+                                            </div>
+                                            <div>
+                                                <span class="badge bg-primary me-2">{e.hoursWorked} hours</span>
+                                                {#if !e.billable}
+                                                    <span class="badge bg-secondary">Not Billable</span>
+                                                {/if}
+                                                <span class="badge bg-success ms-2">
+                                                    {#if e.costBreakdown != null}
+                                                        {e.costBreakdown.grandTotal} CHF
+                                                    {#else}
+                                                        {e.cost} CHF
+                                                    {/if}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="billingEntry{e.id}" class="accordion-collapse collapse" data-bs-parent="#billingTimeEntriesAccordion">
+                                    <div class="accordion-body">
+                                        <!-- Basic Information -->
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <h6>Basic Information</h6>
+                                                <p><strong>Note:</strong> {e.notes ?: "—"}</p>
+                                                <p><strong>Hourly Rate:</strong> {e.hourlyRate ?: "—"} CHF</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6>Status</h6>
+                                                <p>
+                                                    <span class="badge {#if e.invoiced}bg-success{#else}bg-warning{/if}">
+                                                        {#if e.invoiced}Invoiced{#else}Not Invoiced{/if}
+                                                    </span>
+                                                </p>
+                                            </div>
+                                        </div>
 
+                                        <!-- Cost Breakdown -->
+                                        <div class="row mb-3">
+                                            <div class="col-12">
+                                                <h6>Cost Breakdown</h6>
+                                                <table class="table table-sm">
+                                                    <tbody>
+                                                        <!-- Time Cost -->
+                                                        <tr>
+                                                            <td>Time Cost</td>
+                                                            <td class="text-end">{e.costBreakdown.timeCost} CHF</td>
+                                                        </tr>
+                                                        
+                                                        <!-- Surcharges -->
+                                                        {#if e.costBreakdown.nightSurcharge != null}
+                                                        <tr>
+                                                            <td>Night Surcharge</td>
+                                                            <td class="text-end">{e.costBreakdown.nightSurcharge} CHF</td>
+                                                        </tr>
+                                                        {/if}
+                                                        {#if e.costBreakdown.weekendSurcharge != null}
+                                                        <tr>
+                                                            <td>Weekend Surcharge</td>
+                                                            <td class="text-end">{e.costBreakdown.weekendSurcharge} CHF</td>
+                                                        </tr>
+                                                        {/if}
+                                                        {#if e.costBreakdown.holidaySurcharge != null}
+                                                        <tr>
+                                                            <td>Holiday Surcharge</td>
+                                                            <td class="text-end">{e.costBreakdown.holidaySurcharge} CHF</td>
+                                                        </tr>
+                                                        {/if}
+
+                                                        <!-- Additional Costs -->
+                                                        {#if e.costBreakdown.travelTimeCost != null}
+                                                        <tr>
+                                                            <td>Travel Time ({e.travelTimeMinutes} min)</td>
+                                                            <td class="text-end">{e.costBreakdown.travelTimeCost} CHF</td>
+                                                        </tr>
+                                                        {/if}
+                                                        {#if e.costBreakdown.waitingTimeCost != null}
+                                                        <tr>
+                                                            <td>Waiting Time ({e.waitingTimeMinutes} min)</td>
+                                                            <td class="text-end">{e.costBreakdown.waitingTimeCost} CHF</td>
+                                                        </tr>
+                                                        {/if}
+                                                        {#if e.costBreakdown.disposalCost != null}
+                                                        <tr>
+                                                            <td>Disposal Cost</td>
+                                                            <td class="text-end">{e.costBreakdown.disposalCost} CHF</td>
+                                                        </tr>
+                                                        {/if}
+
+                                                        <!-- Total Service Cost -->
+                                                        <tr class="table-primary">
+                                                            <td><strong>Total Service Cost</strong></td>
+                                                            <td class="text-end"><strong>{e.costBreakdown.totalServiceCost} CHF</strong></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+
+                                        <!-- Catalog Items -->
+                                        {#if !e.catalogItems.isEmpty()}
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <h6>Catalog Items</h6>
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Item</th>
+                                                            <th>Quantity</th>
+                                                            <th>Unit Price</th>
+                                                            <th>Total</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {#for item in e.catalogItems}
+                                                        <tr>
+                                                            <td>{item.itemName}</td>
+                                                            <td>{item.quantity}</td>
+                                                            <td>{item.unitPrice} CHF</td>
+                                                            <td>{item.totalPrice} CHF</td>
+                                                        </tr>
+                                                        {/for}
+                                                        <tr class="table-primary">
+                                                            <td colspan="3"><strong>Total Catalog Items</strong></td>
+                                                            <td class="text-end"><strong>{e.costBreakdown.catalogItemsCost} CHF</strong></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        {/if}
+
+                                        <!-- Grand Total -->
+                                        <div class="row mt-3">
+                                            <div class="col-12">
+                                                <div class="alert alert-primary mb-0">
+                                                    <strong>Grand Total: </strong>
+                                                    {e.costBreakdown.grandTotal} CHF
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {/for}
+                    </div>
+
+                    <!-- Time Entries Summary -->
+                    <div class="alert alert-info mt-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Total Time Entries:</strong> {billing.timeEntries.size}
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <strong>Total Cost:</strong> {billing.timeTotal} CHF
+                            </div>
+                        </div>
+                    </div>
+                {/if}
+
+                <!-- All Catalog Items -->
+                <h5 class="mt-5 mb-4">All Catalog Items</h5>
+                {#if billing.materials.isEmpty() && billing.timeEntries.isEmpty()}
+                    <p class="text-muted">No catalog items recorded.</p>
+                {#else}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Source</th>
+                                    <th>Item</th>
+                                    <th>Qty</th>
+                                    <th>Unit Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Project Catalog Items -->
+                                {#for m in billing.materials}
+                                    <tr>
+                                        <td>Project</td>
+                                        <td>{m.itemName}</td>
+                                        <td>{m.quantity}</td>
+                                        <td>{m.unitPrice} CHF</td>
+                                        <td>{m.totalPrice} CHF</td>
+                                    </tr>
+                                {/for}
+                                
+                                <!-- Time Entry Catalog Items -->
+                                {#for entry in billing.timeEntries}
+                                    {#for item in entry.catalogItems}
+                                        <tr>
+                                            <td>Time Entry ({entry.date})</td>
+                                            <td>{item.itemName}</td>
+                                            <td>{item.quantity}</td>
+                                            <td>{item.unitPrice} CHF</td>
+                                            <td>{item.totalPrice} CHF</td>
+                                        </tr>
+                                    {/for}
+                                {/for}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-primary">
+                                    <td colspan="4"><strong>Total Catalog Items</strong></td>
+                                    <td class="text-end">
+                                        <strong>{billing.costBreakdown.totalCatalogItemsAndMaterials} CHF</strong>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                {/if}
+
+                <!-- Grand Total -->
+                <div class="mt-5">
+                    <div class="alert alert-success">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Service Total:</strong> {billing.timeTotal} CHF
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Catalog Items Total:</strong> {billing.costBreakdown.totalCatalogItemsAndMaterials} CHF
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-12">
+                                <h4 class="mb-0">Grand Total: {billing.total} CHF</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
