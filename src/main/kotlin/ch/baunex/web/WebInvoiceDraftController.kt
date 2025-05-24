@@ -57,16 +57,19 @@ class WebInvoiceDraftController {
     @Produces(MediaType.TEXT_HTML)
     fun newForm(@QueryParam("projectId") projectId: Long?): Response {
         val projects = projectFacade.getAllProjects()
+        val customers = invoiceDraftFacade.getAllCustomers()
         val currentDate = LocalDate.now()
+        val dueDate = currentDate.plusDays(30)
         
         // If projectId is provided, get project details
         val project = projectId?.let { projectFacade.getProjectWithDetails(it) }
         
         val template = WebController.Templates.invoiceDraftForm(
             draft = null,
-            customers = emptyList(),
+            customers = customers,
             projects = projects,
             currentDate = currentDate,
+            dueDate = dueDate,
             activeMenu = "invoice-drafts",
             selectedProject = project
         )
@@ -126,8 +129,16 @@ class WebInvoiceDraftController {
         val customers = invoiceDraftFacade.getAllCustomers()
         val projects = projectFacade.getAllProjects()
         val currentDate = LocalDate.now()
+        val dueDate = draft.dueDate ?: currentDate.plusDays(30)
         val activeMenu = "invoice-drafts"
-        val template = WebController.Templates.invoiceDraftForm(draft, customers, projects, currentDate, activeMenu)
+        val template = WebController.Templates.invoiceDraftForm(
+            draft = draft,
+            customers = customers,
+            projects = projects,
+            currentDate = currentDate,
+            dueDate = dueDate,
+            activeMenu = activeMenu
+        )
         return Response.ok(template.render()).build()
     }
 

@@ -146,6 +146,7 @@ class WebController {
             customers: List<CustomerDTO>,
             projects: List<ProjectListDTO>,
             currentDate: LocalDate,
+            dueDate: LocalDate,
             activeMenu: String,
             selectedProject: ProjectDetailDTO? = null
         ): TemplateInstance
