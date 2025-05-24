@@ -25,44 +25,48 @@ class WebInvoiceDraftController {
 
     @GET
     @Produces(MediaType.TEXT_HTML)
-    fun list(): TemplateInstance {
+    fun list(): Response {
         val drafts = invoiceDraftFacade.getAll()
         val currentDate = LocalDate.now()
         val activeMenu = "invoice-drafts"
-        return WebController.Templates.invoiceDraftList(drafts, currentDate, activeMenu)
+        val template = WebController.Templates.invoiceDraftList(drafts, currentDate, activeMenu)
+        return Response.ok(template.render()).build()
     }
 
     @GET
     @Path("/{id}")
     @Produces(MediaType.TEXT_HTML)
-    fun show(@PathParam("id") id: Long): TemplateInstance {
+    fun show(@PathParam("id") id: Long): Response {
         val draft = invoiceDraftFacade.getById(id)
         val currentDate = LocalDate.now()
         val activeMenu = "invoice-drafts"
-        return WebController.Templates.invoiceDraftList(drafts = listOf(draft), currentDate = currentDate, activeMenu = activeMenu)
+        val template = WebController.Templates.invoiceDraftList(drafts = listOf(draft), currentDate = currentDate, activeMenu = activeMenu)
+        return Response.ok(template.render()).build()
     }
 
     @GET
     @Path("/new")
     @Produces(MediaType.TEXT_HTML)
-    fun newForm(): TemplateInstance {
+    fun newForm(): Response {
         val customers = invoiceDraftFacade.getAllCustomers()
         val projects = invoiceDraftFacade.getAllProjects()
         val currentDate = LocalDate.now()
         val activeMenu = "invoice-drafts"
-        return WebController.Templates.invoiceDraftForm(null, customers, projects, currentDate, activeMenu)
+        val template = WebController.Templates.invoiceDraftForm(null, customers, projects, currentDate, activeMenu)
+        return Response.ok(template.render()).build()
     }
 
     @GET
     @Path("/{id}/edit")
     @Produces(MediaType.TEXT_HTML)
-    fun editForm(@RestPath id: Long): TemplateInstance {
+    fun editForm(@RestPath id: Long): Response {
         val draft = invoiceDraftFacade.getById(id)
         val customers = invoiceDraftFacade.getAllCustomers()
         val projects = invoiceDraftFacade.getAllProjects()
         val currentDate = LocalDate.now()
         val activeMenu = "invoice-drafts"
-        return WebController.Templates.invoiceDraftForm(draft, customers, projects, currentDate, activeMenu)
+        val template = WebController.Templates.invoiceDraftForm(draft, customers, projects, currentDate, activeMenu)
+        return Response.ok(template.render()).build()
     }
 
     @POST
