@@ -120,6 +120,7 @@ class WebController {
         @JvmStatic
         external fun invoiceList(
             invoices: List<InvoiceDTO>,
+            projects: List<ProjectListDTO>,
             currentDate: LocalDate,
             activeMenu: String
         ): TemplateInstance
@@ -134,6 +135,7 @@ class WebController {
         @JvmStatic
         external fun invoiceDraftList(
             drafts: List<InvoiceDraftDTO>,
+            projects: List<ProjectListDTO>,
             currentDate: LocalDate,
             activeMenu: String
         ): TemplateInstance
@@ -144,7 +146,8 @@ class WebController {
             customers: List<CustomerDTO>,
             projects: List<ProjectListDTO>,
             currentDate: LocalDate,
-            activeMenu: String
+            activeMenu: String,
+            selectedProject: ProjectDetailDTO? = null
         ): TemplateInstance
     }
 

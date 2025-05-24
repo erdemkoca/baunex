@@ -1,330 +1,155 @@
 {#include layout}
-    {#title}{#if draft??}Rechnungsentwurf bearbeiten{#else}Neuer Rechnungsentwurf{/if}{/title}
-    {#header}{#if draft??}Rechnungsentwurf bearbeiten{#else}Neuer Rechnungsentwurf{/if}{/header}
+    {#title}Neuer Rechnungsentwurf{/title}
+    {#header}Neuer Rechnungsentwurf{/header}
     {#content}
         <div class="container-fluid">
-            <form action="/invoice-drafts/{draft??.id ?: ''}" method="post">
-                {#if draft??}
-                    <input type="hidden" name="id" value="{draft.id}">
-                {/if}
-
+            <form action="/invoice-drafts/new" method="post">
                 <div class="card mb-4">
                     <div class="card-body">
-                        <!-- Absender und Logo -->
-                        <div class="row mb-4">
-                            <div class="col-6">
-                                <h5>Absender</h5>
-                                <p>
-                                    Baunex AG<br>
-                                    Musterstrasse 123<br>
-                                    8000 Zürich<br>
-                                    Schweiz
-                                </p>
-                            </div>
-                            <div class="col-6 text-end">
-                                <div class="logo-placeholder" style="width: 200px; height: 100px; border: 1px dashed #ccc; display: inline-block;">
-                                    Logo Platzhalter
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Rechnungsinformationen -->
-                        <div class="row mb-4">
-                            <div class="col-6">
-                                <h5>Rechnung</h5>
-                                <p>
-                                    Rechnungsnummer: {draft??.invoiceNumber ?: 'Wird automatisch generiert'}<br>
-                                    Rechnungsdatum: {draft??.invoiceDate ?: currentDate}<br>
-                                    Fälligkeitsdatum: {draft??.dueDate ?: currentDate}
-                                </p>
-                            </div>
-                            <div class="col-6">
-                                <h5>Kunde</h5>
-                                <div id="customerInfo">
-                                    {#if draft??}
-                                        <p>
-                                            {draft.customerName}<br>
-                                            {draft.customerAddress ?: ''}
-                                        </p>
-                                    {#else}
-                                        <p>Wird basierend auf Projekt automatisch ausgefüllt</p>
-                                    {/if}
-                                </div>
-                            </div>
-                        </div>
-
+                        <h5 class="card-title mb-4">Projekt auswählen</h5>
+                        
                         <!-- Projektauswahl -->
                         <div class="mb-4">
                             <label for="projectId" class="form-label">Projekt</label>
                             <select class="form-select"
                                     id="projectId"
                                     name="projectId"
-                                    required
-                                    onchange="loadProjectDetails(this.value)">
+                                    required>
                                 <option value="">-- Bitte wählen --</option>
                                 {#each projects}
-                                    <option value="{it.id}"
-                                            {#if draft?? && it.id == draft.projectId}selected{/if}>
+                                    <option value="{it.id}" {#if selectedProject && selectedProject.id == it.id}selected{/if}>
                                         {it.name} - {it.customerName}
                                     </option>
                                 {/each}
                             </select>
                         </div>
 
-                        <!-- Zeitraum -->
-                        <div class="row mb-4">
-                            <div class="col-6">
-                                <label for="serviceStartDate" class="form-label">Service von</label>
-                                <input type="date"
-                                       class="form-control"
-                                       id="serviceStartDate"
-                                       name="serviceStartDate"
-                                       value="{draft??.serviceStartDate ?: ''}">
+                        {#if selectedProject}
+                            <!-- Projektdetails -->
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <h5 class="card-title">Projektdetails</h5>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p><strong>Kunde:</strong> {selectedProject.customerName}</p>
+                                            <p><strong>Adresse:</strong> {selectedProject.customer.street}, {selectedProject.customer.city}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p><strong>Projektname:</strong> {selectedProject.name}</p>
+                                            <p><strong>Beschreibung:</strong> {selectedProject.description}</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-6">
-                                <label for="serviceEndDate" class="form-label">Service bis</label>
-                                <input type="date"
-                                       class="form-control"
-                                       id="serviceEndDate"
-                                       name="serviceEndDate"
-                                       value="{draft??.serviceEndDate ?: ''}">
+
+                            <!-- Zeitraum -->
+                            <div class="row mb-4">
+                                <div class="col-6">
+                                    <label for="serviceStartDate" class="form-label">Service von</label>
+                                    <input type="date"
+                                           class="form-control"
+                                           id="serviceStartDate"
+                                           name="serviceStartDate"
+                                           value="{currentDate}">
+                                </div>
+                                <div class="col-6">
+                                    <label for="serviceEndDate" class="form-label">Service bis</label>
+                                    <input type="date"
+                                           class="form-control"
+                                           id="serviceEndDate"
+                                           name="serviceEndDate"
+                                           value="{currentDate}">
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Einträge Tabelle -->
-                        <div class="table-responsive mb-4">
-                            <table class="table table-bordered" id="entriesTable">
-                                <thead>
-                                    <tr>
-                                        <th>Bezeichnung</th>
-                                        <th>VA/IC</th>
-                                        <th>Menge</th>
-                                        <th>Preis</th>
-                                        <th>Betrag</th>
-                                        <th>Aktionen</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {#if draft?? && draft.entries??}
-                                        {#each draft.entries}
-                                            <tr>
-                                                <td>{it.description}</td>
-                                                <td>{it.type}</td>
-                                                <td>{it.quantity}</td>
-                                                <td>{it.price}</td>
-                                                <td>{it.total}</td>
-                                                <td>
-                                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="editEntry(this)">
-                                                        <i class="bi bi-pencil"></i>
-                                                    </button>
-                                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteEntry(this)">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        {/each}
-                                    {/if}
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="4" class="text-end"><strong>Total Netto</strong></td>
-                                        <td id="totalNetto">{draft??.totalNetto ?: '0.00'}</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="4" class="text-end"><strong>Mehrwertsteuer (8.1%)</strong></td>
-                                        <td id="vatAmount">{draft??.vatAmount ?: '0.00'}</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="4" class="text-end"><strong>Total Brutto</strong></td>
-                                        <td id="totalBrutto">{draft??.totalBrutto ?: '0.00'}</td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                            <button type="button" class="btn btn-outline-primary" onclick="addEntry()">
-                                <i class="bi bi-plus"></i> Neue Zeile
-                            </button>
-                        </div>
+                            <!-- Zeiteinträge -->
+                            {#if selectedProject.timeEntries.size > 0}
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Zeiteinträge</h5>
+                                        <div class="table-responsive">
+                                            <table class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Datum</th>
+                                                        <th>Mitarbeiter</th>
+                                                        <th>Beschreibung</th>
+                                                        <th>Stunden</th>
+                                                        <th>Stundensatz</th>
+                                                        <th>Gesamt</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {#each selectedProject.timeEntries}
+                                                        <tr>
+                                                            <td>{it.date.format('dd.MM.yyyy')}</td>
+                                                            <td>{it.employeeEmail}</td>
+                                                            <td>{it.notes}</td>
+                                                            <td>{it.hoursWorked}</td>
+                                                            <td>{it.hourlyRate}</td>
+                                                            <td>{it.cost}</td>
+                                                        </tr>
+                                                    {/each}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            {/if}
 
-                        <!-- Notizen -->
-                        <div class="mb-4">
-                            <label for="notes" class="form-label">Notizen</label>
-                            <textarea class="form-control"
-                                      id="notes"
-                                      name="notes"
-                                      rows="3">{draft??.notes ?: ''}</textarea>
-                        </div>
+                            <!-- Katalog-Items -->
+                            {#if selectedProject.catalogItems.size > 0}
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Katalog-Items</h5>
+                                        <div class="table-responsive">
+                                            <table class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Artikel</th>
+                                                        <th>Menge</th>
+                                                        <th>Einzelpreis</th>
+                                                        <th>Gesamt</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {#each selectedProject.catalogItems}
+                                                        <tr>
+                                                            <td>{it.itemName}</td>
+                                                            <td>{it.quantity}</td>
+                                                            <td>{it.unitPrice}</td>
+                                                            <td>{it.totalPrice}</td>
+                                                        </tr>
+                                                    {/each}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            {/if}
 
-                        <!-- Zahlungsinformationen -->
-                        <div class="mb-4">
-                            <h5>Zahlungsinformationen</h5>
-                            <p>
-                                Bitte überweisen Sie den Betrag innert 30 Tagen auf folgendes Konto:<br>
-                                Baunex AG<br>
-                                IBAN: CH93 0076 7000 E528 5298 7<br>
-                                BIC: BCVLCH2LXXX
-                            </p>
-                        </div>
+                            <!-- Notizen -->
+                            <div class="mb-4">
+                                <label for="notes" class="form-label">Notizen</label>
+                                <textarea class="form-control"
+                                          id="notes"
+                                          name="notes"
+                                          rows="3"></textarea>
+                            </div>
 
-                        <!-- Aktionen -->
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save"></i> Speichern
-                            </button>
-                            <a href="/invoice-drafts" class="btn btn-outline-secondary">
-                                <i class="bi bi-x"></i> Abbrechen
-                            </a>
-                        </div>
+                            <!-- Aktionen -->
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-plus"></i> Rechnungsentwurf erstellen
+                                </button>
+                                <a href="/invoice-drafts" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x"></i> Abbrechen
+                                </a>
+                            </div>
+                        {/if}
                     </div>
                 </div>
             </form>
         </div>
-
-        <script>
-            // Set default due date to 30 days after invoice date
-            document.getElementById('invoiceDate').addEventListener('change', function() {
-                const invoiceDate = new Date(this.value);
-                const dueDate = new Date(invoiceDate);
-                dueDate.setDate(dueDate.getDate() + 30);
-                document.getElementById('dueDate').value = dueDate.toISOString().split('T')[0];
-            });
-
-            // Load project details when project is selected
-            function loadProjectDetails(projectId) {
-                if (!projectId) return;
-                
-                fetch(`/api/projects/${projectId}/details`)
-                    .then(response => response.json())
-                    .then(data => {
-                        // Update customer info
-                        document.getElementById('customerInfo').innerHTML = `
-                            <p>
-                                ${data.customerName}<br>
-                                ${data.customerAddress || ''}
-                            </p>
-                        `;
-                        
-                        // Load time entries and catalog items
-                        loadProjectEntries(projectId);
-                    });
-            }
-
-            // Load project entries (time entries and catalog items)
-            function loadProjectEntries(projectId) {
-                fetch(`/api/projects/${projectId}/entries`)
-                    .then(response => response.json())
-                    .then(data => {
-                        const tbody = document.querySelector('#entriesTable tbody');
-                        tbody.innerHTML = '';
-                        
-                        // Add time entries
-                        data.timeEntries.forEach(entry => {
-                            addEntryToTable({
-                                description: entry.description,
-                                type: 'VA',
-                                quantity: entry.hours,
-                                price: entry.hourlyRate,
-                                total: entry.hours * entry.hourlyRate
-                            });
-                        });
-                        
-                        // Add catalog items
-                        data.catalogItems.forEach(item => {
-                            addEntryToTable({
-                                description: item.description,
-                                type: 'IC',
-                                quantity: item.quantity,
-                                price: item.price,
-                                total: item.quantity * item.price
-                            });
-                        });
-                        
-                        updateTotals();
-                    });
-            }
-
-            // Add new entry to table
-            function addEntry() {
-                addEntryToTable({
-                    description: '',
-                    type: 'VA',
-                    quantity: 1,
-                    price: 0,
-                    total: 0
-                });
-            }
-
-            // Add entry to table
-            function addEntryToTable(entry) {
-                const tbody = document.querySelector('#entriesTable tbody');
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><input type="text" class="form-control" value="${entry.description}" onchange="updateEntry(this)"></td>
-                    <td>
-                        <select class="form-select" onchange="updateEntry(this)">
-                            <option value="VA" ${entry.type === 'VA' ? 'selected' : ''}>VA</option>
-                            <option value="IC" ${entry.type === 'IC' ? 'selected' : ''}>IC</option>
-                        </select>
-                    </td>
-                    <td><input type="number" class="form-control" value="${entry.quantity}" onchange="updateEntry(this)"></td>
-                    <td><input type="number" class="form-control" value="${entry.price}" onchange="updateEntry(this)"></td>
-                    <td>${entry.total.toFixed(2)}</td>
-                    <td>
-                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="editEntry(this)">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteEntry(this)">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            }
-
-            // Update entry
-            function updateEntry(input) {
-                const tr = input.closest('tr');
-                const quantity = parseFloat(tr.querySelector('td:nth-child(3) input').value) || 0;
-                const price = parseFloat(tr.querySelector('td:nth-child(4) input').value) || 0;
-                const total = quantity * price;
-                tr.querySelector('td:nth-child(5)').textContent = total.toFixed(2);
-                updateTotals();
-            }
-
-            // Edit entry
-            function editEntry(button) {
-                const tr = button.closest('tr');
-                // Implement edit functionality
-            }
-
-            // Delete entry
-            function deleteEntry(button) {
-                if (confirm('Möchten Sie diesen Eintrag wirklich löschen?')) {
-                    const tr = button.closest('tr');
-                    tr.remove();
-                    updateTotals();
-                }
-            }
-
-            // Update totals
-            function updateTotals() {
-                const rows = document.querySelectorAll('#entriesTable tbody tr');
-                let totalNetto = 0;
-                
-                rows.forEach(row => {
-                    const total = parseFloat(row.querySelector('td:nth-child(5)').textContent) || 0;
-                    totalNetto += total;
-                });
-                
-                const vatAmount = totalNetto * 0.081;
-                const totalBrutto = totalNetto + vatAmount;
-                
-                document.getElementById('totalNetto').textContent = totalNetto.toFixed(2);
-                document.getElementById('vatAmount').textContent = vatAmount.toFixed(2);
-                document.getElementById('totalBrutto').textContent = totalBrutto.toFixed(2);
-            }
-        </script>
     {/content}
 {/include} 

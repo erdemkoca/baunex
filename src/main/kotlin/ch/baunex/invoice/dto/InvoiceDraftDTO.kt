@@ -29,7 +29,7 @@ data class InvoiceDraftDTO(
 
 data class InvoiceEntryDTO(
     val id: Long? = null,
-    val description: String,
+    val description: String? = null,
     val type: String, // VA (Verrechnete Arbeit) or IC (In Catalog)
     val quantity: Double,
     val price: Double,

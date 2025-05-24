@@ -4,6 +4,7 @@ import ch.baunex.invoice.dto.InvoiceDTO
 import ch.baunex.invoice.model.InvoiceStatus
 import ch.baunex.invoice.service.InvoiceService
 import ch.baunex.invoice.facade.InvoiceFacade
+import ch.baunex.project.facade.ProjectFacade
 import io.quarkus.qute.TemplateInstance
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
@@ -23,13 +24,17 @@ class WebInvoiceController {
     @Inject
     lateinit var invoiceFacade: InvoiceFacade
 
+    @Inject
+    lateinit var projectFacade: ProjectFacade
+
     @GET
     @Produces(MediaType.TEXT_HTML)
     fun list(): Response {
         val invoices = invoiceFacade.getAll()
+        val projects = projectFacade.getAllProjects()
         val currentDate = LocalDate.now()
         val activeMenu = "invoices"
-        val template = WebController.Templates.invoiceList(invoices, currentDate, activeMenu)
+        val template = WebController.Templates.invoiceList(invoices, projects, currentDate, activeMenu)
         return Response.ok(template.render()).build()
     }
 

@@ -28,7 +28,7 @@ data class InvoiceDTO(
 data class InvoiceItemDTO(
     val id: Long? = null,
     val type: String,
-    val description: String,
+    val description: String? = null,
     val quantity: Double,
     val unitPrice: Double,
     val vatRate: Double,

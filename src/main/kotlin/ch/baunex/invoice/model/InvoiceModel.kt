@@ -29,7 +29,7 @@ class InvoiceItemModel : PanacheEntity() {
     @JoinColumn(name = "invoice_id")
     lateinit var invoice: InvoiceModel
 
-    var description: String = ""
+    var description: String? = ""
     var type: String = "" // VA (Verrechnete Arbeit) or IC (In Catalog)
     var quantity: Double = 0.0
     var price: Double = 0.0

@@ -18,7 +18,7 @@ class InvoiceDraftItemModel : PanacheEntityBase() {
     var type: String = ""
 
     @Column(nullable = false)
-    var description: String = ""
+    var description: String? = ""
 
     @Column(nullable = false)
     var quantity: Double = 0.0

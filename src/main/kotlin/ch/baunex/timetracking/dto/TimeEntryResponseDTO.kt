@@ -14,7 +14,7 @@ data class TimeEntryResponseDTO(
     @Contextual val date: LocalDate,
     val hoursWorked: Double,
     val notes: String?,
-    val hourlyRate: Double?,
+    val hourlyRate: Double,
     val cost: Double?,
     val billable: Boolean,
     val invoiced: Boolean,

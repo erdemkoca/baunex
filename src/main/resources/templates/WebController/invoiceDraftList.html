@@ -4,10 +4,28 @@
     {#content}
         <div class="container-fluid">
             <div class="row mb-3">
-                <div class="col">
-                    <a href="/invoice-drafts/new" class="btn btn-primary">
-                        <i class="bi bi-plus"></i> Neuer Rechnungsentwurf
-                    </a>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Neuer Rechnungsentwurf</h5>
+                            <form action="/invoice-drafts/new" method="get">
+                                <div class="mb-3">
+                                    <label for="projectId" class="form-label">Projekt auswählen</label>
+                                    <select class="form-select" id="projectId" name="projectId" required>
+                                        <option value="">-- Bitte wählen --</option>
+                                        {#each projects}
+                                            <option value="{it.id}">
+                                                {it.name} - {it.customerName}
+                                            </option>
+                                        {/each}
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-plus"></i> Neuer Rechnungsentwurf
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
 
