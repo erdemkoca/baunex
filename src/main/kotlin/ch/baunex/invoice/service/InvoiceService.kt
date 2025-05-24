@@ -24,14 +24,14 @@ class InvoiceService {
     @Transactional
     fun markAsPaid(id: Long) {
         val invoice = getById(id)
-        invoice.status = InvoiceStatus.PAID
+        invoice.status = "PAID" //TODO as Enum
         repository.persist(invoice)
     }
 
     @Transactional
     fun cancel(id: Long) {
         val invoice = getById(id)
-        invoice.status = InvoiceStatus.CANCELLED
+        invoice.status = "CANCELLED" //TODO as Enum
         repository.persist(invoice)
     }
 } 

@@ -1,35 +1,47 @@
 package ch.baunex.web
 
+import ch.baunex.invoice.dto.InvoiceDTO
+import ch.baunex.invoice.model.InvoiceStatus
+import ch.baunex.invoice.service.InvoiceService
 import ch.baunex.invoice.facade.InvoiceFacade
 import io.quarkus.qute.TemplateInstance
+import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
+import org.jboss.resteasy.reactive.RestPath
 import java.time.LocalDate
 
 @Path("/invoices")
+@ApplicationScoped
 class WebInvoiceController {
+
+    @Inject
+    lateinit var invoiceService: InvoiceService
 
     @Inject
     lateinit var invoiceFacade: InvoiceFacade
 
     @GET
     @Produces(MediaType.TEXT_HTML)
-    fun list(): TemplateInstance {
+    fun list(): Response {
         val invoices = invoiceFacade.getAll()
         val currentDate = LocalDate.now()
         val activeMenu = "invoices"
-        return WebController.Templates.invoiceList(invoices, currentDate, activeMenu)
+        val template = WebController.Templates.invoiceList(invoices, currentDate, activeMenu)
+        return Response.ok(template.render()).build()
     }
 
     @GET
     @Path("/{id}")
     @Produces(MediaType.TEXT_HTML)
-    fun show(@PathParam("id") id: Long): TemplateInstance {
+    fun show(@PathParam("id") id: Long): Response {
         val invoice = invoiceFacade.getById(id)
         val currentDate = LocalDate.now()
         val activeMenu = "invoices"
-        return WebController.Templates.invoiceDetail(invoice, currentDate, activeMenu)
+        val template = WebController.Templates.invoiceDetail(invoice, currentDate, activeMenu)
+        return Response.ok(template.render()).build()
     }
 
     @POST

@@ -1,1 +1,115 @@
- 
+{#include layout}
+    {#title}Rechnungsentwürfe{/title}
+    {#header}Rechnungsentwürfe{/header}
+    {#content}
+        <div class="container-fluid">
+            <div class="row mb-3">
+                <div class="col">
+                    <a href="/invoice-drafts/new" class="btn btn-primary">
+                        <i class="bi bi-plus"></i> Neuer Rechnungsentwurf
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Rechnungsnummer</th>
+                                <th>Rechnungsdatum</th>
+                                <th>Fälligkeitsdatum</th>
+                                <th>Kunde</th>
+                                <th>Projekt</th>
+                                <th>Status</th>
+                                <th>Gesamtbetrag</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {#each drafts}
+                            <tr>
+                                <td>{it.invoiceNumber}</td>
+                                <td>{it.invoiceDate.format('dd.MM.yyyy')}</td>
+                                <td>{it.dueDate.format('dd.MM.yyyy')}</td>
+                                <td>{it.customerName}</td>
+                                <td>{it.projectName}</td>
+                                <td>
+                                    {#if it.status == 'DRAFT'}
+                                        <span class="badge bg-warning">Entwurf</span>
+                                    {#else if it.status == 'CANCELLED'}
+                                        <span class="badge bg-danger">Storniert</span>
+                                    {#else}
+                                        <span class="badge bg-success">In Rechnung umgewandelt</span>
+                                    {/if}
+                                </td>
+                                <td>{it.formattedGrandTotal}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="/invoice-drafts/{it.id}"
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="Anzeigen">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        {#if it.status == 'DRAFT'}
+                                            <a href="/invoice-drafts/{it.id}/edit"
+                                               class="btn btn-sm btn-outline-secondary"
+                                               title="Bearbeiten">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-success"
+                                                    title="In Rechnung umwandeln"
+                                                    onclick="createInvoice('{it.id}')">
+                                                <i class="bi bi-file-earmark-text"></i>
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    title="Löschen"
+                                                    onclick="deleteDraft('{it.id}')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        {/if}
+                                    </div>
+                                </td>
+                            </tr>
+                        {/each}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function createInvoice(id) {
+                if (confirm('Möchten Sie diesen Entwurf wirklich in eine Rechnung umwandeln?')) {
+                    fetch('/invoice-drafts/' + id + '/create-invoice', {
+                        method: 'POST'
+                    }).then(response => {
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            response.text().then(text => {
+                                alert('Fehler beim Umwandeln in Rechnung: ' + text);
+                            });
+                        }
+                    });
+                }
+            }
+
+            function deleteDraft(id) {
+                if (confirm('Möchten Sie diesen Entwurf wirklich löschen?')) {
+                    fetch('/invoice-drafts/' + id, {
+                        method: 'DELETE'
+                    }).then(response => {
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            alert('Fehler beim Löschen des Entwurfs');
+                        }
+                    });
+                }
+            }
+        </script>
+    {/content}
+{/include}

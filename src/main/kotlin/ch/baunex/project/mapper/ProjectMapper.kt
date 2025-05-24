@@ -13,13 +13,15 @@ class ProjectMapper @Inject constructor(
     private val timeEntryMapper: TimeEntryMapper,
     private val customerMapper: CustomerMapper
 ) {
-    fun toListDTO(model: ProjectModel) = ProjectListDTO(
-        id           = model.id!!,
-        name         = model.name,
-        customerName = model.customer.companyName ?: "",
-        budget       = model.budget,
-        status       = model.status
-    )
+    fun toListDTO(model: ProjectModel): ProjectListDTO {
+        return ProjectListDTO(
+            id = model.id ?: throw IllegalStateException("Project ID cannot be null"),
+            name = model.name,
+            customerId = model.customer.id ?: throw IllegalStateException("Customer ID cannot be null"),
+            customerName = model.customer.companyName ?: "",
+            status = model.status.name
+        )
+    }
 
     fun toDetailDTO(model: ProjectModel) = ProjectDetailDTO(
         id           = model.id!!,
@@ -41,7 +43,7 @@ class ProjectMapper @Inject constructor(
 
     fun toDTO(model: ProjectModel): ProjectDTO {
         return ProjectDTO(
-            id = model.id,
+            id = model.id ?: throw IllegalStateException("Project ID cannot be null"),
             name = model.name,
             client = model.customer.companyName ?: "",
             budget = model.budget,
@@ -54,7 +56,7 @@ class ProjectMapper @Inject constructor(
             city = model.city,
             timeEntries = model.timeEntries.sortedBy { it.date }.map { timeEntryMapper.toTimeEntryResponseDTO(it) },
             catalogItems = model.usedItems.map { it.toProjectCatalogItemDTO() },
-            customerId = model.customer.id!!,
+            customerId = model.customer.id ?: throw IllegalStateException("Customer ID cannot be null"),
             customerName = model.customer.companyName ?: ""
         )
     }
@@ -65,7 +67,7 @@ class ProjectMapper @Inject constructor(
             name = dto.name
             budget = dto.budget
             description = dto.description
-            status = dto.status
+            status = ch.baunex.project.model.ProjectStatus.valueOf(dto.status.name)
             street = dto.street
             city = dto.city
         }

@@ -24,7 +24,9 @@ class CustomerFacade @Inject constructor(
 
     fun getAllCustomers(): List<CustomerDTO> = listAll()
 
-    fun getById(id: Long): CustomerDTO = customerService.getById(id)
+    fun getById(id: Long): CustomerDTO? {
+        return customerService.getById(id)
+    }
 
     @Transactional
     fun create(dto: CustomerCreateDTO): CustomerDTO = customerService.createCustomer(dto)

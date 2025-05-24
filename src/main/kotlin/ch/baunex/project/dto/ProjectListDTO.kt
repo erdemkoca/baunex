@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 data class ProjectListDTO(
     val id: Long,
     val name: String,
+    val customerId: Long,
     val customerName: String,
-    val budget: Int,
-    val status: ProjectStatus
+    val status: String
 )

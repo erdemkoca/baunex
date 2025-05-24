@@ -26,7 +26,7 @@ class WebInvoiceDraftController {
     @GET
     @Produces(MediaType.TEXT_HTML)
     fun list(): TemplateInstance {
-        val drafts = invoiceDraftFacade.getAllDrafts()
+        val drafts = invoiceDraftFacade.getAll()
         val currentDate = LocalDate.now()
         val activeMenu = "invoice-drafts"
         return WebController.Templates.invoiceDraftList(drafts, currentDate, activeMenu)
@@ -36,7 +36,7 @@ class WebInvoiceDraftController {
     @Path("/{id}")
     @Produces(MediaType.TEXT_HTML)
     fun show(@PathParam("id") id: Long): TemplateInstance {
-        val draft = invoiceDraftFacade.getDraftById(id)
+        val draft = invoiceDraftFacade.getById(id)
         val currentDate = LocalDate.now()
         val activeMenu = "invoice-drafts"
         return WebController.Templates.invoiceDraftList(drafts = listOf(draft), currentDate = currentDate, activeMenu = activeMenu)
@@ -57,7 +57,7 @@ class WebInvoiceDraftController {
     @Path("/{id}/edit")
     @Produces(MediaType.TEXT_HTML)
     fun editForm(@RestPath id: Long): TemplateInstance {
-        val draft = invoiceDraftFacade.getDraftById(id)
+        val draft = invoiceDraftFacade.getById(id)
         val customers = invoiceDraftFacade.getAllCustomers()
         val projects = invoiceDraftFacade.getAllProjects()
         val currentDate = LocalDate.now()
@@ -71,7 +71,7 @@ class WebInvoiceDraftController {
     fun createInvoice(@RestPath id: Long): Response {
         try {
             val draft = invoiceDraftService.getById(id)
-            if (draft.status != InvoiceStatus.DRAFT) {
+            if (draft.status != "DRAFT") {
                 return Response.status(Response.Status.BAD_REQUEST)
                     .entity("Nur Rechnungsentwürfe können in Rechnungen umgewandelt werden.")
                     .build()
@@ -103,10 +103,10 @@ class WebInvoiceDraftController {
             customerId = customerId,
             projectId = projectId,
             notes = notes,
-            status = InvoiceStatus.DRAFT.name
+            status = "DRAFT"
         )
 
-        val created = invoiceDraftService.create(draft)
+        val created = invoiceDraftFacade.create(draft)
         return Response.seeOther(java.net.URI.create("/invoice-drafts/${created.id}")).build()
     }
 
@@ -129,10 +129,10 @@ class WebInvoiceDraftController {
             customerId = customerId,
             projectId = projectId,
             notes = notes,
-            status = InvoiceStatus.DRAFT.name
+            status = "DRAFT"
         )
 
-        invoiceDraftService.update(id, draft)
+        invoiceDraftFacade.update(id, draft)
         return Response.seeOther(java.net.URI.create("/invoice-drafts/${id}")).build()
     }
 
@@ -140,6 +140,6 @@ class WebInvoiceDraftController {
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     fun delete(@PathParam("id") id: Long) {
-        invoiceDraftFacade.deleteDraft(id)
+        invoiceDraftFacade.delete(id)
     }
 } 

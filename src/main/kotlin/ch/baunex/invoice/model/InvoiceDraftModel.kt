@@ -1,47 +1,23 @@
 package ch.baunex.invoice.model
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase
+import io.quarkus.hibernate.orm.panache.PanacheEntity
 import jakarta.persistence.*
 import java.time.LocalDate
 
 @Entity
 @Table(name = "invoice_drafts")
-class InvoiceDraftModel : PanacheEntityBase() {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null
-
-    @Column(nullable = false)
-    var invoiceNumber: String = ""
-
-    @Column(nullable = false)
-    var invoiceDate: LocalDate = LocalDate.now()
-
-    @Column(nullable = false)
-    var dueDate: LocalDate = LocalDate.now().plusDays(30)
-
-    @Column(nullable = false)
-    var customerId: Long = 0
-
-    @Column(nullable = false)
-    var projectId: Long = 0
-
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    var status: InvoiceStatus = InvoiceStatus.DRAFT
-
-    @Column
+class InvoiceDraftModel : PanacheEntity() {
+    var invoiceNumber: String? = null
+    var invoiceDate: LocalDate? = null
+    var dueDate: LocalDate? = null
+    var customerId: Long? = null
+    var projectId: Long? = null
     var notes: String? = null
+    var status: String = "DRAFT"
+    var totalNetto: Double = 0.0
+    var vatAmount: Double = 0.0
+    var totalBrutto: Double = 0.0
 
     @OneToMany(mappedBy = "invoiceDraft", cascade = [CascadeType.ALL], orphanRemoval = true)
     var items: MutableList<InvoiceDraftItemModel> = mutableListOf()
-
-    @Column(nullable = false)
-    var totalAmount: Double = 0.0
-
-    @Column(nullable = false)
-    var vatAmount: Double = 0.0
-
-    @Column(nullable = false)
-    var grandTotal: Double = 0.0
-} 
+}

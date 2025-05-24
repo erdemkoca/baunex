@@ -2,6 +2,8 @@ package ch.baunex.invoice.dto
 
 import ch.baunex.invoice.model.InvoiceStatus
 import java.time.LocalDate
+import java.text.NumberFormat
+import java.util.Locale
 
 data class InvoiceDTO(
     val id: Long? = null,
@@ -18,6 +20,7 @@ data class InvoiceDTO(
     val totalAmount: Double,
     val vatAmount: Double,
     val grandTotal: Double,
+    val formattedGrandTotal: String = NumberFormat.getCurrencyInstance(Locale.GERMANY).format(grandTotal),
     val notes: String?,
     val items: List<InvoiceItemDTO> = emptyList()
 )

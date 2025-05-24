@@ -1,14 +1,13 @@
 package ch.baunex.invoice.mapper
 
 import ch.baunex.invoice.dto.InvoiceDraftDTO
-import ch.baunex.invoice.dto.InvoiceDraftItemDTO
+import ch.baunex.invoice.dto.InvoiceEntryDTO
 import ch.baunex.invoice.model.InvoiceDraftModel
 import ch.baunex.invoice.model.InvoiceDraftItemModel
-import ch.baunex.invoice.model.InvoiceStatus
-import ch.baunex.invoice.model.InvoiceDraftItemType
 import jakarta.enterprise.context.ApplicationScoped
-import java.time.LocalDate
 import jakarta.inject.Inject
+import ch.baunex.user.facade.CustomerFacade
+import ch.baunex.project.facade.ProjectFacade
 
 @ApplicationScoped
 class InvoiceDraftMapper {
@@ -16,27 +15,41 @@ class InvoiceDraftMapper {
     @Inject
     lateinit var itemMapper: InvoiceDraftItemMapper
 
+    @Inject
+    lateinit var customerFacade: CustomerFacade
+
+    @Inject
+    lateinit var projectFacade: ProjectFacade
+
     fun toModel(dto: InvoiceDraftDTO): InvoiceDraftModel {
-        val model = InvoiceDraftModel().apply {
+        val draftModel = InvoiceDraftModel().apply {
             id = dto.id
             invoiceNumber = dto.invoiceNumber
             invoiceDate = dto.invoiceDate
             dueDate = dto.dueDate
             customerId = dto.customerId
             projectId = dto.projectId
-            status = InvoiceStatus.valueOf(dto.status)
             notes = dto.notes
-            totalAmount = dto.totalAmount
+            status = dto.status ?: "DRAFT"
+            totalNetto = dto.totalNetto
             vatAmount = dto.vatAmount
-            grandTotal = dto.grandTotal
+            totalBrutto = dto.totalBrutto
         }
 
-        // Map items after model is created to avoid circular dependency
-        dto.items.forEach { itemDto ->
-            model.items.add(itemMapper.toModel(itemDto, model))
+        // Convert entries to items
+        dto.entries.forEach { entry ->
+            val item = InvoiceDraftItemModel().apply {
+                invoiceDraft = draftModel
+                description = entry.description
+                type = entry.type
+                quantity = entry.quantity
+                unitPrice = entry.price
+                totalAmount = entry.total
+            }
+            draftModel.items.add(item)
         }
 
-        return model
+        return draftModel
     }
 
     fun toDTO(model: InvoiceDraftModel): InvoiceDraftDTO {
@@ -47,12 +60,29 @@ class InvoiceDraftMapper {
             dueDate = model.dueDate,
             customerId = model.customerId,
             projectId = model.projectId,
-            status = model.status.name,
             notes = model.notes,
-            items = model.items.map { itemMapper.toDTO(it) },
-            totalAmount = model.totalAmount,
+            status = model.status,
+            entries = model.items.map { item ->
+                InvoiceEntryDTO(
+                    id = item.id,
+                    description = item.description,
+                    type = item.type,
+                    quantity = item.quantity,
+                    price = item.unitPrice,
+                    total = item.totalAmount
+                )
+            },
+            totalNetto = model.totalNetto,
             vatAmount = model.vatAmount,
-            grandTotal = model.grandTotal
+            totalBrutto = model.totalBrutto
         )
+    }
+
+    private fun getCustomerName(customerId: Long): String {
+        return customerFacade.getById(customerId)?.companyName ?: ""
+    }
+
+    private fun getProjectName(projectId: Long): String {
+        return projectFacade.getProjectWithDetails(projectId)?.name ?: ""
     }
 } 

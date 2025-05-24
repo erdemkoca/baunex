@@ -6,12 +6,11 @@ import ch.baunex.invoice.mapper.InvoiceDraftMapper
 import ch.baunex.invoice.mapper.InvoiceMapper
 import ch.baunex.invoice.model.InvoiceDraftModel
 import ch.baunex.invoice.model.InvoiceModel
-import ch.baunex.invoice.model.InvoiceStatus
+import ch.baunex.invoice.model.InvoiceItemModel
 import ch.baunex.invoice.repository.InvoiceDraftRepository
 import ch.baunex.invoice.repository.InvoiceRepository
 import ch.baunex.user.dto.CustomerDTO
 import ch.baunex.user.service.CustomerService
-import ch.baunex.project.dto.ProjectDTO
 import ch.baunex.project.model.ProjectModel
 import ch.baunex.project.repository.ProjectRepository
 import jakarta.enterprise.context.ApplicationScoped
@@ -58,9 +57,9 @@ class InvoiceDraftService {
         existing.status = updated.status
         existing.customerId = updated.customerId
         existing.projectId = updated.projectId
-        existing.totalAmount = updated.totalAmount
+        existing.totalNetto = updated.totalNetto
         existing.vatAmount = updated.vatAmount
-        existing.grandTotal = updated.grandTotal
+        existing.totalBrutto = updated.totalBrutto
         existing.notes = updated.notes
         existing.items = updated.items
 
@@ -89,7 +88,7 @@ class InvoiceDraftService {
         val draft = invoiceDraftRepository.findById(draftId)
             ?: throw IllegalArgumentException("Rechnungsentwurf nicht gefunden")
 
-        if (draft.status != InvoiceStatus.DRAFT) {
+        if (draft.status != "DRAFT") {
             throw IllegalStateException("Nur Rechnungsentwürfe können in Rechnungen umgewandelt werden")
         }
 
@@ -101,25 +100,21 @@ class InvoiceDraftService {
             customerId = draft.customerId
             projectId = draft.projectId
             notes = draft.notes
-            status = InvoiceStatus.CREATED
-            totalAmount = draft.totalAmount
+            status = "CREATED"
+            totalNetto = draft.totalNetto
             vatAmount = draft.vatAmount
-            grandTotal = draft.grandTotal
+            totalBrutto = draft.totalBrutto
         }
 
         // Kopiere alle Positionen
         draft.items.forEach { draftItem ->
-            val invoiceItem = InvoiceModel.InvoiceItemModel().apply {
+            val invoiceItem = InvoiceItemModel().apply {
                 this.invoice = invoice
                 type = draftItem.type
                 description = draftItem.description
                 quantity = draftItem.quantity
-                unitPrice = draftItem.unitPrice
-                vatRate = draftItem.vatRate
-                totalAmount = draftItem.totalAmount
-                vatAmount = draftItem.vatAmount
-                grandTotal = draftItem.grandTotal
-                itemOrder = draftItem.itemOrder
+                price = draftItem.unitPrice
+                total = draftItem.totalAmount
                 timeEntryId = draftItem.timeEntryId
                 catalogItemId = draftItem.catalogItemId
             }
@@ -130,7 +125,7 @@ class InvoiceDraftService {
         invoiceRepository.persist(invoice)
 
         // Aktualisiere den Status des Entwurfs
-        draft.status = InvoiceStatus.CONVERTED
+        draft.status = "CONVERTED"
         invoiceDraftRepository.persist(draft)
 
         return invoiceMapper.toDTO(invoice)

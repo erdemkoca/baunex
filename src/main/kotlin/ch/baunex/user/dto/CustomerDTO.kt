@@ -26,5 +26,6 @@ data class CustomerDTO(
     val taxId: String?,
     @Contextual val createdAt: LocalDateTime,
     @Contextual val updatedAt: LocalDateTime,
-    val contacts: List<CustomerContactDTO> = emptyList()
+    val contacts: List<CustomerContactDTO> = emptyList(),
+    val address: String? = null
 )
