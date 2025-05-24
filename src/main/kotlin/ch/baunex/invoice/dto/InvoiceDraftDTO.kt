@@ -10,6 +10,7 @@ data class InvoiceDraftDTO(
     val invoiceDate: LocalDate? = null,
     val dueDate: LocalDate? = null,
     val projectId: Long? = null,
+    val projectName: String? = null,
     val customerId: Long? = null,
     val customerName: String? = null,
     val customerAddress: String? = null,
@@ -21,7 +22,10 @@ data class InvoiceDraftDTO(
     val totalNetto: Double = 0.0,
     val vatAmount: Double = 0.0,
     val totalBrutto: Double = 0.0
-)
+) {
+    val formattedGrandTotal: String
+        get() = NumberFormat.getCurrencyInstance(Locale.GERMANY).format(totalBrutto)
+}
 
 data class InvoiceEntryDTO(
     val id: Long? = null,

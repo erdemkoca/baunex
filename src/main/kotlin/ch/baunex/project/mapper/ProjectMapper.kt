@@ -19,7 +19,8 @@ class ProjectMapper @Inject constructor(
             name = model.name,
             customerId = model.customer.id ?: throw IllegalStateException("Customer ID cannot be null"),
             customerName = model.customer.companyName ?: "",
-            status = model.status.name
+            status = model.status.name,
+            budget = model.budget
         )
     }
 

@@ -9,5 +9,6 @@ data class ProjectListDTO(
     val name: String,
     val customerId: Long,
     val customerName: String,
-    val status: String
+    val status: String,
+    val budget: Int? = null
 )
