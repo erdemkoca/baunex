@@ -4,8 +4,10 @@ import ch.baunex.billing.dto.BillingDTO
 import ch.baunex.catalog.dto.CatalogItemDTO
 import ch.baunex.catalog.dto.ProjectCatalogItemDTO
 import ch.baunex.company.dto.CompanyDTO
+import ch.baunex.company.facade.CompanyFacade
 import ch.baunex.invoice.dto.InvoiceDTO
 import ch.baunex.invoice.dto.InvoiceDraftDTO
+import ch.baunex.invoice.facade.InvoiceDraftFacade
 import ch.baunex.project.dto.ProjectDetailDTO
 import ch.baunex.project.dto.ProjectListDTO
 import ch.baunex.project.facade.ProjectFacade
@@ -33,10 +35,31 @@ class WebController {
     @Inject
     lateinit var timeTrackingFacade: TimeTrackingFacade
 
+    @Inject
+    lateinit var invoiceDraftFacade: InvoiceDraftFacade
+
+    @Inject
+    lateinit var companyFacade: CompanyFacade
+
     @CheckedTemplate(requireTypeSafeExpressions = false)
     object Templates {
         @JvmStatic
-        external fun index(projects: List<ProjectListDTO>, currentDate: LocalDate, activeMenu: String, timeEntries: List<TimeEntryResponseDTO>): TemplateInstance
+        external fun index(
+            projects: List<ProjectListDTO>,
+            timeEntries: List<TimeEntryResponseDTO>,
+            currentDate: LocalDate,
+            activeMenu: String,
+            totalProjects: Int,
+            totalTimeEntries: Int,
+            totalInvoiceDrafts: Int,
+            totalInvoicedAmount: Double,
+            totalTimeHours: Double,
+            totalMaterialCost: Double,
+            totalServiceCost: Double,
+            totalCosts: Double,
+            recentInvoiceDrafts: List<InvoiceDraftDTO>,
+            company: CompanyDTO
+        ): TemplateInstance
 
         @JvmStatic
         external fun projects(projects: List<ProjectListDTO>, currentDate: LocalDate, activeMenu: String): TemplateInstance
@@ -164,9 +187,49 @@ class WebController {
     @Path("/dashboard")
     @Produces(MediaType.TEXT_HTML)
     fun dashboard(): Response {
-        val projects = projectFacade.getAllProjects().map { it }
+        val currentDate = LocalDate.now()
+        val projects = projectFacade.getAllProjects()
         val timeEntries = timeTrackingFacade.getAllTimeEntries()
-        val template = Templates.index(projects, LocalDate.now(), "dashboard", timeEntries)
+        val invoiceDrafts = invoiceDraftFacade.getAll()
+        val company = companyFacade.getCompany() ?: throw IllegalStateException("Company information not found")
+
+        // Calculate statistics
+        val totalProjects = projects.size
+        val totalTimeEntries = timeEntries.size
+        val totalInvoiceDrafts = invoiceDrafts.size
+        val totalInvoicedAmount = invoiceDrafts.sumOf { it.totalBrutto ?: 0.0 }
+        val totalTimeHours = timeEntries.sumOf { it.hoursWorked }
+        
+        // Calculate material costs from project details
+        val totalMaterialCost = projects.sumOf { project ->
+            val projectDetail = projectFacade.getProjectWithDetails(project.id)
+            projectDetail?.catalogItems?.sumOf { item -> item.totalPrice ?: 0.0 } ?: 0.0
+        }
+        
+        val totalServiceCost = timeEntries.sumOf { it.cost ?: 0.0 }
+        val totalCosts = totalServiceCost + totalMaterialCost
+
+        // Get recent items
+        val recentProjects = projects.take(5)
+        val recentTimeEntries = timeEntries.take(5)
+        val recentInvoiceDrafts = invoiceDrafts.take(5)
+
+        val template = Templates.index(
+            projects = recentProjects,
+            timeEntries = recentTimeEntries,
+            currentDate = currentDate,
+            activeMenu = "dashboard",
+            totalProjects = totalProjects,
+            totalTimeEntries = totalTimeEntries,
+            totalInvoiceDrafts = totalInvoiceDrafts,
+            totalInvoicedAmount = totalInvoicedAmount,
+            totalTimeHours = totalTimeHours,
+            totalMaterialCost = totalMaterialCost,
+            totalServiceCost = totalServiceCost,
+            totalCosts = totalCosts,
+            recentInvoiceDrafts = recentInvoiceDrafts,
+            company = company
+        )
         return Response.ok(template.render()).build()
     }
 } 
