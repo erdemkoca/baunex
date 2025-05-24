@@ -221,12 +221,23 @@
                                     <div class="card">
                                         <div class="card-body">
                                             <h5 class="card-title">Zusammenfassung</h5>
+                                            {#if billing}
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <span>Gesamtkosten Dienstleistung:</span>
+                                                    <span id="billingServiceTotal">{billing.timeTotal} CHF</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <span>Gesamtkosten Katalogartikel:</span>
+                                                    <span id="billingMaterialTotal">{billing.costBreakdown.totalCatalogItemsAndMaterials} CHF</span>
+                                                </div>
+                                                <hr>
+                                            {/if}
                                             <div class="d-flex justify-content-between mb-2">
                                                 <span>Bruttobetrag:</span>
                                                 <span id="grossTotal">0.00 CHF</span>
                                             </div>
                                             <div class="d-flex justify-content-between mb-2">
-                                                <span>Mehrwertsteuer ({company.defaultVatRate}%):</span>
+                                                <span>Mehrwertsteuer (<span id="vatRate">{company.defaultVatRate}</span>%):</span>
                                                 <span id="vatAmount">0.00 CHF</span>
                                             </div>
                                             <div class="d-flex justify-content-between mb-2">
@@ -342,6 +353,10 @@
                     let materialTotal = 0;
                     let grossTotal = 0;
 
+                    // Get billing totals if available
+                    const billingServiceTotal = parseFloat(document.querySelector('#billingServiceTotal')?.textContent || '0');
+                    const billingMaterialTotal = parseFloat(document.querySelector('#billingMaterialTotal')?.textContent || '0');
+
                     document.querySelectorAll('.invoice-item').forEach(function(row) {
                         const amount = parseFloat(row.querySelector('.amount').value) || 0;
                         const type = row.querySelector('select').value;
@@ -354,7 +369,14 @@
                         grossTotal += amount;
                     });
 
-                    const vatRate = parseFloat(document.querySelector('#vatAmount').textContent.match(/\(([\d.]+)%\)/)[1]) / 100;
+                    // Use billing totals if no items are added yet
+                    if (grossTotal === 0 && (billingServiceTotal > 0 || billingMaterialTotal > 0)) {
+                        serviceTotal = billingServiceTotal;
+                        materialTotal = billingMaterialTotal;
+                        grossTotal = billingServiceTotal + billingMaterialTotal;
+                    }
+
+                    const vatRate = parseFloat(document.querySelector('#vatRate').textContent) / 100;
                     const vatAmount = grossTotal * vatRate;
                     const netTotal = grossTotal - vatAmount;
 
