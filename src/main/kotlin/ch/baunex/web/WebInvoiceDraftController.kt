@@ -6,6 +6,7 @@ import ch.baunex.invoice.model.InvoiceStatus
 import ch.baunex.invoice.service.InvoiceDraftService
 import ch.baunex.invoice.facade.InvoiceDraftFacade
 import ch.baunex.project.facade.ProjectFacade
+import ch.baunex.company.facade.CompanyFacade
 import io.quarkus.qute.TemplateInstance
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
@@ -28,6 +29,9 @@ class WebInvoiceDraftController {
 
     @Inject
     lateinit var projectFacade: ProjectFacade
+
+    @Inject
+    lateinit var companyFacade: CompanyFacade
 
     @GET
     @Produces(MediaType.TEXT_HTML)
@@ -60,6 +64,7 @@ class WebInvoiceDraftController {
         val customers = invoiceDraftFacade.getAllCustomers()
         val currentDate = LocalDate.now()
         val dueDate = currentDate.plusDays(30)
+        val company = companyFacade.getCompany()
         
         // If projectId is provided, get project details
         val project = projectId?.let { projectFacade.getProjectWithDetails(it) }
@@ -71,7 +76,8 @@ class WebInvoiceDraftController {
             currentDate = currentDate,
             dueDate = dueDate,
             activeMenu = "invoice-drafts",
-            selectedProject = project
+            selectedProject = project,
+            company = company
         )
         
         return Response.ok(template.render()).build()

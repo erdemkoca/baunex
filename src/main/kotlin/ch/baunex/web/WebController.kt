@@ -148,7 +148,8 @@ class WebController {
             currentDate: LocalDate,
             dueDate: LocalDate,
             activeMenu: String,
-            selectedProject: ProjectDetailDTO? = null
+            selectedProject: ProjectDetailDTO? = null,
+            company: CompanyDTO? = null
         ): TemplateInstance
     }
 

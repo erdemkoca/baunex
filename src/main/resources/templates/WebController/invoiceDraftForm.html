@@ -26,31 +26,44 @@
                             <!-- Rechnungskopf -->
                             <div class="row mb-4">
                                 <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="companyLogo" class="form-label">Firmenlogo</label>
-                                        <input type="file" class="form-control" id="companyLogo" accept="image/*">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="companyName" class="form-label">Firmenname</label>
-                                        <input type="text" class="form-control" id="companyName" name="companyName">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="companyAddress" class="form-label">Firmenadresse</label>
-                                        <textarea class="form-control" id="companyAddress" name="companyAddress" rows="3"></textarea>
+                                    <!-- Firmeninformationen -->
+                                    <div class="company-info">
+                                        <h4>{company.name}</h4>
+                                        <p>{company.street}<br>
+                                        {company.zipCode} {company.city}<br>
+                                        {company.country}</p>
+                                        <p>
+                                            Tel: {company.phone}<br>
+                                            E-Mail: {company.email}<br>
+                                            Web: {company.website}
+                                        </p>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="invoiceNumber" class="form-label">Rechnungsnummer</label>
-                                        <input type="text" class="form-control" id="invoiceNumber" name="invoiceNumber">
+                                <div class="col-md-6 text-end">
+                                    <!-- Logo -->
+                                    <div class="company-logo mb-3">
+                                        {#if company.logo}
+                                            <img src="{company.logo}" alt="Firmenlogo" style="max-height: 100px;">
+                                        {#else}
+                                            <div class="placeholder-logo" style="height: 100px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center;">
+                                                Logo
+                                            </div>
+                                        {/if}
                                     </div>
-                                    <div class="mb-3">
-                                        <label for="invoiceDate" class="form-label">Rechnungsdatum</label>
-                                        <input type="date" class="form-control" id="invoiceDate" name="invoiceDate" value="{currentDate}">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="dueDate" class="form-label">Fälligkeitsdatum</label>
-                                        <input type="date" class="form-control" id="dueDate" name="dueDate" value="{dueDate}">
+                                    <!-- Rechnungsinformationen -->
+                                    <div class="invoice-info">
+                                        <div class="mb-3">
+                                            <label for="invoiceNumber" class="form-label">Rechnungsnummer</label>
+                                            <input type="text" class="form-control" id="invoiceNumber" name="invoiceNumber">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="invoiceDate" class="form-label">Rechnungsdatum</label>
+                                            <input type="date" class="form-control" id="invoiceDate" name="invoiceDate" value="{currentDate}">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="dueDate" class="form-label">Fälligkeitsdatum</label>
+                                            <input type="date" class="form-control" id="dueDate" name="dueDate" value="{dueDate}">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -58,23 +71,41 @@
                             <!-- Kundendaten -->
                             <div class="row mb-4">
                                 <div class="col-md-6">
-                                    <h5>Kunde</h5>
-                                    <p><strong>Name:</strong> {selectedProject.customerName}</p>
-                                    <p><strong>Adresse:</strong> {selectedProject.customer.street}, {selectedProject.customer.city}</p>
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5>Rechnungsempfänger</h5>
+                                            <p>
+                                                <strong>{selectedProject.customerName}</strong><br>
+                                                {selectedProject.customer.street}<br>
+                                                {selectedProject.customer.zipCode} {selectedProject.customer.city}<br>
+                                                {selectedProject.customer.country}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <h5>Projekt</h5>
-                                    <p><strong>Name:</strong> {selectedProject.name}</p>
-                                    <p><strong>Beschreibung:</strong> {selectedProject.description}</p>
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5>Projekt</h5>
+                                            <p>
+                                                <strong>{selectedProject.name}</strong><br>
+                                                {selectedProject.description}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
+                            </div>
+
+                            <!-- Rechnungstitel -->
+                            <div class="text-center mb-4">
+                                <h2>Rechnung</h2>
                             </div>
 
                             <!-- Rechnungspositionen -->
                             <div class="card mb-4">
                                 <div class="card-body">
-                                    <h5 class="card-title">Rechnungspositionen</h5>
                                     <div class="table-responsive">
-                                        <table class="table" id="invoiceItems">
+                                        <table class="table table-bordered" id="invoiceItems">
                                             <thead>
                                                 <tr>
                                                     <th style="width: 40%">Bezeichnung / Artikel</th>
@@ -117,6 +148,11 @@
                                                         </td>
                                                     </tr>
                                                 {/each}
+                                                <tr class="service-total">
+                                                    <td colspan="4" class="text-end"><strong>Service Total:</strong></td>
+                                                    <td><span id="serviceTotal">0.00</span> CHF</td>
+                                                    <td></td>
+                                                </tr>
 
                                                 <!-- Material Section -->
                                                 <tr class="table-secondary">
@@ -149,6 +185,11 @@
                                                         </td>
                                                     </tr>
                                                 {/each}
+                                                <tr class="material-total">
+                                                    <td colspan="4" class="text-end"><strong>Material Total:</strong></td>
+                                                    <td><span id="materialTotal">0.00</span> CHF</td>
+                                                    <td></td>
+                                                </tr>
                                             </tbody>
                                         </table>
                                         <button type="button" class="btn btn-outline-primary" id="addItem">
@@ -164,17 +205,14 @@
                                     <div class="card">
                                         <div class="card-body">
                                             <h5 class="card-title">Zahlungsinformationen</h5>
+                                            <p>
+                                                <strong>Bank:</strong> {company.bankName}<br>
+                                                <strong>IBAN:</strong> {company.iban}<br>
+                                                <strong>BIC:</strong> {company.bic}
+                                            </p>
                                             <div class="mb-3">
-                                                <label for="bankName" class="form-label">Bank</label>
-                                                <input type="text" class="form-control" id="bankName" name="bankName">
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="iban" class="form-label">IBAN</label>
-                                                <input type="text" class="form-control" id="iban" name="iban">
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="bic" class="form-label">BIC</label>
-                                                <input type="text" class="form-control" id="bic" name="bic">
+                                                <label for="notes" class="form-label">Notizen</label>
+                                                <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
                                             </div>
                                         </div>
                                     </div>
@@ -188,7 +226,7 @@
                                                 <span id="grossTotal">0.00 CHF</span>
                                             </div>
                                             <div class="d-flex justify-content-between mb-2">
-                                                <span>Mehrwertsteuer (8.1%):</span>
+                                                <span>Mehrwertsteuer ({company.defaultVatRate}%):</span>
                                                 <span id="vatAmount">0.00 CHF</span>
                                             </div>
                                             <div class="d-flex justify-content-between mb-2">
@@ -200,13 +238,20 @@
                                 </div>
                             </div>
 
-                            <!-- Notizen -->
-                            <div class="mb-4">
-                                <label for="notes" class="form-label">Notizen</label>
-                                <textarea class="form-control"
-                                          id="notes"
-                                          name="notes"
-                                          rows="3"></textarea>
+                            <!-- Fusszeile -->
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h5>AGB</h5>
+                                            <pre class="small">{company.defaultInvoiceTerms}</pre>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h5>Zahlungsinformationen</h5>
+                                            <pre class="small">{company.defaultInvoiceFooter}</pre>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Aktionen -->
@@ -293,13 +338,28 @@
 
                 // Update totals
                 function updateTotals() {
+                    let serviceTotal = 0;
+                    let materialTotal = 0;
                     let grossTotal = 0;
-                    document.querySelectorAll('.invoice-item .amount').forEach(function(input) {
-                        grossTotal += parseFloat(input.value) || 0;
+
+                    document.querySelectorAll('.invoice-item').forEach(function(row) {
+                        const amount = parseFloat(row.querySelector('.amount').value) || 0;
+                        const type = row.querySelector('select').value;
+                        
+                        if (type === 'VA') {
+                            serviceTotal += amount;
+                        } else {
+                            materialTotal += amount;
+                        }
+                        grossTotal += amount;
                     });
-                    const vatAmount = grossTotal * 0.081;
+
+                    const vatRate = parseFloat(document.querySelector('#vatAmount').textContent.match(/\(([\d.]+)%\)/)[1]) / 100;
+                    const vatAmount = grossTotal * vatRate;
                     const netTotal = grossTotal - vatAmount;
 
+                    document.getElementById('serviceTotal').textContent = serviceTotal.toFixed(2);
+                    document.getElementById('materialTotal').textContent = materialTotal.toFixed(2);
                     document.getElementById('grossTotal').textContent = grossTotal.toFixed(2) + ' CHF';
                     document.getElementById('vatAmount').textContent = vatAmount.toFixed(2) + ' CHF';
                     document.getElementById('netTotal').textContent = netTotal.toFixed(2) + ' CHF';
