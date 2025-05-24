@@ -1,0 +1,54 @@
+{#include layout}
+  {#title}Einstellungen – Baunex Business Management{/title}
+  {#header}Einstellungen{/header}
+  {#content}
+    <div class="card">
+      <div class="card-header">Unternehmenseinstellungen</div>
+      <div class="card-body">
+        <form action="/settings" method="post">
+          <div class="mb-3">
+            <label for="companyName" class="form-label">Firmenname</label>
+            <input type="text" class="form-control" id="companyName" name="companyName" value="{company.name}" required>
+          </div>
+          <div class="mb-3">
+            <label for="street" class="form-label">Straße</label>
+            <input type="text" class="form-control" id="street" name="street" value="{company.street}" required>
+          </div>
+          <div class="mb-3">
+            <label for="city" class="form-label">Ort</label>
+            <input type="text" class="form-control" id="city" name="city" value="{company.city}" required>
+          </div>
+          <div class="mb-3">
+            <label for="zip" class="form-label">PLZ</label>
+            <input type="text" class="form-control" id="zip" name="zip" value="{company.zip}" required>
+          </div>
+          <div class="mb-3">
+            <label for="phone" class="form-label">Telefon</label>
+            <input type="text" class="form-control" id="phone" name="phone" value="{company.phone}" required>
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label">E-Mail</label>
+            <input type="email" class="form-control" id="email" name="email" value="{company.email}" required>
+          </div>
+          <div class="mb-3">
+            <label for="vatNumber" class="form-label">MWST-Nummer</label>
+            <input type="text" class="form-control" id="vatNumber" name="vatNumber" value="{company.vatNumber}" required>
+          </div>
+          <div class="mb-3">
+            <label for="defaultVatRate" class="form-label">Standard MWST-Satz (%)</label>
+            <input type="number" class="form-control" id="defaultVatRate" name="defaultVatRate" value="{company.defaultVatRate}" step="0.1" required>
+          </div>
+          <div class="mb-3">
+            <label for="defaultInvoiceFooter" class="form-label">Standard Rechnungsfuss</label>
+            <textarea class="form-control" id="defaultInvoiceFooter" name="defaultInvoiceFooter" rows="3">{company.defaultInvoiceFooter}</textarea>
+          </div>
+          <div class="mb-3">
+            <label for="defaultInvoiceTerms" class="form-label">Standard Rechnungsbedingungen</label>
+            <textarea class="form-control" id="defaultInvoiceTerms" name="defaultInvoiceTerms" rows="3">{company.defaultInvoiceTerms}</textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Speichern</button>
+        </form>
+      </div>
+    </div>
+  {/content}
+{/include} 

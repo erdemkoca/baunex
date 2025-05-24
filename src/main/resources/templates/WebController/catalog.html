@@ -1,0 +1,58 @@
+{#include layout}
+  {#title}Katalog – Baunex Business Management{/title}
+  {#header}Katalog{/header}
+  {#content}
+    <div class="mb-4">
+      <a href="/catalog/new" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Neuer Katalogeintrag
+      </a>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Alle Katalogeinträge</div>
+      <div class="card-body">
+        {#if items.isEmpty()}
+          <p class="text-muted">Keine Katalogeinträge gefunden.</p>
+        {#else}
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+              <tr>
+                <th>Name</th>
+                <th>Beschreibung</th>
+                <th>Preis</th>
+                <th>Einheit</th>
+                <th>Aktionen</th>
+              </tr>
+              </thead>
+              <tbody>
+              {#for item in items}
+                <tr>
+                  <td>{item.name}</td>
+                  <td>{item.description ?: '—'}</td>
+                  <td>{item.price} CHF</td>
+                  <td>{item.unit}</td>
+                  <td>
+                    <div class="btn-group">
+                      <a href="/catalog/{item.id}/edit" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-pencil"></i>
+                      </a>
+                      <a
+                              href="/catalog/{item.id}/delete"
+                              class="btn btn-sm btn-outline-danger"
+                              onclick="return confirm('Möchten Sie diesen Katalogeintrag wirklich löschen?')"
+                      >
+                        <i class="bi bi-trash"></i>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              {/for}
+              </tbody>
+            </table>
+          </div>
+        {/if}
+      </div>
+    </div>
+  {/content}
+{/include} 

@@ -1,57 +1,66 @@
 {#include layout}
-  {#title}Customers – Baunex Business Management{/title}
-  {#header}Customers{/header}
+  {#title}Kunden – Baunex Business Management{/title}
+  {#header}Kunden{/header}
   {#content}
 
     <div class="mb-4">
       <a href="/customers/new" class="btn btn-primary">
-        <i class="bi bi-plus-circle me-2"></i>New Customer
+        <i class="bi bi-plus-circle me-2"></i>Neuer Kunde
       </a>
     </div>
 
     <div class="card">
-      <div class="card-header">All Customers</div>
+      <div class="card-header">Alle Kunden</div>
       <div class="card-body">
         {#if customers.isEmpty()}
-          <p class="text-muted">No customers found.</p>
+          <p class="text-muted">Keine Kunden gefunden.</p>
         {#else}
           <div class="table-responsive">
             <table class="table table-hover align-middle">
               <thead>
               <tr>
                 <th>Name</th>
-                <th>Customer No</th>
-                <th>City</th>
-                <th>Primary Contact</th>
-                <th>Actions</th>
+                <th>Kundennummer</th>
+                <th>Ort</th>
+                <th>Hauptkontakt</th>
+                <th>Aktionen</th>
               </tr>
               </thead>
               <tbody>
-              {#for cust in customers}
-                <tr class="customer-row" data-href="/customers/{cust.id}" style="cursor:pointer;">
+              {#for customer in customers}
+                <tr>
                   <td>
-                    {#if cust.companyName}
-                      {cust.companyName}
+                    {#if customer.companyName}
+                      {customer.companyName}
                     {#else}
-                      {cust.firstName} {cust.lastName}
+                      {customer.firstName} {customer.lastName}
                     {/if}
                   </td>
-                  <td>{cust.customerNumber}</td>
-                  <td>{cust.city ?: '—'}</td>
+                  <td>{customer.customerNumber ?: '—'}</td>
+                  <td>{customer.city ?: '—'}</td>
                   <td>
-                    {#if !cust.contacts.isEmpty()}
-                      {cust.contacts[0].firstName} {cust.contacts[0].lastName}
+                    {#if customer.contacts.size > 0}
+                      {#for contact in customer.contacts}
+                        {#if contact.isPrimary}
+                          {contact.firstName} {contact.lastName}
+                        {/if}
+                      {/for}
                     {#else}
-                      <span class="text-muted">—</span>
+                      —
                     {/if}
                   </td>
                   <td>
                     <div class="btn-group">
+                      <a href="/customers/{customer.id}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-eye"></i>
+                      </a>
+                      <a href="/customers/{customer.id}/edit" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-pencil"></i>
+                      </a>
                       <a
-                              href="/customers/{cust.id}/delete"
-                              title="Delete"
+                              href="/customers/{customer.id}/delete"
                               class="btn btn-sm btn-outline-danger"
-                              onclick="return confirm('Are you sure you want to delete this customer?');"
+                              onclick="return confirm('Möchten Sie diesen Kunden wirklich löschen?')"
                       >
                         <i class="bi bi-trash"></i>
                       </a>
@@ -70,7 +79,7 @@
       document.addEventListener("DOMContentLoaded", function () {
         document.querySelectorAll(".customer-row").forEach(row => {
           row.addEventListener("click", function (e) {
-            // don’t navigate if a button/link was clicked
+            // don't navigate if a button/link was clicked
             if (!e.target.closest("a")) {
               window.location.href = row.dataset.href;
             }

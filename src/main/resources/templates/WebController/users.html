@@ -1,28 +1,28 @@
 {#include layout}
-  {#title}Users - Baunex Business Management{/title}
-  {#header}Users{/header}
+  {#title}Benutzer - Baunex Business Management{/title}
+  {#header}Benutzer{/header}
   {#content}
     <div class="mb-4">
       <a href="/users/new" class="btn btn-primary">
-        <i class="bi bi-plus-circle me-2"></i>New User
+        <i class="bi bi-plus-circle me-2"></i>Neuer Benutzer
       </a>
     </div>
 
     <div class="card">
-      <div class="card-header">All Users</div>
+      <div class="card-header">Alle Benutzer</div>
       <div class="card-body">
         {#if users.isEmpty()}
-          <p class="text-muted">No users found.</p>
+          <p class="text-muted">Keine Benutzer gefunden.</p>
         {#else}
           <div class="table-responsive">
             <table class="table table-hover">
               <thead>
               <tr>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Street</th>
-                <th>Role</th>
-                <th>Actions</th>
+                <th>E-Mail</th>
+                <th>Telefon</th>
+                <th>Straße</th>
+                <th>Rolle</th>
+                <th>Aktionen</th>
               </tr>
               </thead>
               <tbody>
@@ -40,13 +40,12 @@
                       <a
                               href="/users/{user.id}/delete"
                               class="btn btn-sm btn-outline-danger"
-                              onclick="return confirm('Are you sure you want to delete this user?')"
+                              onclick="return confirm('Möchten Sie diesen Benutzer wirklich löschen?')"
                       >
                         <i class="bi bi-trash"></i>
                       </a>
                     </div>
                   </td>
-
                 </tr>
               {/for}
               </tbody>

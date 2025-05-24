@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,167 +10,91 @@
   />
   <link
           rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css"
   />
-  <link rel="stylesheet" href="/css/styles.css" />
-  <link
-          rel="icon"
-          type="image/png"
-          href="data:image/png;base64,…"
-  />
+  <style>
+    .sidebar {
+      min-height: 100vh;
+      background-color: #f8f9fa;
+      border-right: 1px solid #dee2e6;
+    }
+    .nav-link {
+      color: #495057;
+    }
+    .nav-link:hover {
+      color: #0d6efd;
+    }
+    .nav-link.active {
+      color: #0d6efd;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="/dashboard">
-      <i class="bi bi-building me-2"></i>
-      Baunex Business Management
-    </a>
-    <button
-            class="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarNav"
-    >
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item">
-          <a class="nav-link" href="/dashboard">
-            <i class="bi bi-speedometer2 me-1"></i> Dashboard
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-                  href="/projects"
-                  class="nav-link {#if activeMenu == 'projects'}active{/}"
-          >
-            <i class="bi bi-briefcase me-1"></i> Projects
-          </a>
-        </li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="invoicesDropdown" role="button" data-bs-toggle="dropdown">
-            <i class="bi bi-receipt me-1"></i> Rechnungen
-          </a>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li>
-              <a class="dropdown-item" href="/invoice-drafts">
-                <i class="bi bi-file-earmark-text me-2"></i> Rechnungsentwürfe
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item" href="/invoices">
-                <i class="bi bi-receipt me-2"></i> Rechnungen
-              </a>
-            </li>
-          </ul>
-        </li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="settingsDropdown" role="button" data-bs-toggle="dropdown">
-            <i class="bi bi-gear me-1"></i> Einstellungen
-          </a>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li>
-              <a class="dropdown-item" href="/settings/company">
-                <i class="bi bi-building me-2"></i> Firmeneinstellungen
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item" href="/settings/users">
-                <i class="bi bi-person me-2"></i> Benutzer
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item" href="/settings/employees">
-                <i class="bi bi-person-badge me-2"></i> Mitarbeiter
-              </a>
-            </li>
-          </ul>
-        </li>
-      </ul>
-    </div>
-  </div>
-</nav>
-
 <div class="container-fluid">
   <div class="row">
-    <div class="col-md-2 sidebar">
-      <div class="d-flex flex-column mt-4">
-        <a
-                href="/dashboard"
-                class="nav-link py-2 {#if activeMenu == 'dashboard'}active{/}"
-        >
-          <i class="bi bi-speedometer2 me-2"></i> Dashboard
-        </a>
-        <a
-                href="/projects"
-                class="nav-link py-2 {#if activeMenu == 'projects'}active{/}"
-        >
-          <i class="bi bi-briefcase me-2"></i> Projects
-        </a>
-        <a
-                href="/users"
-                class="nav-link py-2 {#if activeMenu == 'users'}active{/}"
-        >
-          <i class="bi bi-person me-2"></i> Users
-        </a>
-        <a
-                href="/timetracking"
-                class="nav-link py-2 {#if activeMenu == 'timetracking'}active{/}"
-        >
-          <i class="bi bi-clock-history me-2"></i> Time Tracking
-        </a>
-        <a
-                href="/employees"
-                class="nav-link py-2 {#if activeMenu == 'employees'}active{/}"
-        >
-          <i class="bi bi-person-workspace me-2"></i> Workers
-        </a>
-        <a
-                href="/customers"
-                class="nav-link py-2 {#if activeMenu == 'customers'}active{/}"
-        >
-          <i class="bi bi-people me-2"></i> Customers
-        </a>
-        <div class="dropdown-divider"></div>
-        <a
-                href="/invoice-drafts"
-                class="nav-link py-2 {#if activeMenu == 'invoice-drafts'}active{/}"
-        >
-          <i class="bi bi-file-earmark-text me-2"></i> Rechnungsentwürfe
-        </a>
-        <a
-                href="/invoices"
-                class="nav-link py-2 {#if activeMenu == 'invoices'}active{/}"
-        >
-          <i class="bi bi-receipt me-2"></i> Rechnungen
-        </a>
+    <!-- Sidebar -->
+    <div class="col-md-3 col-lg-2 px-0 sidebar">
+      <div class="p-3">
+        <h4 class="mb-4">Baunex</h4>
+        <ul class="nav flex-column">
+          <li class="nav-item">
+            <a class="nav-link {#if activeMenu == 'dashboard'}active{/if}" href="/">
+              <i class="bi bi-speedometer2 me-2"></i>Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {#if activeMenu == 'projects'}active{/if}" href="/projects">
+              <i class="bi bi-folder me-2"></i>Projekte
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {#if activeMenu == 'customers'}active{/if}" href="/customers">
+              <i class="bi bi-people me-2"></i>Kunden
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {#if activeMenu == 'employees'}active{/if}" href="/employees">
+              <i class="bi bi-person me-2"></i>Mitarbeiter
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {#if activeMenu == 'timetracking'}active{/if}" href="/timetracking">
+              <i class="bi bi-clock me-2"></i>Zeiterfassung
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {#if activeMenu == 'catalog'}active{/if}" href="/catalog">
+              <i class="bi bi-box me-2"></i>Katalog
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {#if activeMenu == 'invoiceDrafts'}active{/if}" href="/invoice-drafts">
+              <i class="bi bi-file-text me-2"></i>Rechnungsentwürfe
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {#if activeMenu == 'users'}active{/if}" href="/users">
+              <i class="bi bi-person-circle me-2"></i>Benutzer
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {#if activeMenu == 'settings'}active{/if}" href="/settings">
+              <i class="bi bi-gear me-2"></i>Einstellungen
+            </a>
+          </li>
+        </ul>
       </div>
     </div>
 
-    <div class="col-md-10 content">
-      <div
-              class="d-flex justify-content-between align-items-center mt-4 mb-4"
-      >
-        <h2 class="mb-0">{#insert header}Page Title{/}</h2>
-        <div class="text-muted">
-          <i class="bi bi-calendar3 me-1"></i> {currentDate}
-        </div>
-      </div>
-      {#insert content}Default content{/}
+    <!-- Main content -->
+    <div class="col-md-9 col-lg-10 px-4 py-3">
+      <h2 class="mb-4">{#insert header}Dashboard{/}</h2>
+      {#insert content}No content provided{/}
     </div>
   </div>
 </div>
 
-<footer class="bg-light text-center text-muted py-3 mt-5">
-  <div class="container">
-    <p class="mb-0">© 2023 Baunex Business Management. All rights reserved.</p>
-  </div>
-</footer>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-<script src="/js/app.js"></script>
 </body>
 </html>
