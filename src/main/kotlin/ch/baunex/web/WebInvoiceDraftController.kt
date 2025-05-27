@@ -101,6 +101,43 @@ class WebInvoiceDraftController {
         val project = projectFacade.getProjectWithDetails(projectId)
             ?: return Response.status(404).build()
 
+        // Collect all entries: time entries, their catalog items, and project catalog items
+        val entries = mutableListOf<InvoiceEntryDTO>()
+
+        // Add time entries
+        project.timeEntries.forEach { entry ->
+            // Add the time entry itself
+            entries.add(InvoiceEntryDTO(
+                description = entry.notes,
+                type = "VA",
+                quantity = entry.hoursWorked,
+                price = entry.hourlyRate,
+                total = entry.hoursWorked * entry.hourlyRate
+            ))
+
+            // Add catalog items from this time entry
+            entry.catalogItems.forEach { catalogItem ->
+                entries.add(InvoiceEntryDTO(
+                    description = catalogItem.itemName,
+                    type = "IC",
+                    quantity = catalogItem.quantity.toDouble(),
+                    price = catalogItem.unitPrice,
+                    total = catalogItem.totalPrice
+                ))
+            }
+        }
+
+        // Add project catalog items
+        project.catalogItems.forEach { item ->
+            entries.add(InvoiceEntryDTO(
+                description = item.itemName,
+                type = "IC",
+                quantity = item.quantity.toDouble(),
+                price = item.unitPrice,
+                total = item.totalPrice
+            ))
+        }
+
         val draft = InvoiceDraftDTO(
             projectId = projectId,
             customerId = project.customerId,
@@ -110,23 +147,7 @@ class WebInvoiceDraftController {
             serviceEndDate = serviceEndDate?.let { LocalDate.parse(it) },
             notes = notes,
             status = "DRAFT",
-            entries = project.timeEntries.map { entry ->
-                InvoiceEntryDTO(
-                    description = entry.notes,
-                    type = "VA",
-                    quantity = entry.hoursWorked,
-                    price = entry.hourlyRate,
-                    total = entry.hoursWorked * entry.hourlyRate
-                )
-            } + project.catalogItems.map { item ->
-                InvoiceEntryDTO(
-                    description = item.itemName,
-                    type = "IC",
-                    quantity = item.quantity.toDouble(),
-                    price = item.unitPrice,
-                    total = item.totalPrice
-                )
-            }
+            entries = entries
         )
 
         val createdDraft = invoiceDraftFacade.create(draft)
@@ -228,7 +249,8 @@ class WebInvoiceDraftController {
     @DELETE
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    fun delete(@PathParam("id") id: Long) {
+    fun delete(@RestPath id: Long): Response {
         invoiceDraftFacade.delete(id)
+        return Response.ok().build()
     }
 } 

@@ -12,7 +12,6 @@ import ch.baunex.project.dto.ProjectDetailDTO
 import ch.baunex.project.dto.ProjectListDTO
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.timetracking.dto.TimeEntryCatalogItemDTO
-import ch.baunex.user.dto.UserResponseDTO
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.timetracking.facade.TimeTrackingFacade
 import ch.baunex.user.dto.CustomerContactDTO
@@ -74,12 +73,6 @@ class WebController {
             contacts: List<CustomerContactDTO>,
             customers: List<CustomerDTO>
         ): TemplateInstance
-
-        @JvmStatic
-        external fun users(users: List<UserResponseDTO>, currentDate: LocalDate, activeMenu: String): TemplateInstance
-
-        @JvmStatic
-        external fun userForm(user: UserResponseDTO?, currentDate: LocalDate, activeMenu: String, roles: List<String>): TemplateInstance
 
         @JvmStatic
         external fun employees(employees: List<EmployeeDTO>, currentDate: LocalDate, activeMenu: String): TemplateInstance

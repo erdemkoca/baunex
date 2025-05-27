@@ -17,94 +17,121 @@ class SampleTimeEntryLoader {
     @Transactional
     fun load() {
         val sampleEntries = listOf(
-            // Regular workday entry with catalog items
+            // Emergency Server Room Maintenance
             TimeEntryDTO(
                 employeeId = 1,
                 projectId = 1,
-                date = LocalDate.now().minusDays(5),
+                date = LocalDate.now().minusDays(7),
+                hoursWorked = 12.0,
+                note = "Notfallwartung Serverraum - Klimaanlage ausgefallen",
+                hourlyRate = 75.0,
+                billable = true,
+                invoiced = true,
+                hasNightSurcharge = true,
+                hasWeekendSurcharge = true,
+                travelTimeMinutes = 45,
+                catalogItems = listOf(
+                    TimeEntryCatalogItemDTO(
+                        catalogItemId = 1,
+                        quantity = 1,
+                        itemName = "Serverraum-Klimaanlage",
+                        unitPrice = 3500.0,
+                        totalPrice = 3500.0
+                    ),
+                    TimeEntryCatalogItemDTO(
+                        catalogItemId = 2,
+                        quantity = 2,
+                        itemName = "Notfallkühlung",
+                        unitPrice = 450.0,
+                        totalPrice = 900.0
+                    ),
+                    TimeEntryCatalogItemDTO(
+                        catalogItemId = 3,
+                        quantity = 5,
+                        itemName = "Temperatursensoren",
+                        unitPrice = 120.0,
+                        totalPrice = 600.0
+                    )
+                )
+            ),
+            // Complex Electrical Installation
+            TimeEntryDTO(
+                employeeId = 2,
+                projectId = 2,
+                date = LocalDate.now().minusDays(6),
                 hoursWorked = 8.0,
-                note = "Elektroinstallation Bürotrakt - Hauptverteilung",
+                note = "Elektroinstallation Bürotrakt - Hauptverteilung und Notstrom",
                 hourlyRate = 65.0,
                 billable = true,
                 invoiced = false,
                 catalogItems = listOf(
                     TimeEntryCatalogItemDTO(
-                        catalogItemId = 1,
-                        quantity = 2,
-                        itemName = "Hauptverteiler",
-                        unitPrice = 450.0,
-                        totalPrice = 900.0
-                    ),
-                    TimeEntryCatalogItemDTO(
-                        catalogItemId = 2,
-                        quantity = 10,
-                        itemName = "Kabelkanal",
-                        unitPrice = 25.0,
-                        totalPrice = 250.0
-                    )
-                )
-            ),
-            // Weekend work with night surcharge
-            TimeEntryDTO(
-                employeeId = 2,
-                projectId = 1,
-                date = LocalDate.now().minusDays(4),
-                hoursWorked = 6.0,
-                note = "Notfallreparatur - Stromausfall",
-                hourlyRate = 70.0,
-                billable = true,
-                invoiced = true,
-                hasWeekendSurcharge = true,
-                hasNightSurcharge = true,
-                travelTimeMinutes = 45,
-                catalogItems = listOf(
-                    TimeEntryCatalogItemDTO(
-                        catalogItemId = 3,
+                        catalogItemId = 4,
                         quantity = 1,
-                        itemName = "Notstromaggregat",
+                        itemName = "Hauptverteiler",
                         unitPrice = 1200.0,
                         totalPrice = 1200.0
-                    )
-                )
-            ),
-            // Holiday work with disposal
-            TimeEntryDTO(
-                employeeId = 3,
-                projectId = 2,
-                date = LocalDate.now().minusDays(3),
-                hoursWorked = 7.5,
-                note = "Altkabel Entsorgung und Neuverkabelung",
-                hourlyRate = 55.0,
-                billable = true,
-                invoiced = false,
-                hasHolidaySurcharge = true,
-                disposalCost = 250.0,
-                travelTimeMinutes = 30,
-                waitingTimeMinutes = 45,
-                catalogItems = listOf(
-                    TimeEntryCatalogItemDTO(
-                        catalogItemId = 4,
-                        quantity = 100,
-                        itemName = "Netzwerkkabel",
-                        unitPrice = 3.50,
-                        totalPrice = 350.0
                     ),
                     TimeEntryCatalogItemDTO(
                         catalogItemId = 5,
-                        quantity = 20,
-                        itemName = "Netzwerkdosen",
-                        unitPrice = 15.0,
-                        totalPrice = 300.0
+                        quantity = 1,
+                        itemName = "Notstromaggregat",
+                        unitPrice = 4500.0,
+                        totalPrice = 4500.0
+                    ),
+                    TimeEntryCatalogItemDTO(
+                        catalogItemId = 6,
+                        quantity = 50,
+                        itemName = "Kabelkanal",
+                        unitPrice = 25.0,
+                        totalPrice = 1250.0
+                    ),
+                    TimeEntryCatalogItemDTO(
+                        catalogItemId = 7,
+                        quantity = 200,
+                        itemName = "Netzwerkkabel",
+                        unitPrice = 3.50,
+                        totalPrice = 700.0
                     )
                 )
             ),
-            // Regular workday with waiting time
+            // Holiday Emergency Repair
+            TimeEntryDTO(
+                employeeId = 3,
+                projectId = 1,
+                date = LocalDate.now().minusDays(5),
+                hoursWorked = 6.0,
+                note = "Notfallreparatur - Stromausfall in Produktionshalle",
+                hourlyRate = 70.0,
+                billable = true,
+                invoiced = true,
+                hasHolidaySurcharge = true,
+                hasNightSurcharge = true,
+                travelTimeMinutes = 60,
+                catalogItems = listOf(
+                    TimeEntryCatalogItemDTO(
+                        catalogItemId = 8,
+                        quantity = 1,
+                        itemName = "Transformator",
+                        unitPrice = 2800.0,
+                        totalPrice = 2800.0
+                    ),
+                    TimeEntryCatalogItemDTO(
+                        catalogItemId = 9,
+                        quantity = 10,
+                        itemName = "Sicherungselemente",
+                        unitPrice = 45.0,
+                        totalPrice = 450.0
+                    )
+                )
+            ),
+            // Regular Maintenance with Waiting Time
             TimeEntryDTO(
                 employeeId = 1,
                 projectId = 2,
-                date = LocalDate.now().minusDays(2),
+                date = LocalDate.now().minusDays(4),
                 hoursWorked = 8.0,
-                note = "Wartung Klimaanlage",
+                note = "Wartung Klimaanlage und Filterwechsel",
                 hourlyRate = 65.0,
                 billable = true,
                 invoiced = true,
@@ -112,54 +139,143 @@ class SampleTimeEntryLoader {
                 waitingTimeMinutes = 120,
                 catalogItems = listOf(
                     TimeEntryCatalogItemDTO(
-                        catalogItemId = 6,
-                        quantity = 1,
+                        catalogItemId = 10,
+                        quantity = 4,
                         itemName = "Klimaanlagenfilter",
                         unitPrice = 85.0,
-                        totalPrice = 85.0
+                        totalPrice = 340.0
+                    ),
+                    TimeEntryCatalogItemDTO(
+                        catalogItemId = 11,
+                        quantity = 2,
+                        itemName = "Kältemittel",
+                        unitPrice = 150.0,
+                        totalPrice = 300.0
                     )
                 )
             ),
-            // Non-billable internal work
+            // Complex Network Installation
             TimeEntryDTO(
                 employeeId = 2,
                 projectId = 1,
-                date = LocalDate.now().minusDays(1),
-                hoursWorked = 4.0,
-                note = "Interne Schulung - Neue Sicherheitsrichtlinien",
+                date = LocalDate.now().minusDays(3),
+                hoursWorked = 10.0,
+                note = "Netzwerkinstallation - Neuer Serverraum",
                 hourlyRate = 70.0,
-                billable = false,
-                invoiced = false
+                billable = true,
+                invoiced = false,
+                catalogItems = listOf(
+                    TimeEntryCatalogItemDTO(
+                        catalogItemId = 12,
+                        quantity = 2,
+                        itemName = "Netzwerk-Switch",
+                        unitPrice = 1200.0,
+                        totalPrice = 2400.0
+                    ),
+                    TimeEntryCatalogItemDTO(
+                        catalogItemId = 13,
+                        quantity = 100,
+                        itemName = "Cat7 Kabel",
+                        unitPrice = 4.50,
+                        totalPrice = 450.0
+                    ),
+                    TimeEntryCatalogItemDTO(
+                        catalogItemId = 14,
+                        quantity = 50,
+                        itemName = "Netzwerkdosen",
+                        unitPrice = 15.0,
+                        totalPrice = 750.0
+                    )
+                )
             ),
-            // Complex project with multiple surcharges
+            // Weekend Emergency Service
             TimeEntryDTO(
                 employeeId = 3,
                 projectId = 2,
-                date = LocalDate.now(),
-                hoursWorked = 10.0,
-                note = "Notfallwartung Serverraum - Klimaanlage ausgefallen",
-                hourlyRate = 55.0,
+                date = LocalDate.now().minusDays(2),
+                hoursWorked = 8.0,
+                note = "Notfallservice - Alarmanlage ausgefallen",
+                hourlyRate = 75.0,
                 billable = true,
-                invoiced = false,
-                hasNightSurcharge = true,
+                invoiced = true,
                 hasWeekendSurcharge = true,
-                hasHolidaySurcharge = true,
-                travelTimeMinutes = 60,
-                disposalCost = 150.0,
+                hasNightSurcharge = true,
+                travelTimeMinutes = 30,
                 catalogItems = listOf(
                     TimeEntryCatalogItemDTO(
-                        catalogItemId = 7,
+                        catalogItemId = 15,
                         quantity = 1,
-                        itemName = "Serverraum-Klimaanlage",
-                        unitPrice = 3500.0,
-                        totalPrice = 3500.0
+                        itemName = "Alarmanlage",
+                        unitPrice = 1800.0,
+                        totalPrice = 1800.0
                     ),
                     TimeEntryCatalogItemDTO(
-                        catalogItemId = 8,
-                        quantity = 2,
-                        itemName = "Notfallkühlung",
-                        unitPrice = 450.0,
-                        totalPrice = 900.0
+                        catalogItemId = 16,
+                        quantity = 5,
+                        itemName = "Bewegungsmelder",
+                        unitPrice = 120.0,
+                        totalPrice = 600.0
+                    )
+                )
+            ),
+            // Regular Workday with Multiple Tasks
+            TimeEntryDTO(
+                employeeId = 1,
+                projectId = 1,
+                date = LocalDate.now().minusDays(1),
+                hoursWorked = 8.0,
+                note = "Regelmäßige Wartung und Reparaturen",
+                hourlyRate = 65.0,
+                billable = true,
+                invoiced = false,
+                catalogItems = listOf(
+                    TimeEntryCatalogItemDTO(
+                        catalogItemId = 17,
+                        quantity = 10,
+                        itemName = "LED-Leuchtmittel",
+                        unitPrice = 35.0,
+                        totalPrice = 350.0
+                    ),
+                    TimeEntryCatalogItemDTO(
+                        catalogItemId = 18,
+                        quantity = 5,
+                        itemName = "Steckdosen",
+                        unitPrice = 25.0,
+                        totalPrice = 125.0
+                    )
+                )
+            ),
+            // Complex Security System Installation
+            TimeEntryDTO(
+                employeeId = 2,
+                projectId = 2,
+                date = LocalDate.now(),
+                hoursWorked = 9.0,
+                note = "Installation neues Sicherheitssystem",
+                hourlyRate = 70.0,
+                billable = true,
+                invoiced = false,
+                catalogItems = listOf(
+                    TimeEntryCatalogItemDTO(
+                        catalogItemId = 19,
+                        quantity = 1,
+                        itemName = "Zutrittskontrollsystem",
+                        unitPrice = 2500.0,
+                        totalPrice = 2500.0
+                    ),
+                    TimeEntryCatalogItemDTO(
+                        catalogItemId = 20,
+                        quantity = 8,
+                        itemName = "Zutrittskartenleser",
+                        unitPrice = 350.0,
+                        totalPrice = 2800.0
+                    ),
+                    TimeEntryCatalogItemDTO(
+                        catalogItemId = 21,
+                        quantity = 100,
+                        itemName = "Zutrittskarten",
+                        unitPrice = 15.0,
+                        totalPrice = 1500.0
                     )
                 )
             )

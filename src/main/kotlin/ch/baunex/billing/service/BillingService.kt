@@ -71,7 +71,7 @@ class BillingService @Inject constructor(
             timeEntries = timeEntryDTOs,
             materialTotal = materialTotal,
             timeTotal = totalServiceCost,
-            total = materialTotal + totalServiceCost + totalCatalogItemsCost,
+            total = totalCatalogItemsAndMaterials + totalServiceCost,
             costBreakdown = costBreakdown
         )
     }
