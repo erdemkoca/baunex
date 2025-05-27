@@ -225,4 +225,13 @@ class WebController {
         )
         return Response.ok(template.render()).build()
     }
+
+    @GET
+    @Path("/documents/{type}/preview")
+    fun documentPreview(
+        @PathParam("type") type: String,
+        @QueryParam("projectId") projectId: Long
+    ): String {
+        return "WebController/documentPreview"
+    }
 } 

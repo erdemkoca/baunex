@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Document Preview</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .document-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .document-toolbar {
+            position: sticky;
+            top: 0;
+            background: white;
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .document-content {
+            min-height: 500px;
+        }
+        .section-editor {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .section-editor:hover {
+            border-color: #0d6efd;
+        }
+        .section-toolbar {
+            margin-bottom: 10px;
+        }
+        .preview-mode .section-editor {
+            border: none;
+            padding: 0;
+        }
+        .preview-mode .section-toolbar {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="document-toolbar">
+            <div class="row">
+                <div class="col">
+                    <h2 th:text="${documentType} + ' Preview'">Document Preview</h2>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary" onclick="toggleEditMode()">Toggle Edit Mode</button>
+                    <button class="btn btn-success" onclick="generatePDF()">Generate PDF</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="document-container">
+            <div id="documentContent" class="document-content">
+                <!-- Document sections will be dynamically loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isEditMode = true;
+        const documentType = '[[${documentType}]]';
+        const projectId = '[[${projectId}]]';
+
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            document.getElementById('documentContent').classList.toggle('preview-mode');
+        }
+
+        function generatePDF() {
+            window.location.href = `/api/documents/${documentType}/generate?projectId=${projectId}`;
+        }
+
+        function loadDocumentPreview() {
+            fetch(`/api/documents/${documentType}/preview?projectId=${projectId}`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('documentContent').innerHTML = html;
+                });
+        }
+
+        // Load initial preview
+        loadDocumentPreview();
+    </script>
+</body>
+</html> 
