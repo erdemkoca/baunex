@@ -57,5 +57,5 @@ class CompanyModel : PanacheEntity() {
     var defaultInvoiceTerms: String? = null
 
     @Column
-    var defaultVatRate: Double = 7.7  // Default Swiss VAT rate
+    var defaultVatRate: Double = 8.1  // Default Swiss VAT rate
 } 

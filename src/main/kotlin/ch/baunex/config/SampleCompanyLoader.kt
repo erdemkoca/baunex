@@ -44,7 +44,7 @@ class SampleCompanyLoader {
                 Allgemeine Geschäftsbedingungen:
                 
                 1. Zahlungsbedingungen: 30 Tage netto
-                2. Alle Preise inklusive 7.7% MWST
+                2. Alle Preise inklusive 8.1% MWST
                 3. Garantie: 2 Jahre auf Material und Arbeit
                 4. Verspätete Zahlungen werden mit 5% Verzugszinsen belastet
             """.trimIndent()

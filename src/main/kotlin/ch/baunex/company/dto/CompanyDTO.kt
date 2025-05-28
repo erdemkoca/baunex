@@ -21,5 +21,5 @@ data class CompanyDTO(
     val logo: String? = null,
     val defaultInvoiceFooter: String? = null,
     val defaultInvoiceTerms: String? = null,
-    val defaultVatRate: Double = 7.7
+    val defaultVatRate: Double = 8.1
 ) 
