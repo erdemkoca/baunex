@@ -2,13 +2,14 @@ package ch.baunex.web
 
 import ch.baunex.invoice.dto.InvoiceDraftDTO
 import ch.baunex.invoice.dto.InvoiceEntryDTO
-import ch.baunex.invoice.model.InvoiceStatus
 import ch.baunex.invoice.service.InvoiceDraftService
 import ch.baunex.invoice.facade.InvoiceDraftFacade
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.company.facade.CompanyFacade
 import ch.baunex.billing.facade.BillingFacade
-import io.quarkus.qute.TemplateInstance
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
@@ -69,11 +70,14 @@ class WebInvoiceDraftController {
         val currentDate = LocalDate.now()
         val dueDate = currentDate.plusDays(30)
         val company = companyFacade.getCompany()
-        
-        // If projectId is provided, get project details and billing information
+
         val project = projectId?.let { projectFacade.getProjectWithDetails(it) }
         val billing = projectId?.let { billingFacade.getBillingForProject(it) }
-        
+
+        val mapper = jacksonObjectMapper()
+            .registerModule(JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+
         val template = WebController.Templates.invoiceDraftForm(
             draft = null,
             customers = customers,
@@ -85,9 +89,13 @@ class WebInvoiceDraftController {
             company = company,
             billing = billing
         )
-        
+            .data("projectJson", mapper.writeValueAsString(project))
+            .data("companyJson", mapper.writeValueAsString(company))
+            .data("billingJson", mapper.writeValueAsString(billing))
+
         return Response.ok(template.render()).build()
     }
+
 
     @POST
     @Path("/new")

@@ -70,6 +70,8 @@
                 <button onclick="markAsPaid({invoice.id})" class="btn btn-success">Als bezahlt markieren</button>
                 <button onclick="cancelInvoice({invoice.id})" class="btn btn-danger">Stornieren</button>
                 {/if}
+                <button onclick="previewDocument({invoice.projectId})" class="btn btn-primary">Vorschau</button>
+                <button onclick="generateDocument({invoice.projectId})" class="btn btn-info">PDF generieren</button>
                 <a href="/invoices" class="btn btn-secondary">Zurück zur Übersicht</a>
             </div>
         </div>
@@ -104,6 +106,14 @@
                     }
                 });
             }
+        }
+
+        function previewDocument(projectId) {
+            window.open(`/api/documents/INVOICE_DRAFT/preview?projectId=${projectId}`, '_blank', 'width=1000,height=800');
+        }
+
+        function generateDocument(projectId) {
+            window.location.href = `/api/documents/INVOICE_DRAFT/generate?projectId=${projectId}`;
         }
     </script>
 </body>

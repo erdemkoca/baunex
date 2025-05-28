@@ -1,395 +1,170 @@
+<!-- invoiceDraftForm.html -->
 {#include layout}
-    {#title}Neuer Rechnungsentwurf{/title}
-    {#header}Neuer Rechnungsentwurf{/header}
-    {#content}
-        <div class="container-fluid">
-            <form action="/invoice-drafts/new" method="post" id="invoiceForm">
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <!-- Projektauswahl -->
-                        <div class="mb-4">
-                            <label for="projectId" class="form-label">Projekt</label>
-                            <select class="form-select"
-                                    id="projectId"
-                                    name="projectId"
-                                    required>
-                                <option value="">-- Bitte wählen --</option>
-                                {#each projects}
-                                    <option value="{it.id}" {#if selectedProject && selectedProject.id == it.id}selected{/if}>
-                                        {it.name} - {it.customerName}
-                                    </option>
-                                {/each}
-                            </select>
-                        </div>
+  {#title}Neuer Rechnungsentwurf{/title}
+  {#header}Neuer Rechnungsentwurf{/header}
+  {#content}
+    <div class="container-fluid" id="invoice-app"
+         data-project='{projectJson}'
+         data-company='{companyJson}'
+         data-billing='{billingJson}'
+         data-vat-rate="{company.defaultVatRate ?: 7.7}"
+         data-current-date="{currentDate}"
+         data-due-date="{dueDate}">
 
-                        {#if selectedProject}
-                            <!-- Rechnungskopf -->
-                            <div class="row mb-4">
-                                <div class="col-md-6">
-                                    <!-- Firmeninformationen -->
-                                    <div class="company-info">
-                                        <h4>{company.name}</h4>
-                                        <p>{company.street}<br>
-                                        {company.zipCode} {company.city}<br>
-                                        {company.country}</p>
-                                        <p>
-                                            Tel: {company.phone}<br>
-                                            E-Mail: {company.email}<br>
-                                            Web: {company.website}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 text-end">
-                                    <!-- Logo -->
-                                    <div class="company-logo mb-3">
-                                        {#if company.logo}
-                                            <img src="{company.logo}" alt="Firmenlogo" style="max-height: 100px;">
-                                        {#else}
-                                            <div class="placeholder-logo" style="height: 100px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center;">
-                                                Logo
-                                            </div>
-                                        {/if}
-                                    </div>
-                                    <!-- Rechnungsinformationen -->
-                                    <div class="invoice-info">
-                                        <div class="mb-3">
-                                            <label for="invoiceNumber" class="form-label">Rechnungsnummer</label>
-                                            <input type="text" class="form-control" id="invoiceNumber" name="invoiceNumber">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="invoiceDate" class="form-label">Rechnungsdatum</label>
-                                            <input type="date" class="form-control" id="invoiceDate" name="invoiceDate" value="{currentDate}">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="dueDate" class="form-label">Fälligkeitsdatum</label>
-                                            <input type="date" class="form-control" id="dueDate" name="dueDate" value="{dueDate}">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+      <!-- Vue-kompatibles Formular -->
+      <form @submit.prevent="submitInvoice">
+        <div class="card mb-4">
+          <div class="card-body">
+            <div class="mb-4">
+              <label class="form-label">Projekt</label>
+              <select v-model="project.id" class="form-select" disabled>
+                <option :value="project.id">{{ project.name }} - {{ project.customerName }}</option>
+              </select>
+            </div>
 
-                            <!-- Kundendaten -->
-                            <div class="row mb-4">
-                                <div class="col-md-6">
-                                    <div class="card">
-                                        <div class="card-body">
-                                            <h5>Rechnungsempfänger</h5>
-                                            <p>
-                                                <strong>{selectedProject.customerName}</strong><br>
-                                                {selectedProject.customer.street}<br>
-                                                {selectedProject.customer.zipCode} {selectedProject.customer.city}<br>
-                                                {selectedProject.customer.country}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="card">
-                                        <div class="card-body">
-                                            <h5>Projekt</h5>
-                                            <p>
-                                                <strong>{selectedProject.name}</strong><br>
-                                                {selectedProject.description}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Rechnungstitel -->
-                            <div class="text-center mb-4">
-                                <h2>Rechnung</h2>
-                            </div>
-
-                            <!-- Rechnungspositionen -->
-                            <div class="card mb-4">
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered" id="invoiceItems">
-                                            <thead>
-                                                <tr>
-                                                    <th style="width: 40%">Bezeichnung / Artikel</th>
-                                                    <th style="width: 10%">VA/IC</th>
-                                                    <th style="width: 10%">Menge</th>
-                                                    <th style="width: 15%">Preis</th>
-                                                    <th style="width: 15%">Betrag</th>
-                                                    <th style="width: 10%">Aktionen</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <!-- Service Section -->
-                                                <tr class="table-secondary">
-                                                    <td colspan="6"><strong>Service</strong></td>
-                                                </tr>
-                                                {#each selectedProject.timeEntries}
-                                                    <tr class="invoice-item" data-type="VA">
-                                                        <td>
-                                                            <input type="text" class="form-control" name="items[{it_index}].description" value="{it.notes}" required>
-                                                        </td>
-                                                        <td>
-                                                            <select class="form-select" name="items[{it_index}].type" required>
-                                                                <option value="VA" selected>VA</option>
-                                                                <option value="IC">IC</option>
-                                                            </select>
-                                                        </td>
-                                                        <td>
-                                                            <input type="number" class="form-control quantity" name="items[{it_index}].quantity" value="{it.hoursWorked}" step="0.5" required>
-                                                        </td>
-                                                        <td>
-                                                            <input type="number" class="form-control price" name="items[{it_index}].price" value="{it.hourlyRate}" step="0.01" required>
-                                                        </td>
-                                                        <td>
-                                                            <input type="number" class="form-control amount" name="items[{it_index}].amount" value="{it.cost}" readonly>
-                                                        </td>
-                                                        <td>
-                                                            <button type="button" class="btn btn-sm btn-outline-danger remove-item">
-                                                                <i class="bi bi-trash"></i>
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                {/each}
-                                                <tr class="service-total">
-                                                    <td colspan="4" class="text-end"><strong>Service Total:</strong></td>
-                                                    <td><span id="serviceTotal">0.00</span> CHF</td>
-                                                    <td></td>
-                                                </tr>
-
-                                                <!-- Material Section -->
-                                                <tr class="table-secondary">
-                                                    <td colspan="6"><strong>Material</strong></td>
-                                                </tr>
-                                                {#each selectedProject.catalogItems}
-                                                    <tr class="invoice-item" data-type="IC">
-                                                        <td>
-                                                            <input type="text" class="form-control" name="items[{it_index + selectedProject.timeEntries.size}].description" value="{it.itemName}" required>
-                                                        </td>
-                                                        <td>
-                                                            <select class="form-select" name="items[{it_index + selectedProject.timeEntries.size}].type" required>
-                                                                <option value="VA">VA</option>
-                                                                <option value="IC" selected>IC</option>
-                                                            </select>
-                                                        </td>
-                                                        <td>
-                                                            <input type="number" class="form-control quantity" name="items[{it_index + selectedProject.timeEntries.size}].quantity" value="{it.quantity}" required>
-                                                        </td>
-                                                        <td>
-                                                            <input type="number" class="form-control price" name="items[{it_index + selectedProject.timeEntries.size}].price" value="{it.unitPrice}" step="0.01" required>
-                                                        </td>
-                                                        <td>
-                                                            <input type="number" class="form-control amount" name="items[{it_index + selectedProject.timeEntries.size}].amount" value="{it.totalPrice}" readonly>
-                                                        </td>
-                                                        <td>
-                                                            <button type="button" class="btn btn-sm btn-outline-danger remove-item">
-                                                                <i class="bi bi-trash"></i>
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                {/each}
-                                                <tr class="material-total">
-                                                    <td colspan="4" class="text-end"><strong>Material Total:</strong></td>
-                                                    <td><span id="materialTotal">0.00</span> CHF</td>
-                                                    <td></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                        <button type="button" class="btn btn-outline-primary" id="addItem">
-                                            <i class="bi bi-plus"></i> Position hinzufügen
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Zusammenfassung -->
-                            <div class="row mb-4">
-                                <div class="col-md-6">
-                                    <div class="card">
-                                        <div class="card-body">
-                                            <h5 class="card-title">Zahlungsinformationen</h5>
-                                            <p>
-                                                <strong>Bank:</strong> {company.bankName}<br>
-                                                <strong>IBAN:</strong> {company.iban}<br>
-                                                <strong>BIC:</strong> {company.bic}
-                                            </p>
-                                            <div class="mb-3">
-                                                <label for="notes" class="form-label">Notizen</label>
-                                                <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="card">
-                                        <div class="card-body">
-                                            <h5 class="card-title">Zusammenfassung</h5>
-                                            {#if billing}
-                                                <div class="d-flex justify-content-between mb-2">
-                                                    <span>Gesamtkosten Dienstleistung:</span>
-                                                    <span id="billingServiceTotal">{billing.timeTotal} CHF</span>
-                                                </div>
-                                                <div class="d-flex justify-content-between mb-2">
-                                                    <span>Gesamtkosten Katalogartikel:</span>
-                                                    <span id="billingMaterialTotal">{billing.costBreakdown.totalCatalogItemsAndMaterials} CHF</span>
-                                                </div>
-                                                <hr>
-                                            {/if}
-                                            <div class="d-flex justify-content-between mb-2">
-                                                <span>Bruttobetrag:</span>
-                                                <span id="grossTotal">0.00 CHF</span>
-                                            </div>
-                                            <div class="d-flex justify-content-between mb-2">
-                                                <span>Mehrwertsteuer (<span id="vatRate">{company.defaultVatRate}</span>%):</span>
-                                                <span id="vatAmount">0.00 CHF</span>
-                                            </div>
-                                            <div class="d-flex justify-content-between mb-2">
-                                                <strong>Nettobetrag:</strong>
-                                                <strong id="netTotal">0.00 CHF</strong>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Fusszeile -->
-                            <div class="card mb-4">
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <h5>AGB</h5>
-                                            <pre class="small">{company.defaultInvoiceTerms}</pre>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <h5>Zahlungsinformationen</h5>
-                                            <pre class="small">{company.defaultInvoiceFooter}</pre>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Aktionen -->
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-plus"></i> Rechnungsentwurf erstellen
-                                </button>
-                                <a href="/invoice-drafts" class="btn btn-outline-secondary">
-                                    <i class="bi bi-x"></i> Abbrechen
-                                </a>
-                            </div>
-                        {/if}
-                    </div>
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <h4>{{ company.name }}</h4>
+                <p>{{ company.street }}<br>{{ company.zipCode }} {{ company.city }}<br>{{ company.country }}</p>
+                <p>Tel: {{ company.phone }}<br>E-Mail: {{ company.email }}<br>Web: {{ company.website }}</p>
+              </div>
+              <div class="col-md-6 text-end">
+                <div class="mb-3">
+                  <label class="form-label">Rechnungsnummer</label>
+                  <input v-model="invoiceNumber" type="text" class="form-control">
                 </div>
-            </form>
+                <div class="mb-3">
+                  <label class="form-label">Rechnungsdatum</label>
+                  <input v-model="invoiceDate" type="date" class="form-control">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Fälligkeitsdatum</label>
+                  <input v-model="dueDate" type="date" class="form-control">
+                </div>
+              </div>
+            </div>
+
+            <h5 class="text-center">Rechnungspositionen</h5>
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Bezeichnung</th>
+                  <th>Typ</th>
+                  <th>Menge</th>
+                  <th>Preis</th>
+                  <th>Betrag</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, index) in items" :key="index">
+                  <td><input v-model="item.description" class="form-control"></td>
+                  <td>
+                    <select v-model="item.type" class="form-select">
+                      <option value="VA">VA</option>
+                      <option value="IC">IC</option>
+                    </select>
+                  </td>
+                  <td><input v-model.number="item.quantity" type="number" class="form-control"></td>
+                  <td><input v-model.number="item.price" type="number" class="form-control"></td>
+                  <td>{{ (item.quantity * item.price).toFixed(2) }}</td>
+                  <td><button @click.prevent="removeItem(index)" class="btn btn-sm btn-outline-danger">x</button></td>
+                </tr>
+              </tbody>
+            </table>
+            <button @click.prevent="addItem" class="btn btn-outline-primary">+ Position</button>
+
+            <div class="mt-4">
+              <h5>Zusammenfassung</h5>
+              <p>Brutto: {{ grossTotal.toFixed(2) }} CHF</p>
+              <p>MWST ({{ vatRate }}%): {{ vatAmount.toFixed(2) }} CHF</p>
+              <p><strong>Nettobetrag: {{ netTotal.toFixed(2) }} CHF</strong></p>
+            </div>
+
+            <div class="mt-3">
+              <label class="form-label">Notizen</label>
+              <textarea v-model="notes" class="form-control"></textarea>
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+              <button type="submit" class="btn btn-primary">Rechnungsentwurf speichern</button>
+              <a href="/invoice-drafts" class="btn btn-outline-secondary">Abbrechen</a>
+            </div>
+
+          </div>
         </div>
+      </form>
 
-        <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                // Initialize Sortable for invoice items
-                new Sortable(document.querySelector('#invoiceItems tbody'), {
-                    animation: 150,
-                    handle: '.drag-handle',
-                    ghostClass: 'sortable-ghost'
-                });
+      <script type="module">
+        const { createApp } = Vue
+        const app = document.getElementById('invoice-app');
+        const project = JSON.parse(app.dataset.project || 'null');
+        const company = JSON.parse(app.dataset.company || 'null');
+        const billing = JSON.parse(app.dataset.billing || 'null');
+        const vatRate = parseFloat(app.dataset.vatRate || '7.7');
+        const currentDate = app.dataset.currentDate;
+        const dueDate = app.dataset.dueDate;
 
-                // Add new item
-                document.getElementById('addItem').addEventListener('click', function() {
-                    const tbody = document.querySelector('#invoiceItems tbody');
-                    const itemCount = tbody.querySelectorAll('.invoice-item').length;
-                    const newRow = document.createElement('tr');
-                    newRow.className = 'invoice-item';
-                    newRow.innerHTML = 
-                        '<td>' +
-                            '<input type="text" class="form-control" name="items[' + itemCount + '].description" required>' +
-                        '</td>' +
-                        '<td>' +
-                            '<select class="form-select" name="items[' + itemCount + '].type" required>' +
-                                '<option value="VA">VA</option>' +
-                                '<option value="IC">IC</option>' +
-                            '</select>' +
-                        '</td>' +
-                        '<td>' +
-                            '<input type="number" class="form-control quantity" name="items[' + itemCount + '].quantity" value="1" required>' +
-                        '</td>' +
-                        '<td>' +
-                            '<input type="number" class="form-control price" name="items[' + itemCount + '].price" value="0.00" step="0.01" required>' +
-                        '</td>' +
-                        '<td>' +
-                            '<input type="number" class="form-control amount" name="items[' + itemCount + '].amount" value="0.00" readonly>' +
-                        '</td>' +
-                        '<td>' +
-                            '<button type="button" class="btn btn-sm btn-outline-danger remove-item">' +
-                                '<i class="bi bi-trash"></i>' +
-                            '</button>' +
-                        '</td>';
-                    tbody.appendChild(newRow);
-                    updateTotals();
-                });
+        createApp({
+          data() {
+            return {
+              company,
+              project,
+              vatRate,
+              invoiceNumber: '',
+              invoiceDate: currentDate,
+              dueDate: dueDate,
+              notes: '',
+              items: [
+                ...(project?.timeEntries || []).map(e => ({
+                  description: e.notes,
+                  type: 'VA',
+                  quantity: e.hoursWorked,
+                  price: e.hourlyRate
+                })),
+                ...(project?.catalogItems || []).map(e => ({
+                  description: e.itemName,
+                  type: 'IC',
+                  quantity: e.quantity,
+                  price: e.unitPrice
+                }))
+              ]
+            };
+          },
+          computed: {
+            grossTotal() {
+              return this.items.reduce((sum, i) => sum + i.quantity * i.price, 0);
+            },
+            vatAmount() {
+              return this.grossTotal * (this.vatRate / 100);
+            },
+            netTotal() {
+              return this.grossTotal + this.vatAmount;
+            }
+          },
+          methods: {
+            addItem() {
+              this.items.push({ description: '', type: 'VA', quantity: 1, price: 0 });
+            },
+            removeItem(index) {
+              this.items.splice(index, 1);
+            },
+            submitInvoice() {
+              alert('Rechnungsdaten bereit zum Senden');
+              console.log({
+                projectId: this.project.id,
+                invoiceNumber: this.invoiceNumber,
+                invoiceDate: this.invoiceDate,
+                dueDate: this.dueDate,
+                notes: this.notes,
+                items: this.items
+              });
+            }
+          }
+        }).mount('#invoice-app');
+      </script>
 
-                // Remove item
-                document.querySelector('#invoiceItems').addEventListener('click', function(e) {
-                    if (e.target.closest('.remove-item')) {
-                        const row = e.target.closest('tr');
-                        if (row.classList.contains('invoice-item')) {
-                            row.remove();
-                            updateTotals();
-                        }
-                    }
-                });
-
-                // Calculate amount when quantity or price changes
-                document.querySelector('#invoiceItems').addEventListener('input', function(e) {
-                    if (e.target.classList.contains('quantity') || e.target.classList.contains('price')) {
-                        const row = e.target.closest('tr');
-                        const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
-                        const price = parseFloat(row.querySelector('.price').value) || 0;
-                        const amount = quantity * price;
-                        row.querySelector('.amount').value = amount.toFixed(2);
-                        updateTotals();
-                    }
-                });
-
-                // Update totals
-                function updateTotals() {
-                    let serviceTotal = 0;
-                    let materialTotal = 0;
-                    let grossTotal = 0;
-
-                    // Get billing totals if available
-                    const billingServiceTotal = parseFloat(document.querySelector('#billingServiceTotal')?.textContent || '0');
-                    const billingMaterialTotal = parseFloat(document.querySelector('#billingMaterialTotal')?.textContent || '0');
-
-                    document.querySelectorAll('.invoice-item').forEach(function(row) {
-                        const amount = parseFloat(row.querySelector('.amount').value) || 0;
-                        const type = row.querySelector('select').value;
-                        
-                        if (type === 'VA') {
-                            serviceTotal += amount;
-                        } else {
-                            materialTotal += amount;
-                        }
-                        grossTotal += amount;
-                    });
-
-                    // Use billing totals if no items are added yet
-                    if (grossTotal === 0 && (billingServiceTotal > 0 || billingMaterialTotal > 0)) {
-                        serviceTotal = billingServiceTotal;
-                        materialTotal = billingMaterialTotal;
-                        grossTotal = billingServiceTotal + billingMaterialTotal;
-                    }
-
-                    const vatRate = parseFloat(document.querySelector('#vatRate').textContent) / 100;
-                    const vatAmount = grossTotal * vatRate;
-                    const netTotal = grossTotal - vatAmount;
-
-                    document.getElementById('serviceTotal').textContent = serviceTotal.toFixed(2);
-                    document.getElementById('materialTotal').textContent = materialTotal.toFixed(2);
-                    document.getElementById('grossTotal').textContent = grossTotal.toFixed(2) + ' CHF';
-                    document.getElementById('vatAmount').textContent = vatAmount.toFixed(2) + ' CHF';
-                    document.getElementById('netTotal').textContent = netTotal.toFixed(2) + ' CHF';
-                }
-
-                // Initial calculation
-                updateTotals();
-            });
-        </script>
-    {/content}
-{/include} 
+      <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    </div>
+  {/content}
+{/include}

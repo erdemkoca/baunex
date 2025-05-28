@@ -1,4 +1,4 @@
-package ch.baunex.document.generator.model
+package ch.baunex.documentGenerator.model
 
 enum class DocumentType {
     INVOICE,

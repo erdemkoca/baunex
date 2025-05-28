@@ -23,6 +23,10 @@ class InvoiceFacade {
         return mapper.toDTO(service.getById(id))
     }
 
+    fun getInvoiceByProjectId(projectId: Long): InvoiceDTO {
+        return mapper.toDTO(service.getById(projectId))
+    }
+
     fun markAsPaid(id: Long) {
         service.markAsPaid(id)
     }
