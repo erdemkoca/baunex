@@ -3,6 +3,7 @@ package ch.baunex.billing.service
 import ch.baunex.billing.dto.BillingDTO
 import ch.baunex.billing.dto.CostBreakdownDTO
 import ch.baunex.catalog.mapper.toProjectCatalogItemDTO
+import ch.baunex.catalog.dto.ProjectCatalogItemDTO
 import ch.baunex.catalog.model.ProjectCatalogItemModel
 import ch.baunex.timetracking.model.TimeEntryModel
 import ch.baunex.timetracking.mapper.TimeEntryMapper
@@ -35,8 +36,26 @@ class BillingService @Inject constructor(
         val materialDTOs = materialModels.map { item -> item.toProjectCatalogItemDTO() }
         val timeEntryDTOs = timeEntryModels.map { entry -> timeEntryMapper.toTimeEntryResponseDTO(entry) }
 
+        // Get all catalog items from time entries and add them to materials
+        val timeEntryCatalogItems = timeEntryDTOs.flatMap { entry ->
+            entry.catalogItems.map { item ->
+                ProjectCatalogItemDTO(
+                    id = item.id,
+                    projectId = projectId,
+                    itemName = "${item.itemName} (${entry.date})",
+                    quantity = item.quantity,
+                    unitPrice = item.unitPrice,
+                    totalPrice = item.totalPrice,
+                    catalogItemId = item.catalogItemId
+                )
+            }
+        }
+
+        // Combine all materials
+        val allMaterials = materialDTOs + timeEntryCatalogItems
+
         // Calculate totals
-        val materialTotal = materialDTOs.sumOf { it.totalPrice }
+        val materialTotal = allMaterials.sumOf { it.totalPrice }
         
         // Calculate cost breakdown
         var totalServiceCost = 0.0
@@ -67,7 +86,7 @@ class BillingService @Inject constructor(
 
         return BillingDTO(
             projectId = projectId,
-            materials = materialDTOs,
+            materials = allMaterials,
             timeEntries = timeEntryDTOs,
             materialTotal = materialTotal,
             timeTotal = totalServiceCost,

@@ -180,11 +180,15 @@
           quantity: e.hoursWorked || 0,
           price: e.hourlyRate || 0
         }));
-        const catalogItems = (project?.catalogItems || []).map(e => ({
-          description: e.itemName || '',
-          quantity: e.quantity || 0,
-          price: e.unitPrice || 0
+
+        // Get all materials from billing (includes both project catalog items and time entry catalog items)
+        const materialItems = (billing?.materials || []).map(item => ({
+          description: item.itemName,
+          quantity: item.quantity,
+          price: item.unitPrice,
+          total: item.totalPrice
         }));
+
         return {
           company,
           project,
@@ -194,7 +198,7 @@
           dueDate: dueDate,
           notes: '',
           serviceItems: timeEntries,
-          materialItems: catalogItems
+          materialItems: materialItems
         };
       },
       mounted() {
