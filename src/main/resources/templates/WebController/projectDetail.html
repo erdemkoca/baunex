@@ -581,18 +581,18 @@
                                     </tr>
                                 {/for}
                                 
-                                <!-- Time Entry Catalog Items -->
-                                {#for entry in billing.timeEntries}
-                                    {#for item in entry.catalogItems}
-                                        <tr>
-                                            <td>Zeiterfassung ({entry.date})</td>
-                                            <td>{item.itemName}</td>
-                                            <td>{item.quantity}</td>
-                                            <td>{item.unitPrice} CHF</td>
-                                            <td>{item.totalPrice} CHF</td>
-                            </tr>
-                                    {/for}
-                        {/for}
+                                {!<!-- Time Entry Catalog Items -->!}
+                                {!{#for entry in billing.timeEntries}!}
+                                    {!{#for item in entry.catalogItems}!}
+                                        {!<tr>!}
+                                            {!<td>Zeiterfassung ({entry.date})</td>!}
+                                            {!<td>{item.itemName}</td>!}
+                                            {!<td>{item.quantity}</td>!}
+                                            {!<td>{item.unitPrice} CHF</td>!}
+                                            {!<td>{item.totalPrice} CHF</td>!}
+                                        {!</tr>!}
+                                    {!{/for}!}
+                                {!{/for}!}
                         </tbody>
                             <tfoot>
                                 <tr class="table-primary">
