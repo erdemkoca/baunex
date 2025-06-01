@@ -8,7 +8,7 @@
                     <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">Neuer Rechnungsentwurf</h5>
-                            <form action="/invoice-drafts/new" method="get">
+                            <form action="/invoice/new" method="get">
                                 <div class="mb-3">
                                     <label for="projectId" class="form-label">Projekt auswählen</label>
                                     <select class="form-select" id="projectId" name="projectId" required>
@@ -64,13 +64,13 @@
                                 <td>{it.formattedGrandTotal}</td>
                                 <td>
                                     <div class="btn-group">
-                                        <a href="/invoice-drafts/{it.id}"
+                                        <a href="/invoice/{it.id}"
                                            class="btn btn-sm btn-outline-primary"
                                            title="Anzeigen">
                                             <i class="bi bi-eye"></i>
                                         </a>
                                         {#if it.status == 'DRAFT'}
-                                            <a href="/invoice-drafts/{it.id}/edit"
+                                            <a href="/invoice/{it.id}/edit"
                                                class="btn btn-sm btn-outline-secondary"
                                                title="Bearbeiten">
                                                 <i class="bi bi-pencil"></i>
@@ -101,7 +101,7 @@
         <script>
             function createInvoice(id) {
                 if (confirm('Möchten Sie diesen Entwurf wirklich in eine Rechnung umwandeln?')) {
-                    fetch('/invoice-drafts/' + id + '/create-invoice', {
+                    fetch('/invoice/' + id + '/create-invoice', {
                         method: 'POST'
                     }).then(response => {
                         if (response.ok) {
@@ -117,7 +117,7 @@
 
             function deleteDraft(id) {
                 if (confirm('Möchten Sie diesen Entwurf wirklich löschen?')) {
-                    fetch('/invoice-drafts/' + id, {
+                    fetch('/invoice/' + id, {
                         method: 'DELETE'
                     }).then(response => {
                         if (response.ok) {

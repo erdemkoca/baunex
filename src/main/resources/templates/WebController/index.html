@@ -90,7 +90,7 @@
                             <a href="/timetracking/new" class="btn btn-success">
                                 <i class="bi bi-clock me-2"></i>Zeit erfassen
                             </a>
-                            <a href="/invoice-drafts/new" class="btn btn-info">
+                            <a href="/invoice/new" class="btn btn-info">
                                 <i class="bi bi-file-earmark-text me-2"></i>Neuer Rechnungsentwurf
                             </a>
                             <a href="/customers/new" class="btn btn-warning">
@@ -173,10 +173,10 @@
                             <div class="list-group list-group-flush">
                                 {#for draft in recentInvoiceDrafts}
                                     <a href="/invoice-drafts/{draft.id}" class="list-group-item list-group-item-action">
-                                        <div class="d-flex w-100 justify-content-between">
-                                            <h6 class="mb-1">{draft.invoiceNumber}</h6>
-                                            <small>{draft.totalBrutto} CHF</small>
-                                        </div>
+                                        {!<div class="d-flex w-100 justify-content-between">!}
+                                            {!<h6 class="mb-1">{draft.invoiceNumber}</h6>!}
+                                            {!<small>{draft.totalBrutto} CHF</small>!}
+                                        {!</div>!}
                                         <small class="text-muted">{draft.customerName} - {draft.invoiceDate.format('dd.MM.yyyy')}</small>
                                     </a>
                                 {/for}

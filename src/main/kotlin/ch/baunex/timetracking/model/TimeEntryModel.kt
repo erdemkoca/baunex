@@ -1,5 +1,6 @@
 package ch.baunex.timetracking.model
 
+import ch.baunex.invoice.model.InvoiceModel
 import ch.baunex.project.model.ProjectModel
 import ch.baunex.user.model.EmployeeModel
 import io.quarkus.hibernate.orm.panache.PanacheEntity
@@ -70,4 +71,9 @@ class TimeEntryModel : PanacheEntity() {
 
     @Column(name = "waiting_time_minutes")
     var waitingTimeMinutes: Int = 0
+
+    @ManyToOne
+    @JoinColumn(name = "invoice_id")
+    var invoice: InvoiceModel? = null
+
 }

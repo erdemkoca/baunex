@@ -2,16 +2,14 @@ package ch.baunex.web
 
 import ch.baunex.billing.dto.BillingDTO
 import ch.baunex.catalog.dto.CatalogItemDTO
-import ch.baunex.catalog.dto.ProjectCatalogItemDTO
 import ch.baunex.company.dto.CompanyDTO
 import ch.baunex.company.facade.CompanyFacade
 import ch.baunex.invoice.dto.InvoiceDTO
 import ch.baunex.invoice.dto.InvoiceDraftDTO
-import ch.baunex.invoice.facade.InvoiceDraftFacade
+import ch.baunex.invoice.facade.InvoiceFacade
 import ch.baunex.project.dto.ProjectDetailDTO
 import ch.baunex.project.dto.ProjectListDTO
 import ch.baunex.project.facade.ProjectFacade
-import ch.baunex.timetracking.dto.TimeEntryCatalogItemDTO
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.timetracking.facade.TimeTrackingFacade
 import ch.baunex.user.dto.CustomerContactDTO
@@ -35,7 +33,7 @@ class WebController {
     lateinit var timeTrackingFacade: TimeTrackingFacade
 
     @Inject
-    lateinit var invoiceDraftFacade: InvoiceDraftFacade
+    lateinit var invoiceFacade: InvoiceFacade
 
     @Inject
     lateinit var companyFacade: CompanyFacade
@@ -56,7 +54,7 @@ class WebController {
             totalMaterialCost: Double,
             totalServiceCost: Double,
             totalCosts: Double,
-            recentInvoiceDrafts: List<InvoiceDraftDTO>,
+            recentInvoiceDrafts: List<InvoiceDTO>,
             company: CompanyDTO
         ): TemplateInstance
 
@@ -143,14 +141,16 @@ class WebController {
 
         @JvmStatic
         external fun invoiceDetail(
-            invoice: InvoiceDTO,
+            invoice: String,
             currentDate: LocalDate,
-            activeMenu: String
+            activeMenu: String,
+            companyJson: String,
+            billingJson: String,
         ): TemplateInstance
 
         @JvmStatic
         external fun invoiceDraftList(
-            drafts: List<InvoiceDraftDTO>,
+            drafts: List<InvoiceDTO>,
             projects: List<ProjectListDTO>,
             currentDate: LocalDate,
             activeMenu: String
@@ -183,14 +183,14 @@ class WebController {
         val currentDate = LocalDate.now()
         val projects = projectFacade.getAllProjects()
         val timeEntries = timeTrackingFacade.getAllTimeEntries()
-        val invoiceDrafts = invoiceDraftFacade.getAll()
+        val invoice = invoiceFacade.getAll()
         val company = companyFacade.getCompany() ?: throw IllegalStateException("Company information not found")
 
         // Calculate statistics
         val totalProjects = projects.size
         val totalTimeEntries = timeEntries.size
-        val totalInvoiceDrafts = invoiceDrafts.size
-        val totalInvoicedAmount = invoiceDrafts.sumOf { it.totalBrutto ?: 0.0 }
+        val totalInvoice = invoice.size
+        val totalInvoicedAmount = invoice.sumOf { it.totalAmount ?: 0.0 }
         val totalTimeHours = timeEntries.sumOf { it.hoursWorked }
         
         // Calculate material costs from project details
@@ -205,7 +205,7 @@ class WebController {
         // Get recent items
         val recentProjects = projects.take(5)
         val recentTimeEntries = timeEntries.take(5)
-        val recentInvoiceDrafts = invoiceDrafts.take(5)
+        val recentInvoiceDrafts = invoice.take(5)
 
         val template = Templates.index(
             projects = recentProjects,
@@ -214,7 +214,7 @@ class WebController {
             activeMenu = "dashboard",
             totalProjects = totalProjects,
             totalTimeEntries = totalTimeEntries,
-            totalInvoiceDrafts = totalInvoiceDrafts,
+            totalInvoiceDrafts = totalInvoice,
             totalInvoicedAmount = totalInvoicedAmount,
             totalTimeHours = totalTimeHours,
             totalMaterialCost = totalMaterialCost,

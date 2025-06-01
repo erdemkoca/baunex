@@ -1,5 +1,6 @@
 package ch.baunex.invoice.mapper
 
+import ch.baunex.company.facade.CompanyFacade
 import ch.baunex.invoice.dto.InvoiceDTO
 import ch.baunex.invoice.dto.InvoiceItemDTO
 import ch.baunex.invoice.model.InvoiceModel
@@ -12,7 +13,8 @@ import jakarta.inject.Inject
 @ApplicationScoped
 class InvoiceMapper @Inject constructor(
     private val customerFacade: CustomerFacade,
-    private val projectFacade: ProjectFacade
+    private val projectFacade: ProjectFacade,
+    private val companyFacade: CompanyFacade,
 ) {
 
     fun toModel(dto: InvoiceDTO): InvoiceModel {
@@ -23,7 +25,7 @@ class InvoiceMapper @Inject constructor(
             dueDate = dto.dueDate
             customerId = dto.customerId
             projectId = dto.projectId
-            status = dto.status
+            invoiceStatus = dto.invoiceStatus
             notes = dto.notes
             totalNetto = dto.totalAmount
             vatAmount = dto.vatAmount
@@ -43,30 +45,44 @@ class InvoiceMapper @Inject constructor(
             projectId = model.projectId ?: 0L,
             projectName = model.projectId?.let { getProjectName(it) } ?: "",
             projectDescription = model.projectId?.let { getProjectDescription(it) },
-            status = model.status,
+            invoiceStatus = model.invoiceStatus,
             totalAmount = model.totalNetto,
             vatAmount = model.vatAmount,
             grandTotal = model.totalBrutto,
             notes = model.notes,
+            vatRate = companyFacade.getCompany()?.defaultVatRate ?: 0.0,
             items = model.items.map { toItemDTO(it) }
         )
     }
 
-    private fun toItemDTO(model: InvoiceItemModel): InvoiceItemDTO {
+    fun toItemDTO(model: InvoiceItemModel): InvoiceItemDTO {
         return InvoiceItemDTO(
             id = model.id,
             type = model.type,
             description = model.description,
             quantity = model.quantity,
             unitPrice = model.price,
-            vatRate = 0.0, // Default value since it's not in the model
+            vatRate = 0.0,
             totalAmount = model.total,
-            vatAmount = 0.0, // Default value since it's not in the model
+            vatAmount = 0.0,
             grandTotal = model.total,
-            order = 0, // Default value since it's not in the model
+            order = 0,
             timeEntryId = model.timeEntryId,
-            catalogItemId = model.catalogItemId
+            projectCatalogItemId = model.projectCatalogItemId,
+            price = model.price
         )
+    }
+
+    fun toItemModel(dto: InvoiceItemDTO): InvoiceItemModel {
+        return InvoiceItemModel().apply {
+            description = dto.description
+            type = dto.type
+            quantity = dto.quantity
+            price = dto.price // dto.price == unitPrice
+            total = dto.quantity * dto.price
+            timeEntryId = dto.timeEntryId
+            projectCatalogItemId = dto.projectCatalogItemId
+        }
     }
 
     private fun getCustomerName(customerId: Long): String {
@@ -89,4 +105,4 @@ class InvoiceMapper @Inject constructor(
     private fun getProjectDescription(projectId: Long): String? {
         return projectFacade.getProjectWithDetails(projectId)?.description
     }
-} 
+}

@@ -6,7 +6,6 @@
 <div class="container-fluid" id="invoice-app"
      data-invoice='{invoice}'
      data-company='{companyJson}'
-     data-billing='{billingJson}'
      data-current-date="{currentDate}">
 
   <div class="d-flex justify-content-between mb-4">
@@ -145,7 +144,6 @@
     const app = document.getElementById('invoice-app');
     const invoice = JSON.parse(app.dataset.invoice || '{}');
     const company = JSON.parse(app.dataset.company || '{}');
-    const billing = JSON.parse(app.dataset.billing || '{}');
     const currentDate = app.dataset.currentDate;
 
     createApp({
@@ -153,7 +151,6 @@
         return {
           invoice,
           company,
-          billing,
           invoiceNumber: invoice.invoiceNumber || '',
           invoiceDate: invoice.invoiceDate || currentDate,
           dueDate: invoice.dueDate || currentDate,
@@ -218,24 +215,6 @@
         }
       },
       mounted() {
-        // Initialize service items from billing time entries
-        if (this.billing?.timeEntries) {
-          this.serviceItems = this.billing.timeEntries.map(entry => ({
-            description: entry.notes || '',
-            quantity: entry.hoursWorked || 0,
-            price: entry.hourlyRate || 0
-          }));
-        }
-
-        // Initialize material items from billing materials
-        if (this.billing?.materials) {
-          this.materialItems = this.billing.materials.map(item => ({
-            description: item.itemName,
-            quantity: item.quantity,
-            price: item.unitPrice
-          }));
-        }
-
         const serviceTbody = this.$el.querySelector('table:nth-of-type(1) tbody');
         new Sortable(serviceTbody, {
           handle: '.handle',
