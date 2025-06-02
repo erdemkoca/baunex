@@ -9,6 +9,8 @@ data class TimeEntryResponseDTO(
     val id: Long?,
     val employeeId: Long,
     val employeeEmail: String,
+    val employeeFirstName: String,
+    val employeeLastName: String,
     val projectId: Long,
     val projectName: String,
     @Contextual val date: LocalDate,
@@ -21,16 +23,19 @@ data class TimeEntryResponseDTO(
     val catalogItemDescription: String?,
     val catalogItemPrice: Double?,
     val catalogItems: List<TimeEntryCatalogItemDTO> = emptyList(),
-    
+
     // Surcharges
     val hasNightSurcharge: Boolean = false,
     val hasWeekendSurcharge: Boolean = false,
     val hasHolidaySurcharge: Boolean = false,
-    
+
     // Additional Costs
     val travelTimeMinutes: Int = 0,
     val disposalCost: Double = 0.0,
     val hasWaitingTime: Boolean = false,
     val waitingTimeMinutes: Int = 0,
-    val costBreakdown: TimeEntryCostBreakdownDTO?
+    val costBreakdown: TimeEntryCostBreakdownDTO?,
+
+    val approval: ApprovalDTO = ApprovalDTO()
+
 )

@@ -89,6 +89,8 @@ class TimeTrackingFacade @Inject constructor(
             id = entry.id,
             employeeId = entry.employee.id ?: 0L,
             employeeEmail = entry.employee.email,
+            employeeFirstName = entry.employee.person.firstName,
+            employeeLastName = entry.employee.person.lastName,
             projectId = entry.project.id ?: 0L,
             projectName = entry.project.name,
             date = entry.date,
@@ -120,5 +122,10 @@ class TimeTrackingFacade @Inject constructor(
             unitPrice = item.unitPrice,
             totalPrice = item.totalPrice
         )
+    }
+
+     fun approveEntry(entryId: Long, approverId: Long): Boolean {
+        timeTrackingService.approveEntry(entryId, approverId)
+        return true
     }
 }

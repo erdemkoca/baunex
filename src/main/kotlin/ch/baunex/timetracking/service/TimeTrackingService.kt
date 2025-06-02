@@ -1,16 +1,17 @@
 package ch.baunex.timetracking.service
 
 import ch.baunex.timetracking.dto.TimeEntryDTO
-import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.timetracking.model.TimeEntryModel
 import ch.baunex.timetracking.mapper.TimeEntryMapper
 import ch.baunex.timetracking.repository.TimeEntryRepository
 import ch.baunex.user.repository.EmployeeRepository
 import ch.baunex.project.repository.ProjectRepository
 import ch.baunex.catalog.service.CatalogService
+import ch.baunex.user.service.EmployeeService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
+import java.time.LocalDate
 
 @ApplicationScoped
 class TimeTrackingService @Inject constructor(
@@ -19,7 +20,8 @@ class TimeTrackingService @Inject constructor(
     private val projectRepository: ProjectRepository,
     private val timeEntryMapper: TimeEntryMapper,
     private val timeEntryCatalogItemService: TimeEntryCatalogItemService,
-    private val catalogService: CatalogService
+    private val catalogService: CatalogService,
+    private val employeeService: EmployeeService
 ) {
 
     @Transactional
@@ -111,4 +113,16 @@ class TimeTrackingService @Inject constructor(
         // Then delete the time entry
         return timeEntryRepository.deleteById(id)
     }
+
+    @Transactional
+    fun approveEntry(entryId: Long, approverId: Long): Boolean {
+        val entry = getTimeEntryById(entryId) ?: return false
+        val approver = employeeService.findEmployeeById(approverId) ?: return false
+
+        entry.approved = true
+        entry.approvedBy = approver
+        entry.approvedAt = LocalDate.now()
+        return true
+    }
+
 }

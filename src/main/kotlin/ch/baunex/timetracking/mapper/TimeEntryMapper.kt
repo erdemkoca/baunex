@@ -1,6 +1,7 @@
 package ch.baunex.timetracking.mapper
 
 import ch.baunex.project.model.ProjectModel
+import ch.baunex.timetracking.dto.ApprovalDTO
 import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.timetracking.dto.TimeEntryCatalogItemDTO
@@ -16,6 +17,8 @@ fun TimeEntryModel.toTimeEntryResponseDTO(): TimeEntryResponseDTO {
         id = this.id,
         employeeId = this.employee.id!!,
         employeeEmail = this.employee.email,
+        employeeFirstName = this.employee.person.firstName,
+        employeeLastName = this.employee.person.lastName,
         projectId = this.project.id!!,
         projectName = this.project.name,
         date = this.date,
@@ -47,7 +50,14 @@ fun TimeEntryModel.toTimeEntryResponseDTO(): TimeEntryResponseDTO {
         disposalCost = this.disposalCost,
         hasWaitingTime = this.hasWaitingTime,
         waitingTimeMinutes = this.waitingTimeMinutes,
-        costBreakdown = null // We'll calculate this in the service layer
+        costBreakdown = null, // We'll calculate this in the service layer
+
+        approval = ApprovalDTO(
+            approved = this.approvedBy != null,
+            approverId = this.approvedBy?.id,
+            approverName = this.approvedBy?.person?.firstName + " " + this.approvedBy?.person?.lastName
+        )
+
     )
 }
 

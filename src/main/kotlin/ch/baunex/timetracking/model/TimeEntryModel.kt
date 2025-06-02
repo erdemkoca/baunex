@@ -76,4 +76,15 @@ class TimeEntryModel : PanacheEntity() {
     @JoinColumn(name = "invoice_id")
     var invoice: InvoiceModel? = null
 
+    @Column(name = "approved", nullable = false)
+    var approved: Boolean = false
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approved_by")
+    var approvedBy: EmployeeModel? = null
+
+    @Column(name = "approved_at")
+    var approvedAt: LocalDate? = null
+
+
 }

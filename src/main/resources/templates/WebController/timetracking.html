@@ -14,38 +14,157 @@
         {#if timeEntries.isEmpty()}
           <p class="text-muted">Keine Zeiterfassungen gefunden.</p>
         {#else}
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
-              <tr>
-                <th>Datum</th>
-                <th>Mitarbeiter</th>
-                <th>Projekt</th>
-                <th>Stunden</th>
-                <th>Notiz</th>
-                <th>Aktionen</th>
-              </tr>
-              </thead>
-              <tbody>
-              {#for entry in timeEntries}
-                <tr style="cursor: pointer;" onclick="window.location.href='/timetracking/{entry.id}/edit';">
-                  <td>{entry.date}</td>
-                  <td>{entry.employeeEmail}</td>
-                  <td>{entry.projectName}</td>
-                  <td>{entry.hoursWorked}</td>
-                  <td>{entry.notes ?: '—'}</td>
-                  <td>
-                    <div class="btn-group">
-                      <a href="/timetracking/{entry.id}/delete" class="btn btn-sm btn-outline-danger"
+          <div class="accordion" id="timeEntriesAccordion">
+            {#for entry in timeEntries}
+              <div class="accordion-item">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                          data-bs-target="#entry{entry.id}" aria-expanded="false" aria-controls="entry{entry.id}">
+                    <div class="d-flex justify-content-between w-100 me-3">
+                      <div>
+                        <strong>{entry.employeeFirstName} {entry.employeeLastName}</strong> - {entry.date}
+                        <span class="badge bg-primary ms-2">{entry.hoursWorked} Stunden</span>
+                        {#if !entry.billable}
+                          <span class="badge bg-secondary">Nicht verrechenbar</span>
+                        {/if}
+                      </div>
+                      <div>
+                        {#if entry.approval.approved}
+                          <span class="badge bg-success me-2">
+                            <i class="bi bi-check-circle me-1"></i>Genehmigt von {entry.approval.approverName}
+                          </span>
+                        {#else}
+                          <span class="badge bg-warning me-2">
+                            <i class="bi bi-clock me-1"></i>Ausstehend
+                          </span>
+                        {/if}
+                        <span class="badge bg-info">{entry.cost} CHF</span>
+                      </div>
+                    </div>
+                  </button>
+                </h2>
+                <div id="entry{entry.id}" class="accordion-collapse collapse" data-bs-parent="#timeEntriesAccordion">
+                  <div class="accordion-body">
+                    <!-- Grundinformationen -->
+                    <div class="row mb-3">
+                      <div class="col-md-6">
+                        <h6>Grundinformationen</h6>
+                        <p><strong>Projekt:</strong> {entry.projectName}</p>
+                        <p><strong>Notiz:</strong> {entry.notes ?: "—"}</p>
+                        <p><strong>Stundensatz:</strong> {entry.hourlyRate ?: "—"} CHF</p>
+                      </div>
+                      <div class="col-md-6">
+                        <h6>Status</h6>
+                        <p>
+                          <span class="badge {#if entry.invoiced}bg-success{#else}bg-warning{/if}">
+                            {#if entry.invoiced}Fakturiert{#else}Nicht fakturiert{/if}
+                          </span>
+                        </p>
+                        {#if !entry.approval.approved}
+                          <form action="/timetracking/{entry.id}/approve" method="post" class="mt-2">
+                            <button type="submit" class="btn btn-success btn-sm">
+                              <i class="bi bi-check-circle me-1"></i>Genehmigen
+                            </button>
+                          </form>
+                        {/if}
+                      </div>
+                    </div>
+
+                    <!-- Zuschläge -->
+                    {#if entry.hasNightSurcharge || entry.hasWeekendSurcharge || entry.hasHolidaySurcharge}
+                      <div class="row mb-3">
+                        <div class="col-12">
+                          <h6>Zuschläge</h6>
+                          <div class="d-flex gap-2">
+                            {#if entry.hasNightSurcharge}
+                              <span class="badge bg-dark">Nachtzuschlag</span>
+                            {/if}
+                            {#if entry.hasWeekendSurcharge}
+                              <span class="badge bg-dark">Wochenendzuschlag</span>
+                            {/if}
+                            {#if entry.hasHolidaySurcharge}
+                              <span class="badge bg-dark">Feiertagszuschlag</span>
+                            {/if}
+                          </div>
+                        </div>
+                      </div>
+                    {/if}
+
+                    <!-- Zusätzliche Kosten -->
+                    {#if entry.travelTimeMinutes > 0 || entry.disposalCost > 0 || entry.hasWaitingTime}
+                      <div class="row mb-3">
+                        <div class="col-12">
+                          <h6>Zusätzliche Kosten</h6>
+                          <table class="table table-sm">
+                            <tbody>
+                              {#if entry.travelTimeMinutes > 0}
+                                <tr>
+                                  <td>Reisezeit</td>
+                                  <td class="text-end">{entry.travelTimeMinutes} min</td>
+                                </tr>
+                              {/if}
+                              {#if entry.hasWaitingTime}
+                                <tr>
+                                  <td>Wartezeit</td>
+                                  <td class="text-end">{entry.waitingTimeMinutes} min</td>
+                                </tr>
+                              {/if}
+                              {#if entry.disposalCost > 0}
+                                <tr>
+                                  <td>Entsorgungskosten</td>
+                                  <td class="text-end">{entry.disposalCost} CHF</td>
+                                </tr>
+                              {/if}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    {/if}
+
+                    <!-- Katalogartikel -->
+                    {#if !entry.catalogItems.isEmpty()}
+                      <div class="row mb-3">
+                        <div class="col-12">
+                          <h6>Verwendete Artikel</h6>
+                          <table class="table table-sm">
+                            <thead>
+                              <tr>
+                                <th>Artikel</th>
+                                <th>Menge</th>
+                                <th>Einzelpreis</th>
+                                <th>Gesamt</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {#for item in entry.catalogItems}
+                                <tr>
+                                  <td>{item.itemName}</td>
+                                  <td>{item.quantity}</td>
+                                  <td>{item.unitPrice} CHF</td>
+                                  <td>{item.totalPrice} CHF</td>
+                                </tr>
+                              {/for}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    {/if}
+
+                    <!-- Aktionen -->
+                    <div class="d-flex gap-2 mt-3">
+                      <a href="/timetracking/{entry.id}/edit" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-pencil me-1"></i>Bearbeiten
+                      </a>
+                      <a href="/timetracking/{entry.id}/delete" 
+                         class="btn btn-outline-danger btn-sm"
                          onclick="return confirm('Möchten Sie diesen Eintrag wirklich löschen?')">
-                        <i class="bi bi-trash"></i>
+                        <i class="bi bi-trash me-1"></i>Löschen
                       </a>
                     </div>
-                  </td>
-                </tr>
-              {/for}
-              </tbody>
-            </table>
+                  </div>
+                </div>
+              </div>
+            {/for}
           </div>
         {/if}
       </div>

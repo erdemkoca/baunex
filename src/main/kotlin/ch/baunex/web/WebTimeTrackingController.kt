@@ -7,6 +7,7 @@ import ch.baunex.timetracking.dto.TimeEntryCatalogItemDTO
 import ch.baunex.timetracking.facade.TimeTrackingFacade
 import ch.baunex.user.facade.EmployeeFacade
 import ch.baunex.timetracking.service.TimeEntryCostService
+import ch.baunex.user.model.Role
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
@@ -214,5 +215,19 @@ class WebTimeTrackingController {
     fun delete(@PathParam("id") id: Long): Response {
         timeTrackingFacade.deleteTimeEntry(id)
         return Response.seeOther(URI("/timetracking")).build()
+    }
+
+    @POST
+    @Path("/{id}/approve")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    fun approve(@PathParam("id") id: Long, @FormParam("approverId") approverId: Long): Response {
+        val approverId = employeeFacade.findByRole(Role.ADMIN).id
+        val success = timeTrackingFacade.approveEntry(id, approverId)
+        return if (success) {
+            Response.ok().build()
+        } else {
+            Response.status(Response.Status.NOT_FOUND).build()
+        }
+        //TODO now approverId is hardcoded
     }
 }

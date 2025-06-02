@@ -30,4 +30,3 @@ data class TimeEntryDTO(
     val waitingTimeMinutes: Int = 0,
     val costBreakdown: TimeEntryCostBreakdownDTO? = null
 )
-
