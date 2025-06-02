@@ -28,7 +28,7 @@ class CustomerModel : PanacheEntityBase() {
     var contacts: MutableList<CustomerContact> = mutableListOf()
 
     @Column(nullable = false, unique = true)
-    lateinit var customerNumber: String
+    var customerNumber: Int = 0
 
     @Column(nullable = true)
     var companyName: String? = null

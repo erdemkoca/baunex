@@ -25,6 +25,7 @@ class ProjectService @Inject constructor(
         val customer = customerService.findCustomerModelById(dto.customerId)
             ?: throw IllegalArgumentException("Kein Kunde mit ID ${dto.customerId}")
         val project = dto.toModel(customer)
+        project.projectNumber = generateNextProjectNumber()
         projectRepository.persist(project)
         return project
     }
@@ -77,5 +78,13 @@ class ProjectService @Inject constructor(
     @Transactional
     fun delete(id: Long): Boolean {
         return projectRepository.deleteById(id)
+    }
+
+    fun generateNextProjectNumber(): Int {
+        val maxNumber = projectRepository
+            .listAll()
+            .map { it.projectNumber }
+            .maxOrNull() ?: 1000
+        return maxNumber + 1
     }
 }

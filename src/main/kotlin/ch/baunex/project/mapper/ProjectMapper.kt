@@ -22,7 +22,8 @@ class ProjectMapper @Inject constructor(
             status = model.status.name,
             budget = model.budget,
             startDate = model.startDate,
-            endDate = model.endDate
+            endDate = model.endDate,
+            projectNumberFormatted = "PR-" + model.projectNumber.toString().padStart(4, '0')
         )
     }
 
@@ -41,7 +42,8 @@ class ProjectMapper @Inject constructor(
         city         = model.city,
         timeEntries  = model.timeEntries.sortedBy { it.date }.map { timeEntryMapper.toTimeEntryResponseDTO(it) },
         catalogItems = model.usedItems.map { it.toProjectCatalogItemDTO() },
-        contacts     = model.customer.contacts.map { customerMapper.toContactDTO(it) }
+        contacts     = model.customer.contacts.map { customerMapper.toContactDTO(it) },
+        projectNumberFormatted = "PR-" + model.projectNumber.toString().padStart(4, '0')
     )
 
     fun toDTO(model: ProjectModel): ProjectDTO {
@@ -60,7 +62,9 @@ class ProjectMapper @Inject constructor(
             timeEntries = model.timeEntries.sortedBy { it.date }.map { timeEntryMapper.toTimeEntryResponseDTO(it) },
             catalogItems = model.usedItems.map { it.toProjectCatalogItemDTO() },
             customerId = model.customer.id ?: throw IllegalStateException("Customer ID cannot be null"),
-            customerName = model.customer.companyName ?: ""
+            customerName = model.customer.companyName ?: "",
+            projectNumber = model.projectNumber,
+            projectNumberFormatted = "PR-" + model.projectNumber.toString().padStart(4, '0')
         )
     }
 

@@ -9,6 +9,7 @@ import java.time.LocalDate
 data class ProjectListDTO(
     val id: Long,
     val name: String,
+    val projectNumberFormatted: String,
     val customerId: Long,
     val customerName: String,
     val status: String,

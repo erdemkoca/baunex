@@ -12,6 +12,7 @@ import java.time.LocalDate
 @Serializable
 data class ProjectDetailDTO(
     val id: Long,
+    val projectNumberFormatted: String,
     val name: String,
     val customerId: Long,
     val customerName: String,

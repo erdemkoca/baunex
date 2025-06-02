@@ -7,7 +7,7 @@ import ch.baunex.invoice.service.InvoiceService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 
-@ApplicationScoped
+    @ApplicationScoped
 class InvoiceFacade {
 
     @Inject

@@ -46,4 +46,8 @@ class ProjectModel : PanacheEntity() {
     // Catalog items used in this project (services or products)
     @OneToMany(mappedBy = "project", cascade = [CascadeType.ALL], orphanRemoval = true)
     var usedItems: MutableList<ProjectCatalogItemModel> = mutableListOf()
+
+    @Column(name = "project_number", unique = true, nullable = false)
+    var projectNumber: Int = 0
+
 }

@@ -23,6 +23,7 @@ class CustomerMapper {
             country = model.person.details.country,
             phone = model.person.details.phone,
             customerNumber  = model.customerNumber,
+            formattedCustomerNumber = "CUST-" + model.customerNumber.toString().padStart(4, '0'),
             companyName     = model.companyName,
             paymentTerms    = model.paymentTerms,
             creditLimit     = model.creditLimit,
@@ -82,7 +83,6 @@ class CustomerMapper {
         
         return CustomerModel().apply {
             this.person = person
-            customerNumber = dto.customerNumber
             companyName = dto.companyName
             paymentTerms = dto.paymentTerms
             creditLimit = dto.creditLimit
@@ -107,7 +107,6 @@ class CustomerMapper {
         }
 
         customer.apply {
-            customerNumber = dto.customerNumber
             companyName = dto.companyName
             paymentTerms = dto.paymentTerms
             creditLimit = dto.creditLimit
