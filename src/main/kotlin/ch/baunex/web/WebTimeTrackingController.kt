@@ -44,7 +44,7 @@ class WebTimeTrackingController {
         val timeEntries = timeTrackingFacade.getAllTimeEntries()
         val employees   = employeeFacade.listAll()
         val projects    = projectFacade.getAllProjects()
-        val template = WebController.Templates.timetracking(
+        val template = WebController.Templates.timeTracking(
             activeMenu  = "timetracking",
             timeEntries = timeEntries,
             currentDate = getCurrentDate(),
@@ -62,7 +62,7 @@ class WebTimeTrackingController {
         val employees = employeeFacade.listAll()
         val projects = projectFacade.getAllProjects()
         val catalogItems = catalogFacade.getAllItems()
-        val template = WebController.Templates.timetrackingForm(
+        val template = WebController.Templates.timeTrackingForm(
             entry = null,
             employees = employees,
             projects = projects,
@@ -83,7 +83,7 @@ class WebTimeTrackingController {
         val projects = projectFacade.getAllProjects()
         val catalogItems = catalogFacade.getAllItems()
         
-        val template = WebController.Templates.timetrackingForm(
+        val template = WebController.Templates.timeTrackingForm(
             entry = entry,
             employees = employees,
             projects = projects,

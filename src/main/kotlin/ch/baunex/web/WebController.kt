@@ -79,7 +79,7 @@ class WebController {
         external fun employeeForm(employee: EmployeeDTO?, currentDate: LocalDate, activeMenu: String, roles: List<String>): TemplateInstance
 
         @JvmStatic
-        external fun timetracking(
+        external fun timeTracking(
             activeMenu: String,
             timeEntries: List<TimeEntryResponseDTO>,
             currentDate: String,
@@ -88,7 +88,7 @@ class WebController {
             entry: TimeEntryResponseDTO? = null): TemplateInstance
 
         @JvmStatic
-        external fun timetrackingForm(
+        external fun timeTrackingForm(
             entry: TimeEntryResponseDTO?,
             employees: List<EmployeeDTO>,
             projects: List<ProjectListDTO>,
