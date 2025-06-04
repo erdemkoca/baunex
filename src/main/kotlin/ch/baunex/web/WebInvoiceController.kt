@@ -85,7 +85,7 @@ class WebInvoiceController {
             vatAmount = 0.0,
             grandTotal = 0.0,
             vatRate = company?.defaultVatRate ?: 0.0,
-            notes = ""
+            notes = emptyList()
         )
 
         val invoiceJson = mapper.writeValueAsString(emptyInvoice)

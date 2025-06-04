@@ -3,10 +3,6 @@ package ch.baunex.notes.model
 import io.quarkus.hibernate.orm.panache.PanacheEntity
 import jakarta.persistence.*
 
-enum class MediaType {
-    IMAGE, PDF, VIDEO
-}
-
 @Entity
 @Table(name = "media_attachment")
 class MediaAttachmentModel : PanacheEntity() {
