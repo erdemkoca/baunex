@@ -1,6 +1,7 @@
 package ch.baunex.notes.model
 
 import ch.baunex.documentGenerator.model.DocumentModel
+import ch.baunex.invoice.model.InvoiceModel
 import ch.baunex.project.model.ProjectModel
 import ch.baunex.timetracking.model.TimeEntryModel
 import ch.baunex.user.model.EmployeeModel
@@ -29,8 +30,12 @@ class NoteModel : PanacheEntity() {
     var project: ProjectModel? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "time_entry_id")
+    @JoinColumn(name = "time_entry_id", nullable = true)
     var timeEntry: TimeEntryModel? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "invoice_id", nullable = true)
+    var invoice: InvoiceModel? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "document_id")
@@ -61,5 +66,4 @@ class NoteModel : PanacheEntity() {
 
     @OneToMany(mappedBy = "note", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var attachments: MutableList<MediaAttachmentModel> = mutableListOf()
-
 }

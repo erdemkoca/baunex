@@ -5,8 +5,11 @@ import ch.baunex.invoice.dto.InvoiceDTO
 import ch.baunex.invoice.dto.InvoiceItemDTO
 import ch.baunex.invoice.model.InvoiceModel
 import ch.baunex.invoice.model.InvoiceItemModel
+import ch.baunex.notes.dto.NoteDto
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.user.facade.CustomerFacade
+import ch.baunex.user.service.EmployeeService
+import ch.baunex.notes.mapper.toDto
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 
@@ -15,6 +18,7 @@ class InvoiceMapper @Inject constructor(
     private val customerFacade: CustomerFacade,
     private val projectFacade: ProjectFacade,
     private val companyFacade: CompanyFacade,
+    private val employeeService: EmployeeService
 ) {
 
     fun toModel(dto: InvoiceDTO): InvoiceModel {
@@ -26,7 +30,20 @@ class InvoiceMapper @Inject constructor(
             customerId = dto.customerId
             projectId = dto.projectId
             invoiceStatus = dto.invoiceStatus
-            notes = dto.notes
+            val invoiceEntity = this
+
+            this.notes = dto.notes.map { noteDto ->
+                ch.baunex.notes.model.NoteModel().apply {
+                    this.content = noteDto.content
+                    this.title = noteDto.title
+                    this.category = noteDto.category
+                    this.tags = noteDto.tags
+                    this.createdAt = noteDto.createdAt
+                    this.createdBy = employeeService.findEmployeeById(noteDto.createdById)!!
+                    this.invoice = invoiceEntity
+                }
+            }.toMutableList()
+
             totalNetto = dto.totalAmount
             vatAmount = dto.vatAmount
             totalBrutto = dto.grandTotal
@@ -49,7 +66,23 @@ class InvoiceMapper @Inject constructor(
             totalAmount = model.totalNetto,
             vatAmount = model.vatAmount,
             grandTotal = model.totalBrutto,
-            notes = model.notes,
+            notes = model.notes.map { noteModel ->
+                NoteDto(
+                    id = noteModel.id!!,
+                    projectId = noteModel.project?.id,
+                    timeEntryId = noteModel.timeEntry?.id,
+                    documentId = noteModel.document?.id,
+                    createdById = noteModel.createdBy.id!!,
+                    createdByName = "${noteModel.createdBy.person.firstName} ${noteModel.createdBy.person.lastName}",
+                    createdAt = noteModel.createdAt,
+                    updatedAt = noteModel.updatedAt,
+                    title = noteModel.title,
+                    content = noteModel.content,
+                    category = noteModel.category,
+                    tags = noteModel.tags,
+                    attachments = noteModel.attachments.map { it.toDto() }
+                )
+            },
             vatRate = companyFacade.getCompany()?.defaultVatRate ?: 0.0,
             items = model.items.map { toItemDTO(it) }
         )

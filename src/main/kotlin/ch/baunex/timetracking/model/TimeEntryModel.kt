@@ -1,6 +1,7 @@
 package ch.baunex.timetracking.model
 
 import ch.baunex.invoice.model.InvoiceModel
+import ch.baunex.notes.model.NoteModel
 import ch.baunex.project.model.ProjectModel
 import ch.baunex.user.model.EmployeeModel
 import io.quarkus.hibernate.orm.panache.PanacheEntity
@@ -29,10 +30,8 @@ class TimeEntryModel : PanacheEntity() {
     @Column(name = "hours_worked", nullable = false)
     var hoursWorked: Double = 0.0
 
-    @Column(columnDefinition = "TEXT")
-    var note: String? = null
-
-    // --- Optional enhancements ---
+    @OneToMany(mappedBy = "project", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
+    var notes: MutableList<NoteModel> = mutableListOf()
 
     @Column(name = "hourly_rate")
     var hourlyRate: Double = 0.0
@@ -85,6 +84,4 @@ class TimeEntryModel : PanacheEntity() {
 
     @Column(name = "approved_at")
     var approvedAt: LocalDate? = null
-
-
 }

@@ -1,6 +1,7 @@
 package ch.baunex.invoice.model
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity
+import ch.baunex.notes.model.NoteModel
 import jakarta.persistence.*
 import java.time.LocalDate
 
@@ -16,8 +17,6 @@ class InvoiceModel : PanacheEntity() {
     var customerId: Long? = null
     var projectId: Long? = null
 
-    var notes: String? = null
-
     @Enumerated(EnumType.STRING)
     var invoiceStatus: InvoiceStatus = InvoiceStatus.DRAFT
 
@@ -27,4 +26,7 @@ class InvoiceModel : PanacheEntity() {
 
     @OneToMany(mappedBy = "invoice", cascade = [CascadeType.ALL], orphanRemoval = true)
     var items: MutableList<InvoiceItemModel> = mutableListOf()
+
+    @OneToMany(mappedBy = "invoice", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
+    var notes: MutableList<NoteModel> = mutableListOf()
 }

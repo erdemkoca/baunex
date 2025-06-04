@@ -67,7 +67,20 @@ class TimeTrackingService @Inject constructor(
             this.project = project
             this.date = dto.date
             this.hoursWorked = dto.hoursWorked
-            this.note = dto.note
+            existingEntry.notes.clear()
+            val newNotes = dto.notes.map { noteDto ->
+                ch.baunex.notes.model.NoteModel().apply {
+                    this.content = noteDto.content
+                    this.title = noteDto.title
+                    this.category = noteDto.category
+                    this.tags = noteDto.tags
+                    this.createdAt = noteDto.createdAt
+                    // this.createdBy = …
+                    this.timeEntry = existingEntry
+                }
+            }
+            existingEntry.notes.addAll(newNotes)
+
             this.hourlyRate = employee.hourlyRate
             this.billable = dto.billable
             this.invoiced = dto.invoiced

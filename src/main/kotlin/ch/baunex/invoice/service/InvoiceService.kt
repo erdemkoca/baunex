@@ -6,7 +6,9 @@ import ch.baunex.invoice.model.InvoiceItemModel
 import ch.baunex.invoice.model.InvoiceModel
 import ch.baunex.invoice.model.InvoiceStatus
 import ch.baunex.invoice.repository.InvoiceRepository
+import ch.baunex.notes.model.NoteModel
 import ch.baunex.timetracking.repository.TimeEntryRepository
+import ch.baunex.user.service.EmployeeService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -24,6 +26,9 @@ class InvoiceService {
     @Inject
     lateinit var projectCatalogItemRepository: ProjectCatalogItemRepository
 
+    @Inject
+    lateinit var employeeService: EmployeeService
+
     fun getAll(): List<InvoiceModel> {
         return repository.listAll()
     }
@@ -40,36 +45,48 @@ class InvoiceService {
             dueDate = LocalDate.parse(dto.dueDate)
             customerId = dto.customerId
             projectId = dto.projectId
-            notes = dto.notes
             invoiceStatus = InvoiceStatus.ISSUED
+
+            // 1. Lokale Referenz auf dieses InvoiceModel
+            val invoiceEntity = this
+
+            // 2. Notizen richtig mappen: Für jede NoteDto eine neue NoteModel anlegen
+            this.notes = dto.notes.map { noteDto ->
+                NoteModel().apply {
+                    content = noteDto.content
+                    title = noteDto.title
+                    category = noteDto.category
+                    tags = noteDto.tags
+                    createdAt = noteDto.createdAt
+                    createdBy = employeeService.findEmployeeById(noteDto.createdById)!!
+                    invoice = invoiceEntity   // ← hier verknüpfe ich tatsächlich mit newInvoice
+                }
+            }.toMutableList()
         }
 
-        val items = dto.items.map {
+        // Artikel/Positionen anlegen
+        val items = dto.items.map { itemDto ->
             InvoiceItemModel().apply {
-                description = it.description
-                type = it.type
-                quantity = it.quantity
-                price = it.price
-                total = it.quantity * it.price
-                timeEntryId = it.timeEntryId
-                projectCatalogItemId = it.projectCatalogItemId
-                invoice = newInvoice // ← jetzt eindeutig
+                description = itemDto.description
+                type = itemDto.type
+                quantity = itemDto.quantity
+                price = itemDto.price
+                total = itemDto.quantity * itemDto.price
+                timeEntryId = itemDto.timeEntryId
+                projectCatalogItemId = itemDto.projectCatalogItemId
+                invoice = newInvoice  // ← Verknüpfung mit derselben Invoice
             }
         }
 
         newInvoice.items = items.toMutableList()
-
-
         newInvoice.totalNetto = items.sumOf { it.total }
         newInvoice.vatAmount = newInvoice.totalNetto * dto.vatRate / 100
         newInvoice.totalBrutto = newInvoice.totalNetto + newInvoice.vatAmount
 
         newInvoice.persist()
 
-        // Optional: Markiere Originaldaten als "verrechnet"
         val timeEntryIds = newInvoice.items.mapNotNull { it.timeEntryId }
         val projectCatalogItemIds = newInvoice.items.mapNotNull { it.projectCatalogItemId }
-
         markOriginalEntriesAsInvoiced(newInvoice.id, timeEntryIds, projectCatalogItemIds)
 
         return newInvoice

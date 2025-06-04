@@ -1,6 +1,7 @@
 package ch.baunex.invoice.dto
 
 import ch.baunex.invoice.model.InvoiceStatus
+import ch.baunex.notes.dto.NoteDto
 import java.time.LocalDate
 
 data class InvoiceDTO(
@@ -20,7 +21,7 @@ data class InvoiceDTO(
     val vatAmount: Double,
     val grandTotal: Double,
     val vatRate: Double,
-    val notes: String?,
+    val notes: List<NoteDto> = emptyList(),
 ) {
     val status: String
         get() = invoiceStatus.name
