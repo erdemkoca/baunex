@@ -65,13 +65,15 @@ class WebTimeTrackingController {
         val employees = employeeFacade.listAll()
         val projects = projectFacade.getAllProjects()
         val catalogItems = catalogFacade.getAllItems()
+        val categories = NoteCategory.values().toList()
         val template = WebController.Templates.timeTrackingForm(
             entry = null,
             employees = employees,
             projects = projects,
             currentDate = getCurrentDate(),
             activeMenu = "timetracking",
-            catalogItems = catalogItems
+            catalogItems = catalogItems,
+            categories   = categories
         )
         return Response.ok(template.render()).build()
     }
@@ -85,14 +87,15 @@ class WebTimeTrackingController {
         val employees = employeeFacade.listAll()
         val projects = projectFacade.getAllProjects()
         val catalogItems = catalogFacade.getAllItems()
-        
+        val categories = NoteCategory.values().toList()
         val template = WebController.Templates.timeTrackingForm(
             entry = entry,
             employees = employees,
             projects = projects,
             currentDate = getCurrentDate(),
             activeMenu = "timetracking",
-            catalogItems = catalogItems
+            catalogItems = catalogItems,
+            categories   = categories
         )
         return Response.ok(template.render()).build()
     }

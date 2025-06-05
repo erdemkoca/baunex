@@ -7,6 +7,7 @@ import ch.baunex.company.facade.CompanyFacade
 import ch.baunex.invoice.dto.InvoiceDTO
 import ch.baunex.invoice.dto.InvoiceDraftDTO
 import ch.baunex.invoice.facade.InvoiceFacade
+import ch.baunex.notes.model.NoteCategory
 import ch.baunex.project.dto.ProjectDetailDTO
 import ch.baunex.project.dto.ProjectListDTO
 import ch.baunex.project.facade.ProjectFacade
@@ -94,7 +95,8 @@ class WebController {
             projects: List<ProjectListDTO>,
             currentDate: String,
             activeMenu: String,
-            catalogItems: List<CatalogItemDTO>
+            catalogItems: List<CatalogItemDTO>,
+            categories: List<NoteCategory>
         ): TemplateInstance
 
         @JvmStatic

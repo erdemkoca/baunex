@@ -21,10 +21,10 @@ import java.time.LocalDate
 class TimeTrackingFacade @Inject constructor(
     private val timeEntryRepository: TimeEntryRepository,
     private val timeTrackingService: TimeTrackingService,
-    private val timeEntryCostService: TimeEntryCostService,
     private val timeEntryMapper: TimeEntryMapper
 ) {
 
+    @Transactional
     fun logTime(dto: TimeEntryDTO): TimeEntryResponseDTO {
         return timeEntryMapper.toTimeEntryResponseDTO(timeTrackingService.logTime(dto))
     }

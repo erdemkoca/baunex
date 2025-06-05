@@ -1,16 +1,16 @@
 {#include layout}
-  {#title}{#if entry}Edit Time Entry{#else}Log Time{/if} - Baunex{/title}
-  {#header}{#if entry}Edit Time Entry{#else}Log Time{/if}{/header}
+  {#title}{#if entry}Zeiterfassung bearbeiten{#else}Neue Zeiterfassung{/if} – Baunex{/title}
+  {#header}{#if entry}Zeiterfassung bearbeiten{#else}Neue Zeiterfassung{/if}{/header}
   {#content}
     <div class="card">
-      <div class="card-header">{#if entry}Edit Entry{#else}New Entry{/if}</div>
+      <div class="card-header">{#if entry}Eintrag bearbeiten{#else}Neuer Eintrag{/if}</div>
       <div class="card-body">
         <form action="/timetracking/save" method="post">
           {#if entry}
             <input type="hidden" name="id" value="{entry.id}" />
           {/if}
 
-          <!-- Hidden inputs for default values -->
+          <!-- Versteckte Standardwerte -->
           <input type="hidden" name="hasNightSurcharge" value="false">
           <input type="hidden" name="hasWeekendSurcharge" value="false">
           <input type="hidden" name="hasHolidaySurcharge" value="false">
@@ -18,176 +18,256 @@
           <input type="hidden" name="invoiced" value="false">
           <input type="hidden" name="hasWaitingTime" value="false">
 
+          <!-- Mitarbeiter -->
           <div class="mb-3">
-            <label for="employeeId" class="form-label">Employee</label>
+            <label for="employeeId" class="form-label">Mitarbeiter</label>
             <select class="form-select" id="employeeId" name="employeeId" required>
               {#for employee in employees}
-                <option value="{employee.id}" {#if entry != null && entry.employeeId == employee.id}selected{/if}>
+                <option value="{employee.id}"
+                        {#if entry != null && entry.employeeId == employee.id}selected{/if}>
                   {employee.email}
                 </option>
               {/for}
             </select>
           </div>
 
+          <!-- Projekt -->
           <div class="mb-3">
-            <label for="projectId" class="form-label">Project</label>
+            <label for="projectId" class="form-label">Projekt</label>
             <select class="form-select" id="projectId" name="projectId" required>
               {#for project in projects}
-                <option value="{project.id}" {#if entry != null && entry.projectId == project.id}selected{/if}>
+                <option value="{project.id}"
+                        {#if entry != null && entry.projectId == project.id}selected{/if}>
                   {project.name}
                 </option>
               {/for}
             </select>
           </div>
 
+          <!-- Datum -->
           <div class="mb-3">
-            <label for="date" class="form-label">Date</label>
+            <label for="date" class="form-label">Datum</label>
             <input type="date" class="form-control" id="date" name="date"
                    value="{#if entry}{entry.date}{#else}{currentDate}{/if}" required />
           </div>
 
+          <!-- Gearbeitete Stunden -->
           <div class="mb-3">
-            <label for="hoursWorked" class="form-label">Hours Worked</label>
-            <input type="number" class="form-control" id="hoursWorked" name="hoursWorked" step="0.1" min="0"
-                   value="{#if entry}{entry.hoursWorked}{/if}" required />
+            <label for="hoursWorked" class="form-label">Gearbeitete Stunden</label>
+            <input type="number" class="form-control" id="hoursWorked" name="hoursWorked"
+                   step="0.1" min="0"
+                   value="{#if entry}{entry.hoursWorked}{/if}"
+                   required />
           </div>
 
-          <div class="mb-3">
-            <label for="note" class="form-label">Note</label>
-            <textarea class="form-control" id="note" name="note" rows="3">{#if entry}{entry.notes}{/if}</textarea>
-          </div>
+          <!-- Notizen‐Bereich -->
+          <fieldset class="border rounded p-3 mb-3">
+            <legend class="float-none w-auto px-2">Notizen</legend>
 
+            <div id="notesContainer">
+              {#if entry != null && !entry.notes.isEmpty()}
+                {#for note in entry.notes}
+                  <div class="note-block mb-3 border rounded p-2">
+                    <input type="hidden" name="notes[][id]" value="{note.id}" />
+
+                    <div class="mb-2">
+                      <label class="form-label">Titel</label>
+                      <input type="text" class="form-control" name="notes[][title]"
+                             value="{note.title ?: ''}" placeholder="Optional" />
+                    </div>
+
+                    <div class="mb-2">
+                      <label class="form-label">Kategorie</label>
+                      <select class="form-select" name="notes[][category]" required>
+                        <option value="" disabled {#if note.category == null}selected{/if}>
+                          -- auswählen --
+                        </option>
+                        {#for cat in categories}
+                          <option value="{cat.name}"
+                                  {#if note.category.name == cat.name}selected{/if}>
+                            {cat.name}
+                          </option>
+                        {/for}
+                      </select>
+                    </div>
+
+                    <div class="mb-2">
+                      <label class="form-label">Inhalt</label>
+                      <textarea class="form-control" name="notes[][content]" rows="2" required>{note.content}</textarea>
+                    </div>
+
+                    <div class="mb-2">
+                      <label class="form-label">Tags (Komma‐getrennt)</label>
+                      <input type="text" class="form-control" name="notes[][tags]"
+                             value="{#if !note.tags.isEmpty()}{#for tag in note.tags}{tag}{#if !for.last},{/if}{/for}{/if}"
+                             placeholder="z. B. dringlich,prüfung" />
+                    </div>
+
+                    <button type="button" class="btn btn-danger btn-sm mt-2" onclick="removeNoteBlock(this)">
+                      Entfernen
+                    </button>
+                  </div>
+                {/for}
+              {/if}
+            </div>
+
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="addNoteBlock()">
+              <i class="bi bi-plus-circle me-1"></i>Notiz hinzufügen
+            </button>
+          </fieldset>
+
+          <!-- Stundensatz -->
           <div class="mb-3">
-            <label for="hourlyRate" class="form-label">Hourly Rate</label>
-            <input type="number" class="form-control" id="hourlyRate" name="hourlyRate" step="0.01"
+            <label for="hourlyRate" class="form-label">Stundensatz (CHF)</label>
+            <input type="number" class="form-control" id="hourlyRate" name="hourlyRate"
+                   step="0.01"
                    value="{#if entry}{entry.hourlyRate}{/if}" />
           </div>
 
-          <!-- Surcharges Section -->
+          <!-- Zuschläge -->
           <div class="mb-3">
-            <label class="form-label">Surcharges</label>
+            <label class="form-label">Zuschläge</label>
             <div class="form-check">
-              <input type="checkbox" class="form-check-input" id="hasNightSurcharge" name="hasNightSurcharge" value="true"
-                     {#if entry && entry.hasNightSurcharge}checked{/if} onchange="updateHiddenInput(this)">
-              <label class="form-check-label" for="hasNightSurcharge">Night Surcharge</label>
+              <input type="checkbox" class="form-check-input" id="hasNightSurcharge"
+                     name="hasNightSurcharge" value="true"
+                     {#if entry && entry.hasNightSurcharge}checked{/if}
+                     onchange="updateHiddenInput(this)">
+              <label class="form-check-label" for="hasNightSurcharge">Nachtzuschlag</label>
             </div>
             <div class="form-check">
-              <input type="checkbox" class="form-check-input" id="hasWeekendSurcharge" name="hasWeekendSurcharge" value="true"
-                     {#if entry && entry.hasWeekendSurcharge}checked{/if} onchange="updateHiddenInput(this)">
-              <label class="form-check-label" for="hasWeekendSurcharge">Weekend Surcharge</label>
+              <input type="checkbox" class="form-check-input" id="hasWeekendSurcharge"
+                     name="hasWeekendSurcharge" value="true"
+                     {#if entry && entry.hasWeekendSurcharge}checked{/if}
+                     onchange="updateHiddenInput(this)">
+              <label class="form-check-label" for="hasWeekendSurcharge">Wochenendzuschlag</label>
             </div>
             <div class="form-check">
-              <input type="checkbox" class="form-check-input" id="hasHolidaySurcharge" name="hasHolidaySurcharge" value="true"
-                     {#if entry && entry.hasHolidaySurcharge}checked{/if} onchange="updateHiddenInput(this)">
-              <label class="form-check-label" for="hasHolidaySurcharge">Holiday Surcharge</label>
+              <input type="checkbox" class="form-check-input" id="hasHolidaySurcharge"
+                     name="hasHolidaySurcharge" value="true"
+                     {#if entry && entry.hasHolidaySurcharge}checked{/if}
+                     onchange="updateHiddenInput(this)">
+              <label class="form-check-label" for="hasHolidaySurcharge">Feiertagszuschlag</label>
             </div>
           </div>
 
-          <!-- Additional Costs Section -->
+          <!-- Zusätzliche Kosten -->
           <div class="mb-3">
-            <label class="form-label">Additional Costs</label>
+            <label class="form-label">Zusätzliche Kosten</label>
             <div class="row g-3">
               <div class="col-md-6">
-                <label for="travelTimeMinutes" class="form-label">Travel Time (minutes)</label>
-                <input type="number" class="form-control" id="travelTimeMinutes" name="travelTimeMinutes" min="0"
+                <label for="travelTimeMinutes" class="form-label">Reisezeit (Minuten)</label>
+                <input type="number" class="form-control" id="travelTimeMinutes"
+                       name="travelTimeMinutes" min="0"
                        value="{#if entry}{entry.travelTimeMinutes}{/if}" />
               </div>
               <div class="col-md-6">
-                <label for="disposalCost" class="form-label">Disposal Cost (CHF)</label>
-                <input type="number" class="form-control" id="disposalCost" name="disposalCost" step="0.01" min="0"
+                <label for="disposalCost" class="form-label">Entsorgungskosten (CHF)</label>
+                <input type="number" class="form-control" id="disposalCost"
+                       name="disposalCost" step="0.01" min="0"
                        value="{#if entry}{entry.disposalCost}{/if}" />
               </div>
             </div>
             <div class="row g-3 mt-2">
               <div class="col-md-6">
                 <div class="form-check">
-                  <input type="checkbox" class="form-check-input" id="hasWaitingTime" name="hasWaitingTime" value="true"
-                         {#if entry && entry.hasWaitingTime}checked{/if} onchange="updateHiddenInput(this)">
-                  <label class="form-check-label" for="hasWaitingTime">Waiting Time</label>
+                  <input type="checkbox" class="form-check-input" id="hasWaitingTime"
+                         name="hasWaitingTime" value="true"
+                         {#if entry && entry.hasWaitingTime}checked{/if}
+                         onchange="updateHiddenInput(this)">
+                  <label class="form-check-label" for="hasWaitingTime">Wartezeit</label>
                 </div>
               </div>
               <div class="col-md-6">
-                <label for="waitingTimeMinutes" class="form-label">Waiting Time (minutes)</label>
-                <input type="number" class="form-control" id="waitingTimeMinutes" name="waitingTimeMinutes" min="0"
+                <label for="waitingTimeMinutes" class="form-label">Wartezeit (Minuten)</label>
+                <input type="number" class="form-control" id="waitingTimeMinutes"
+                       name="waitingTimeMinutes" min="0"
                        value="{#if entry}{entry.waitingTimeMinutes}{/if}" />
               </div>
             </div>
           </div>
 
+          <!-- Nicht verrechenbar & Fakturiert -->
           <div class="mb-3 form-check">
-            <input type="checkbox" class="form-check-input" id="notBillable" name="notBillable" value="true"
-                   {#if entry && !entry.billable}checked{/if} onchange="updateHiddenInput(this)">
-            <label class="form-check-label" for="notBillable">Not Billable</label>
+            <input type="checkbox" class="form-check-input" id="notBillable"
+                   name="notBillable" value="true"
+                   {#if entry && !entry.billable}checked{/if}
+                   onchange="updateHiddenInput(this)">
+            <label class="form-check-label" for="notBillable">Nicht verrechenbar</label>
+          </div>
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="invoiced"
+                   name="invoiced" value="true"
+                   {#if entry && entry.invoiced}checked{/if}
+                   onchange="updateHiddenInput(this)">
+            <label class="form-check-label" for="invoiced">Fakturiert</label>
           </div>
 
-          <div class="mb-3 form-check">
-            <input type="checkbox" class="form-check-input" id="invoiced" name="invoiced" value="true"
-                   {#if entry && entry.invoiced}checked{/if} onchange="updateHiddenInput(this)">
-            <label class="form-check-label" for="invoiced">Invoiced</label>
-          </div>
-
-          <!-- Catalog Items Section -->
+          <!-- Katalogartikel (unverändert) -->
           <div class="mb-3">
-            <label class="form-label">Catalog Items</label>
+            <label class="form-label">Katalogartikel</label>
             <div class="catalog-items-container">
               <table class="table" id="catalogItemsTable">
                 <thead>
-                  <tr>
-                    <th>Item Name</th>
-                    <th>Quantity</th>
-                    <th>Unit Price</th>
-                    <th>Total</th>
-                    <th>Actions</th>
-                  </tr>
+                <tr>
+                  <th>Artikelname</th>
+                  <th>Menge</th>
+                  <th>Einzelpreis</th>
+                  <th>Gesamt</th>
+                  <th>Aktionen</th>
+                </tr>
                 </thead>
                 <tbody>
-                  {#if entry && !entry.catalogItems.isEmpty()}
-                    {#for item in entry.catalogItems}
+                {#if entry != null && !entry.catalogItems.isEmpty()}
+                  {#for item in entry.catalogItems}
                     <tr>
                       <td>{item.itemName}</td>
                       <td>{item.quantity}</td>
                       <td>{item.unitPrice} CHF</td>
                       <td>{item.totalPrice} CHF</td>
                       <td>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="removeCatalogItem(this)">Remove</button>
+                        <button type="button" class="btn btn-danger btn-sm"
+                                onclick="removeCatalogItem(this)">Entfernen</button>
                         <input type="hidden" name="catalogItemIds" value="{item.catalogItemId}">
                         <input type="hidden" name="catalogItemQuantities" value="{item.quantity}">
                         <input type="hidden" name="catalogItemNames" value="{item.itemName}">
                         <input type="hidden" name="catalogItemPrices" value="{item.unitPrice}">
                       </td>
                     </tr>
-                    {/for}
-                  {/if}
+                  {/for}
+                {/if}
                 </tbody>
               </table>
-              
-              <!-- Add Catalog Item Form -->
+
+              <!-- Formular zum Hinzufügen -->
               <div class="row g-3 align-items-end mb-3">
                 <div class="col">
-                  <label for="catalogItemSelect" class="form-label">Catalog Item</label>
+                  <label for="catalogItemSelect" class="form-label">Katalogartikel wählen</label>
                   <select class="form-select" id="catalogItemSelect">
-                    <option value="">Select a catalog item</option>
+                    <option value="">-- Artikel auswählen --</option>
                     {#for item in catalogItems}
-                    <option value="{item.id}" data-name="{item.name}" data-price="{item.unitPrice}">
-                      {item.name} - {item.unitPrice} CHF
-                    </option>
+                      <option value="{item.id}" data-name="{item.name}" data-price="{item.unitPrice}">
+                        {item.name} – {item.unitPrice} CHF
+                      </option>
                     {/for}
                   </select>
                 </div>
                 <div class="col-auto">
-                  <label for="itemQuantity" class="form-label">Quantity</label>
-                  <input type="number" class="form-control" id="itemQuantity" min="1" value="1">
+                  <label for="itemQuantity" class="form-label">Menge</label>
+                  <input type="number" class="form-control" id="itemQuantity"
+                         min="1" value="1">
                 </div>
                 <div class="col-auto">
                   <button type="button" class="btn btn-primary" onclick="addCatalogItem()">
-                    <i class="bi bi-plus-circle me-2"></i>Add Item
+                    <i class="bi bi-plus-circle me-1"></i>Artikel hinzufügen
                   </button>
                 </div>
               </div>
             </div>
           </div>
 
+          <!-- JavaScript‐Helpers -->
           <script>
+            // Hidden‐Inputs aktualisieren
             function updateHiddenInput(checkbox) {
               const name = checkbox.getAttribute('name');
               const hiddenInput = document.querySelector('input[type="hidden"][name="' + name + '"]');
@@ -195,42 +275,62 @@
                 hiddenInput.value = checkbox.checked ? "true" : "false";
               }
             }
-
-            // Initialize hidden inputs based on checkbox states
             document.addEventListener('DOMContentLoaded', function() {
-              const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-              checkboxes.forEach(checkbox => {
-                updateHiddenInput(checkbox);
-              });
+              document.querySelectorAll('input[type="checkbox"]').forEach(cb => updateHiddenInput(cb));
             });
 
-            let catalogItemIndex = {#if entry}{entry.catalogItems.size()}{#else}0{/if};
+            // Notiz‐Blöcke hinzufügen/entfernen
+            function addNoteBlock() {
+              const container = document.getElementById('notesContainer');
+              const block = document.createElement('div');
+              block.className = 'note-block mb-3 border rounded p-2';
+              block.innerHTML = `
+                <input type="hidden" name="notes[][id]" value="" />
+                <div class="mb-2">
+                  <label class="form-label">Titel</label>
+                  <input type="text" class="form-control" name="notes[][title]" placeholder="Optional">
+                </div>
+                <div class="mb-2">
+                  <label class="form-label">Kategorie</label>
+                  <select class="form-select" name="notes[][category]" required>
+                    <option value="" disabled selected>-- auswählen --</option>
+                    {#for cat in categories}
+                      <option value="{cat.name}">{cat.name}</option>
+                    {/for}
+                  </select>
+                </div>
+                <div class="mb-2">
+                  <label class="form-label">Inhalt</label>
+                  <textarea class="form-control" name="notes[][content]" rows="2" required></textarea>
+                </div>
+                <div class="mb-2">
+                  <label class="form-label">Tags (Komma‐getrennt)</label>
+                  <input type="text" class="form-control" name="notes[][tags]" placeholder="z. B. dringlich,prüfung">
+                </div>
+                <button type="button" class="btn btn-danger btn-sm mt-2" onclick="removeNoteBlock(this)">
+                  Entfernen
+                </button>
+              `;
+              container.appendChild(block);
+            }
+            function removeNoteBlock(btn) {
+              btn.closest('.note-block').remove();
+            }
 
+            // Katalogartikel‐Skript
+            let catalogItemIndex = {#if entry}{entry.catalogItems.size()}{#else}0{/if};
             function addCatalogItem() {
               const select = document.getElementById('catalogItemSelect');
               const quantity = document.getElementById('itemQuantity');
               const option = select.options[select.selectedIndex];
-              
-              if (!select.value) {
-                alert('Please select a catalog item');
-                return;
-              }
-
+              if (!select.value) { alert('Bitte einen Katalogartikel auswählen'); return; }
               const itemId = parseInt(select.value);
-              if (isNaN(itemId)) {
-                alert('Invalid catalog item ID');
-                return;
-              }
-
               const itemName = option.dataset.name;
               const unitPrice = parseFloat(option.dataset.price);
               const itemQuantity = parseInt(quantity.value);
               const totalPrice = unitPrice * itemQuantity;
-
               const tbody = document.querySelector('#catalogItemsTable tbody');
               const row = document.createElement('tr');
-              
-              // Create cells
               const cells = [
                 createCell(itemName),
                 createCell(itemQuantity),
@@ -238,70 +338,63 @@
                 createCell(totalPrice + ' CHF'),
                 createActionCell(itemId, itemName, itemQuantity, unitPrice, totalPrice)
               ];
-              
-              cells.forEach(cell => row.appendChild(cell));
+              cells.forEach(c => row.appendChild(c));
               tbody.appendChild(row);
               catalogItemIndex++;
-
-              // Reset form
               select.value = '';
               quantity.value = '1';
             }
-
             function createCell(text) {
               const cell = document.createElement('td');
               cell.textContent = text;
               return cell;
             }
-
             function createActionCell(id, name, quantity, unitPrice, totalPrice) {
               const cell = document.createElement('td');
-              
-              // Create remove button
-              const removeButton = document.createElement('button');
-              removeButton.type = 'button';
-              removeButton.className = 'btn btn-danger btn-sm';
-              removeButton.textContent = 'Remove';
-              removeButton.onclick = function() { removeCatalogItem(this); };
-              cell.appendChild(removeButton);
+              const removeBtn = document.createElement('button');
+              removeBtn.type = 'button';
+              removeBtn.className = 'btn btn-danger btn-sm';
+              removeBtn.textContent = 'Entfernen';
+              removeBtn.onclick = function() { removeCatalogItem(this); };
+              cell.appendChild(removeBtn);
 
-              // Add hidden inputs for catalog item data
-              const hiddenInputs = [
+              // Versteckte Inputs für Katalogartikel‐Daten
+              [
                 { name: 'catalogItemIds', value: id },
                 { name: 'catalogItemQuantities', value: quantity },
                 { name: 'catalogItemNames', value: name },
                 { name: 'catalogItemPrices', value: unitPrice }
-              ];
-              
-              hiddenInputs.forEach(input => {
-                const hiddenInput = document.createElement('input');
-                hiddenInput.type = 'hidden';
-                hiddenInput.name = input.name;
-                hiddenInput.value = input.value;
-                cell.appendChild(hiddenInput);
+              ].forEach(inp => {
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = inp.name;
+                hidden.value = inp.value;
+                cell.appendChild(hidden);
               });
-
               return cell;
             }
-
             function removeCatalogItem(button) {
-              const row = button.closest('tr');
-              row.remove();
+              button.closest('tr').remove();
             }
 
-            // Show/hide waiting time minutes based on checkbox
-            document.getElementById('hasWaitingTime').addEventListener('change', function() {
-              const waitingTimeInput = document.getElementById('waitingTimeMinutes');
-              waitingTimeInput.disabled = !this.checked;
-              if (!this.checked) {
-                waitingTimeInput.value = '0';
+            // Wartezeit‐Eingabe ent/dissable
+            document.addEventListener('DOMContentLoaded', function() {
+              const wt = document.getElementById('hasWaitingTime');
+              if (wt) {
+                wt.addEventListener('change', function() {
+                  const inp = document.getElementById('waitingTimeMinutes');
+                  inp.disabled = !this.checked;
+                  if (!this.checked) inp.value = '0';
+                });
+                if (!wt.checked) document.getElementById('waitingTimeMinutes').disabled = true;
               }
             });
           </script>
 
+          <!-- Speichern/Abbrechen -->
           <div class="mt-3">
-            <button type="submit" class="btn btn-primary">Save</button>
-            <a href="/timetracking" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Speichern</button>
+            <a href="/timetracking" class="btn btn-outline-secondary">Abbrechen</a>
           </div>
         </form>
       </div>

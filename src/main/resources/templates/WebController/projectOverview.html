@@ -1,6 +1,6 @@
 {#include layout}
   {#title}{#if project.id}Edit Project – {project.name}{#else}New Project{/if}{/title}
-  {#header}Project Overview{/header}
+  {#header}{#if project.id}Project Overview{#else}Create New Project{/if}{/header}
   {#content}
 
     <form action="/projects/save" method="post">
@@ -18,12 +18,12 @@
           <div class="mb-3">
             <label for="name" class="form-label">Project Name</label>
             <input
-                    type="text"
-                    class="form-control"
-                    id="name"
-                    name="name"
-                    value="{project.name ?: ''}"
-                    required
+              type="text"
+              class="form-control"
+              id="name"
+              name="name"
+              value="{project.name ?: ''}"
+              required
             />
           </div>
 
@@ -31,20 +31,24 @@
           <div class="mb-3">
             <label for="customerId" class="form-label">Customer</label>
             <select
-                    id="customerId"
-                    name="customerId"
-                    class="form-select"
-                    required
+              id="customerId"
+              name="customerId"
+              class="form-select"
+              required
             >
               <option value="" disabled {#if project.customerId == null}selected{/if}>
                 -- Select customer --
               </option>
               {#for cust in customers}
                 <option
-                        value="{cust.id}"
-                        {#if cust.id == project.customerId}selected{/if}
+                  value="{cust.id}"
+                  {#if cust.id == project.customerId}selected{/if}
                 >
-                  {#if cust.companyName}{cust.companyName}{#else}{cust.firstName} {cust.lastName}{/if}
+                  {#if cust.companyName}
+                    {cust.companyName}
+                  {#else}
+                    {cust.firstName} {cust.lastName}
+                  {/if}
                 </option>
               {/for}
             </select>
@@ -56,13 +60,13 @@
             <div class="input-group">
               <span class="input-group-text">CHF</span>
               <input
-                      type="number"
-                      class="form-control"
-                      id="budget"
-                      name="budget"
-                      value="{project.budget}"
-                      min="0"
-                      required
+                type="number"
+                class="form-control"
+                id="budget"
+                name="budget"
+                value="{project.budget}"
+                min="0"
+                required
               />
             </div>
           </div>
@@ -71,11 +75,11 @@
           <div class="mb-3">
             <label for="contact" class="form-label">Contact</label>
             <input
-                    type="text"
-                    class="form-control"
-                    id="contact"
-                    name="contact"
-                    value="{project.contact ?: ''}"
+              type="text"
+              class="form-control"
+              id="contact"
+              name="contact"
+              value="{project.contact ?: ''}"
             />
           </div>
 
@@ -90,6 +94,103 @@
             </select>
           </div>
 
+          <!-- Optional: Beschreibung, Daten, Adresse usw. (wie gehabt) -->
+          <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <textarea id="description"
+                      name="description"
+                      class="form-control"
+                      rows="3">{project.description ?: ''}</textarea>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label for="startDate" class="form-label">Start Date</label>
+              <input type="date"
+                     id="startDate"
+                     name="startDate"
+                     class="form-control"
+                     value="{project.startDate ?: ''}" />
+            </div>
+            <div class="col-md-6">
+              <label for="endDate" class="form-label">End Date</label>
+              <input type="date"
+                     id="endDate"
+                     name="endDate"
+                     class="form-control"
+                     value="{project.endDate ?: ''}" />
+            </div>
+          </div>
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label for="street" class="form-label">Street</label>
+              <input type="text"
+                     id="street"
+                     name="street"
+                     class="form-control"
+                     value="{project.street ?: ''}" />
+            </div>
+            <div class="col-md-6">
+              <label for="city" class="form-label">City</label>
+              <input type="text"
+                     id="city"
+                     name="city"
+                     class="form-control"
+                     value="{project.city ?: ''}" />
+            </div>
+          </div>
+
+          <!-- Notizen‐Bereich -->
+          <fieldset class="border rounded p-3 mb-3">
+            <legend class="float-none w-auto px-2">Notizen</legend>
+
+            <div id="projectNotesContainer">
+              {#if project.notes != null && !project.notes.isEmpty()}
+                {#for note in project.notes}
+                  <div class="note-block mb-3 border rounded p-2">
+                    <input type="hidden" name="initialNotes[][id]" value="{note.id}" />
+                    <div class="mb-2">
+                      <label class="form-label">Titel</label>
+                      <input type="text" class="form-control" name="initialNotes[][title]"
+                             value="{note.title ?: ''}" placeholder="Optional" />
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label">Kategorie</label>
+                      <select class="form-select" name="initialNotes[][category]" required>
+                        <option value="">-- wählen --</option>
+                        {#for cat in ch.baunex.notes.model.NoteCategory.values()}
+                          <option value="{cat.name}"
+                                  {#if note.category.name == cat.name}selected{/if}>
+                            {cat.name}
+                          </option>
+                        {/for}
+                      </select>
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label">Inhalt</label>
+                      <textarea class="form-control" name="initialNotes[][content]" rows="2" required>
+{note.content}
+                      </textarea>
+                    </div>
+                    <div>
+                      <label class="form-label">Tags (Komma-getrennt)</label>
+                      <input type="text" class="form-control" name="initialNotes[][tags]"
+                             value="{note.tags.join(\",\")}" placeholder="z. B. wichtig,dringlich" />
+                    </div>
+                    <button type="button" class="btn btn-danger btn-sm mt-2"
+                            onclick="removeProjectNoteBlock(this)">
+                      Entfernen
+                    </button>
+                  </div>
+                {/for}
+              {/if}
+            </div>
+
+            <button type="button" class="btn btn-outline-primary btn-sm"
+                    onclick="addProjectNoteBlock()">
+              <i class="bi bi-plus-circle me-1"></i>Notiz hinzufügen
+            </button>
+          </fieldset>
+
           <!-- Actions -->
           <div class="d-flex gap-2 mt-4">
             <button type="submit" class="btn btn-primary">
@@ -98,10 +199,51 @@
             </button>
             <a href="/projects" class="btn btn-outline-secondary">Cancel</a>
           </div>
-
         </div>
       </div>
     </form>
 
+    <!-- JavaScript für Notizen im Projekt‐Formular -->
+    <script>
+      function addProjectNoteBlock() {
+        const container = document.getElementById('projectNotesContainer');
+        const block = document.createElement('div');
+        block.className = 'note-block mb-3 border rounded p-2';
+        block.innerHTML = `
+          <input type="hidden" name="initialNotes[][id]" value="" />
+          <div class="mb-2">
+            <label class="form-label">Titel</label>
+            <input type="text" class="form-control" name="initialNotes[][title]" placeholder="Optional">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Kategorie</label>
+            <select class="form-select" name="initialNotes[][category]" required>
+              <option value="">-- wählen --</option>
+              {#for cat in ch.baunex.notes.model.NoteCategory.values()}
+                <option value="{cat.name}">{cat.name}</option>
+              {/for}
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Inhalt</label>
+            <textarea class="form-control" name="initialNotes[][content]" rows="2" required></textarea>
+          </div>
+          <div>
+            <label class="form-label">Tags (Komma-getrennt)</label>
+            <input type="text" class="form-control" name="initialNotes[][tags]"
+                   placeholder="z. B. wichtig,dringlich">
+          </div>
+          <button type="button" class="btn btn-danger btn-sm mt-2"
+                  onclick="removeProjectNoteBlock(this)">
+            Entfernen
+          </button>
+        `;
+        container.appendChild(block);
+      }
+
+      function removeProjectNoteBlock(btn) {
+        btn.closest('.note-block').remove();
+      }
+    </script>
   {/content}
 {/include}
