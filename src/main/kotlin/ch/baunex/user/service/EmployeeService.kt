@@ -1,6 +1,7 @@
 // --- EmployeeService.kt ---
 package ch.baunex.user.service
 
+import ch.baunex.project.model.ProjectModel
 import ch.baunex.user.dto.EmployeeCreateDTO
 import ch.baunex.user.mapper.toEmployeeModel
 import ch.baunex.user.mapper.applyTo
@@ -49,4 +50,6 @@ class EmployeeService @Inject constructor(
     fun findByRole(role: Role): EmployeeModel {
         return employeeRepository.findByRole(role)
     }
+
+    fun getEmployee(id: Long): EmployeeModel? = employeeRepository.findById(id)
 }

@@ -110,7 +110,8 @@ class WebProjectController {
             catalogItems = emptyList(),
             billing      = BillingDTO(0, emptyList(), emptyList(), 0.0, 0.0, 0.0),
             contacts     = emptyList(),
-            customers    = customers
+            customers    = customers,
+            categories = NoteCategory.entries
         )
         return Response.ok(template.render()).build()
     }
@@ -132,7 +133,8 @@ class WebProjectController {
             catalogItems,
             billing,
             contacts,
-            customers
+            customers,
+            NoteCategory.entries
         )
         return Response.ok(template.render()).build()
     }
@@ -215,6 +217,60 @@ class WebProjectController {
         }
         return Response.seeOther(URI("/projects")).build()
     }
+
+    @POST
+    @Path("/{id}/notes/save")
+    @Transactional
+    fun saveProjectNote(
+        @PathParam("id") projectId: Long,
+        @FormParam("title") title: String?,
+        @FormParam("category") categoryName: String,
+        @FormParam("content") content: String,
+        @FormParam("tags") tagsCsv: String?,
+        @FormParam("createdById") createdById: Long
+    ): Response {
+        // 1. DTO zusammenbauen
+        val tagsList = tagsCsv
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?: emptyList()
+
+        projectFacade.addNoteToProject(
+            projectId,
+            title,
+            NoteCategory.valueOf(categoryName),
+            content,
+            tagsList,
+            createdById
+        )
+        return Response.seeOther(URI("/projects/$projectId")).build()
+    }
+
+    @GET
+    @Path("/{id}/notes")
+    fun viewNotes(@PathParam("id") id: Long): Response {
+        val detail = projectFacade.getProjectWithDetails(id)
+            ?: return Response.status(404).build()
+
+        // Flag, ob mindestens eine Projekt-Notiz existiert
+        val hasProjNotes = detail.notes.isNotEmpty()
+
+        // Flag, ob mindestens eine TimeEntry-Notiz existiert
+        val hasTimeNotes = detail.timeEntries.any { it.notes.isNotEmpty() }
+
+        val employees = employeeFacade.listAll()
+        val template = WebController.Templates.projectNotes(
+            project = detail,
+            employees = employees,
+            hasProjectNotes = hasProjNotes,
+            hasTimeEntryNotes = hasTimeNotes,
+            activeMenu = "projects",
+            currentDate = getCurrentDate()
+        )
+        return Response.ok(template.render()).build()
+    }
+
 
     @GET
     @Path("/{id}/delete")

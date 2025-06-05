@@ -1,81 +1,91 @@
 {#include layout}
-  {#title}Projekte – Baunex Business Management{/title}
-  {#header}Projekte{/header}
-  {#content}
-    <div class="mb-4">
-      <a href="/projects/new" class="btn btn-primary">
-        <i class="bi bi-plus-circle me-2"></i>Neues Projekt
-      </a>
-    </div>
+{#title}Projekte – Baunex Business Management{/title}
+{#header}Projekte{/header}
+{#content}
+  <div class="mb-4 d-flex justify-content-between align-items-center">
+    <h4 class="mb-0">Alle Projekte</h4>
+    <a href="/projects/new" class="btn btn-primary">
+      <i class="bi bi-plus-circle me-2"></i>Neues Projekt
+    </a>
+  </div>
 
-    <div class="card">
-      <div class="card-header">Alle Projekte</div>
-      <div class="card-body">
-        {#if projects.isEmpty()}
-          <p class="text-muted">Keine Projekte gefunden.</p>
-        {#else}
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
+  <div class="card">
+    <div class="card-body p-0">
+      {#if projects.isEmpty()}
+        <p class="text-center text-muted py-4">Keine Projekte gefunden.</p>
+      {#else}
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
               <tr>
-                <th>ID</th>
+                <th>Projektnr.</th>
                 <th>Name</th>
                 <th>Kunde</th>
                 <th>Startdatum</th>
                 <th>Enddatum</th>
                 <th>Budget</th>
                 <th>Status</th>
-                <th>Aktionen</th>
+                <th class="text-end">Aktionen</th>
               </tr>
-              </thead>
-              <tbody>
+            </thead>
+            <tbody>
               {#for project in projects}
-                <tr>
+                <tr class="align-middle">
                   <td>{project.projectNumberFormatted}</td>
                   <td>{project.name}</td>
                   <td>{project.customerName}</td>
                   <td>{project.startDate}</td>
-                  <td>{project.endDate ?: '—'}</td>
+                  <td>{project.endDate ?: "—"}</td>
                   <td>{project.budget} CHF</td>
                   <td>
-                    <span class="badge bg-{project.status ?: '' == 'ACTIVE' ? 'success' : 'secondary'}">
-                      {project.status ?: '' == 'ACTIVE' ? 'Aktiv' : 'Abgeschlossen'}
-                    </span>
+                    {#if project.status == "IN_PROGRESS"}
+                      <span class="badge bg-warning text-dark">In Bearbeitung</span>
+                    {#else if project.status == "PLANNED"}
+                      <span class="badge bg-secondary">Geplant</span>
+                    {#else if project.status == "COMPLETED"}
+                      <span class="badge bg-success">Abgeschlossen</span>
+                    {#else if project.status == "CANCELLED"}
+                      <span class="badge bg-danger">Abgebrochen</span>
+                    {#else}
+                      <span class="badge bg-secondary">{project.status}</span>
+                    {/if}
                   </td>
-                  <td>
-                    <div class="btn-group">
-                      <a href="/projects/{project.id}" class="btn btn-sm btn-outline-primary">
+                  <td class="text-end">
+                    <div class="btn-group" role="group" aria-label="Aktionen">
+                      <a href="/projects/{project.id}"
+                         class="btn btn-sm btn-outline-primary"
+                         title="Ansicht">
                         <i class="bi bi-eye"></i>
                       </a>
-                      <a href="/projects/{project.id}/edit" class="btn btn-sm btn-outline-secondary">
+                      <a href="/projects/{project.id}/edit"
+                         class="btn btn-sm btn-outline-secondary"
+                         title="Bearbeiten">
                         <i class="bi bi-pencil"></i>
                       </a>
-                      <a
-                              href="/projects/{project.id}/delete"
-                              class="btn btn-sm btn-outline-danger"
-                              onclick="return confirm('Möchten Sie dieses Projekt wirklich löschen?')"
-                      >
+                      <a href="/projects/{project.id}/delete"
+                         class="btn btn-sm btn-outline-danger"
+                         title="Löschen"
+                         onclick="return confirm('Möchten Sie dieses Projekt wirklich löschen?')">
                         <i class="bi bi-trash"></i>
                       </a>
                     </div>
                   </td>
                 </tr>
               {/for}
-              </tbody>
-            </table>
-          </div>
-        {/if}
-      </div>
+            </tbody>
+          </table>
+        </div>
+      {/if}
     </div>
-  {/content}
+  </div>
+{/content}
 {/include}
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll(".project-row").forEach(row => {
+    document.querySelectorAll("tbody tr").forEach(row => {
       row.addEventListener("click", function (e) {
-        // Navigation nicht auslösen, wenn auf einen Link geklickt wird
-        if (!e.target.closest("a")) {
+        if (!e.target.closest("a") && !e.target.closest("button") && row.dataset.href) {
           window.location.href = row.dataset.href;
         }
       });

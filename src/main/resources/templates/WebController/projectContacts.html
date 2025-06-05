@@ -1,0 +1,21 @@
+<div class="card mb-4">
+    <div class="card-body">
+        <h5>Kundenkontakte</h5>
+        {#if contacts.isEmpty()}
+            <p class="text-muted">Keine Kontakte für diesen Kunden.</p>
+        {#else}
+            <ul class="list-group">
+                {#for c in contacts}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{c.role ?: "Kontakt"}</strong> – {c.firstName} {c.lastName}
+                        </div>
+                        {#if c.isPrimary}
+                            <span class="badge bg-primary">Primär</span>
+                        {/if}
+                    </li>
+                {/for}
+            </ul>
+        {/if}
+    </div>
+</div>

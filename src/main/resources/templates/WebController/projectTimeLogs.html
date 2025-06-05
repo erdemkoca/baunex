@@ -1,0 +1,139 @@
+<div class="card mb-4">
+    <div class="card-body">
+        <h5>Zeiterfassung</h5>
+        {#if project.timeEntries.isEmpty()}
+            <p class="text-muted">Keine Zeiterfassungen für dieses Projekt.</p>
+        {#else}
+            <div class="accordion" id="timeEntriesAccordion">
+                {#for entry in project.timeEntries}
+                    <div class="accordion-item mb-3">
+                        <h2 class="accordion-header" id="heading{entry.id}">
+                            <button class="accordion-button collapsed" type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#entry{entry.id}"
+                                    aria-expanded="false"
+                                    aria-controls="entry{entry.id}">
+                                <div class="d-flex justify-content-between w-100">
+                                    <div>
+                                        <strong>{entry.employeeEmail}</strong> – {entry.date}
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-primary me-2">{entry.hoursWorked} Stunden</span>
+                                        {#if !entry.billable}
+                                            <span class="badge bg-secondary">Nicht verrechenbar</span>
+                                        {/if}
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="entry{entry.id}"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#timeEntriesAccordion">
+                            <div class="accordion-body">
+                                <!-- Grundinformationen -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <h6>Grundinformationen</h6>
+                                        <p>
+                                            <strong>Notiz:</strong>
+                                            {#if entry.notes.isEmpty()}
+                                                —
+                                            {#else}
+                                                {#for note in entry.notes}
+                                                    <div class="mb-2">
+                                                        <span class="small text-muted">
+                                                            {note.createdAt} – {note.createdByName}
+                                                        </span><br />
+                                                        {#if note.title}
+                                                            <strong>{note.title}</strong><br />
+                                                        {/if}
+                                                        <span>{note.content}</span>
+                                                    </div>
+                                                {/for}
+                                            {/if}
+                                        </p>
+                                        <p>
+                                            <strong>Stundensatz:</strong> {entry.hourlyRate ?: "—"} CHF
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Status</h6>
+                                        <p>
+                                            <span class="badge {#if entry.invoiced}bg-success{#else}bg-warning{/if}">
+                                                {#if entry.invoiced}Fakturiert{#else}Nicht fakturiert{/if}
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Kostenaufschlüsselung -->
+                                <div class="row mb-3">
+                                    <div class="col-12">
+                                        <h6>Kostenaufschlüsselung</h6>
+                                        <table class="table table-sm">
+                                            <tbody>
+                                                <!-- Zeitkosten -->
+                                                <tr>
+                                                    <td>Zeitkosten</td>
+                                                    <td class="text-end">{entry.costBreakdown.timeCost} CHF</td>
+                                                </tr>
+
+                                                <!-- Zuschläge -->
+                                                {#if entry.costBreakdown.nightSurcharge != null}
+                                                    <tr>
+                                                        <td>Nachtzuschlag</td>
+                                                        <td class="text-end">{entry.costBreakdown.nightSurcharge} CHF</td>
+                                                    </tr>
+                                                {/if}
+                                                {#if entry.costBreakdown.weekendSurcharge != null}
+                                                    <tr>
+                                                        <td>Wochenendzuschlag</td>
+                                                        <td class="text-end">{entry.costBreakdown.weekendSurcharge} CHF</td>
+                                                    </tr>
+                                                {/if}
+                                                {#if entry.costBreakdown.holidaySurcharge != null}
+                                                    <tr>
+                                                        <td>Feiertagszuschlag</td>
+                                                        <td class="text-end">{entry.costBreakdown.holidaySurcharge} CHF</td>
+                                                    </tr>
+                                                {/if}
+
+                                                <!-- Zusätzliche Kosten -->
+                                                {#if entry.costBreakdown.travelTimeCost != null}
+                                                    <tr>
+                                                        <td>Reisezeit ({entry.travelTimeMinutes} min)</td>
+                                                        <td class="text-end">{entry.costBreakdown.travelTimeCost} CHF</td>
+                                                    </tr>
+                                                {/if}
+                                                {#if entry.costBreakdown.waitingTimeCost != null}
+                                                    <tr>
+                                                        <td>Wartezeit ({entry.waitingTimeMinutes} min)</td>
+                                                        <td class="text-end">{entry.costBreakdown.waitingTimeCost} CHF</td>
+                                                    </tr>
+                                                {/if}
+                                                {#if entry.costBreakdown.disposalCost != null}
+                                                    <tr>
+                                                        <td>Entsorgungskosten</td>
+                                                        <td class="text-end">{entry.costBreakdown.disposalCost} CHF</td>
+                                                    </tr>
+                                                {/if}
+
+                                                <!-- Gesamtkosten Dienstleistung -->
+                                                <tr class="table-primary">
+                                                    <td><strong>Gesamtkosten Dienstleistung</strong></td>
+                                                    <td class="text-end">
+                                                        <strong>{entry.costBreakdown.totalServiceCost} CHF</strong>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {/for}
+            </div>
+        {/if}
+    </div>
+</div>

@@ -1,0 +1,180 @@
+{#include layout}
+    {#title}Notizen – Projekt {project.name}{/title}
+    {#header}Notizen – Projektübersicht{/header}
+    {#content}
+        <div class="mb-4">
+            <a href="/projects/{project.id}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Zurück zur Projektübersicht
+            </a>
+        </div>
+
+        <!-- Projekt-Notizen -->
+        <div class="card mb-4">
+            <div class="card-header">Alle Projekt-Notizen</div>
+            <div class="card-body">
+                {#if !hasProjectNotes}
+                    <p class="text-muted">Keine projektbezogenen Notizen vorhanden.</p>
+                {#else}
+                    <div class="accordion" id="projectNotesAccordion">
+                        {#for note in project.notes}
+                            <div class="accordion-item mb-2">
+                                <h2 class="accordion-header" id="projNoteHeader{note.id}">
+                                    <button class="accordion-button collapsed" type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#projNote{note.id}"
+                                            aria-expanded="false"
+                                            aria-controls="projNote{note.id}">
+                                        <div class="d-flex justify-content-between w-100">
+                                            <div>
+                                                {note.createdAt} – {note.createdByName}
+                                                <span class="badge bg-secondary ms-2">{note.category}</span>
+                                            </div>
+                                            <div>
+                                                {#if note.title}
+                                                    <em>{note.title}</em>
+                                                {/if}
+                                            </div>
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="projNote{note.id}"
+                                     class="accordion-collapse collapse"
+                                     data-bs-parent="#projectNotesAccordion">
+                                    <div class="accordion-body">
+                                        <p>{note.content}</p>
+                                        {#if !note.tags.isEmpty()}
+                                            <p class="mb-1"><strong>Tags:</strong>
+                                                {#for tag in note.tags}
+                                                    <span class="badge bg-secondary me-1">{tag}</span>
+                                                {/for}
+                                            </p>
+                                        {/if}
+                                        {#if !note.attachments.isEmpty()}
+                                            <p class="mb-0"><strong>Anhänge:</strong>
+                                                {#for att in note.attachments}
+                                                    <a href="{att.url}" target="_blank">
+                                                        {att.caption ?: "Datei"}
+                                                    </a>
+                                                    {#if !for.last}, {/if}
+                                                {/for}
+                                            </p>
+                                        {/if}
+                                    </div>
+                                </div>
+                            </div>
+                        {/for}
+                    </div>
+                {/if}
+            </div>
+        </div>
+
+        <!-- Zeiterfassungs-Notizen -->
+        <div class="card mb-4">
+            <div class="card-header">Alle Zeiterfassungs-Notizen</div>
+            <div class="card-body">
+                {#if !hasTimeEntryNotes}
+                    <p class="text-muted">Keine Zeiterfassungs-Notizen vorhanden.</p>
+                {#else}
+                    <div class="accordion" id="timeEntryNotesAccordion">
+                        {#for entry in project.timeEntries}
+                            {#for note in entry.notes}
+                                <div class="accordion-item mb-2">
+                                    <h2 class="accordion-header" id="timeNoteHeader{note.id}">
+                                        <button class="accordion-button collapsed" type="button"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#timeNote{note.id}"
+                                                aria-expanded="false"
+                                                aria-controls="timeNote{note.id}">
+                                            <div class="d-flex justify-content-between w-100">
+                                                <div>
+                                                    {note.createdAt} – {note.createdByName}
+                                                    <span class="badge bg-secondary ms-2">{note.category}</span>
+                                                </div>
+                                                <div>
+                                                    {#if note.title}
+                                                        <em>{note.title}</em>
+                                                    {/if}
+                                                </div>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="timeNote{note.id}"
+                                         class="accordion-collapse collapse"
+                                         data-bs-parent="#timeEntryNotesAccordion">
+                                        <div class="accordion-body">
+                                            <p>{note.content}</p>
+                                            {#if !note.tags.isEmpty()}
+                                                <p class="mb-1"><strong>Tags:</strong>
+                                                    {#for tag in note.tags}
+                                                        <span class="badge bg-secondary me-1">{tag}</span>
+                                                    {/for}
+                                                </p>
+                                            {/if}
+                                            {#if !note.attachments.isEmpty()}
+                                                <p class="mb-0"><strong>Anhänge:</strong>
+                                                    {#for att in note.attachments}
+                                                        <a href="{att.url}" target="_blank">
+                                                            {att.caption ?: "Datei"}
+                                                        </a>
+                                                        {#if !for.last}, {/if}
+                                                    {/for}
+                                                </p>
+                                            {/if}
+                                        </div>
+                                    </div>
+                                </div>
+                            {/for}
+                        {/for}
+                    </div>
+                {/if}
+            </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <h5>Neue Notiz hinzufügen</h5>
+        <form action="/projects/{project.id}/notes/save" method="post">
+            <input type="hidden" name="projectId" value="{project.id}" />
+
+            <div class="mb-3">
+                <label class="form-label">Titel (optional)</label>
+                <input type="text" name="title" class="form-control" placeholder="Titel der Notiz" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Kategorie</label>
+                <select name="category" class="form-select" required>
+                    <option value="">-- wählen --</option>
+                    {#for cat in ch.baunex.notes.model.NoteCategory.values()}
+                        <option value="{cat.name}">{cat.name}</option>
+                    {/for}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Inhalt</label>
+                <textarea name="content" class="form-control" rows="3" required></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Tags (Komma-getrennt)</label>
+                <input type="text" name="tags" class="form-control"
+                       placeholder="z. B. dringlich, Prüfung" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Erstellt von (Mitarbeiter)</label>
+                <select name="createdById" class="form-select" required>
+                    <option value="">-- wählen --</option>
+                    {#for emp in employees}
+                        <option value="{emp.id}">{emp.firstName} {emp.lastName}</option>
+                    {/for}
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Notiz speichern
+            </button>
+        </form>
+    {/content}
+{/include}

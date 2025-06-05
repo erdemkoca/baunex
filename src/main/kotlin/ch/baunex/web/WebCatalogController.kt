@@ -6,6 +6,7 @@ import ch.baunex.catalog.dto.CatalogItemDTO
 import ch.baunex.catalog.dto.ProjectCatalogItemDTO
 import ch.baunex.catalog.facade.CatalogFacade
 import ch.baunex.catalog.facade.ProjectCatalogItemFacade
+import ch.baunex.notes.model.NoteCategory
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.user.dto.CustomerContactDTO
 import ch.baunex.user.dto.CustomerDTO
@@ -57,7 +58,8 @@ class WebCatalogController {
             catalogItems = catalogItems,
             billing      = billing,
             contacts     = contacts,
-            customers    = customers
+            customers    = customers,
+            categories = NoteCategory.entries
         )
         return Response.ok(tpl.render()).build()
     }

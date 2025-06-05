@@ -70,7 +70,18 @@ class WebController {
             catalogItems: List<CatalogItemDTO>,
             billing: BillingDTO,
             contacts: List<CustomerContactDTO>,
-            customers: List<CustomerDTO>
+            customers: List<CustomerDTO>,
+            categories: List<NoteCategory>
+        ): TemplateInstance
+
+        @JvmStatic
+        external fun projectNotes(
+            project: ProjectDetailDTO,
+            employees: List<EmployeeDTO>,
+            hasProjectNotes: Boolean,
+            hasTimeEntryNotes: Boolean,
+            activeMenu: String,
+            currentDate: LocalDate
         ): TemplateInstance
 
         @JvmStatic
