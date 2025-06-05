@@ -22,7 +22,9 @@
                     <a class="nav-link" data-bs-toggle="tab" href="#billing" role="tab">Abrechnung</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="tab" href="#notes" role="tab">Notizen</a>
+                    <a class="nav-link" href="/projects/{project.id}/notes" role="tab">
+                        Notizen
+                    </a>
                 </li>
             {/if}
         </ul>
@@ -52,11 +54,6 @@
                 <!-- Abrechnung -->
                 <div class="tab-pane fade" id="billing" role="tabpanel">
                         {#include WebController/projectBilling.html /}
-                </div>
-
-                <!-- Notizen -->
-                <div class="tab-pane fade" id="notes" role="tabpanel">
-                        {#include WebController/projectNotes.html /}
                 </div>
             {/if}
         </div>

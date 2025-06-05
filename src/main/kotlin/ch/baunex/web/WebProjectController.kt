@@ -111,7 +111,8 @@ class WebProjectController {
             billing      = BillingDTO(0, emptyList(), emptyList(), 0.0, 0.0, 0.0),
             contacts     = emptyList(),
             customers    = customers,
-            categories = NoteCategory.entries
+            categories = NoteCategory.entries,
+            employees = emptyList()
         )
         return Response.ok(template.render()).build()
     }
@@ -134,7 +135,8 @@ class WebProjectController {
             billing,
             contacts,
             customers,
-            NoteCategory.entries
+            NoteCategory.entries,
+            employees = employeeFacade.listAll()
         )
         return Response.ok(template.render()).build()
     }
@@ -266,7 +268,8 @@ class WebProjectController {
             hasProjectNotes = hasProjNotes,
             hasTimeEntryNotes = hasTimeNotes,
             activeMenu = "projects",
-            currentDate = getCurrentDate()
+            currentDate = getCurrentDate(),
+            NoteCategory.entries
         )
         return Response.ok(template.render()).build()
     }

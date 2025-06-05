@@ -71,7 +71,8 @@ class WebController {
             billing: BillingDTO,
             contacts: List<CustomerContactDTO>,
             customers: List<CustomerDTO>,
-            categories: List<NoteCategory>
+            categories: List<NoteCategory>,
+            employees: List<EmployeeDTO>
         ): TemplateInstance
 
         @JvmStatic
@@ -81,7 +82,8 @@ class WebController {
             hasProjectNotes: Boolean,
             hasTimeEntryNotes: Boolean,
             activeMenu: String,
-            currentDate: LocalDate
+            currentDate: LocalDate,
+            categories: List<NoteCategory>,
         ): TemplateInstance
 
         @JvmStatic

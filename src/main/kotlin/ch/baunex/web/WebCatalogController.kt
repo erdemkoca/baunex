@@ -59,7 +59,9 @@ class WebCatalogController {
             billing      = billing,
             contacts     = contacts,
             customers    = customers,
-            categories = NoteCategory.entries
+            categories = NoteCategory.entries,
+            employees = emptyList()
+
         )
         return Response.ok(tpl.render()).build()
     }

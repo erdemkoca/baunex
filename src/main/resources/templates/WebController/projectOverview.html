@@ -153,8 +153,6 @@
         </div>
       </div>
 
-      <!-- ... oberer Teil von projectOverview.html ... -->
-
       <!-- Projekt-Notizen (initial) -->
       <fieldset class="border rounded p-3 mb-3">
         <legend class="float-none w-auto px-2">Notizen</legend>
@@ -172,7 +170,7 @@
                           type="text"
                           class="form-control"
                           name="initialNotes[][tags]"
-                          value="{#if note.tags != null && !note.tags.isEmpty()}{#for tag in note.tags}{tag}{#if !for.last}, {/if}{/for}{/if}"
+                          value="{#if note.tags != null && !note.tags.isEmpty()}{#for tag in note.tags}{tag}{#if tag != note.tags.get(note.tags.size() - 1)}, {/if}{/for}{/if}"
                           placeholder="z. B. wichtig, dringlich"
                   />
                 </div>
