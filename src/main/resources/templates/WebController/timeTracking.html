@@ -16,16 +16,16 @@
         {#else}
           <div class="accordion" id="timeEntriesAccordion">
             {#for entry in timeEntries}
-              <div class="accordion-item">
-                <h2 class="accordion-header">
-                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+              <div class="accordion-item mb-3">
+                <h2 class="accordion-header" id="heading{entry.id}">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                           data-bs-target="#entry{entry.id}" aria-expanded="false" aria-controls="entry{entry.id}">
-                    <div class="d-flex justify-content-between w-100 me-3">
+                    <div class="d-flex justify-content-between w-100">
                       <div>
-                        <strong>{entry.employeeFirstName} {entry.employeeLastName}</strong> - {entry.date}
+                        <strong>{entry.employeeFirstName} {entry.employeeLastName}</strong> – {entry.date}
                         <span class="badge bg-primary ms-2">{entry.hoursWorked} Stunden</span>
                         {#if !entry.billable}
-                          <span class="badge bg-secondary">Nicht verrechenbar</span>
+                          <span class="badge bg-secondary ms-1">Nicht verrechenbar</span>
                         {/if}
                       </div>
                       <div>
@@ -45,13 +45,50 @@
                 </h2>
                 <div id="entry{entry.id}" class="accordion-collapse collapse" data-bs-parent="#timeEntriesAccordion">
                   <div class="accordion-body">
+
                     <!-- Grundinformationen -->
                     <div class="row mb-3">
                       <div class="col-md-6">
                         <h6>Grundinformationen</h6>
                         <p><strong>Projekt:</strong> {entry.projectName}</p>
-                        <p><strong>Notiz:</strong> {entry.notes ?: "—"}</p>
-                        <p><strong>Stundensatz:</strong> {entry.hourlyRate ?: "—"} CHF</p>
+                        <!-- Notizen-Liste -->
+                        <h6 class="mt-3">Notizen</h6>
+                        {#if entry.notes.isEmpty()}
+                          <p class="text-muted">Keine Notizen vorhanden.</p>
+                        {#else}
+                          <div class="notes-list">
+                            {#for note in entry.notes}
+                              <div class="card mb-2">
+                                <div class="card-header small text-muted">
+                                  {note.createdAt} – {note.createdByName} <span class="badge bg-secondary ms-2">{note.category}</span>
+                                </div>
+                                <div class="card-body py-2">
+                                  {#if note.title}
+                                    <h6 class="card-title mb-1">{note.title}</h6>
+                                  {/if}
+                                  <p class="card-text">{note.content}</p>
+                                  {#if note.tags.isEmpty() == false}
+                                    <p class="mb-0">
+                                      <strong>Tags:</strong>
+                                      {#for tag in note.tags}
+                                        <span class="badge bg-secondary me-1">{tag}</span>
+                                      {/for}
+                                    </p>
+                                  {/if}
+                                  {#if note.attachments.isEmpty() == false}
+                                    <p class="mb-0 mt-1">
+                                      <strong>Anhänge:</strong>
+                                      {#for att in note.attachments}
+                                        <a href="{att.url}" target="_blank">{att.caption ?: "Datei"}</a>
+                                        {#if !for.last}, {/if}
+                                      {/for}
+                                    </p>
+                                  {/if}
+                                </div>
+                              </div>
+                            {/for}
+                          </div>
+                        {/if}
                       </div>
                       <div class="col-md-6">
                         <h6>Status</h6>
@@ -97,24 +134,24 @@
                           <h6>Zusätzliche Kosten</h6>
                           <table class="table table-sm">
                             <tbody>
-                              {#if entry.travelTimeMinutes > 0}
-                                <tr>
-                                  <td>Reisezeit</td>
-                                  <td class="text-end">{entry.travelTimeMinutes} min</td>
-                                </tr>
-                              {/if}
-                              {#if entry.hasWaitingTime}
-                                <tr>
-                                  <td>Wartezeit</td>
-                                  <td class="text-end">{entry.waitingTimeMinutes} min</td>
-                                </tr>
-                              {/if}
-                              {#if entry.disposalCost > 0}
-                                <tr>
-                                  <td>Entsorgungskosten</td>
-                                  <td class="text-end">{entry.disposalCost} CHF</td>
-                                </tr>
-                              {/if}
+                            {#if entry.travelTimeMinutes > 0}
+                              <tr>
+                                <td>Reisezeit</td>
+                                <td class="text-end">{entry.travelTimeMinutes} min</td>
+                              </tr>
+                            {/if}
+                            {#if entry.hasWaitingTime}
+                              <tr>
+                                <td>Wartezeit</td>
+                                <td class="text-end">{entry.waitingTimeMinutes} min</td>
+                              </tr>
+                            {/if}
+                            {#if entry.disposalCost > 0}
+                              <tr>
+                                <td>Entsorgungskosten</td>
+                                <td class="text-end">{entry.disposalCost} CHF</td>
+                              </tr>
+                            {/if}
                             </tbody>
                           </table>
                         </div>
@@ -128,22 +165,22 @@
                           <h6>Verwendete Artikel</h6>
                           <table class="table table-sm">
                             <thead>
-                              <tr>
-                                <th>Artikel</th>
-                                <th>Menge</th>
-                                <th>Einzelpreis</th>
-                                <th>Gesamt</th>
-                              </tr>
+                            <tr>
+                              <th>Artikel</th>
+                              <th>Menge</th>
+                              <th>Einzelpreis</th>
+                              <th>Gesamt</th>
+                            </tr>
                             </thead>
                             <tbody>
-                              {#for item in entry.catalogItems}
-                                <tr>
-                                  <td>{item.itemName}</td>
-                                  <td>{item.quantity}</td>
-                                  <td>{item.unitPrice} CHF</td>
-                                  <td>{item.totalPrice} CHF</td>
-                                </tr>
-                              {/for}
+                            {#for item in entry.catalogItems}
+                              <tr>
+                                <td>{item.itemName}</td>
+                                <td>{item.quantity}</td>
+                                <td>{item.unitPrice} CHF</td>
+                                <td>{item.totalPrice} CHF</td>
+                              </tr>
+                            {/for}
                             </tbody>
                           </table>
                         </div>
@@ -155,12 +192,13 @@
                       <a href="/timetracking/{entry.id}/edit" class="btn btn-outline-primary btn-sm">
                         <i class="bi bi-pencil me-1"></i>Bearbeiten
                       </a>
-                      <a href="/timetracking/{entry.id}/delete" 
+                      <a href="/timetracking/{entry.id}/delete"
                          class="btn btn-outline-danger btn-sm"
                          onclick="return confirm('Möchten Sie diesen Eintrag wirklich löschen?')">
                         <i class="bi bi-trash me-1"></i>Löschen
                       </a>
                     </div>
+
                   </div>
                 </div>
               </div>

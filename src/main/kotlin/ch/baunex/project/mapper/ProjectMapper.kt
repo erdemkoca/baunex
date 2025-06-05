@@ -1,6 +1,8 @@
 package ch.baunex.project.mapper
 
 import ch.baunex.catalog.mapper.toProjectCatalogItemDTO
+import ch.baunex.notes.dto.NoteDto
+import ch.baunex.notes.mapper.toDto
 import ch.baunex.notes.model.NoteModel
 import ch.baunex.project.dto.*
 import ch.baunex.project.model.ProjectModel
@@ -48,7 +50,24 @@ class ProjectMapper @Inject constructor(
         timeEntries  = model.timeEntries.sortedBy { it.date }.map { timeEntryMapper.toTimeEntryResponseDTO(it) },
         catalogItems = model.usedItems.map { it.toProjectCatalogItemDTO() },
         contacts     = model.customer.contacts.map { customerMapper.toContactDTO(it) },
-        projectNumberFormatted = "PR-" + model.projectNumber.toString().padStart(4, '0')
+        projectNumberFormatted = "PR-" + model.projectNumber.toString().padStart(4, '0'),
+        notes        = model.notes.map { note ->
+            NoteDto(
+                id = note.id!!,
+                projectId = note.project?.id,
+                timeEntryId = note.timeEntry?.id,
+                documentId = note.document?.id,
+                createdById = note.createdBy.id!!,
+                createdByName = "${note.createdBy.person.firstName} ${note.createdBy.person.lastName}",
+                createdAt = note.createdAt,
+                updatedAt = note.updatedAt,
+                title = note.title,
+                content = note.content,
+                category = note.category,
+                tags = note.tags,
+                attachments = note.attachments.map { it.toDto() }
+            )
+        }
     )
 
     fun toDTO(model: ProjectModel): ProjectDTO {

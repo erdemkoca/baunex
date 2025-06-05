@@ -1,6 +1,7 @@
 package ch.baunex.project.dto
 
 import ch.baunex.catalog.dto.ProjectCatalogItemDTO
+import ch.baunex.notes.dto.NoteDto
 import ch.baunex.project.model.ProjectStatus
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.user.dto.CustomerContactDTO
@@ -26,6 +27,6 @@ data class ProjectDetailDTO(
     val customer: CustomerDTO,
     val timeEntries: List<TimeEntryResponseDTO>,
     val catalogItems: List<ProjectCatalogItemDTO>,
-    val contacts: List<CustomerContactDTO>
-
+    val contacts: List<CustomerContactDTO>,
+    val notes: List<NoteDto> = emptyList()
 )

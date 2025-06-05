@@ -1,271 +1,335 @@
 {#include layout}
-{#title}{#if project.id}Projekt – {project.name}{#else}Neues Projekt{/if}{/title}
-{#header}{#if project.id}Projektübersicht{#else}Neues Projekt{/if}{/header}
-{#content}
+    {#title}{#if project.id}Projekt – {project.name}{#else}Neues Projekt{/if}{/title}
+    {#header}{#if project.id}Projektübersicht{#else}Neues Projekt{/if}{/header}
+    {#content}
 
-<!-- Tab Navigation -->
-<ul class="nav nav-tabs mb-3" role="tablist">
-    <li class="nav-item">
-        <a class="nav-link active" data-bs-toggle="tab" href="#overview" role="tab">Übersicht</a>
-    </li>
-    {#if project.id}
-    <li class="nav-item">
-        <a class="nav-link" data-bs-toggle="tab" href="#timelogs" role="tab">Zeiterfassung</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" data-bs-toggle="tab" href="#catalog" role="tab">Katalog</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" data-bs-toggle="tab" href="#contacts" role="tab">Kontakte</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" data-bs-toggle="tab" href="#billing" role="tab">Abrechnung</a>
-    </li>
-    {/if}
-</ul>
-
-<div class="tab-content">
-
-    <!-- Overview Tab -->
-    <div class="tab-pane fade show active" id="overview" role="tabpanel">
-        <form action="/projects/save" method="post">
+        <!-- Tab Navigation -->
+        <ul class="nav nav-tabs mb-3" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#overview" role="tab">Übersicht</a>
+            </li>
             {#if project.id}
-                <input type="hidden" name="id" value="{project.id}" />
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#timelogs" role="tab">Zeiterfassung</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#catalog" role="tab">Katalog</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#contacts" role="tab">Kontakte</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#billing" role="tab">Abrechnung</a>
+                </li>
             {/if}
-            <div class="card mb-4">
-                <div class="card-header">
-                    {#if project.id}Projekt bearbeiten{#else}Neues Projekt erstellen{/if}
-                </div>
-                <div class="card-body">
+        </ul>
 
-                    <!-- Project Name -->
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Projektname</label>
-                        <input type="text"
-                               id="name"
-                               name="name"
-                               class="form-control"
-                               value="{project.name}"
-                               required />
-                    </div>
+        <div class="tab-content">
 
-                    <!-- Customer Select -->
-                    <div class="mb-3">
-                        <label for="customerId" class="form-label">Kunde</label>
-                        <select id="customerId"
-                                name="customerId"
-                                class="form-select"
-                                required>
-                            <option value="" disabled {#if project.customerId == 0}selected{/if}>
-                                -- Kunde auswählen --
-                            </option>
-                            {#for cust in customers}
-                                <option value="{cust.id}"
-                                        {#if cust.id == project.customerId}selected{/if}>
-                                    {#if cust.companyName}
-                                        {cust.companyName}
-                                    {#else}
-                                        {cust.firstName} {cust.lastName}
-                                    {/if}
-                                </option>
-                            {/for}
-                        </select>
-                    </div>
-
-                    <!-- Budget -->
-                    <div class="mb-3">
-                        <label for="budget" class="form-label">Budget (CHF)</label>
-                        <div class="input-group">
-                            <span class="input-group-text">CHF</span>
-                            <input type="number"
-                                   id="budget"
-                                   name="budget"
-                                   class="form-control"
-                                   value="{project.budget}"
-                                   min="0"
-                                   required />
+            <!-- Overview Tab -->
+            <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                <form action="/projects/save" method="post">
+                    {#if project.id}
+                        <input type="hidden" name="id" value="{project.id}" />
+                    {/if}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            {#if project.id}Projekt bearbeiten{#else}Neues Projekt erstellen{/if}
                         </div>
-                    </div>
+                        <div class="card-body">
 
-                    <!-- Description -->
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Beschreibung</label>
-                        <textarea id="description"
-                                  name="description"
-                                  class="form-control"
-                                  rows="3">{project.description ?: ''}</textarea>
-                    </div>
+                            <!-- Project Name -->
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Projektname</label>
+                                <input type="text"
+                                       id="name"
+                                       name="name"
+                                       class="form-control"
+                                       value="{project.name}"
+                                       required />
+                            </div>
 
-                    <!-- Dates -->
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label for="startDate" class="form-label">Startdatum</label>
-                            <input type="date"
-                                   id="startDate"
-                                   name="startDate"
-                                   class="form-control"
-                                   value="{project.startDate ?: ''}" />
-                        </div>
-                        <div class="col-md-6">
-                            <label for="endDate" class="form-label">Enddatum</label>
-                            <input type="date"
-                                   id="endDate"
-                                   name="endDate"
-                                   class="form-control"
-                                   value="{project.endDate ?: ''}" />
-                        </div>
-                    </div>
+                            <!-- Customer Select -->
+                            <div class="mb-3">
+                                <label for="customerId" class="form-label">Kunde</label>
+                                <select id="customerId"
+                                        name="customerId"
+                                        class="form-select"
+                                        required>
+                                    <option value="" disabled {#if project.customerId == 0}selected{/if}>
+                                        -- Kunde auswählen --
+                                    </option>
+                                    {#for cust in customers}
+                                        <option value="{cust.id}"
+                                                {#if cust.id == project.customerId}selected{/if}>
+                                            {#if cust.companyName}{cust.companyName}{#else}{cust.firstName} {cust.lastName}{/if}
+                                        </option>
+                                    {/for}
+                                </select>
+                            </div>
 
-                    <!-- Location -->
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="street" class="form-label">Strasse</label>
-                            <input type="text"
-                                   id="street"
-                                   name="street"
-                                   class="form-control"
-                                   value="{project.street ?: ''}" />
-                        </div>
-                        <div class="col-md-6">
-                            <label for="city" class="form-label">Stadt</label>
-                            <input type="text"
-                                   id="city"
-                                   name="city"
-                                   class="form-control"
-                                   value="{project.city ?: ''}" />
-                        </div>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="mt-4 d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-save me-2"></i>
-                            {#if project.id}Projekt aktualisieren{#else}Projekt erstellen{/if}
-                        </button>
-                        <a href="/projects" class="btn btn-outline-secondary">Abbrechen</a>
-                    </div>
-
-                </div>
-            </div>
-        </form>
-    </div>
-
-    <!-- Time Logs Tab -->
-    <div class="tab-pane fade" id="timelogs" role="tabpanel">
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5>Zeiterfassung</h5>
-                {#if project.timeEntries.isEmpty()}
-                <p class="text-muted">Keine Zeiterfassungen für dieses Projekt.</p>
-                {#else}
-                <div class="accordion" id="timeEntriesAccordion">
-                    {#for entry in project.timeEntries}
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
-                                    data-bs-target="#entry{entry.id}" aria-expanded="false" aria-controls="entry{entry.id}">
-                                <div class="d-flex justify-content-between w-100 me-3">
-                                    <div>
-                                        <strong>{entry.employeeEmail}</strong> - {entry.date}
-                                    </div>
-                                    <div>
-                                        <span class="badge bg-primary me-2">{entry.hoursWorked} Stunden</span>
-                                        {#if !entry.billable}
-                                        <span class="badge bg-secondary">Nicht verrechenbar</span>
-                                        {/if}
-                                    </div>
-                                </div>
-                            </button>
-                        </h2>
-                        <div id="entry{entry.id}" class="accordion-collapse collapse" data-bs-parent="#timeEntriesAccordion">
-                            <div class="accordion-body">
-                                <!-- Basic Information -->
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <h6>Grundinformationen</h6>
-                                        <p><strong>Notiz:</strong> {entry.notes ?: "—"}</p>
-                                        <p><strong>Stundensatz:</strong> {entry.hourlyRate ?: "—"} CHF</p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h6>Status</h6>
-                                        <p>
-                                            <span class="badge {#if entry.invoiced}bg-success{#else}bg-warning{/if}">
-                                                {#if entry.invoiced}Fakturiert{#else}Nicht fakturiert{/if}
-                                            </span>
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <!-- Cost Breakdown -->
-                                <div class="row mb-3">
-                                    <div class="col-12">
-                                        <h6>Kostenaufschlüsselung</h6>
-                                        <table class="table table-sm">
-                                            <tbody>
-                                                <!-- Time Cost -->
-                                                <tr>
-                                                    <td>Zeitkosten</td>
-                                                    <td class="text-end">{entry.costBreakdown.timeCost} CHF</td>
-                                                </tr>
-                                                
-                                                <!-- Surcharges -->
-                                                {#if entry.costBreakdown.nightSurcharge != null}
-                                                <tr>
-                                                    <td>Nachtzuschlag</td>
-                                                    <td class="text-end">{entry.costBreakdown.nightSurcharge} CHF</td>
-                                                </tr>
-                                                {/if}
-                                                {#if entry.costBreakdown.weekendSurcharge != null}
-                                                <tr>
-                                                    <td>Wochenendzuschlag</td>
-                                                    <td class="text-end">{entry.costBreakdown.weekendSurcharge} CHF</td>
-                                                </tr>
-                                                {/if}
-                                                {#if entry.costBreakdown.holidaySurcharge != null}
-                                                <tr>
-                                                    <td>Feiertagszuschlag</td>
-                                                    <td class="text-end">{entry.costBreakdown.holidaySurcharge} CHF</td>
-                                                </tr>
-                                                {/if}
-
-                                                <!-- Additional Costs -->
-                                                {#if entry.costBreakdown.travelTimeCost != null}
-                                                <tr>
-                                                    <td>Reisezeit ({entry.travelTimeMinutes} min)</td>
-                                                    <td class="text-end">{entry.costBreakdown.travelTimeCost} CHF</td>
-                                                </tr>
-                                                {/if}
-                                                {#if entry.costBreakdown.waitingTimeCost != null}
-                                                <tr>
-                                                    <td>Wartezeit ({entry.waitingTimeMinutes} min)</td>
-                                                    <td class="text-end">{entry.costBreakdown.waitingTimeCost} CHF</td>
-                                                </tr>
-                                                {/if}
-                                                {#if entry.costBreakdown.disposalCost != null}
-                                                <tr>
-                                                    <td>Entsorgungskosten</td>
-                                                    <td class="text-end">{entry.costBreakdown.disposalCost} CHF</td>
-                                                </tr>
-                                                {/if}
-
-                                                <!-- Total Service Cost -->
-                                                <tr class="table-primary">
-                                                    <td><strong>Gesamtkosten Dienstleistung</strong></td>
-                                                    <td class="text-end"><strong>{entry.costBreakdown.totalServiceCost} CHF</strong></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
+                            <!-- Budget -->
+                            <div class="mb-3">
+                                <label for="budget" class="form-label">Budget (CHF)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">CHF</span>
+                                    <input type="number"
+                                           id="budget"
+                                           name="budget"
+                                           class="form-control"
+                                           value="{project.budget}"
+                                           min="0"
+                                           required />
                                 </div>
                             </div>
+
+                            <!-- Description -->
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Beschreibung</label>
+                                <textarea id="description"
+                                          name="description"
+                                          class="form-control"
+                                          rows="3">{project.description ?: ''}</textarea>
+                            </div>
+
+                            <!-- Dates -->
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label for="startDate" class="form-label">Startdatum</label>
+                                    <input type="date"
+                                           id="startDate"
+                                           name="startDate"
+                                           class="form-control"
+                                           value="{project.startDate ?: ''}" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="endDate" class="form-label">Enddatum</label>
+                                    <input type="date"
+                                           id="endDate"
+                                           name="endDate"
+                                           class="form-control"
+                                           value="{project.endDate ?: ''}" />
+                                </div>
+                            </div>
+
+                            <!-- Location -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label for="street" class="form-label">Strasse</label>
+                                    <input type="text"
+                                           id="street"
+                                           name="street"
+                                           class="form-control"
+                                           value="{project.street ?: ''}" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="city" class="form-label">Stadt</label>
+                                    <input type="text"
+                                           id="city"
+                                           name="city"
+                                           class="form-control"
+                                           value="{project.city ?: ''}" />
+                                </div>
+                            </div>
+
+                            <!-- Aktionen -->
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save me-2"></i>
+                                    {#if project.id}Projekt aktualisieren{#else}Projekt erstellen{/if}
+                                </button>
+                                <a href="/projects" class="btn btn-outline-secondary">Abbrechen</a>
+                            </div>
+
                         </div>
                     </div>
-                    {/for}
+                </form>
+
+                <!-- Notizen-Bereich -->
+                <div class="card">
+                    <div class="card-header">Notizen</div>
+                    <div class="card-body">
+                        {#if project.notes.isEmpty()}
+                            <p class="text-muted">Noch keine Notizen für dieses Projekt.</p>
+                        {#else}
+                            <div class="accordion" id="projectNotesAccordion">
+                                {#for note in project.notes}
+                                    <div class="accordion-item mb-2">
+                                        <h2 class="accordion-header" id="noteHeader{note.id}">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                                    data-bs-target="#projectNote{note.id}" aria-expanded="false" aria-controls="projectNote{note.id}">
+                                                <div class="d-flex justify-content-between w-100">
+                                                    <div>
+                                                        {note.createdAt} – {note.createdByName}
+                                                        <span class="badge bg-secondary ms-2">{note.category}</span>
+                                                    </div>
+                                                    <div>
+                                                        {#if note.title}
+                                                            <em>{note.title}</em>
+                                                        {/if}
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        </h2>
+                                        <div id="projectNote{note.id}" class="accordion-collapse collapse" data-bs-parent="#projectNotesAccordion">
+                                            <div class="accordion-body">
+                                                <p>{note.content}</p>
+                                                {#if note.tags.isEmpty() == false}
+                                                    <p class="mb-1"><strong>Tags:</strong>
+                                                        {#for tag in note.tags}
+                                                            <span class="badge bg-secondary me-1">{tag}</span>
+                                                        {/for}
+                                                    </p>
+                                                {/if}
+                                                {#if note.attachments.isEmpty() == false}
+                                                    <p class="mb-0"><strong>Anhänge:</strong>
+                                                        {#for att in note.attachments}
+                                                            <a href="{att.url}" target="_blank">{att.caption ?: "Datei"}</a>
+                                                            {#if !for.last}, {/if}
+                                                        {/for}
+                                                    </p>
+                                                {/if}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {/for}
+                            </div>
+                        {/if}
+                    </div>
                 </div>
-                {/if}
             </div>
-        </div>
-    </div>
+
+            <!-- Time Logs Tab -->
+            {#if project.id}
+                <div class="tab-pane fade" id="timelogs" role="tabpanel">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5>Zeiterfassung</h5>
+                            {#if project.timeEntries.isEmpty()}
+                                <p class="text-muted">Keine Zeiterfassungen für dieses Projekt.</p>
+                            {#else}
+                                <div class="accordion" id="timeEntriesAccordion">
+                                    {#for entry in project.timeEntries}
+                                        <div class="accordion-item mb-3">
+                                            <h2 class="accordion-header" id="heading{entry.id}">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                                        data-bs-target="#entry{entry.id}" aria-expanded="false" aria-controls="entry{entry.id}">
+                                                    <div class="d-flex justify-content-between w-100">
+                                                        <div>
+                                                            <strong>{entry.employeeEmail}</strong> – {entry.date}
+                                                        </div>
+                                                        <div>
+                                                            <span class="badge bg-primary me-2">{entry.hoursWorked} Stunden</span>
+                                                            {#if !entry.billable}
+                                                                <span class="badge bg-secondary">Nicht verrechenbar</span>
+                                                            {/if}
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            </h2>
+                                            <div id="entry{entry.id}" class="accordion-collapse collapse" data-bs-parent="#timeEntriesAccordion">
+                                                <div class="accordion-body">
+
+                                                    <!-- Grundinformationen -->
+                                                    <div class="row mb-3">
+                                                        <div class="col-md-6">
+                                                            <h6>Grundinformationen</h6>
+                                                            <p><strong>Notiz:</strong>
+                                                                {#if entry.notes.isEmpty()}
+                                                                    —
+                                                                {#else}
+                                                                {#for note in entry.notes}
+                                                            <div class="mb-2">
+                                                                <span class="small text-muted">{note.createdAt} – {note.createdByName}</span><br />
+                                                                {#if note.title}
+                                                                    <strong>{note.title}</strong><br />
+                                                                {/if}
+                                                                <span>{note.content}</span>
+                                                            </div>
+                                                            {/for}
+                                                            {/if}
+                                                            </p>
+                                                            <p><strong>Stundensatz:</strong> {entry.hourlyRate ?: "—"} CHF</p>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <h6>Status</h6>
+                                                            <p>
+                          <span class="badge {#if entry.invoiced}bg-success{#else}bg-warning{/if}">
+                            {#if entry.invoiced}Fakturiert{#else}Nicht fakturiert{/if}
+                          </span>
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Kostenaufschlüsselung -->
+                                                    <div class="row mb-3">
+                                                        <div class="col-12">
+                                                            <h6>Kostenaufschlüsselung</h6>
+                                                            <table class="table table-sm">
+                                                                <tbody>
+                                                                <!-- Zeitkosten -->
+                                                                <tr>
+                                                                    <td>Zeitkosten</td>
+                                                                    <td class="text-end">{entry.costBreakdown.timeCost} CHF</td>
+                                                                </tr>
+                                                                <!-- Zuschläge -->
+                                                                {#if entry.costBreakdown.nightSurcharge != null}
+                                                                    <tr>
+                                                                        <td>Nachtzuschlag</td>
+                                                                        <td class="text-end">{entry.costBreakdown.nightSurcharge} CHF</td>
+                                                                    </tr>
+                                                                {/if}
+                                                                {#if entry.costBreakdown.weekendSurcharge != null}
+                                                                    <tr>
+                                                                        <td>Wochenendzuschlag</td>
+                                                                        <td class="text-end">{entry.costBreakdown.weekendSurcharge} CHF</td>
+                                                                    </tr>
+                                                                {/if}
+                                                                {#if entry.costBreakdown.holidaySurcharge != null}
+                                                                    <tr>
+                                                                        <td>Feiertagszuschlag</td>
+                                                                        <td class="text-end">{entry.costBreakdown.holidaySurcharge} CHF</td>
+                                                                    </tr>
+                                                                {/if}
+                                                                <!-- Weitere Kosten -->
+                                                                {#if entry.costBreakdown.travelTimeCost != null}
+                                                                    <tr>
+                                                                        <td>Reisezeit ({entry.travelTimeMinutes} min)</td>
+                                                                        <td class="text-end">{entry.costBreakdown.travelTimeCost} CHF</td>
+                                                                    </tr>
+                                                                {/if}
+                                                                {#if entry.costBreakdown.waitingTimeCost != null}
+                                                                    <tr>
+                                                                        <td>Wartezeit ({entry.waitingTimeMinutes} min)</td>
+                                                                        <td class="text-end">{entry.costBreakdown.waitingTimeCost} CHF</td>
+                                                                    </tr>
+                                                                {/if}
+                                                                {#if entry.costBreakdown.disposalCost != null}
+                                                                    <tr>
+                                                                        <td>Entsorgungskosten</td>
+                                                                        <td class="text-end">{entry.costBreakdown.disposalCost} CHF</td>
+                                                                    </tr>
+                                                                {/if}
+                                                                <!-- Gesamtkosten Dienstleistung -->
+                                                                <tr class="table-primary">
+                                                                    <td><strong>Gesamtkosten Dienstleistung</strong></td>
+                                                                    <td class="text-end"><strong>{entry.costBreakdown.totalServiceCost} CHF</strong></td>
+                                                                </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {/for}
+                                </div>
+                            {/if}
+                        </div>
+                    </div>
+                </div>
+            {/if}
 
     <!-- Catalog Tab -->
     <div class="tab-pane fade" id="catalog" role="tabpanel">
@@ -629,7 +693,7 @@
         </div>
     </div>
 
-</div>
+        </div>
 
-{/content}
+    {/content}
 {/include}
