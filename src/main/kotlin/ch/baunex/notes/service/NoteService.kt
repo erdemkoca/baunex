@@ -15,6 +15,7 @@ import ch.baunex.timetracking.repository.TimeEntryRepository
 import ch.baunex.user.repository.EmployeeRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @ApplicationScoped
@@ -66,7 +67,7 @@ class NoteService(
             this.timeEntry = timeEntryModel
             this.document = documentModel
             this.createdBy = userModel
-            this.createdAt = LocalDateTime.now()
+            this.createdAt = LocalDate.now()
             this.title = createDto.title
             this.content = createDto.content
             this.category = createDto.category
@@ -92,7 +93,7 @@ class NoteService(
         existing.content = updateDto.content
         existing.category = updateDto.category
         existing.tags = updateDto.tags
-        existing.updatedAt = LocalDateTime.now()
+        existing.updatedAt = LocalDate.now()
 
         // Projekt/TimeEntry/Document-Verknüpfung kann optional geändert werden, wenn nötig:
         // existing.project = updateDto.projectId?.let { projectRepo.findById(it) }

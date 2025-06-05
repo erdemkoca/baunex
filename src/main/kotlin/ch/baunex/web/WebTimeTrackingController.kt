@@ -158,7 +158,7 @@ class WebTimeTrackingController {
                 documentId    = null,
                 createdById   = employeeId,  // z. B. Hero, aus Session holen
                 createdByName = employeeFacade.findById(employeeId).firstName + employeeFacade.findById(employeeId).lastName,
-                createdAt     = LocalDateTime.now(),
+                createdAt     = LocalDate.now(),
                 updatedAt     = null,
                 title         = noteTitle,
                 content       = noteContent,

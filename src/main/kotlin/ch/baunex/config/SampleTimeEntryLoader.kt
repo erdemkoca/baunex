@@ -9,7 +9,6 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 @ApplicationScoped
 class SampleTimeEntryLoader {
@@ -36,7 +35,7 @@ class SampleTimeEntryLoader {
                         documentId    = null,
                         createdById   = 1L,
                         createdByName = "Max Mustermann",
-                        createdAt     = LocalDateTime.now().minusDays(7).plusHours(12),
+                        createdAt     = LocalDate.now().minusDays(7),
                         updatedAt     = null,
                         title         = "Notfall-Einsatz Serverraum",
                         content       = "Stromausfall führte zu Ausfall der Klimaanlage. Wir mussten sofort Ersatzgenerator einsetzen.",
@@ -89,7 +88,7 @@ class SampleTimeEntryLoader {
                         documentId    = null,
                         createdById   = 1L,
                         createdByName = "Max Mustermann",
-                        createdAt     = LocalDateTime.now().minusDays(6).plusHours(9),
+                        createdAt     = LocalDate.now().minusDays(6),
                         updatedAt     = null,
                         title         = "Verteilerschrank Montage",
                         content       = "Hauptverteiler installiert, Verkabelung geprüft. Kleinere Anpassungen am Sicherungskasten notwendig.",
@@ -146,7 +145,7 @@ class SampleTimeEntryLoader {
                         documentId    = null,
                         createdById   = 1L,
                         createdByName = "Max Mustermann",
-                        createdAt     = LocalDateTime.now().minusDays(5).plusHours(8),
+                        createdAt     = LocalDate.now().minusDays(5),
                         updatedAt     = null,
                         title         = "Fehlerbehebung Feiertag",
                         content       = "Sicherung defekt, musste ausgetauscht werden. Kunde nicht vor Ort, Ersatzteil vorgehalten.",
@@ -192,7 +191,7 @@ class SampleTimeEntryLoader {
                         documentId    = null,
                         createdById   = 1L,
                         createdByName = "Max Mustermann",
-                        createdAt     = LocalDateTime.now().minusDays(4).plusHours(10),
+                        createdAt     = LocalDate.now().minusDays(4),
                         updatedAt     = null,
                         title         = "Warten auf Materialien",
                         content       = "Lieferung der Klimaanlagenfilter verzögert sich um 2 Tage, Kunde informiert.",
@@ -237,7 +236,7 @@ class SampleTimeEntryLoader {
                         documentId    = null,
                         createdById   = 1L,
                         createdByName = "Max Mustermann",
-                        createdAt     = LocalDateTime.now().minusDays(3).plusHours(11),
+                        createdAt     = LocalDate.now().minusDays(3),
                         updatedAt     = null,
                         title         = "Netzwerkverkabelung",
                         content       = "Cat7-Kabel verlegt, Ports getestet. Switch konfiguriert.",
@@ -287,7 +286,7 @@ class SampleTimeEntryLoader {
                         documentId    = null,
                         createdById   = 1L,
                         createdByName = "Max Mustermann",
-                        createdAt     = LocalDateTime.now().minusDays(2).plusHours(14),
+                        createdAt     = LocalDate.now().minusDays(2),
                         updatedAt     = null,
                         title         = "Dringender Kundeneinsatz",
                         content       = "Alarmanlage defekt, Ersatzteil zufällig auf Lager, sofort eingebaut.",
@@ -333,7 +332,7 @@ class SampleTimeEntryLoader {
                         documentId    = null,
                         createdById   = 1L,
                         createdByName = "Max Mustermann",
-                        createdAt     = LocalDateTime.now().minusDays(1).plusHours(9),
+                        createdAt     = LocalDate.now().minusDays(1),
                         updatedAt     = null,
                         title         = "Allgemeiner Check-up",
                         content       = "Überprüfung der Steckdosen und Leitungen im gesamten Erdgeschoss.",
@@ -376,7 +375,7 @@ class SampleTimeEntryLoader {
                         documentId    = null,
                         createdById   = 1L,
                         createdByName = "Max Mustermann",
-                        createdAt     = LocalDateTime.now().minusHours(2),
+                        createdAt     = LocalDate.now().minusDays(2),
                         updatedAt     = null,
                         title         = "Zutrittskontrolle konfiguriert",
                         content       = "Alle Lesegeräte eingerichtet, Karten funktionieren.",

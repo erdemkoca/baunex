@@ -1,22 +1,23 @@
 {#include layout}
-{#title}Projekte – Baunex Business Management{/title}
-{#header}Projekte{/header}
-{#content}
-  <div class="mb-4 d-flex justify-content-between align-items-center">
-    <h4 class="mb-0">Alle Projekte</h4>
-    <a href="/projects/new" class="btn btn-primary">
-      <i class="bi bi-plus-circle me-2"></i>Neues Projekt
-    </a>
-  </div>
+  {#title}Projekte – Baunex Business Management{/title}
+  {#header}Projekte{/header}
+  {#content}
 
-  <div class="card">
-    <div class="card-body p-0">
-      {#if projects.isEmpty()}
-        <p class="text-center text-muted py-4">Keine Projekte gefunden.</p>
-      {#else}
-        <div class="table-responsive">
-          <table class="table table-hover mb-0">
-            <thead class="table-light">
+    <div class="mb-4 d-flex justify-content-between align-items-center">
+      <h4 class="mb-0">Alle Projekte</h4>
+      <a href="/projects/new" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Neues Projekt
+      </a>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body p-0">
+        {#if projects.isEmpty()}
+          <p class="text-center text-muted py-4">Keine Projekte gefunden.</p>
+        {#else}
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
               <tr>
                 <th>Projektnr.</th>
                 <th>Name</th>
@@ -27,10 +28,16 @@
                 <th>Status</th>
                 <th class="text-end">Aktionen</th>
               </tr>
-            </thead>
-            <tbody>
+              </thead>
+              <tbody>
               {#for project in projects}
-                <tr class="align-middle">
+                <!--
+                  Durch data-href wird die komplette Zeile klickbar:
+                  ein Klick auf die Zeile öffnet dann /projects/{project.id}
+                -->
+                <tr class="align-middle"
+                    data-href="/projects/{project.id}"
+                    style="cursor: pointer;">
                   <td>{project.projectNumberFormatted}</td>
                   <td>{project.name}</td>
                   <td>{project.customerName}</td>
@@ -51,41 +58,43 @@
                     {/if}
                   </td>
                   <td class="text-end">
-                    <div class="btn-group" role="group" aria-label="Aktionen">
-                      <a href="/projects/{project.id}"
-                         class="btn btn-sm btn-outline-primary"
-                         title="Ansicht">
-                        <i class="bi bi-eye"></i>
-                      </a>
-                      <a href="/projects/{project.id}/edit"
-                         class="btn btn-sm btn-outline-secondary"
-                         title="Bearbeiten">
-                        <i class="bi bi-pencil"></i>
-                      </a>
-                      <a href="/projects/{project.id}/delete"
-                         class="btn btn-sm btn-outline-danger"
-                         title="Löschen"
-                         onclick="return confirm('Möchten Sie dieses Projekt wirklich löschen?')">
-                        <i class="bi bi-trash"></i>
-                      </a>
-                    </div>
+                    <a href="/projects/{project.id}/delete"
+                       class="btn btn-sm btn-outline-danger"
+                       title="Löschen"
+                       onclick="return confirm('Möchten Sie dieses Projekt wirklich löschen?')">
+                      <i class="bi bi-trash"></i>
+                    </a>
                   </td>
                 </tr>
               {/for}
-            </tbody>
-          </table>
-        </div>
-      {/if}
+              </tbody>
+            </table>
+          </div>
+        {/if}
+      </div>
     </div>
-  </div>
-{/content}
+
+
+    <div class="card">
+      <div class="card-header">Kürzliche Notizen (Platzhalter)</div>
+      <div class="card-body">
+        <p class="text-muted">Hier könnten Ihre neuesten Projekt-Notizen auftauchen.</p>
+      </div>
+    </div>
+
+  {/content}
 {/include}
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll("tbody tr").forEach(row => {
+    // Jede Zeile, die ein data-href hat, wird anklickbar
+    document.querySelectorAll("tbody tr[data-href]").forEach(row => {
       row.addEventListener("click", function (e) {
-        if (!e.target.closest("a") && !e.target.closest("button") && row.dataset.href) {
+        // Klick auf Link/Schaltfläche in der Zeile soll den row-click nicht auslösen:
+        if (
+                !e.target.closest("a") &&
+                !e.target.closest("button")
+        ) {
           window.location.href = row.dataset.href;
         }
       });

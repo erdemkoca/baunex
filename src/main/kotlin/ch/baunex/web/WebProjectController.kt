@@ -172,7 +172,7 @@ class WebProjectController {
                     documentId    = null,
                     createdById   = employeeId,
                     createdByName = employeeFacade.findById(employeeId).firstName + employeeFacade.findById(employeeId).lastName,
-                    createdAt     = LocalDateTime.now(),
+                    createdAt     = LocalDate.now(),
                     updatedAt     = null,
                     title         = projectNoteTitle,
                     content       = projectNoteContent,

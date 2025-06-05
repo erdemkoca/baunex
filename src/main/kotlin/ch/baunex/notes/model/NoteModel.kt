@@ -7,6 +7,7 @@ import ch.baunex.timetracking.model.TimeEntryModel
 import ch.baunex.user.model.EmployeeModel
 import io.quarkus.hibernate.orm.panache.PanacheEntity
 import jakarta.persistence.*
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Entity
@@ -36,10 +37,10 @@ class NoteModel : PanacheEntity() {
     lateinit var createdBy: EmployeeModel
 
     @Column(name = "created_at", nullable = false)
-    var createdAt: LocalDateTime = LocalDateTime.now()
+    var createdAt: LocalDate? = null
 
     @Column(name = "updated_at")
-    var updatedAt: LocalDateTime? = null
+    var updatedAt: LocalDate? = null
 
     @Column(name = "title")
     var title: String? = null

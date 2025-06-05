@@ -11,7 +11,6 @@ import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import java.time.LocalDate
 import org.jboss.logging.Logger
-import java.time.LocalDateTime
 
 /**
  * Lädt Beispiel-Projekte und verknüpft sie mit bestehenden Kunden aus dem CustomerFacade.
@@ -66,7 +65,7 @@ class SampleProjectLoader {
                         documentId    = null,
                         createdById   = 1L,
                         createdByName = "Max Mustermann",
-                        createdAt     = LocalDateTime.now().minusDays(29),
+                        createdAt     = LocalDate.now().minusDays(29),
                         updatedAt     = null,
                         title         = "Kundengespräch abgeschlossen",
                         content       = "Am 05.05.2025 mit Herrn Müller abgesprochen, dass die Elektroinstallation bis Ende August fertig sein soll.",
@@ -81,7 +80,7 @@ class SampleProjectLoader {
                         documentId    = null,
                         createdById   = 1L,
                         createdByName = "Max Mustermann",
-                        createdAt     = LocalDateTime.now().minusDays(25),
+                        createdAt     = LocalDate.now().minusDays(25),
                         updatedAt     = null,
                         title         = "Materialbedarf prüfen",
                         content       = "Benötigen 50m NYM-J 5x1.5, 30m NYM-J 3x1.5, sowie 10 Sicherungsautomaten Typ B16.",
@@ -109,7 +108,7 @@ class SampleProjectLoader {
                         documentId    = null,
                         createdById   = 1L,
                         createdByName = "Max Mustermann",
-                        createdAt     = LocalDateTime.now().minusDays(9),
+                        createdAt     = LocalDate.now().minusDays(9),
                         updatedAt     = null,
                         title         = "Planung Vorerst",
                         content       = "Standort wurde besichtigt, Stromanschluss ist 63A vorhanden. Genehmigung durch Parkplatzbetreiber steht noch aus.",
@@ -137,7 +136,7 @@ class SampleProjectLoader {
                         documentId    = null,
                         createdById   = 1L,
                         createdByName = "Max Mustermann",
-                        createdAt     = LocalDateTime.now().minusDays(20),
+                        createdAt     = LocalDate.now().minusDays(20),
                         updatedAt     = null,
                         title         = "Erster Rundgang",
                         content       = "Bestandsaufnahme alter Kabel und Verteilerschrank. Fotos angehängt für späteren Vergleich.",
@@ -152,7 +151,7 @@ class SampleProjectLoader {
                         documentId    = null,
                         createdById   = 1L,
                         createdByName = "Max Mustermann",
-                        createdAt     = LocalDateTime.now().minusDays(15),
+                        createdAt     = LocalDate.now().minusDays(15),
                         updatedAt     = null,
                         title         = "Fehler im Altkasten",
                         content       = "Sicherungskasten ist zu klein, muss gegen neuen 13-Reihen-Schrank getauscht werden.",
@@ -180,7 +179,7 @@ class SampleProjectLoader {
                         documentId    = null,
                         createdById   = 1L,
                         createdByName = "Max Mustermann",
-                        createdAt     = LocalDateTime.now().minusDays(4),
+                        createdAt     = LocalDate.now().minusDays(4),
                         updatedAt     = null,
                         title         = "Lichtkonzept erstellen",
                         content       = "Architekturbüro hat Anforderungen übermittelt: dimmbare LED-Panels gewünscht.",

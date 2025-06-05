@@ -9,6 +9,7 @@ import ch.baunex.user.service.EmployeeService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @ApplicationScoped
@@ -62,7 +63,7 @@ class ProjectFacade @Inject constructor(
             this.category = category
             this.content = content
             this.tags = tags
-            this.createdAt = LocalDateTime.now()
+            this.createdAt = LocalDate.now()
             this.createdBy = creator
             this.project = project
         }

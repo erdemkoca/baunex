@@ -5,6 +5,7 @@ import ch.baunex.invoice.dto.InvoiceDTO
 import ch.baunex.invoice.dto.InvoiceItemDTO
 import ch.baunex.invoice.model.InvoiceModel
 import ch.baunex.invoice.model.InvoiceItemModel
+import ch.baunex.notes.model.NoteModel
 import ch.baunex.notes.dto.NoteDto
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.user.facade.CustomerFacade
@@ -33,7 +34,7 @@ class InvoiceMapper @Inject constructor(
             val invoiceEntity = this
 
             this.notes = dto.notes.map { noteDto ->
-                ch.baunex.notes.model.NoteModel().apply {
+                NoteModel().apply {
                     this.content = noteDto.content
                     this.title = noteDto.title
                     this.category = noteDto.category
