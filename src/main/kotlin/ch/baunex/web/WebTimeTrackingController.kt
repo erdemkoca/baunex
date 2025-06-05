@@ -1,6 +1,8 @@
 package ch.baunex.web
 
 import ch.baunex.catalog.facade.CatalogFacade
+import ch.baunex.notes.dto.NoteDto
+import ch.baunex.notes.model.NoteCategory
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.timetracking.dto.TimeEntryCatalogItemDTO
@@ -14,6 +16,7 @@ import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import java.net.URI
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.logging.Logger
 
 @Path("/timetracking")
@@ -121,16 +124,11 @@ class WebTimeTrackingController {
         @FormParam("travelTimeMinutes") travelTimeMinutes: Int = 0,
         @FormParam("disposalCost") disposalCost: Double = 0.0,
         @FormParam("hasWaitingTime") hasWaitingTime: String?,
-        @FormParam("waitingTimeMinutes") waitingTimeMinutes: Int = 0
+        @FormParam("waitingTimeMinutes") waitingTimeMinutes: Int = 0,
+        @FormParam("noteTitle") noteTitle: String?,
+        @FormParam("noteContent") noteContent: String?,
+        @FormParam("noteCategory") noteCategory: String?
     ): Response {
-        // Debug logging
-        logger.info("Form parameters received:")
-        logger.info("notBillable: $notBillable")
-        logger.info("invoiced: $invoiced")
-        logger.info("hasNightSurcharge: $hasNightSurcharge")
-        logger.info("hasWeekendSurcharge: $hasWeekendSurcharge")
-        logger.info("hasHolidaySurcharge: $hasHolidaySurcharge")
-        logger.info("hasWaitingTime: $hasWaitingTime")
 
         val catalogItems = if (catalogItemIds != null && catalogItemQuantities != null && 
                              catalogItemNames != null && catalogItemPrices != null) {
@@ -149,12 +147,32 @@ class WebTimeTrackingController {
             emptyList()
         }
 
+        val singleNote: NoteDto? = if (!noteContent.isNullOrBlank()) {
+            NoteDto(
+                id            = 0L,               // 0L fuer neu (wird in Service ueberschrieben)
+                projectId     = projectId,        // oder null, je nachdem
+                timeEntryId   = null,             // im Create‐Fall wird erst TimeEntry gespeichert
+                documentId    = null,
+                createdById   = employeeId,  // z. B. Hero, aus Session holen
+                createdByName = employeeFacade.findById(employeeId).firstName + employeeFacade.findById(employeeId).lastName,
+                createdAt     = LocalDateTime.now(),
+                updatedAt     = null,
+                title         = noteTitle,
+                content       = noteContent,
+                category      = NoteCategory.valueOf(noteCategory ?: "INFO"),
+                tags          = emptyList(),
+                attachments   = emptyList()
+            )
+        } else {
+            null
+        }
+
         val dto = TimeEntryDTO(
             employeeId = employeeId,
             projectId = projectId,
             date = date,
             hoursWorked = hoursWorked,
-            notes = emptyList(),
+            notes = if (singleNote != null) listOf(singleNote) else emptyList(),
             hourlyRate = hourlyRate,
             billable = notBillable != "true",
             invoiced = invoiced == "true",
@@ -191,15 +209,6 @@ class WebTimeTrackingController {
                 )
             )
         )
-
-        // Debug logging for DTO values
-        logger.info("DTO values:")
-        logger.info("billable: ${dto.billable}")
-        logger.info("invoiced: ${dto.invoiced}")
-        logger.info("hasNightSurcharge: ${dto.hasNightSurcharge}")
-        logger.info("hasWeekendSurcharge: ${dto.hasWeekendSurcharge}")
-        logger.info("hasHolidaySurcharge: ${dto.hasHolidaySurcharge}")
-        logger.info("hasWaitingTime: ${dto.hasWaitingTime}")
 
         if (id == null) {
             timeTrackingFacade.logTime(dto)

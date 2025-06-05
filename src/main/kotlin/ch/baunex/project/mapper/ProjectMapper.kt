@@ -1,17 +1,22 @@
 package ch.baunex.project.mapper
 
 import ch.baunex.catalog.mapper.toProjectCatalogItemDTO
+import ch.baunex.notes.model.NoteModel
 import ch.baunex.project.dto.*
 import ch.baunex.project.model.ProjectModel
+import ch.baunex.project.model.ProjectStatus
 import ch.baunex.timetracking.mapper.TimeEntryMapper
 import ch.baunex.user.mapper.CustomerMapper
+import ch.baunex.user.model.CustomerModel
+import ch.baunex.user.service.EmployeeService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 
 @ApplicationScoped
 class ProjectMapper @Inject constructor(
     private val timeEntryMapper: TimeEntryMapper,
-    private val customerMapper: CustomerMapper
+    private val customerMapper: CustomerMapper,
+    private val employeeService: EmployeeService
 ) {
     fun toListDTO(model: ProjectModel): ProjectListDTO {
         return ProjectListDTO(
@@ -74,32 +79,121 @@ class ProjectMapper @Inject constructor(
             name = dto.name
             budget = dto.budget
             description = dto.description
-            status = ch.baunex.project.model.ProjectStatus.valueOf(dto.status.name)
+            status = ProjectStatus.valueOf(dto.status.name)
             street = dto.street
             city = dto.city
         }
     }
+
+    fun createModel(dto: ProjectCreateDTO, customer: CustomerModel): ProjectModel {
+        return ProjectModel().apply {
+            name        = dto.name
+            this.customer = customer
+            budget      = dto.budget
+            startDate   = dto.startDate
+            endDate     = dto.endDate
+            description = dto.description
+            status      = dto.status
+            street      = dto.street
+            city        = dto.city
+
+            val projectEntity = this
+            notes = dto.initialNotes.map { noteDto ->
+                NoteModel().apply {
+                    content    = noteDto.content
+                    title      = noteDto.title
+                    category   = noteDto.category
+                    tags       = noteDto.tags
+                    createdAt  = noteDto.createdAt
+                    updatedAt  = noteDto.updatedAt
+                    createdBy  = employeeService.findEmployeeById(noteDto.createdById)!!
+                    project    = projectEntity
+                }
+            }.toMutableList()
+        }
+    }
+
+    fun updateModel(model: ProjectModel, dto: ProjectUpdateDTO) {
+        dto.name       ?.let { model.name        = it }
+        dto.budget     ?.let { model.budget      = it }
+        dto.startDate  ?.let { model.startDate   = it }
+        dto.endDate    ?.let { model.endDate     = it }
+        dto.description?.let { model.description = it }
+        dto.status     ?.let { model.status      = it }
+        dto.street     ?.let { model.street      = it }
+        dto.city       ?.let { model.city        = it }
+
+        if (dto.updatedNotes.isNotEmpty()) {
+            model.notes.clear()
+            val projectEntity = model
+            val newNotes = dto.updatedNotes.map { noteDto ->
+                NoteModel().apply {
+                    content    = noteDto.content
+                    title      = noteDto.title
+                    category   = noteDto.category
+                    tags       = noteDto.tags
+                    createdAt  = noteDto.createdAt
+                    updatedAt  = noteDto.updatedAt
+                    createdBy  = employeeService.findEmployeeById(noteDto.createdById)!!
+                    project    = projectEntity
+                }
+            }
+            model.notes.addAll(newNotes)
+        }
+    }
 }
 
-fun ProjectCreateDTO.toModel(customer: ch.baunex.user.model.CustomerModel) = ProjectModel().apply {
-    name        = this@toModel.name
-    this.customer = customer
-    budget      = this@toModel.budget
-    startDate   = this@toModel.startDate
-    endDate     = this@toModel.endDate
-    description = this@toModel.description
-    status      = this@toModel.status
-    street      = this@toModel.street
-    city        = this@toModel.city
-}
-
-fun ProjectUpdateDTO.applyTo(model: ProjectModel) {
-    name        ?.let { model.name        = it }
-    budget      ?.let { model.budget      = it }
-    startDate   ?.let { model.startDate   = it }
-    endDate     ?.let { model.endDate     = it }
-    description ?.let { model.description = it }
-    status      ?.let { model.status      = it }
-    street      ?.let { model.street      = it }
-    city        ?.let { model.city        = it }
-}
+//fun ProjectCreateDTO.toModel(customer: CustomerModel) = ProjectModel().apply {
+//    name        = this@toModel.name
+//    this.customer = customer
+//    budget      = this@toModel.budget
+//    startDate   = this@toModel.startDate
+//    endDate     = this@toModel.endDate
+//    description = this@toModel.description
+//    status      = this@toModel.status
+//    street      = this@toModel.street
+//    city        = this@toModel.city
+//
+//    val projectEntity = this
+//    notes = this@toModel.initialNotes.map { noteDto ->
+//        NoteModel().apply {
+//            content    = noteDto.content
+//            title      = noteDto.title
+//            category   = noteDto.category
+//            tags       = noteDto.tags
+//            createdAt  = noteDto.createdAt
+//            updatedAt  = noteDto.updatedAt
+//            createdBy  = employeeService.findEmployeeById(noteDto.createdById)!!
+//            project    = projectEntity
+//        }
+//    }.toMutableList()
+//
+//}
+//
+//fun ProjectUpdateDTO.applyTo(model: ProjectModel) {
+//    name        ?.let { model.name        = it }
+//    budget      ?.let { model.budget      = it }
+//    startDate   ?.let { model.startDate   = it }
+//    endDate     ?.let { model.endDate     = it }
+//    description ?.let { model.description = it }
+//    status      ?.let { model.status      = it }
+//    street      ?.let { model.street      = it }
+//    city        ?.let { model.city        = it }
+//    if (updatedNotes.isNotEmpty()) {
+//        model.notes.clear()
+//        val projectEntity = model
+//        val newNotes = updatedNotes.map { noteDto ->
+//            NoteModel().apply {
+//                content    = noteDto.content
+//                title      = noteDto.title
+//                category   = noteDto.category
+//                tags       = noteDto.tags
+//                createdAt  = noteDto.createdAt
+//                updatedAt  = noteDto.updatedAt
+//                createdBy  = employeeService.findEmployeeById(noteDto.createdById)!!
+//                project    = projectEntity
+//            }
+//        }
+//        model.notes.addAll(newNotes)
+//    }
+//}

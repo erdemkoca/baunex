@@ -7,6 +7,7 @@ import ch.baunex.timetracking.repository.TimeEntryRepository
 import ch.baunex.user.repository.EmployeeRepository
 import ch.baunex.project.repository.ProjectRepository
 import ch.baunex.catalog.service.CatalogService
+import ch.baunex.notes.model.NoteModel
 import ch.baunex.user.service.EmployeeService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
@@ -31,12 +32,41 @@ class TimeTrackingService @Inject constructor(
         val project = projectRepository.findById(dto.projectId)
             ?: throw IllegalArgumentException("Project not found with id: ${dto.projectId}")
 
-        val timeEntry = timeEntryMapper.toTimeEntryModel(dto, employee, project)
+        // 1. TimeEntryModel neu anlegen
+        val timeEntry = TimeEntryModel().apply {
+            this.employee = employee
+            this.project = project
+            this.date = dto.date
+            this.hoursWorked = dto.hoursWorked
+            this.hourlyRate = employee.hourlyRate
+            this.billable = dto.billable
+            this.invoiced = dto.invoiced
+            this.catalogItemDescription = dto.catalogItemDescription
+            this.catalogItemPrice = dto.catalogItemPrice
+
+            // 2. Notizen verarbeiten
+            val parent = this
+            this.notes = dto.notes.map { noteDto ->
+                NoteModel().apply {
+                    content    = noteDto.content
+                    title      = noteDto.title
+                    category   = noteDto.category
+                    tags       = noteDto.tags
+                    createdAt  = noteDto.createdAt
+                    updatedAt  = noteDto.updatedAt
+                    createdBy  = employeeService.findEmployeeById(noteDto.createdById)!!
+                    timeEntry  = parent
+                }
+            }.toMutableList()
+        }
+
+        // 3. speichern
         timeEntryRepository.persist(timeEntry)
 
-        // Handle catalog items
+        // 4. Katalog-Items verknüpfen
         dto.catalogItems.forEach { catalogItemDto ->
-            val catalogItemId = catalogItemDto.catalogItemId ?: throw IllegalArgumentException("Catalog item ID cannot be null")
+            val catalogItemId = catalogItemDto.catalogItemId
+                ?: throw IllegalArgumentException("Catalog item ID cannot be null")
             val catalogItem = catalogService.getCatalogItemById(catalogItemId)
                 ?: throw IllegalArgumentException("Catalog item not found with id: $catalogItemId")
             timeEntryCatalogItemService.addCatalogItemToTimeEntry(timeEntry, catalogItem, catalogItemDto.quantity)
@@ -69,13 +99,13 @@ class TimeTrackingService @Inject constructor(
             this.hoursWorked = dto.hoursWorked
             existingEntry.notes.clear()
             val newNotes = dto.notes.map { noteDto ->
-                ch.baunex.notes.model.NoteModel().apply {
+                NoteModel().apply {
                     this.content = noteDto.content
                     this.title = noteDto.title
                     this.category = noteDto.category
                     this.tags = noteDto.tags
                     this.createdAt = noteDto.createdAt
-                    // this.createdBy = …
+                    createdBy  = employeeService.findEmployeeById(noteDto.createdById)!!
                     this.timeEntry = existingEntry
                 }
             }

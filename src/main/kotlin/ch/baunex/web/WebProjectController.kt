@@ -3,6 +3,8 @@ package ch.baunex.web
 import ch.baunex.billing.dto.BillingDTO
 import ch.baunex.billing.facade.BillingFacade
 import ch.baunex.catalog.facade.CatalogFacade
+import ch.baunex.notes.dto.NoteDto
+import ch.baunex.notes.model.NoteCategory
 import ch.baunex.project.dto.ProjectCreateDTO
 import ch.baunex.project.dto.ProjectDetailDTO
 import ch.baunex.project.dto.ProjectListDTO
@@ -11,6 +13,8 @@ import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.user.dto.CustomerDTO
 import ch.baunex.user.dto.CustomerContactDTO
 import ch.baunex.user.facade.CustomerFacade
+import ch.baunex.user.facade.EmployeeFacade
+import ch.baunex.user.model.Role
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import jakarta.ws.rs.*
@@ -36,6 +40,9 @@ class WebProjectController {
 
     @Inject
     lateinit var customerFacade: CustomerFacade
+
+    @Inject
+    lateinit var employeeFacade: EmployeeFacade
 
     private fun getCurrentDate() = LocalDate.now()
 
@@ -143,8 +150,37 @@ class WebProjectController {
         @FormParam("description")description: String?,
         @FormParam("status")     status: ch.baunex.project.model.ProjectStatus?,
         @FormParam("street")     street: String?,
-        @FormParam("city")       city: String?
-    ): Response {
+        @FormParam("city")       city: String?,
+        //@FormParam("employeeId") employeeId: Long,
+        @FormParam("projectNoteTitle") projectNoteTitle: String?,
+        @FormParam("projectNoteContent") projectNoteContent: String?,
+        @FormParam("projectNoteCategory") projectNoteCategory: String?
+        ): Response {
+        val employeeId = employeeFacade.findByRole(Role.ADMIN).id
+        //TODO now employeeId is hardcoded, should be changed
+
+        val projectNotes: List<NoteDto> = if (!projectNoteContent.isNullOrBlank()) {
+            listOf(
+                NoteDto(
+                    id            = 0L,
+                    projectId     = null,
+                    timeEntryId   = null,
+                    documentId    = null,
+                    createdById   = employeeId,
+                    createdByName = employeeFacade.findById(employeeId).firstName + employeeFacade.findById(employeeId).lastName,
+                    createdAt     = LocalDateTime.now(),
+                    updatedAt     = null,
+                    title         = projectNoteTitle,
+                    content       = projectNoteContent,
+                    category      = NoteCategory.valueOf(projectNoteCategory ?: "INFO"),
+                    tags          = emptyList(),
+                    attachments   = emptyList()
+                )
+            )
+        } else {
+            emptyList()
+        }
+
         if (id == null || id == 0L) {
             projectFacade.createProject(
                 ProjectCreateDTO(
@@ -156,7 +192,8 @@ class WebProjectController {
                     description = description,
                     status      = status    ?: ch.baunex.project.model.ProjectStatus.PLANNED,
                     street      = street,
-                    city        = city
+                    city        = city,
+                    initialNotes = projectNotes
                 )
             )
         } else {
@@ -171,7 +208,8 @@ class WebProjectController {
                     description = description,
                     status      = status,
                     street      = street,
-                    city        = city
+                    city        = city,
+                    updatedNotes = projectNotes
                 )
             )
         }

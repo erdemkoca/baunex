@@ -1,5 +1,6 @@
 package ch.baunex.project.dto
 
+import ch.baunex.notes.dto.NoteDto
 import ch.baunex.project.model.ProjectStatus
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -15,5 +16,6 @@ data class ProjectUpdateDTO(
     val description: String? = null,
     val status: ProjectStatus? = null,
     val street: String? = null,
-    val city: String? = null
+    val city: String? = null,
+    val updatedNotes: List<NoteDto>
 )

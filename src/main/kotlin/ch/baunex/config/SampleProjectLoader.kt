@@ -44,6 +44,7 @@ class SampleProjectLoader {
             return customer.id
         }
 
+        //TODO: initialnotes not emptylist()
         val samples = listOf(
             ProjectCreateDTO(
                 name        = "EFH Neubau Zürich",
@@ -54,7 +55,8 @@ class SampleProjectLoader {
                 description = "Elektroinstallation für neues Einfamilienhaus in Zürich.",
                 status      = ProjectStatus.IN_PROGRESS,
                 street      = "Weinbergstrasse 12",
-                city        = "Zürich"
+                city        = "Zürich",
+                initialNotes = emptyList()
             ),
             ProjectCreateDTO(
                 name        = "Ladestation Garage Basel",
@@ -65,7 +67,8 @@ class SampleProjectLoader {
                 description = "Installation von 3 Ladepunkten in Tiefgarage.",
                 status      = ProjectStatus.PLANNED,
                 street      = "Steinenvorstadt 99",
-                city        = "Basel"
+                city        = "Basel",
+                initialNotes = emptyList()
             ),
             ProjectCreateDTO(
                 name        = "Altbau-Umbau Luzern",
@@ -76,7 +79,8 @@ class SampleProjectLoader {
                 description = "Modernisierung Elektroinstallation in MFH.",
                 status      = ProjectStatus.IN_PROGRESS,
                 street      = "Museggstrasse 3",
-                city        = "Luzern"
+                city        = "Luzern",
+                initialNotes = emptyList()
             ),
             ProjectCreateDTO(
                 name        = "Bürobeleuchtung Bern",
@@ -87,7 +91,8 @@ class SampleProjectLoader {
                 description = "LED-Beleuchtung in Grossraumbüro.",
                 status      = ProjectStatus.PLANNED,
                 street      = "Bundesgasse 45",
-                city        = "Bern"
+                city        = "Bern",
+                initialNotes = emptyList()
             )
         )
 
