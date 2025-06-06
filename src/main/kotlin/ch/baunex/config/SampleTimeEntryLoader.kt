@@ -21,12 +21,13 @@ class SampleTimeEntryLoader {
         val today = LocalDate.now()
 
         val sampleEntries = listOf(
-            // Emergency Server Room Maintenance
+            // 1) Emergency Server Room Maintenance
             TimeEntryDTO(
                 employeeId         = 1,
                 projectId          = 1,
                 date               = today.minusDays(7),
                 hoursWorked        = 12.0,
+                title              = "Notfall-Einsatz Serverraum",  // hier übernehmen wir den Note-Titel
                 notes              = listOf(
                     NoteDto(
                         id            = 0L,
@@ -50,6 +51,10 @@ class SampleTimeEntryLoader {
                 hasNightSurcharge  = true,
                 hasWeekendSurcharge= true,
                 travelTimeMinutes  = 45,
+                hasHolidaySurcharge= false,
+                hasWaitingTime     = false,
+                waitingTimeMinutes = 0,
+                disposalCost       = 0.0,
                 catalogItems       = listOf(
                     TimeEntryCatalogItemDTO(
                         catalogItemId = 1,
@@ -74,12 +79,14 @@ class SampleTimeEntryLoader {
                     )
                 )
             ),
-            // Complex Electrical Installation
+
+            // 2) Complex Electrical Installation
             TimeEntryDTO(
                 employeeId         = 2,
                 projectId          = 2,
                 date               = today.minusDays(6),
                 hoursWorked        = 8.0,
+                title              = "Verteilerschrank Montage",
                 notes              = listOf(
                     NoteDto(
                         id            = 0L,
@@ -100,6 +107,13 @@ class SampleTimeEntryLoader {
                 hourlyRate         = 65.0,
                 billable           = true,
                 invoiced           = false,
+                hasNightSurcharge  = false,
+                hasWeekendSurcharge= false,
+                hasHolidaySurcharge= false,
+                travelTimeMinutes  = 0,
+                hasWaitingTime     = false,
+                waitingTimeMinutes = 0,
+                disposalCost       = 0.0,
                 catalogItems       = listOf(
                     TimeEntryCatalogItemDTO(
                         catalogItemId = 4,
@@ -131,12 +145,14 @@ class SampleTimeEntryLoader {
                     )
                 )
             ),
-            // Holiday Emergency Repair
+
+            // 3) Holiday Emergency Repair
             TimeEntryDTO(
                 employeeId         = 3,
                 projectId          = 1,
                 date               = today.minusDays(5),
                 hoursWorked        = 6.0,
+                title              = "Fehlerbehebung Feiertag",
                 notes              = listOf(
                     NoteDto(
                         id            = 0L,
@@ -157,9 +173,13 @@ class SampleTimeEntryLoader {
                 hourlyRate         = 70.0,
                 billable           = true,
                 invoiced           = true,
-                hasHolidaySurcharge = true,
-                hasNightSurcharge  = true,
+                hasNightSurcharge  = false,
+                hasWeekendSurcharge= false,
+                hasHolidaySurcharge= true,
                 travelTimeMinutes  = 60,
+                hasWaitingTime     = false,
+                waitingTimeMinutes = 0,
+                disposalCost       = 0.0,
                 catalogItems       = listOf(
                     TimeEntryCatalogItemDTO(
                         catalogItemId = 8,
@@ -177,12 +197,14 @@ class SampleTimeEntryLoader {
                     )
                 )
             ),
-            // Regular Maintenance with Waiting Time
+
+            // 4) Regular Maintenance with Waiting Time
             TimeEntryDTO(
                 employeeId         = 1,
                 projectId          = 2,
                 date               = today.minusDays(4),
                 hoursWorked        = 8.0,
+                title              = "Warten auf Materialien",
                 notes              = listOf(
                     NoteDto(
                         id            = 0L,
@@ -203,8 +225,13 @@ class SampleTimeEntryLoader {
                 hourlyRate         = 65.0,
                 billable           = true,
                 invoiced           = true,
+                hasNightSurcharge  = false,
+                hasWeekendSurcharge= false,
+                hasHolidaySurcharge= false,
+                travelTimeMinutes  = 0,
                 hasWaitingTime     = true,
                 waitingTimeMinutes = 120,
+                disposalCost       = 0.0,
                 catalogItems       = listOf(
                     TimeEntryCatalogItemDTO(
                         catalogItemId = 10,
@@ -222,12 +249,14 @@ class SampleTimeEntryLoader {
                     )
                 )
             ),
-            // Complex Network Installation
+
+            // 5) Complex Network Installation
             TimeEntryDTO(
                 employeeId         = 2,
                 projectId          = 1,
                 date               = today.minusDays(3),
                 hoursWorked        = 10.0,
+                title              = "Netzwerkverkabelung",
                 notes              = listOf(
                     NoteDto(
                         id            = 0L,
@@ -248,6 +277,13 @@ class SampleTimeEntryLoader {
                 hourlyRate         = 70.0,
                 billable           = true,
                 invoiced           = false,
+                hasNightSurcharge  = false,
+                hasWeekendSurcharge= false,
+                hasHolidaySurcharge= false,
+                travelTimeMinutes  = 0,
+                hasWaitingTime     = false,
+                waitingTimeMinutes = 0,
+                disposalCost       = 0.0,
                 catalogItems       = listOf(
                     TimeEntryCatalogItemDTO(
                         catalogItemId = 12,
@@ -272,12 +308,14 @@ class SampleTimeEntryLoader {
                     )
                 )
             ),
-            // Weekend Emergency Service
+
+            // 6) Weekend Emergency Service
             TimeEntryDTO(
                 employeeId         = 3,
                 projectId          = 2,
                 date               = today.minusDays(2),
                 hoursWorked        = 8.0,
+                title              = "Dringender Kundeneinsatz",
                 notes              = listOf(
                     NoteDto(
                         id            = 0L,
@@ -298,9 +336,13 @@ class SampleTimeEntryLoader {
                 hourlyRate         = 75.0,
                 billable           = true,
                 invoiced           = true,
-                hasWeekendSurcharge= true,
                 hasNightSurcharge  = true,
+                hasWeekendSurcharge= true,
+                hasHolidaySurcharge= false,
                 travelTimeMinutes  = 30,
+                hasWaitingTime     = false,
+                waitingTimeMinutes = 0,
+                disposalCost       = 0.0,
                 catalogItems       = listOf(
                     TimeEntryCatalogItemDTO(
                         catalogItemId = 15,
@@ -318,12 +360,14 @@ class SampleTimeEntryLoader {
                     )
                 )
             ),
-            // Regular Workday with Multiple Tasks
+
+            // 7) Regular Workday with Multiple Tasks
             TimeEntryDTO(
                 employeeId         = 1,
                 projectId          = 1,
                 date               = today.minusDays(1),
                 hoursWorked        = 8.0,
+                title              = "Allgemeiner Check-up",
                 notes              = listOf(
                     NoteDto(
                         id            = 0L,
@@ -344,6 +388,13 @@ class SampleTimeEntryLoader {
                 hourlyRate         = 65.0,
                 billable           = true,
                 invoiced           = false,
+                hasNightSurcharge  = false,
+                hasWeekendSurcharge= false,
+                hasHolidaySurcharge= false,
+                travelTimeMinutes  = 0,
+                hasWaitingTime     = false,
+                waitingTimeMinutes = 0,
+                disposalCost       = 0.0,
                 catalogItems       = listOf(
                     TimeEntryCatalogItemDTO(
                         catalogItemId = 17,
@@ -361,12 +412,14 @@ class SampleTimeEntryLoader {
                     )
                 )
             ),
-            // Complex Security System Installation
+
+            // 8) Complex Security System Installation
             TimeEntryDTO(
                 employeeId         = 2,
                 projectId          = 2,
                 date               = today,
                 hoursWorked        = 9.0,
+                title              = "Zutrittskontrolle konfiguriert",
                 notes              = listOf(
                     NoteDto(
                         id            = 0L,
@@ -387,6 +440,13 @@ class SampleTimeEntryLoader {
                 hourlyRate         = 70.0,
                 billable           = true,
                 invoiced           = false,
+                hasNightSurcharge  = false,
+                hasWeekendSurcharge= false,
+                hasHolidaySurcharge= false,
+                travelTimeMinutes  = 0,
+                hasWaitingTime     = false,
+                waitingTimeMinutes = 0,
+                disposalCost       = 0.0,
                 catalogItems       = listOf(
                     TimeEntryCatalogItemDTO(
                         catalogItemId = 19,
@@ -413,6 +473,7 @@ class SampleTimeEntryLoader {
             )
         )
 
+        // Alle Sample-Einträge speichern
         sampleEntries.forEach { timeTrackingFacade.logTime(it) }
     }
 }

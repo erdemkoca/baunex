@@ -33,6 +33,7 @@ class TimeEntryMapper @Inject constructor(
             projectName = entry.project.name,
             date = entry.date,
             hoursWorked = entry.hoursWorked,
+            title = entry.title,
             notes = emptyList(), // wird weiter unten überschrieben
             hourlyRate = entry.hourlyRate,
             cost = entry.hoursWorked * entry.hourlyRate,
@@ -74,6 +75,7 @@ class TimeEntryMapper @Inject constructor(
                     projectId = entry.project.id!!,
                     date = entry.date,
                     hoursWorked = entry.hoursWorked,
+                    title = entry.title,
                     notes = entry.notes.map { noteModel ->
                         NoteDto(
                             id = noteModel.id!!,
@@ -142,6 +144,7 @@ class TimeEntryMapper @Inject constructor(
             this.project = project
             this.date = dto.date
             this.hoursWorked = dto.hoursWorked
+            this.title = dto.title
 
             // Marke Dir eine Referenz auf das TimeEntryModel
             val timeEntryEntity = this

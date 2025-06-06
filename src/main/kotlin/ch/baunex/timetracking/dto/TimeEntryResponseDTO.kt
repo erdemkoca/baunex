@@ -16,6 +16,7 @@ data class TimeEntryResponseDTO(
     val projectName: String,
     @Contextual val date: LocalDate,
     val hoursWorked: Double,
+    val title: String,
     val notes: List<NoteDto> = emptyList(),
     val hourlyRate: Double,
     val cost: Double?,

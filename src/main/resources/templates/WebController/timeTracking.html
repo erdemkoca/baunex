@@ -1,5 +1,5 @@
 {#include layout}
-  {#title}Zeiterfassung - Baunex{/title}
+  {#title}Zeiterfassung – Baunex{/title}
   {#header}Zeiterfassung{/header}
   {#content}
     <div class="mb-3 d-flex justify-content-between align-items-center">
@@ -18,34 +18,44 @@
             {#for entry in timeEntries}
               <div class="accordion-item mb-3">
                 <h2 class="accordion-header" id="heading{entry.id}">
-                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                          data-bs-target="#entry{entry.id}" aria-expanded="false" aria-controls="entry{entry.id}">
-                    <div class="d-flex justify-content-between w-100">
-                      <div>
-                        <strong>{entry.employeeFirstName} {entry.employeeLastName}</strong> – {entry.date}
-                        <span class="badge bg-primary ms-2">{entry.hoursWorked} Stunden</span>
-                        {#if !entry.billable}
-                          <span class="badge bg-secondary ms-1">Nicht verrechenbar</span>
-                        {/if}
+                  <button class="accordion-button collapsed" type="button"
+                          data-bs-toggle="collapse"
+                          data-bs-target="#entry{entry.id}"
+                          aria-expanded="false"
+                          aria-controls="entry{entry.id}">
+                    <div class="d-flex flex-column w-100">
+                      <!-- Obere Zeile: Mitarbeiter + Datum + Stunden -->
+                      <div class="d-flex justify-content-between w-100">
+                        <div>
+                          <strong>{entry.employeeFirstName} {entry.employeeLastName}</strong> – {entry.projectName} - {entry.date}
+                          <span class="badge bg-primary ms-2">{entry.hoursWorked} Stunden</span>
+                          {#if !entry.billable}
+                            <span class="badge bg-secondary ms-1">Nicht verrechenbar</span>
+                          {/if}
+                        </div>
+                        <div>
+                          {#if entry.approval.approved}
+                            <span class="badge bg-success me-2">
+                              <i class="bi bi-check-circle me-1"></i>Genehmigt von {entry.approval.approverName}
+                            </span>
+                          {#else}
+                            <span class="badge bg-warning me-2">
+                              <i class="bi bi-clock me-1"></i>Ausstehend
+                            </span>
+                          {/if}
+                          <span class="badge bg-info">{entry.cost} CHF</span>
+                        </div>
                       </div>
-                      <div>
-                        {#if entry.approval.approved}
-                          <span class="badge bg-success me-2">
-                            <i class="bi bi-check-circle me-1"></i>Genehmigt von {entry.approval.approverName}
-                          </span>
-                        {#else}
-                          <span class="badge bg-warning me-2">
-                            <i class="bi bi-clock me-1"></i>Ausstehend
-                          </span>
-                        {/if}
-                        <span class="badge bg-info">{entry.cost} CHF</span>
+                      <!-- Neue zweite Zeile: Title -->
+                      <div class="mt-1 ps-3">
+                        <em>Titel:</em> {entry.title}
                       </div>
                     </div>
                   </button>
                 </h2>
-                <div id="entry{entry.id}" class="accordion-collapse collapse" data-bs-parent="#timeEntriesAccordion">
+                <div id="entry{entry.id}" class="accordion-collapse collapse"
+                     data-bs-parent="#timeEntriesAccordion">
                   <div class="accordion-body">
-
                     <!-- Grundinformationen -->
                     <div class="row mb-3">
                       <div class="col-md-6">
@@ -60,7 +70,8 @@
                             {#for note in entry.notes}
                               <div class="card mb-2">
                                 <div class="card-header small text-muted">
-                                  {note.createdAt} – {note.createdByName} <span class="badge bg-secondary ms-2">{note.category}</span>
+                                  {note.createdAt} – {note.createdByName}
+                                  <span class="badge bg-secondary ms-2">{note.category}</span>
                                 </div>
                                 <div class="card-body py-2">
                                   {#if note.title}
@@ -189,7 +200,8 @@
 
                     <!-- Aktionen -->
                     <div class="d-flex gap-2 mt-3">
-                      <a href="/timetracking/{entry.id}/edit" class="btn btn-outline-primary btn-sm">
+                      <a href="/timetracking/{entry.id}/edit"
+                         class="btn btn-outline-primary btn-sm">
                         <i class="bi bi-pencil me-1"></i>Bearbeiten
                       </a>
                       <a href="/timetracking/{entry.id}/delete"
@@ -198,7 +210,6 @@
                         <i class="bi bi-trash me-1"></i>Löschen
                       </a>
                     </div>
-
                   </div>
                 </div>
               </div>

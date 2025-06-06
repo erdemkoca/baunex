@@ -43,7 +43,7 @@ class TimeTrackingService @Inject constructor(
             this.invoiced = dto.invoiced
             this.catalogItemDescription = dto.catalogItemDescription
             this.catalogItemPrice = dto.catalogItemPrice
-
+            this.title=dto.title
             // 2. Notizen verarbeiten
             val parent = this
             this.notes = dto.notes.map { noteDto ->
@@ -97,6 +97,7 @@ class TimeTrackingService @Inject constructor(
             this.project = project
             this.date = dto.date
             this.hoursWorked = dto.hoursWorked
+            this.title    = dto.title
             existingEntry.notes.clear()
             val newNotes = dto.notes.map { noteDto ->
                 NoteModel().apply {

@@ -51,7 +51,7 @@
     <tbody>
       <tr v-for="(item, index) in serviceItems" :key="'s' + index" class="draggable">
         <td class="text-center"><i class="bi bi-grip-vertical handle"></i></td>
-        <td><input v-model="item.description" class="form-control"></td>
+        <td><input v-model="item.itemName" class="form-control"></td>
         <td><input v-model.number="item.quantity" type="number" class="form-control"></td>
         <td><input v-model.number="item.price" type="number" class="form-control"></td>
         <td>{{ (item.quantity * item.price).toFixed(2) }}</td>
@@ -146,6 +146,8 @@
     const invoice = JSON.parse(app.dataset.invoice || '{}');
     const company = JSON.parse(app.dataset.company || '{}');
     const billing = JSON.parse(app.dataset.billing || '{}');
+    console.log('Billing data:', billing);
+    console.log('Time entries:', billing.timeEntries);
     const currentDate = app.dataset.currentDate;
 
     createApp({
@@ -182,7 +184,7 @@
       },
       methods: {
         addService() {
-          this.serviceItems.push({ description: '', quantity: 1, price: 0 });
+          this.serviceItems.push({ itemName: '', quantity: 1, price: 0 });
         },
         removeService(index) {
           this.serviceItems.splice(index, 1);
@@ -221,7 +223,7 @@
         // Initialize service items from billing time entries
         if (this.billing?.timeEntries) {
           this.serviceItems = this.billing.timeEntries.map(entry => ({
-            description: entry.notes || '',
+            itemName: entry.title || '',
             quantity: entry.hoursWorked || 0,
             price: entry.hourlyRate || 0
           }));

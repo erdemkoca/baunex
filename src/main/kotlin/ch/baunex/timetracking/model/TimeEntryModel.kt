@@ -30,6 +30,9 @@ class TimeEntryModel : PanacheEntity() {
     @Column(name = "hours_worked", nullable = false)
     var hoursWorked: Double = 0.0
 
+    @Column(name = "title", length = 255)
+    var title: String = ""
+
     @OneToMany(mappedBy = "timeEntry", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var notes: MutableList<NoteModel> = mutableListOf()
 
