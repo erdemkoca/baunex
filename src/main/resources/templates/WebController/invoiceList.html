@@ -64,13 +64,13 @@
                                 <td>{it.formattedGrandTotal}</td>
                                 <td>
                                     <div class="btn-group">
-                                        <a href="/invoices/{it.id}"
+                                        <a href="/invoice/{it.id}"
                                            class="btn btn-sm btn-outline-primary"
                                            title="Anzeigen">
                                             <i class="bi bi-eye"></i>
                                         </a>
                                         {#if it.status != 'PAID' && it.status != 'CANCELLED'}
-                                            <a href="/invoices/{it.id}/edit"
+                                            <a href="/invoice/{it.id}/edit"
                                                class="btn btn-sm btn-outline-secondary"
                                                title="Bearbeiten">
                                                 <i class="bi bi-pencil"></i>
@@ -101,7 +101,7 @@
         <script>
             function markAsPaid(id) {
                 if (confirm('Möchten Sie diese Rechnung wirklich als bezahlt markieren?')) {
-                    fetch('/invoices/' + id + '/mark-as-paid', {
+                    fetch('/invoice/' + id + '/mark-as-paid', {
                         method: 'POST'
                     }).then(response => {
                         if (response.ok) {
@@ -115,7 +115,7 @@
 
             function cancelInvoice(id) {
                 if (confirm('Möchten Sie diese Rechnung wirklich stornieren?')) {
-                    fetch('/invoices/' + id + '/cancel', {
+                    fetch('/invoice/' + id + '/cancel', {
                         method: 'POST'
                     }).then(response => {
                         if (response.ok) {
