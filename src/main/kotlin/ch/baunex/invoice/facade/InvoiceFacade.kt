@@ -41,4 +41,8 @@ class InvoiceFacade {
     fun cancel(id: Long) {
         service.cancel(id)
     }
+
+    fun generateInvoiceNumber(): String {
+        return service.generateInvoiceNumber()
+    }
 } 

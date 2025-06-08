@@ -40,7 +40,9 @@ class InvoiceService {
     @Transactional
     fun createInvoice(dto: InvoiceDraftDTO): InvoiceModel {
         val newInvoice = InvoiceModel().apply {
-            invoiceNumber = dto.invoiceNumber ?: generateInvoiceNumber()
+            invoiceNumber = dto.invoiceNumber
+                ?.takeIf { it.isNotBlank() }
+                ?: generateInvoiceNumber()
             invoiceDate = LocalDate.parse(dto.invoiceDate)
             dueDate = LocalDate.parse(dto.dueDate)
             customerId = dto.customerId

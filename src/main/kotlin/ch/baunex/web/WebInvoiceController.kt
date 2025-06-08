@@ -6,6 +6,7 @@ import ch.baunex.company.dto.CompanyDTO
 import ch.baunex.company.facade.CompanyFacade
 import ch.baunex.invoice.dto.InvoiceDTO
 import ch.baunex.invoice.facade.InvoiceFacade
+import ch.baunex.invoice.model.InvoiceStatus
 import ch.baunex.project.dto.ProjectDetailDTO
 import ch.baunex.project.dto.ProjectListDTO
 import ch.baunex.project.facade.ProjectFacade
@@ -115,7 +116,7 @@ class WebInvoiceController {
             // Create a new empty invoice
             val newInvoice = InvoiceDTO(
                 id = null,
-                invoiceNumber = "",
+                invoiceNumber = invoiceFacade.generateInvoiceNumber(),
                 invoiceDate = currentDate,
                 dueDate = currentDate.plusDays(30),
                 customerId = project.customerId,
@@ -124,7 +125,7 @@ class WebInvoiceController {
                 projectId = project.id,
                 projectName = project.name,
                 projectDescription = project.description,
-                invoiceStatus = ch.baunex.invoice.model.InvoiceStatus.DRAFT,
+                invoiceStatus = InvoiceStatus.DRAFT,
                 items = emptyList(),
                 totalAmount = 0.0,
                 vatAmount = 0.0,
