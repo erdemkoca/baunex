@@ -2,6 +2,7 @@ package ch.baunex.invoice.dto
 
 import ch.baunex.invoice.model.InvoiceStatus
 import ch.baunex.notes.dto.NoteDto
+import ch.baunex.serialization.LocalDateSerializer
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
@@ -10,8 +11,8 @@ import java.time.LocalDate
 data class InvoiceDTO(
     val id: Long?,
     val invoiceNumber: String,
-    @Contextual val invoiceDate: LocalDate,
-    @Contextual val dueDate: LocalDate,
+    @Serializable(with = LocalDateSerializer::class) val invoiceDate: LocalDate,
+    @Serializable(with = LocalDateSerializer::class) val dueDate: LocalDate,
     val customerId: Long,
     val customerName: String,
     val customerAddress: String,

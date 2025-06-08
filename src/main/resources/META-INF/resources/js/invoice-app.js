@@ -93,12 +93,28 @@ createApp({
                 ]
             };
 
-            fetch('/invoice/create', {
+            console.log('Submitting invoice with payload:', payload);
+
+            fetch('/api/invoice/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
-            }).then(() => {
+            })
+            .then(async response => {
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Server response:', errorText);
+                    throw new Error(`Server error: ${response.status} ${response.statusText}\n${errorText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
                 window.location.href = '/invoice';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Fehler beim Speichern der Rechnung: ' + error.message);
             });
         }
     },

@@ -64,13 +64,13 @@
                                 <td>{inv.formattedGrandTotal}</td>
                                 <td>
                                     <div class="btn-group">
-                                        <a href="/invoice/{it.id}"
+                                        <a href="/invoice/{inv.id}"
                                            class="btn btn-sm btn-outline-primary"
                                            title="Anzeigen">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        {#if it.status != 'PAID' && it.status != 'CANCELLED'}
-                                            <a href="/invoice/{it.id}/edit"
+                                        {#if inv.status != 'PAID' && inv.status != 'CANCELLED'}
+                                            <a href="/invoice/{inv.id}/edit"
                                                class="btn btn-sm btn-outline-secondary"
                                                title="Bearbeiten">
                                                 <i class="bi bi-pencil"></i>
@@ -78,13 +78,13 @@
                                             <button type="button"
                                                     class="btn btn-sm btn-outline-success"
                                                     title="Als bezahlt markieren"
-                                                    onclick="markAsPaid('{it.id}')">
+                                                    onclick="markAsPaid('{inv.id}')">
                                                 <i class="bi bi-check-circle"></i>
                                             </button>
                                             <button type="button"
                                                     class="btn btn-sm btn-outline-danger"
                                                     title="Stornieren"
-                                                    onclick="cancelInvoice('{it.id}')">
+                                                    onclick="cancelInvoice('{inv.id}')">
                                                 <i class="bi bi-x-circle"></i>
                                             </button>
                                         {/if}

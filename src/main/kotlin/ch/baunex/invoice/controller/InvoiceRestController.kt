@@ -7,6 +7,7 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
+import org.jboss.logging.Logger
 
 @Path("/api/invoice")
 @ApplicationScoped
@@ -14,6 +15,8 @@ class InvoiceRestController {
 
     @Inject
     lateinit var invoiceFacade: InvoiceFacade
+
+    private val logger = Logger.getLogger(InvoiceRestController::class.java)
 
     @GET
     @Path("/{id}")
@@ -25,8 +28,17 @@ class InvoiceRestController {
     @Path("/create")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    fun create(dto: InvoiceDraftDTO): InvoiceDTO =
-        invoiceFacade.createInvoice(dto)
+    fun create(dto: InvoiceDraftDTO): InvoiceDTO {
+        logger.info("Received invoice creation request: $dto")
+        try {
+            val result = invoiceFacade.createInvoice(dto)
+            logger.info("Successfully created invoice with ID: ${result.id}")
+            return result
+        } catch (e: Exception) {
+            logger.error("Error creating invoice", e)
+            throw e
+        }
+    }
 
     @POST @Path("/{id}/mark-as-paid")
     @Produces(MediaType.APPLICATION_JSON)

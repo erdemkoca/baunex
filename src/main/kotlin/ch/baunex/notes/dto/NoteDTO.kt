@@ -1,6 +1,7 @@
 package ch.baunex.notes.dto
 
 import ch.baunex.notes.model.NoteCategory
+import ch.baunex.serialization.LocalDateSerializer
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
@@ -14,8 +15,8 @@ data class NoteDto(
     val documentId: Long?,
     val createdById: Long,
     val createdByName: String,
-    @Contextual val createdAt: LocalDate?,
-    @Contextual  val updatedAt: LocalDate?,
+    @Serializable(with = LocalDateSerializer::class) val createdAt: LocalDate?,
+    @Serializable(with = LocalDateSerializer::class) val updatedAt: LocalDate?,
     val title: String?,
     val content: String,
     val category: NoteCategory,
