@@ -2,7 +2,9 @@ package ch.baunex.invoice.model
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity
 import ch.baunex.notes.model.NoteModel
+import ch.baunex.serialization.LocalDateSerializer
 import jakarta.persistence.*
+import kotlinx.serialization.Serializable
 import java.time.LocalDate
 
 @Entity
@@ -11,8 +13,8 @@ class InvoiceModel : PanacheEntity() {
 
     var invoiceNumber: String? = null
 
-    var invoiceDate: LocalDate? = null
-    var dueDate: LocalDate? = null
+    @Serializable(with = LocalDateSerializer::class) var invoiceDate: LocalDate? = null
+    @Serializable(with = LocalDateSerializer::class) var dueDate: LocalDate? = null
 
     var customerId: Long? = null
     var projectId: Long? = null

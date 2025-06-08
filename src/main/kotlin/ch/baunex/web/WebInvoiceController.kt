@@ -75,16 +75,21 @@ class WebInvoiceController {
         val projects = projectFacade.getAllProjects()
         val currentDate = LocalDate.now()
         val activeMenu = "invoice"
-        val template = WebController.Templates.invoiceList(invoices, projects, currentDate, activeMenu)
+        val template = WebController.Templates.invoiceList(
+            invoicesJson = json.encodeToString(invoices),
+            projectsJson = json.encodeToString(projects),
+            currentDate = currentDate,
+            activeMenu = activeMenu
+        )
         return Response.ok(template.render()).build()
     }
 
     @GET
     @Path("/new")
     @Produces(MediaType.TEXT_HTML)
-    fun new(@QueryParam("projectId") projectId: Long): Response {
+    fun new(@QueryParam("projectId") projectId: Long, @QueryParam("status") status: String?): Response {
         try {
-            logger.info("Starting to create new invoice for project ID: $projectId")
+            logger.info("Starting to create new invoice for project ID: $projectId with status: $status")
             
             val project = projectFacade.getProjectWithDetails(projectId)
             logger.info("Project found: ${project?.name}")
@@ -113,7 +118,7 @@ class WebInvoiceController {
             val currentDate = LocalDate.now()
             val activeMenu = "invoice"
             
-            // Create a new empty invoice
+            // Create a new empty invoice with the specified status
             val newInvoice = InvoiceDTO(
                 id = null,
                 invoiceNumber = invoiceFacade.generateInvoiceNumber(),
@@ -125,7 +130,7 @@ class WebInvoiceController {
                 projectId = project.id,
                 projectName = project.name,
                 projectDescription = project.description,
-                invoiceStatus = InvoiceStatus.DRAFT,
+                invoiceStatus = if (status == "DRAFT") InvoiceStatus.DRAFT else InvoiceStatus.ISSUED,
                 items = emptyList(),
                 totalAmount = 0.0,
                 vatAmount = 0.0,
@@ -166,6 +171,19 @@ class WebInvoiceController {
             billingJson = json.encodeToString(billing)
         )
         return Response.ok(template.render()).build()
+    }
+
+    @POST
+    @Path("/{id}/publish")
+    fun publishInvoice(@PathParam("id") id: Long): Response {
+        return try {
+            invoiceFacade.publishInvoice(id)
+            Response.ok().build()
+        } catch (e: Exception) {
+            Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity("Fehler beim Veröffentlichen der Rechnung: ${e.message}")
+                .build()
+        }
     }
 
     // catch-all for other routes like /invoice/edit, etc.

@@ -13,6 +13,9 @@ import ch.baunex.user.service.EmployeeService
 import ch.baunex.notes.mapper.toDto
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
+import java.time.LocalDate
+import ch.baunex.invoice.dto.InvoiceNewDraftDTO
+import ch.baunex.invoice.model.InvoiceStatus
 
 @ApplicationScoped
 class InvoiceMapper @Inject constructor(
@@ -48,7 +51,44 @@ class InvoiceMapper @Inject constructor(
             totalNetto = dto.totalAmount
             vatAmount = dto.vatAmount
             totalBrutto = dto.grandTotal
+            items = dto.items.map { toItemModel(it) }.toMutableList()
         }
+    }
+
+    fun toModelFromNewDraft(dto: InvoiceNewDraftDTO): InvoiceModel {
+        return InvoiceModel().apply {
+            invoiceNumber = dto.invoiceNumber
+                ?.takeIf { it.isNotBlank() }
+                ?: generateInvoiceNumber()
+            invoiceDate = dto.invoiceDate
+            dueDate = LocalDate.parse(dto.dueDate)
+            customerId = dto.customerId
+            projectId = dto.projectId
+            invoiceStatus = InvoiceStatus.DRAFT
+            val invoiceEntity = this
+
+            this.notes = dto.notes.map { noteDto ->
+                NoteModel().apply {
+                    this.content = noteDto.content
+                    this.title = noteDto.title
+                    this.category = noteDto.category
+                    this.tags = noteDto.tags
+                    this.createdAt = noteDto.createdAt
+                    this.createdBy = employeeService.findEmployeeById(noteDto.createdById)!!
+                    this.invoice = invoiceEntity
+                }
+            }.toMutableList()
+
+            items = dto.items.map { toItemModel(it) }.toMutableList()
+            totalNetto = items.sumOf { it.total }
+            vatAmount = totalNetto * dto.vatRate / 100
+            totalBrutto = totalNetto + vatAmount
+        }
+    }
+
+    private fun generateInvoiceNumber(): String {
+        // This should be moved to a service or utility class
+        return (System.currentTimeMillis() % 100000).toString().padStart(5, '0')
     }
 
     fun toDTO(model: InvoiceModel): InvoiceDTO {
@@ -138,5 +178,37 @@ class InvoiceMapper @Inject constructor(
 
     private fun getProjectDescription(projectId: Long): String? {
         return projectFacade.getProjectWithDetails(projectId)?.description
+    }
+
+    fun updateModelFromDTO(model: InvoiceModel, dto: InvoiceDTO): InvoiceModel {
+        return model.apply {
+            invoiceNumber = dto.invoiceNumber
+            invoiceDate = dto.invoiceDate
+            dueDate = dto.dueDate
+            customerId = dto.customerId
+            projectId = dto.projectId
+            invoiceStatus = dto.invoiceStatus
+            totalNetto = dto.totalAmount
+            vatAmount = dto.vatAmount
+            totalBrutto = dto.grandTotal
+            
+            // Update items
+            items.clear()
+            items.addAll(dto.items.map { toItemModel(it) })
+            
+            // Update notes
+            notes.clear()
+            notes.addAll(dto.notes.map { noteDto ->
+                NoteModel().apply {
+                    this.content = noteDto.content
+                    this.title = noteDto.title
+                    this.category = noteDto.category
+                    this.tags = noteDto.tags
+                    this.createdAt = noteDto.createdAt
+                    this.createdBy = employeeService.findEmployeeById(noteDto.createdById)!!
+                    this.invoice = model
+                }
+            })
+        }
     }
 }

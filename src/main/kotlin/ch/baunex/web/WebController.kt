@@ -5,7 +5,6 @@ import ch.baunex.catalog.dto.CatalogItemDTO
 import ch.baunex.company.dto.CompanyDTO
 import ch.baunex.company.facade.CompanyFacade
 import ch.baunex.invoice.dto.InvoiceDTO
-import ch.baunex.invoice.dto.InvoiceDraftDTO
 import ch.baunex.invoice.facade.InvoiceFacade
 import ch.baunex.notes.model.NoteCategory
 import ch.baunex.project.dto.ProjectDetailDTO
@@ -151,8 +150,8 @@ class WebController {
 
         @JvmStatic
         external fun invoiceList(
-            invoices: List<InvoiceDTO>,
-            projects: List<ProjectListDTO>,
+            invoicesJson: String,
+            projectsJson: String,
             currentDate: LocalDate,
             activeMenu: String
         ): TemplateInstance

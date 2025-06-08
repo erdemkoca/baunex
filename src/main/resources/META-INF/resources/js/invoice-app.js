@@ -78,7 +78,7 @@ createApp({
         removeMaterial(index) {
             this.materialItems.splice(index, 1);
         },
-        submitInvoice() {
+        submitInvoice(asDraft = true) {
             const payload = {
                 invoiceNumber: this.invoiceNumber,
                 invoiceDate: this.invoiceDate,
@@ -95,27 +95,56 @@ createApp({
 
             console.log('Submitting invoice with payload:', payload);
 
-            fetch('/api/invoice/create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-            .then(async response => {
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Server response:', errorText);
-                    throw new Error(`Server error: ${response.status} ${response.statusText}\n${errorText}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Success:', data);
-                window.location.href = '/invoice';
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Fehler beim Speichern der Rechnung: ' + error.message);
-            });
+            // Wenn es eine neue Rechnung ist (keine ID vorhanden)
+            if (!this.invoice.id) {
+                fetch('/api/invoice/new', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(async response => {
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('Server response:', errorText);
+                        throw new Error(`Server error: ${response.status} ${response.statusText}\n${errorText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Success:', data);
+                    window.location.href = '/invoice';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Fehler beim Speichern der Rechnung: ' + error.message);
+                });
+            } else {
+                // Wenn es eine existierende Rechnung ist
+                payload.id = this.invoice.id;
+                payload.invoiceStatus = asDraft ? 'DRAFT' : 'ISSUED';
+
+                fetch('/api/invoice/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(async response => {
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('Server response:', errorText);
+                        throw new Error(`Server error: ${response.status} ${response.statusText}\n${errorText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Success:', data);
+                    window.location.href = '/invoice';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Fehler beim Speichern der Rechnung: ' + error.message);
+                });
+            }
         }
     },
     mounted() {
@@ -267,7 +296,12 @@ createApp({
 
             <!-- Aktionen -->
             <div class="mt-4 d-flex gap-2">
-                <button @click="submitInvoice" class="btn btn-primary">Rechnungsentwurf speichern</button>
+                <button @click="submitInvoice(true)" class="btn btn-outline-primary">
+                    <i class="bi bi-save"></i> Als Entwurf speichern
+                </button>
+                <button @click="submitInvoice(false)" class="btn btn-primary">
+                    <i class="bi bi-send"></i> Als Rechnung speichern
+                </button>
                 <a href="/invoice" class="btn btn-outline-secondary">Abbrechen</a>
             </div>
         </div>

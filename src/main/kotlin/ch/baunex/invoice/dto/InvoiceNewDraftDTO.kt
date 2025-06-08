@@ -1,11 +1,13 @@
 package ch.baunex.invoice.dto
 
 import ch.baunex.notes.dto.NoteDto
+import ch.baunex.serialization.LocalDateSerializer
 import kotlinx.serialization.Serializable
+import java.time.LocalDate
 
 @Serializable
-data class InvoiceDraftDTO(
-    val invoiceDate: String, // "2025-05-28"
+data class InvoiceNewDraftDTO(
+    @Serializable(with = LocalDateSerializer::class) val invoiceDate: LocalDate,
     val dueDate: String,
     val invoiceNumber: String?,
     val notes: List<NoteDto> = emptyList(),
