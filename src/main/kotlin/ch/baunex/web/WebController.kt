@@ -223,11 +223,11 @@ class WebController {
     }
 
     @GET
-    @Path("/documents/{type}/preview")
+    @Path("/document/{type}/preview")
     fun documentPreview(
         @PathParam("type") type: String,
         @QueryParam("projectId") projectId: Long
     ): String {
         return "WebController/documentPreview"
-    }
+    }//TODO weshalb diese Funktion hier in dieser Klasse; nötig?
 } 

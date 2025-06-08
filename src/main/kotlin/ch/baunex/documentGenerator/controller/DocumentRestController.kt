@@ -56,9 +56,21 @@ class DocumentRestController {
     @Produces("application/pdf")
     fun downloadPdf(@PathParam("id") id: Long): Response {
         logger.info("Generating PDF for document $id")
-        val pdfBytes = documentFacade.generatePdf(id)
-        return Response.ok(pdfBytes)
-            .header("Content-Disposition", "attachment; filename=document-$id.pdf")
-            .build()
+        try {
+            // Versuche zuerst, das Dokument zu finden
+            val doc = documentFacade.service.getDocumentById(id)
+            val pdfBytes = documentFacade.service.generatePdfBytes(doc)
+            return Response.ok(pdfBytes)
+                .header("Content-Disposition", "attachment; filename=document-$id.pdf")
+                .build()
+        } catch (e: NotFoundException) {
+            // Wenn das Dokument nicht existiert, erstelle es aus der Rechnung
+            logger.info("Document not found, creating from invoice $id")
+            val doc = documentFacade.service.createInvoiceDocument(id)
+            val pdfBytes = documentFacade.service.generatePdfBytes(doc)
+            return Response.ok(pdfBytes)
+                .header("Content-Disposition", "attachment; filename=document-$id.pdf")
+                .build()
+        }
     }
 }
