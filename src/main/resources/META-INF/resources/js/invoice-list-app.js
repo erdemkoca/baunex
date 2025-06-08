@@ -103,6 +103,49 @@ createApp({
                     alert('Fehler beim Stornieren der Rechnung');
                 }
             }
+        },
+        async downloadPdf(id) {
+            try {
+                const response = await fetch(`/api/document/${id}/pdf`, {
+                    method: 'GET'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('PDF konnte nicht generiert werden');
+                }
+                
+                // Get the filename from the Content-Disposition header or use a default
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = 'invoice.pdf';
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename=(.+)/);
+                    if (filenameMatch) {
+                        filename = filenameMatch[1];
+                    }
+                }
+                
+                // Convert the response to a blob
+                const blob = await response.blob();
+                
+                // Create a URL for the blob
+                const url = window.URL.createObjectURL(blob);
+                
+                // Create a temporary link element
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                
+                // Append to the document, click it, and remove it
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Clean up the URL
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Fehler beim Herunterladen der PDF: ' + error.message);
+            }
         }
     },
     template: `
@@ -181,7 +224,7 @@ createApp({
                             <tr v-for="inv in filteredInvoices" 
                                 :key="inv.id" 
                                 class="invoice-row"
-                                style="cursor: pointer;"
+                                style="cursor: pointer"
                                 @click="navigateToInvoice(inv.id)">
                                 <td>{{ inv.invoiceNumber }}</td>
                                 <td>{{ new Date(inv.invoiceDate).toLocaleDateString('de-CH') }}</td>
@@ -219,13 +262,12 @@ createApp({
                                                 <i class="bi bi-x-circle"></i> Stornieren
                                             </button>
                                         </template>
-                                        <template v-else>
-                                            <a :href="'/invoice/' + inv.id + '/pdf'"
-                                               class="btn btn-sm btn-outline-secondary"
-                                               title="PDF herunterladen">
-                                                <i class="bi bi-file-pdf"></i> PDF
-                                            </a>
-                                        </template>
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-secondary"
+                                                @click="downloadPdf(inv.id)"
+                                                title="PDF herunterladen">
+                                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                                        </button>
                                     </div>
                                 </td>
                             </tr>

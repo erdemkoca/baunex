@@ -2,7 +2,12 @@ package ch.baunex.documentGenerator.service
 
 import ch.baunex.documentGenerator.model.DocumentModel
 import ch.baunex.documentGenerator.mapper.DocumentMapper
+import ch.baunex.documentGenerator.pdf.PdfGeneratorComponent
+import ch.baunex.documentGenerator.pdf.PdfRenderer
 import ch.baunex.documentGenerator.repository.DocumentRepository
+import ch.baunex.invoice.repository.InvoiceRepository
+import ch.baunex.project.repository.ProjectRepository
+import ch.baunex.user.repository.CustomerRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -16,6 +21,19 @@ class DocumentService {
 
     @Inject
     lateinit var documentRepository: DocumentRepository
+
+    @Inject
+    lateinit var invoiceRepository: InvoiceRepository
+
+    @Inject
+    lateinit var customerRepository: CustomerRepository
+
+    @Inject
+    lateinit var projectRepository: ProjectRepository
+
+    @Inject
+    lateinit var pdfGenerator: PdfGeneratorComponent
+
 
     fun saveDocument(doc: DocumentModel): DocumentModel {
         doc.persist()
@@ -48,5 +66,22 @@ class DocumentService {
         val doc = getDocumentById(id)
         doc.delete()
     }
+
+    @Transactional
+    fun createInvoiceDocument(invoiceId: Long): DocumentModel {
+        val invoice = invoiceRepository.findById(invoiceId)
+            ?: throw NotFoundException("Invoice $invoiceId not found")
+        val customer = customerRepository.findById(invoice.customerId)
+        val project = invoice.projectId?.let { projectRepository.findById(it) }
+        val doc = documentMapper.toDocument(invoice, customer, project)
+        return saveDocument(doc)
+    }
+
+    @Transactional
+    fun generatePdfBytes(doc: DocumentModel): ByteArray {
+        // Hier rufst du deine PDF-Logik auf, z.B.:
+        return pdfGenerator.generatePdf(doc)
+    }
+
 
 }

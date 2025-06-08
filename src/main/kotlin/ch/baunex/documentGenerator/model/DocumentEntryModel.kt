@@ -17,4 +17,5 @@ class DocumentEntryModel  : PanacheEntity() {
     var description: String? = null
     var quantity: Double? = null
     var price: Double? = null
+    var type: String? = null  // "VA" oder "IC"
 }
