@@ -147,6 +147,9 @@ class WebController {
         external fun companySettings(company: CompanyDTO?, activeMenu: String, currentDate: LocalDate): TemplateInstance
 
         @JvmStatic
+        external fun invoiceShell(activeMenu: String = "invoice"): TemplateInstance
+
+        @JvmStatic
         external fun invoiceList(
             invoices: List<InvoiceDTO>,
             projects: List<ProjectListDTO>,
@@ -156,32 +159,11 @@ class WebController {
 
         @JvmStatic
         external fun invoiceDetail(
-            invoice: String,
+            invoiceJson: String,
             currentDate: LocalDate,
             activeMenu: String,
             companyJson: String,
             billingJson: String,
-        ): TemplateInstance
-
-        @JvmStatic
-        external fun invoiceDraftList(
-            drafts: List<InvoiceDTO>,
-            projects: List<ProjectListDTO>,
-            currentDate: LocalDate,
-            activeMenu: String
-        ): TemplateInstance
-
-        @JvmStatic
-        external fun invoiceDraftForm(
-            draft: InvoiceDraftDTO?,
-            customers: List<CustomerDTO>,
-            projects: List<ProjectListDTO>,
-            currentDate: LocalDate,
-            dueDate: LocalDate,
-            activeMenu: String,
-            selectedProject: ProjectDetailDTO? = null,
-            company: CompanyDTO? = null,
-            billing: BillingDTO? = null
         ): TemplateInstance
     }
 

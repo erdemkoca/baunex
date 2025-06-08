@@ -1,17 +1,20 @@
 package ch.baunex.invoice.dto
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class InvoiceItemDTO(
-    val id: Long? = null,
+    val id: Long?,
     val type: String,
-    val description: String? = null,
+    val description: String?,
     val quantity: Double,
-    val price: Double,
     val unitPrice: Double,
     val vatRate: Double,
     val totalAmount: Double,
     val vatAmount: Double,
     val grandTotal: Double,
-    val order: Int = 0,
-    val timeEntryId: Long? = null,
-    val projectCatalogItemId: Long? = null
+    val order: Int,
+    val timeEntryId: Long?,
+    val projectCatalogItemId: Long?,
+    val price: Double
 )

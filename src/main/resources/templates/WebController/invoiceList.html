@@ -13,11 +13,11 @@
                                     <label for="projectId" class="form-label">Projekt auswählen</label>
                                     <select class="form-select" id="projectId" name="projectId" required>
                                         <option value="">-- Bitte wählen --</option>
-                                        {#each projects}
-                                            <option value="{it.id}">
-                                                {it.name} - {it.customerName}
+                                        {#for proj in projects}
+                                            <option value="{proj.id}">
+                                                {proj.name} – {proj.customerName}
                                             </option>
-                                        {/each}
+                                        {/for}
                                     </select>
                                 </div>
                                 <button type="submit" class="btn btn-primary">
@@ -45,23 +45,23 @@
                             </tr>
                         </thead>
                         <tbody>
-                        {#each invoices}
+                        {#for inv in invoices}
                             <tr>
-                                <td>{it.invoiceNumber}</td>
-                                <td>{it.invoiceDate.format('dd.MM.yyyy')}</td>
-                                <td>{it.dueDate.format('dd.MM.yyyy')}</td>
-                                <td>{it.customerName}</td>
-                                <td>{it.projectName}</td>
+                                <td>{inv.invoiceNumber}</td>
+                                <td>{inv.invoiceDate.format('dd.MM.yyyy')}</td>
+                                <td>{inv.dueDate.format('dd.MM.yyyy')}</td>
+                                <td>{inv.customerName}</td>
+                                <td>{inv.projectName}</td>
                                 <td>
-                                    {#if it.status == 'PAID'}
+                                    {#if inv.status == 'PAID'}
                                         <span class="badge bg-success">Bezahlt</span>
-                                    {#else if it.status == 'CANCELLED'}
+                                        {#else if inv.status == 'CANCELLED'}
                                         <span class="badge bg-danger">Storniert</span>
-                                    {#else}
+                                        {#else}
                                         <span class="badge bg-warning">Offen</span>
-                                    {/if}
-                                </td>
-                                <td>{it.formattedGrandTotal}</td>
+                                        {/if}
+                                    </td>
+                                <td>{inv.formattedGrandTotal}</td>
                                 <td>
                                     <div class="btn-group">
                                         <a href="/invoice/{it.id}"
@@ -90,8 +90,8 @@
                                         {/if}
                                     </div>
                                 </td>
-                            </tr>
-                        {/each}
+                                </tr>
+                            {/for}
                         </tbody>
                     </table>
                 </div>
