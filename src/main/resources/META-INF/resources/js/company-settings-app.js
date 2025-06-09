@@ -16,7 +16,8 @@ createApp({
                 { key: 'invoice', label: 'Rechnungseinstellungen' }
             ],
             activeTab: 'general',
-            saving: false
+            saving: false,
+            logoPreview: company.logo || null
         }
     },
     methods: {
@@ -38,6 +39,38 @@ createApp({
                 alert('Fehler: ' + e.message);
             } finally {
                 this.saving = false;
+            }
+        },
+        async onLogoSelected(ev) {
+            const file = ev.target.files[0]
+            if (!file) return
+            
+            // Create preview immediately
+            const reader = new FileReader()
+            reader.onload = (e) => {
+                this.logoPreview = e.target.result
+            }
+            reader.readAsDataURL(file)
+            
+            try {
+                const form = new FormData()
+                form.append("file", file)
+                const resp = await fetch(`/api/upload/logo`, {
+                    method: "POST",
+                    body: form
+                })
+                
+                if (!resp.ok) {
+                    throw new Error(await resp.text())
+                }
+                
+                const { url } = await resp.json()
+                this.company.logo = url
+            } catch (e) {
+                console.error('Error uploading logo:', e)
+                alert('Fehler beim Hochladen des Logos: ' + e.message)
+                // Reset preview on error
+                this.logoPreview = this.company.logo
             }
         }
     },
@@ -130,18 +163,24 @@ createApp({
 
         <!-- Invoice -->
         <div v-if="activeTab==='invoice'">
-          <div class="mb-3">
-            <label class="form-label">Logo (URL oder Base64)</label>
-            <input v-model="company.logo" class="form-control">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Standard-Fußzeile</label>
-            <textarea v-model="company.defaultInvoiceFooter" class="form-control" rows="3"></textarea>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Standard-AGB</label>
-            <textarea v-model="company.defaultInvoiceTerms" class="form-control" rows="3"></textarea>
-          </div>
+            <div class="mb-3">
+                <label class="form-label">Logo hochladen</label>
+                <input type="file" accept="image/*" @change="onLogoSelected" class="form-control">
+            </div>
+            <div v-if="logoPreview" class="mb-3">
+                <label class="form-label">Vorschau:</label><br>
+                <div style="border: 1px solid #ddd; padding: 10px; display: inline-block;">
+                    <img :src="logoPreview" style="max-height: 100px; max-width: 200px; object-fit: contain;"/>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Standard-Fußzeile</label>
+                <textarea v-model="company.defaultInvoiceFooter" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Standard-AGB</label>
+                <textarea v-model="company.defaultInvoiceTerms" class="form-control" rows="3"></textarea>
+            </div>
         </div>
       </div>
 

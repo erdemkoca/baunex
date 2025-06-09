@@ -30,6 +30,7 @@ class SampleCompanyLoader {
             bankName = "Banque Cantonale Vaudoise",
             vatNumber = "CHE-123.456.789 MWST",
             taxNumber = "123.456.789",
+            logo = "/images/logo/baunex_logo.png",
             defaultInvoiceFooter = """
                 Vielen Dank für Ihr Vertrauen.
                 

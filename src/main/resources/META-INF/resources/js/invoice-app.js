@@ -25,6 +25,7 @@ createApp({
             vatRate: invoice.vatRate || 8.1,
             serviceItems: invoice.items?.filter(i => i.type === 'VA') || [],
             materialItems: invoice.items?.filter(i => i.type === 'IC') || [],
+            logoPreview: company.logo || null
         };
     },
     created() {
@@ -174,6 +175,38 @@ createApp({
                     alert('Fehler beim Speichern der Rechnung: ' + error.message);
                 });
             }
+        },
+        async onLogoSelected(ev) {
+            const file = ev.target.files[0]
+            if (!file) return
+            
+            // Create preview immediately
+            const reader = new FileReader()
+            reader.onload = (e) => {
+                this.logoPreview = e.target.result
+            }
+            reader.readAsDataURL(file)
+            
+            try {
+                const form = new FormData()
+                form.append("file", file)
+                const resp = await fetch(`/api/upload/logo`, {
+                    method: "POST",
+                    body: form
+                })
+                
+                if (!resp.ok) {
+                    throw new Error(await resp.text())
+                }
+                
+                const { url } = await resp.json()
+                this.company.logo = url
+            } catch (e) {
+                console.error('Error uploading logo:', e)
+                alert('Fehler beim Hochladen des Logos: ' + e.message)
+                // Reset preview on error
+                this.logoPreview = this.company.logo
+            }
         }
     },
     mounted() {
@@ -211,9 +244,12 @@ createApp({
                     </div>
                 </div>
                 <div class="text-end">
-                    <div style="height: 80px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center;">
-                        Firmenlogo
+                    <div style="height: 80px; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; padding: 10px;">
+                        <div v-if="company.logo" class="text-center">
+                            <img :src="company.logo" style="max-height: 60px; max-width: 150px; object-fit: contain;"/>
+                        </div>
                     </div>
+                    
                     <div class="mt-3">
                         <strong>Datum:</strong>
                         <input v-model="invoiceDate" type="date" class="form-control form-control-sm">
