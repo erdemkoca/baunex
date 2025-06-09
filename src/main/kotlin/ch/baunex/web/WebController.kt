@@ -143,7 +143,11 @@ class WebController {
         ): TemplateInstance
 
         @JvmStatic
-        external fun companySettings(company: CompanyDTO?, activeMenu: String, currentDate: LocalDate): TemplateInstance
+        external fun companySettings(
+            companyJson: String,
+            activeMenu: String,
+            currentDate: LocalDate
+        ): TemplateInstance
 
         @JvmStatic
         external fun invoiceShell(activeMenu: String = "invoice"): TemplateInstance
