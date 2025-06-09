@@ -13,4 +13,8 @@ class InvoiceRepository : PanacheRepository<InvoiceModel> {
     fun findByCustomerId(customerId: Long): List<InvoiceModel> {
         return find("customerId", customerId).list()
     }
+
+    fun findByIdWithItems(id: Long): InvoiceModel? {
+        return find("FROM InvoiceModel i LEFT JOIN FETCH i.items WHERE i.id = ?1", id).firstResult()
+    }
 } 

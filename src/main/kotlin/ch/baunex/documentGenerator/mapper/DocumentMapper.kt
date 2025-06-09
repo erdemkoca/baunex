@@ -10,10 +10,17 @@ import ch.baunex.documentGenerator.model.DocumentType
 import ch.baunex.invoice.model.InvoiceModel
 import ch.baunex.project.model.ProjectModel
 import ch.baunex.user.model.CustomerModel
+import ch.baunex.company.model.CompanyModel
+import ch.baunex.company.repository.CompanyRepository
 import jakarta.enterprise.context.ApplicationScoped
+import jakarta.inject.Inject
+import java.time.format.DateTimeFormatter
 
 @ApplicationScoped
 class DocumentMapper {
+
+    @Inject
+    lateinit var companyRepository: CompanyRepository
 
     /**
      * Wandelt ein DocumentDTO in das persistierbare DocumentModel um.
@@ -59,32 +66,70 @@ class DocumentMapper {
     }
 
     fun toDocument(invoice: InvoiceModel, customer: CustomerModel?, project: ProjectModel?): DocumentModel {
+        // Hole die Firmeninformationen
+        val company = companyRepository.findFirst()
+
         val doc = DocumentModel().apply {
             type = DocumentType.INVOICE
             customerName = customer?.companyName ?: ""
-            customerAddress = customer?.person?.details?.street ?: ""
+            customerAddress = buildString {
+                append(customer?.person?.details?.street ?: "")
+                append(", ")
+                append(customer?.person?.details?.zipCode ?: "")
+                append(" ")
+                append(customer?.person?.details?.city ?: "")
+            }
+            customerZip = customer?.person?.details?.zipCode
+            customerCity = customer?.person?.details?.city
             invoiceNumber = invoice.invoiceNumber
-            invoiceDate   = invoice.invoiceDate
-            dueDate       = invoice.dueDate
+            invoiceDate = invoice.invoiceDate
+            dueDate = invoice.dueDate
             invoiceStatus = invoice.invoiceStatus
-            notes         = invoice.notes.joinToString("\n") { it.content }
-            vatRate       = if (invoice.totalBrutto != 0.0)
-                invoice.vatAmount / (invoice.totalBrutto - invoice.vatAmount) * 100
-            else 0.0
-            projectId     = invoice.projectId
-            projectName   = project?.name ?: ""
-            // createdAt bleibt auf Default (now)
+            notes = invoice.notes.joinToString("\n") { it.content }
+            vatRate = company?.defaultVatRate ?: 8.1
+            projectId = invoice.projectId
+            projectName = project?.name ?: ""
+
+            // Set company information
+            company?.let {
+                companyName = it.name
+                companyAddress = it.street
+                companyZip = it.zipCode
+                companyCity = it.city
+                companyPhone = it.phone
+                companyEmail = it.email
+                terms = it.defaultInvoiceTerms
+                footer = buildString {
+                    append("**Bankverbindung**  \n")
+                    append("${it.bankName ?: ""}  \n")
+                    append("IBAN: ${it.iban ?: ""}  \n")
+                    append("BIC: ${it.bic ?: ""}  \n")
+                    if (!it.vatNumber.isNullOrBlank()) append("MWST-Nr: ${it.vatNumber}  \n")
+                    if (!it.taxNumber.isNullOrBlank()) append("Steuer-Nr: ${it.taxNumber}  \n")
+                }
+            }
+
+            // Set document information
+            documentNumber = invoice.invoiceNumber
+            documentDate = invoice.invoiceDate?.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
         }
 
+        // Füge die Rechnungspositionen hinzu
         doc.entries = invoice.items.map { item ->
             DocumentEntryModel().apply {
-                document    = doc
-                type        = item.type
+                document = doc
+                type = item.type
                 description = item.description
-                quantity    = item.quantity
-                price       = item.price
+                quantity = item.quantity
+                price = item.price
+                total = item.quantity * item.price
             }
         }.toMutableList()
+
+        // Setze die Summen im Dokument
+        doc.totalNetto = invoice.totalNetto
+        doc.vatAmount = invoice.vatAmount
+        doc.totalBrutto = invoice.totalBrutto
 
         return doc
     }

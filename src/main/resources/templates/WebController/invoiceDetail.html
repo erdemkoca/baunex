@@ -2,6 +2,9 @@
     {#title}Rechnung{/title}
     {#header}Rechnung{/header}
     {#content}
+        <!-- EasyMDE CSS -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.css">
+        
         <!-- Nur noch ein "Mount-Point" für Vue -->
         <div id="invoice-app"
              data-invoice='{invoiceJson}'
@@ -10,6 +13,8 @@
              data-current-date='{currentDate}'>
         </div>
 
+        <!-- EasyMDE Script -->
+        <script src="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.js"></script>
         <!-- Und hier wird Dein JS-Modul geladen -->
         <script type="module" src="/js/invoice-app.js"></script>
     {/content}

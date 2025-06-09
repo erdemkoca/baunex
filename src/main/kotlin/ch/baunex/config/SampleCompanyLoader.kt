@@ -33,15 +33,15 @@ class SampleCompanyLoader {
             defaultInvoiceFooter = """
                 Vielen Dank für Ihr Vertrauen.
                 
-                Bitte überweisen Sie den Betrag innerhalb von 30 Tagen auf folgendes Konto:
-                IBAN: CH93 0076 7000 E528 5290 7
-                BIC: BCVLCH2LXXX
-                Bank: Banque Cantonale Vaudoise
+                **Bankverbindung**  
+                Banque Cantonale Vaudoise  
+                IBAN: CH93 0076 7000 E528 5290 7  
+                BIC: BCVLCH2LXXX  
                 
                 Bei Fragen stehen wir Ihnen gerne zur Verfügung.
             """.trimIndent(),
             defaultInvoiceTerms = """
-                Allgemeine Geschäftsbedingungen:
+                **Allgemeine Geschäftsbedingungen**
                 
                 1. Zahlungsbedingungen: 30 Tage netto
                 2. Alle Preise inklusive 8.1% MWST

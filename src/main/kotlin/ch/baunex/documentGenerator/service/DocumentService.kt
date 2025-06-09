@@ -35,14 +35,22 @@ class DocumentService {
     lateinit var pdfGenerator: PdfGeneratorComponent
 
 
+    @Transactional
     fun saveDocument(doc: DocumentModel): DocumentModel {
+        // First persist the document
         doc.persist()
-        doc.entries.forEach { it.persist() }
+        
+        // Then persist each entry with the document reference
+        doc.entries.forEach { entry ->
+            entry.document = doc
+            entry.persist()
+        }
+        
         return doc
     }
 
     fun getDocumentById(id: Long): DocumentModel =
-        documentRepository  .findById(id) ?: throw NotFoundException("Document $id not found")
+        documentRepository.findByIdWithEntries(id) ?: throw NotFoundException("Document $id not found")
 
     @Transactional
     fun updateDocument(existing: DocumentModel, updated: DocumentModel): DocumentModel {
@@ -69,19 +77,34 @@ class DocumentService {
 
     @Transactional
     fun createInvoiceDocument(invoiceId: Long): DocumentModel {
-        val invoice = invoiceRepository.findById(invoiceId)
+        val invoice = invoiceRepository.findByIdWithItems(invoiceId)
             ?: throw NotFoundException("Invoice $invoiceId not found")
+        
+        println("Invoice items size: ${invoice.items.size}")
+        println("Invoice items: ${invoice.items}")
+        
         val customer = customerRepository.findById(invoice.customerId)
         val project = invoice.projectId?.let { projectRepository.findById(it) }
         val doc = documentMapper.toDocument(invoice, customer, project)
+        
+        println("Document entries size: ${doc.entries.size}")
+        println("Document entries: ${doc.entries}")
+        
         return saveDocument(doc)
     }
 
     @Transactional
     fun generatePdfBytes(doc: DocumentModel): ByteArray {
-        // Hier rufst du deine PDF-Logik auf, z.B.:
-        return pdfGenerator.generatePdf(doc)
+        try {
+            return pdfGenerator.generatePdf(doc)
+        } catch (e: Exception) {
+            e.printStackTrace() // Für Debugging-Zwecke
+            throw RuntimeException("Fehler beim Generieren der PDF: ${e.message}", e)
+        }
     }
+
+    fun getAllDocuments(): List<DocumentModel> =
+        documentRepository.listAll()
 
 
 }

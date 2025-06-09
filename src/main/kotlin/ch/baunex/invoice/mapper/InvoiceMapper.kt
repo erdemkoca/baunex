@@ -51,7 +51,7 @@ class InvoiceMapper @Inject constructor(
             totalNetto = dto.totalAmount
             vatAmount = dto.vatAmount
             totalBrutto = dto.grandTotal
-            items = dto.items.map { toItemModel(it) }.toMutableList()
+            items = dto.items.map { toItemModel(it, this) }.toMutableList()
         }
     }
 
@@ -79,7 +79,7 @@ class InvoiceMapper @Inject constructor(
                 }
             }.toMutableList()
 
-            items = dto.items.map { toItemModel(it) }.toMutableList()
+            items = dto.items.map { toItemModel(it, this) }.toMutableList()
             totalNetto = items.sumOf { it.total }
             vatAmount = totalNetto * dto.vatRate / 100
             totalBrutto = totalNetto + vatAmount
@@ -147,8 +147,9 @@ class InvoiceMapper @Inject constructor(
         )
     }
 
-    fun toItemModel(dto: InvoiceItemDTO): InvoiceItemModel {
+    fun toItemModel(dto: InvoiceItemDTO, invoice: InvoiceModel): InvoiceItemModel {
         return InvoiceItemModel().apply {
+            this.invoice = invoice
             description = dto.description
             type = dto.type
             quantity = dto.quantity
@@ -194,7 +195,7 @@ class InvoiceMapper @Inject constructor(
             
             // Update items
             items.clear()
-            items.addAll(dto.items.map { toItemModel(it) })
+            items.addAll(dto.items.map { toItemModel(it, this) })
             
             // Update notes
             notes.clear()

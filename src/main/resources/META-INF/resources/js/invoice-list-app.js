@@ -107,7 +107,10 @@ createApp({
         async downloadPdf(id) {
             try {
                 const response = await fetch(`/api/document/${id}/pdf`, {
-                    method: 'GET'
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/pdf'
+                    }
                 });
                 
                 if (!response.ok) {
@@ -118,7 +121,7 @@ createApp({
                 const contentDisposition = response.headers.get('Content-Disposition');
                 let filename = 'invoice.pdf';
                 if (contentDisposition) {
-                    const filenameMatch = contentDisposition.match(/filename=(.+)/);
+                    const filenameMatch = contentDisposition.match(/filename="(.+)"/);
                     if (filenameMatch) {
                         filename = filenameMatch[1];
                     }
@@ -134,6 +137,7 @@ createApp({
                 const link = document.createElement('a');
                 link.href = url;
                 link.download = filename;
+                link.type = 'application/pdf';
                 
                 // Append to the document, click it, and remove it
                 document.body.appendChild(link);

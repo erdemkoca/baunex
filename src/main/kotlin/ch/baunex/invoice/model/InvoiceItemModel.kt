@@ -9,7 +9,7 @@ import jakarta.persistence.*
 class InvoiceItemModel : PanacheEntity() {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "invoice_id")
+    @JoinColumn(name = "invoice_id", nullable = false)
     @JsonIgnore
     lateinit var invoice: InvoiceModel
 

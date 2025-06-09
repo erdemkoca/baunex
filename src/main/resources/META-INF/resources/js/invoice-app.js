@@ -46,6 +46,35 @@ createApp({
                 price: item.unitPrice
             }));
         }
+
+        // Initialize markdown editors
+        this.$nextTick(() => {
+            const termsEditor = new EasyMDE({
+                element: document.getElementById('terms-editor'),
+                spellChecker: false,
+                status: false,
+                toolbar: ['bold', 'italic', 'heading', '|', 'quote', 'unordered-list', 'ordered-list', '|', 'preview'],
+                initialValue: this.company.defaultInvoiceTerms || ''
+            });
+
+            const footerEditor = new EasyMDE({
+                element: document.getElementById('footer-editor'),
+                spellChecker: false,
+                status: false,
+                toolbar: ['bold', 'italic', 'heading', '|', 'quote', 'unordered-list', 'ordered-list', '|', 'preview'],
+                initialValue: this.company.defaultInvoiceFooter || ''
+            });
+
+            // Update company data when editors change
+            termsEditor.codemirror.on('change', () => {
+                this.company.defaultInvoiceTerms = termsEditor.value();
+            });
+
+            footerEditor.codemirror.on('change', () => {
+                this.company.defaultInvoiceFooter = footerEditor.value();
+            });
+        });
+
         console.log('After initialization:', { serviceItems: this.serviceItems, materialItems: this.materialItems });
     },
     computed: {
@@ -286,11 +315,11 @@ createApp({
             <div class="row">
                 <div class="col-md-6">
                     <h6>AGB</h6>
-                    <pre class="small">{{ company.defaultInvoiceTerms }}</pre>
+                    <textarea id="terms-editor" class="form-control"></textarea>
                 </div>
                 <div class="col-md-6">
                     <h6>Zahlungsinformationen</h6>
-                    <pre class="small">{{ company.defaultInvoiceFooter }}</pre>
+                    <textarea id="footer-editor" class="form-control"></textarea>
                 </div>
             </div>
 

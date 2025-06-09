@@ -44,4 +44,10 @@ class DocumentFacade {
         val model = service.getDocumentById(id)
         return service.generatePdfBytes(model)
     }
+
+    fun getAll(): List<DocumentResponseDTO> =
+        service.getAllDocuments().map { mapper.toResponseDTO(it) }
+
+    fun getDocument(id: Long): DocumentResponseDTO =
+        getById(id)
 }
