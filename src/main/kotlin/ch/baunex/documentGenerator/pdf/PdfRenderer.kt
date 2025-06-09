@@ -228,7 +228,7 @@ object PdfRenderer {
                         <div class="invoice-title">Rechnung ${doc.invoiceNumber.orEmpty()}</div>
                         <div class="invoice-meta">
                             <div class="invoice-meta-left">
-                                <p><strong>Projekt:</strong> ${doc.projectName.orEmpty()}</p>
+                                <p><strong>Projekt:</strong> ${doc.projectNumber?.or(0)}</p>
                                 <p><strong>Kundennummer:</strong> ${doc.customerId.orEmpty()}</p>
                                 <p><strong>Zeitraum:</strong> ${doc.projectStartDate?.format(dateFormatter).orEmpty()} - ${doc.projectEndDate?.format(dateFormatter).orEmpty()}</p>
                             </div>

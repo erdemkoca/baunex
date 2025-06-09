@@ -90,6 +90,7 @@ class DocumentMapper {
             vatRate = company?.defaultVatRate ?: 8.1
             projectId = invoice.projectId
             projectName = project?.name ?: ""
+            projectNumber = project?.projectNumber
             projectStartDate = project?.startDate
             projectEndDate = project?.endDate
 

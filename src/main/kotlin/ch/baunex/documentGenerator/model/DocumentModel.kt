@@ -50,6 +50,8 @@ class DocumentModel : PanacheEntity() {
     @Column(length = 1000)
     var projectName: String? = null
 
+    var projectNumber: Int? = null
+
     var totalNetto: Double = 0.0
     var vatAmount: Double = 0.0
     var totalBrutto: Double = 0.0
