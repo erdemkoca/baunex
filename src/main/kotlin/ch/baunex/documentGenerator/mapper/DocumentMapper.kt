@@ -100,7 +100,7 @@ class DocumentMapper {
                 companyEmail = it.email
                 terms = it.defaultInvoiceTerms
                 footer = buildString {
-                    append("**Bankverbindung**  \n")
+                    append("Bankverbindung\n")
                     append("${it.bankName ?: ""}  \n")
                     append("IBAN: ${it.iban ?: ""}  \n")
                     append("BIC: ${it.bic ?: ""}  \n")

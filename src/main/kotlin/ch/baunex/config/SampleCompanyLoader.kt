@@ -41,7 +41,7 @@ class SampleCompanyLoader {
                 Bei Fragen stehen wir Ihnen gerne zur Verfügung.
             """.trimIndent(),
             defaultInvoiceTerms = """
-                **Allgemeine Geschäftsbedingungen**
+                Allgemeine Geschäftsbedingungen
                 
                 1. Zahlungsbedingungen: 30 Tage netto
                 2. Alle Preise inklusive 8.1% MWST

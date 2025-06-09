@@ -1,10 +1,11 @@
 {#include layout}
     {#title}Firmeneinstellungen{/title}
-    {#header}Firmeneinstellungen{/header}
+    {#header}Einstellungen{/header}
     {#content}
-        <!-- Vue-Shell für die Firmeneinstellungen -->
         <div id="company-settings-app"
-             data-company='{companyJson}'></div>
+             data-company='{companyJson}'
+             data-current-date='{currentDate}'>
+        </div>
         <script type="module" src="/js/company-settings-app.js"></script>
     {/content}
 {/include}
