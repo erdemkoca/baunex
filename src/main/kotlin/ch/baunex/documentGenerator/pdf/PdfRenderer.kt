@@ -234,8 +234,7 @@ object PdfRenderer {
                             </div>
                             <div class="invoice-meta-right">
                                 <p>${doc.companyCity.orEmpty()}, ${doc.invoiceDate?.format(dateFormatter).orEmpty()}</p>
-                                <p><strong>Fälligkeitsdatum:</strong> ${doc.dueDate?.format(dateFormatter).orEmpty()}</p>
-                                <p><strong>Status:</strong> ${doc.invoiceStatus?.name.orEmpty()}</p>
+                                <p><strong>Fälligkeitsdatum:</strong> ${doc.dueDate?.format(dateFormatter).orEmpty()}</p>                              
                             </div>
                         </div>
                     </div>
