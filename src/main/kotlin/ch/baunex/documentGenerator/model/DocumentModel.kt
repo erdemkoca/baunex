@@ -73,12 +73,25 @@ class DocumentModel : PanacheEntity() {
     @Column(length = 100)
     var companyEmail: String? = null
 
+    @Column(length = 1000)
+    var companyLogo: String? = null
+
     // Customer information
+    @Column(length = 100)
+    var customerId: String? = null
+
     @Column(length = 100)
     var customerZip: String? = null
 
     @Column(length = 100)
     var customerCity: String? = null
+
+    // Project information
+    @Serializable(with = LocalDateSerializer::class)
+    var projectStartDate: LocalDate? = null
+
+    @Serializable(with = LocalDateSerializer::class)
+    var projectEndDate: LocalDate? = null
 
     // Document information
     @Column(length = 100)

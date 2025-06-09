@@ -79,6 +79,7 @@ class DocumentMapper {
                 append(" ")
                 append(customer?.person?.details?.city ?: "")
             }
+            customerId = customer?.id?.toString()
             customerZip = customer?.person?.details?.zipCode
             customerCity = customer?.person?.details?.city
             invoiceNumber = invoice.invoiceNumber
@@ -89,6 +90,8 @@ class DocumentMapper {
             vatRate = company?.defaultVatRate ?: 8.1
             projectId = invoice.projectId
             projectName = project?.name ?: ""
+            projectStartDate = project?.startDate
+            projectEndDate = project?.endDate
 
             // Set company information
             company?.let {
@@ -98,6 +101,7 @@ class DocumentMapper {
                 companyCity = it.city
                 companyPhone = it.phone
                 companyEmail = it.email
+                companyLogo = it.logo
                 terms = it.defaultInvoiceTerms
                 footer = buildString {
                     append("Bankverbindung\n")
