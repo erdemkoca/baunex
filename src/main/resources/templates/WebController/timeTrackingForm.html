@@ -3,7 +3,9 @@
 {#header}{#if entry}Zeiterfassung bearbeiten{#else}Neue Zeiterfassung{/if}{/header}
 {#content}
 <div class="card">
-    <div class="card-header">{#if entry}Eintrag bearbeiten{#else}Neuer Eintrag{/if}</div>
+    <div class="card-header">
+        {#if entry}Eintrag bearbeiten{#else}Neuer Eintrag{/if}
+    </div>
     <div class="card-body">
         <form action="/timetracking/save" method="post">
             {#if entry}
@@ -11,33 +13,35 @@
             {/if}
 
             <!-- Versteckte Standardwerte -->
-            <input type="hidden" name="hasNightSurcharge" value="false">
+            <input type="hidden" name="hasNightSurcharge"   value="false">
             <input type="hidden" name="hasWeekendSurcharge" value="false">
             <input type="hidden" name="hasHolidaySurcharge" value="false">
-            <input type="hidden" name="notBillable" value="false">
-            <input type="hidden" name="invoiced" value="false">
-            <input type="hidden" name="hasWaitingTime" value="false">
+            <input type="hidden" name="notBillable"         value="false">
+            <input type="hidden" name="invoiced"            value="false">
+            <input type="hidden" name="hasWaitingTime"      value="false">
 
             <!-- Neuer Feld: Titel (optional) -->
             <div class="mb-3">
                 <label for="title" class="form-label">Titel (optional)</label>
-                <input type="text"
-                       id="title"
-                       name="title"
-                       class="form-control"
-                       placeholder="Kurze Beschreibung"
-                       value="{entry.title ?: ''}" />
+                <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        class="form-control"
+                        placeholder="Kurze Beschreibung"
+                        value="{entry && entry.title ?: ''}"
+                />
             </div>
 
             <!-- Mitarbeiter -->
             <div class="mb-3">
                 <label for="employeeId" class="form-label">Mitarbeiter</label>
-                <select class="form-select" id="employeeId" name="employeeId" required>
-                    {#for employee in employees}
-                    <option value="{employee.id}"
-                            {#if entry != null && entry.employeeId == employee.id}selected{/if}>
-                        {employee.email}
-                    </option>
+                <select id="employeeId" name="employeeId" class="form-select" required>
+                    {#for emp in employees}
+                    <option
+                            value="{emp.id}"
+                            {#if entry && entry.employeeId == emp.id}selected{/if}
+                    >{emp.firstName} {emp.lastName}</option>
                     {/for}
                 </select>
             </div>
@@ -45,12 +49,12 @@
             <!-- Projekt -->
             <div class="mb-3">
                 <label for="projectId" class="form-label">Projekt</label>
-                <select class="form-select" id="projectId" name="projectId" required>
-                    {#for project in projects}
-                    <option value="{project.id}"
-                            {#if entry != null && entry.projectId == project.id}selected{/if}>
-                        {project.name}
-                    </option>
+                <select id="projectId" name="projectId" class="form-select" required>
+                    {#for proj in projects}
+                    <option
+                            value="{proj.id}"
+                            {#if entry && entry.projectId == proj.id}selected{/if}
+                    >{proj.name}</option>
                     {/for}
                 </select>
             </div>
@@ -58,17 +62,29 @@
             <!-- Datum -->
             <div class="mb-3">
                 <label for="date" class="form-label">Datum</label>
-                <input type="date" class="form-control" id="date" name="date"
-                       value="{#if entry}{entry.date}{#else}{currentDate}{/if}" required />
+                <input
+                        type="date"
+                        id="date"
+                        name="date"
+                        class="form-control"
+                        value="{entry && entry.date ?: currentDate}"
+                        required
+                />
             </div>
 
             <!-- Gearbeitete Stunden -->
             <div class="mb-3">
                 <label for="hoursWorked" class="form-label">Gearbeitete Stunden</label>
-                <input type="number" class="form-control" id="hoursWorked" name="hoursWorked"
-                       step="0.1" min="0"
-                       value="{#if entry}{entry.hoursWorked}{/if}"
-                       required />
+                <input
+                        type="number"
+                        id="hoursWorked"
+                        name="hoursWorked"
+                        step="0.1"
+                        min="0"
+                        class="form-control"
+                        value="{#if entry}{entry.hoursWorked}{/if}"
+                        required
+                />
             </div>
 
             <!-- Notizen‐Bereich -->
@@ -81,76 +97,329 @@
                     <div class="note-block mb-3 border rounded p-2">
                         <input type="hidden" name="notes[][id]" value="{note.id}" />
 
+                        <!-- Titel -->
                         <div class="mb-2">
                             <label class="form-label">Titel</label>
-                            <input type="text" class="form-control" name="notes[][title]"
-                                   value="{note.title ?: ''}" placeholder="Optional" />
+                            <input
+                                    type="text"
+                                    name="notes[][title]"
+                                    class="form-control"
+                                    value="{note.title ?: ''}"
+                                    placeholder="Optional"
+                            />
                         </div>
 
+                        <!-- Kategorie -->
                         <div class="mb-2">
                             <label class="form-label">Kategorie</label>
-                            <select class="form-select" name="notes[][category]" required>
-                                <option value="" disabled {#if note.category == null}selected{/if}>
-                                    -- auswählen --
-                                </option>
+                            <select name="notes[][category]" class="form-select" required>
+                                <option value="">-- auswählen --</option>
                                 {#for cat in categories}
-                                <option value="{cat.name}"
-                                        {#if note.category.name == cat.name}selected{/if}>
-                                    {cat.name}
-                                </option>
+                                <option
+                                        value="{cat.name}"
+                                        {#if note.category.name == cat.name}selected{/if}
+                                >{cat.name}</option>
                                 {/for}
                             </select>
                         </div>
 
+                        <!-- Inhalt -->
                         <div class="mb-2">
                             <label class="form-label">Inhalt</label>
-                            <textarea class="form-control" name="notes[][content]" rows="2" required>{note.content}</textarea>
+                            <textarea
+                                    name="notes[][content]"
+                                    class="form-control"
+                                    rows="2"
+                                    required
+                            >{note.content}</textarea>
                         </div>
 
+                        <!-- Tags -->
                         <div class="mb-2">
-                            <label class="form-label">Tags (Komma‐getrennt)</label>
+                            <label class="form-label">Tags (Komma-getrennt)</label>
                             <input
                                     type="text"
-                                    class="form-control"
                                     name="notes[][tags]"
+                                    class="form-control"
                                     value="{#if !note.tags.isEmpty()}{#for tag in note.tags}{tag}{#if tag != note.tags.get(note.tags.size() - 1)}, {/if}{/for}{/if}"
-                                    placeholder="z. B. dringlich,prüfung" />
+                            placeholder="z. B. dringlich, Prüfung"
+                            />
                         </div>
 
-                        <button type="button" class="btn btn-danger btn-sm mt-2" onclick="removeNoteBlock(this)">
-                            Entfernen
-                        </button>
+                        <button
+                                type="button"
+                                class="btn btn-danger btn-sm mt-2"
+                                onclick="removeNoteBlock(this)"
+                        >Entfernen</button>
                     </div>
                     {/for}
                     {/if}
                 </div>
 
-                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addNoteBlock()">
-                    <i class="bi bi-plus-circle me-1"></i>Notiz hinzufügen
-                </button>
+                <button
+                        type="button"
+                        class="btn btn-outline-primary btn-sm"
+                        onclick="addNoteBlock()"
+                ><i class="bi bi-plus-circle me-1"></i>Notiz hinzufügen</button>
             </fieldset>
 
             <!-- Stundensatz -->
             <div class="mb-3">
                 <label for="hourlyRate" class="form-label">Stundensatz (CHF)</label>
-                <input type="number" class="form-control" id="hourlyRate" name="hourlyRate"
-                       step="0.01"
-                       value="{#if entry}{entry.hourlyRate}{/if}" />
+                <input
+                        type="number"
+                        id="hourlyRate"
+                        name="hourlyRate"
+                        step="0.01"
+                        class="form-control"
+                        value="{#if entry}{entry.hourlyRate}{/if}"
+                />
             </div>
 
             <!-- Zuschläge -->
             <div class="mb-3">
                 <label class="form-label">Zuschläge</label>
                 <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="hasNightSurcharge"
-                           name="hasNightSurcharge" value="true"
-                           {#if entry && entry.hasNightSurcharge}checked{/if}
-                           onchange="updateHiddenInput(this)">
+                    <input
+                            type="checkbox"
+                            id="hasNightSurcharge"
+                            name="hasNightSurcharge"
+                            class="form-check-input"
+                            value="true"
+                            {#if entry && entry.hasNightSurcharge}checked{/if}
+                            onchange="updateHiddenInput(this)"
+                    />
                     <label class="form-check-label" for="hasNightSurcharge">Nachtzuschlag</label>
                 </div>
                 <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="hasWeekendSurcharge"
-                           name="hasWeekendSurcharge" value="true"
-                           {#if entry && entry.hasWeekendSurcharge}checked{/if}
-                           onchange="updateHiddenInput(this)">
-                    <label class="form-check-label" for="has
+                    <input
+                            type="checkbox"
+                            id="hasWeekendSurcharge"
+                            name="hasWeekendSurcharge"
+                            class="form-check-input"
+                            value="true"
+                            {#if entry && entry.hasNightSurcharge}checked{/if}
+                            onchange="updateHiddenInput(this)"
+                    />
+                    <label class="form-check-label" for="hasWeekendSurcharge">Wochenendzuschlag</label>
+                </div>
+                <div class="form-check">
+                    <input
+                            type="checkbox"
+                            id="hasHolidaySurcharge"
+                            name="hasHolidaySurcharge"
+                            class="form-check-input"
+                            value="true"
+                            {#if entry && entry.hasHolidaySurcharge}checked{/if}
+                            onchange="updateHiddenInput(this)"
+                    />
+                    <label class="form-check-label" for="hasHolidaySurcharge">Feiertagszuschlag</label>
+                </div>
+            </div>
+
+            <!-- Zusätzliche Kosten -->
+            <div class="mb-3">
+                <label class="form-label">Zusätzliche Kosten</label>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Reisezeit (Minuten)</label>
+                        <input
+                                type="number"
+                                id="travelTimeMinutes"
+                                name="travelTimeMinutes"
+                                min="0"
+                                class="form-control"
+                                value="{#if entry}{entry.travelTimeMinutes}{/if}"
+                        />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Entsorgungskosten (CHF)</label>
+                        <input
+                                type="number"
+                                id="disposalCost"
+                                name="disposalCost"
+                                step="0.01"
+                                min="0"
+                                class="form-control"
+                                value="{#if entry}{entry.disposalCost}{/if}"
+                        />
+                    </div>
+                </div>
+                <div class="row g-3 mt-2">
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input
+                                    type="checkbox"
+                                    id="hasWaitingTime"
+                                    name="hasWaitingTime"
+                                    class="form-check-input"
+                                    value="true"
+                                    {#if entry && entry.hasWaitingTime}checked{/if}
+                                    onchange="updateHiddenInput(this)"
+                            />
+                            <label class="form-check-label" for="hasWaitingTime">Wartezeit</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Wartezeit (Minuten)</label>
+                        <input
+                                type="number"
+                                id="waitingTimeMinutes"
+                                name="waitingTimeMinutes"
+                                min="0"
+                                class="form-control"
+                                value="{#if entry}{entry.waitingTimeMinutes}{/if}"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nicht verrechenbar & Fakturiert -->
+            <div class="mb-3 form-check">
+                <input
+                        type="checkbox"
+                        id="notBillable"
+                        name="notBillable"
+                        class="form-check-input"
+                        value="true"
+                        {#if entry != null && !entry.billable}checked{/if}
+                        onchange="updateHiddenInput(this)"
+                />
+                <label class="form-check-label" for="notBillable">Nicht verrechenbar</label>
+            </div>
+            <div class="mb-3 form-check">
+                <input
+                        type="checkbox"
+                        id="invoiced"
+                        name="invoiced"
+                        class="form-check-input"
+                        value="true"
+                        {#if entry && entry.invoiced}checked{/if}
+                        onchange="updateHiddenInput(this)"
+                />
+                <label class="form-check-label" for="invoiced">Fakturiert</label>
+            </div>
+
+            <!-- Katalogartikel -->
+            <div class="mb-3">
+                <label class="form-label">Katalogartikel</label>
+                <table class="table" id="catalogItemsTable">
+                    <thead>
+                    <tr>
+                        <th>Name</th><th>Menge</th><th>Einzelpreis</th><th>Gesamt</th><th>Aktionen</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {#if entry && entry.catalogItems}
+                    {#for item in entry.catalogItems}
+                    <tr>
+                        <td>{item.itemName}</td>
+                        <td>{item.quantity}</td>
+                        <td>{item.unitPrice} CHF</td>
+                        <td>{item.totalPrice} CHF</td>
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeCatalogItem(this)">x</button>
+                            <input type="hidden" name="catalogItemIds" value="{item.catalogItemId}">
+                            <input type="hidden" name="catalogItemQuantities" value="{item.quantity}">
+                            <input type="hidden" name="catalogItemNames" value="{item.itemName}">
+                            <input type="hidden" name="catalogItemPrices" value="{item.unitPrice}">
+                        </td>
+                    </tr>
+                    {/for}
+                    {/if}
+                    </tbody>
+                </table>
+                <div class="row g-3 align-items-end mt-2">
+                    <div class="col">
+                        <select id="catalogItemSelect" class="form-select">
+                            <option value="">-- Artikel auswählen --</option>
+                            {#for ci in catalogItems}
+                            <option value="{ci.id}" data-name="{ci.name}" data-price="{ci.unitPrice}">
+                                {ci.name} – {ci.unitPrice} CHF
+                            </option>
+                            {/for}
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <input type="number" id="itemQuantity" class="form-control" min="1" value="1"/>
+                    </div>
+                    <div class="col-auto">
+                        <button type="button" class="btn btn-primary" onclick="addCatalogItem()">
+                            <i class="bi bi-plus-circle me-1"></i>Hinzufügen
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- JavaScript‐Helpers -->
+            <script>
+                function updateHiddenInput(cb) {
+                    const hi = document.querySelector(`input[type="hidden"][name="${cb.name}"]`);
+                    if (hi) hi.value = cb.checked;
+                }
+                document.addEventListener('DOMContentLoaded', () => {
+                    document.querySelectorAll('input[type="checkbox"]').forEach(updateHiddenInput);
+                });
+
+                function addNoteBlock() {
+                    const c = document.getElementById('notesContainer');
+                    const b = document.createElement('div');
+                    b.className = 'note-block mb-3 border rounded p-2';
+                    b.innerHTML = `
+                <input type="hidden" name="notes[][id]" value=""/>
+                <div class="mb-2"><label class="form-label">Titel</label>
+                  <input type="text" name="notes[][title]" class="form-control" placeholder="Optional"/></div>
+                <div class="mb-2"><label class="form-label">Kategorie</label>
+                  <select name="notes[][category]" class="form-select" required>
+                    <option value="" disabled selected>-- auswählen --</option>
+                    {#for cat in categories}<option value="{cat.name}">{cat.name}</option>{/for}
+                  </select></div>
+                <div class="mb-2"><label class="form-label">Inhalt</label>
+                  <textarea name="notes[][content]" class="form-control" rows="2" required></textarea></div>
+                <div class="mb-2"><label class="form-label">Tags (Komma-getrennt)</label>
+                  <input type="text" name="notes[][tags]" class="form-control" placeholder="z. B. wichtig, dringlich"/></div>
+                <button type="button" class="btn btn-danger btn-sm mt-2" onclick="removeNoteBlock(this)">Entfernen</button>
+              `;
+                    c.appendChild(b);
+                }
+                function removeNoteBlock(btn) {
+                    btn.closest('.note-block').remove();
+                }
+
+                function addCatalogItem() {
+                    const sel = document.getElementById('catalogItemSelect');
+                    const qty = parseInt(document.getElementById('itemQuantity').value, 10);
+                    if (!sel.value) return alert('Bitte Artikel wählen');
+                    const nm = sel.selectedOptions[0].dataset.name;
+                    const pr = parseFloat(sel.selectedOptions[0].dataset.price);
+                    const tb = document.querySelector('#catalogItemsTable tbody');
+                    const row = document.createElement('tr');
+                    row.innerHTML = 
+                        '<td>' + nm + '</td>' +
+                        '<td>' + qty + '</td>' +
+                        '<td>' + pr + ' CHF</td>' +
+                        '<td>' + (pr*qty) + ' CHF</td>' +
+                        '<td>' +
+                        '<button type="button" class="btn btn-danger btn-sm" onclick="removeCatalogItem(this)">x</button>' +
+                        '<input type="hidden" name="catalogItemIds" value="' + sel.value + '">' +
+                        '<input type="hidden" name="catalogItemQuantities" value="' + qty + '">' +
+                        '<input type="hidden" name="catalogItemNames" value="' + nm + '">' +
+                        '<input type="hidden" name="catalogItemPrices" value="' + pr + '">' +
+                        '</td>';
+                    tb.appendChild(row);
+                }
+                function removeCatalogItem(btn) {
+                    btn.closest('tr').remove();
+                }
+            </script>
+
+            <!-- Speichern/Abbrechen -->
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">Speichern</button>
+                <a href="/timetracking" class="btn btn-outline-secondary">Abbrechen</a>
+            </div>
+        </form>
+    </div>
+</div>
+{/content}
+{/include}
