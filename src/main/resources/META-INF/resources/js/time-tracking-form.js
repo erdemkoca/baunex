@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <!-- Datum -->
                         <div class="mb-3">
                             <label class="form-label">Datum</label>
-                            <input v-model="entry.date" type="date" class="form-control" :value="entry.date || currentDate" required>
+                            <input v-model="entry.date" type="date" class="form-control" required>
                         </div>
 
                         <!-- Gearbeitete Stunden -->
@@ -94,8 +94,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <label class="form-label">Kategorie</label>
                                     <select v-model="note.category" class="form-select" required>
                                         <option value="">-- auswählen --</option>
-                                        <option v-for="cat in categories" :key="cat.name" :value="cat.name">
-                                            {{ cat.name }}
+                                        <option v-for="cat in categories" :key="cat" :value="cat">
+                                            {{ cat }}
                                         </option>
                                     </select>
                                 </div>
