@@ -22,12 +22,3 @@ fun NoteModel.toDto(): NoteDto {
         attachments = this.attachments.map { it.toDto() }
     )
 }
-
-fun MediaAttachmentModel.toDto(): MediaAttachmentDto {
-    return MediaAttachmentDto(
-        id = this.id!!,
-        url = this.url,
-        type = this.type,
-        caption = this.caption
-    )
-}

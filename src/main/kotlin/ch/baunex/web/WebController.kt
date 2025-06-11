@@ -94,21 +94,22 @@ class WebController {
         @JvmStatic
         external fun timeTracking(
             activeMenu: String,
-            timeEntries: List<TimeEntryResponseDTO>,
+            timeEntriesJson: String,
             currentDate: String,
-            employees: List<EmployeeDTO>,
-            projects: List<ProjectListDTO>,
-            entry: TimeEntryResponseDTO? = null): TemplateInstance
+            employeesJson: String,
+            projectsJson: String,
+            entryJson: String //TODO maybe just timeEntriesJson is needed, the rest can be deleted
+        ): TemplateInstance
 
         @JvmStatic
         external fun timeTrackingForm(
-            entry: TimeEntryResponseDTO?,
-            employees: List<EmployeeDTO>,
-            projects: List<ProjectListDTO>,
-            currentDate: String,
             activeMenu: String,
-            catalogItems: List<CatalogItemDTO>,
-            categories: List<NoteCategory>
+            entryJson: String,
+            employeesJson: String,
+            projectsJson: String,
+            categoriesJson: String,
+            catalogItemsJson: String,
+            currentDate: String
         ): TemplateInstance
 
         @JvmStatic
@@ -233,5 +234,5 @@ class WebController {
         @QueryParam("projectId") projectId: Long
     ): String {
         return "WebController/documentPreview"
-    }//TODO weshalb diese Funktion hier in dieser Klasse; nötig?
+    }
 } 

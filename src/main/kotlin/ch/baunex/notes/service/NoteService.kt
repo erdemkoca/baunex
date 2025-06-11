@@ -15,6 +15,7 @@ import ch.baunex.timetracking.repository.TimeEntryRepository
 import ch.baunex.user.repository.EmployeeRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
+import java.io.InputStream
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -25,7 +26,8 @@ class NoteService(
     private val projectRepo: ProjectRepository,
     private val timeEntryRepo: TimeEntryRepository,
     private val documentRepo: DocumentRepository,
-    private val employeeRepo: EmployeeRepository
+    private val employeeRepo: EmployeeRepository,
+    private val noteAttachmentService: NoteAttachmentService
 ) {
 
     fun listNotesByProject(projectId: Long): List<NoteDto> {
@@ -114,26 +116,21 @@ class NoteService(
     }
 
     @Transactional
-    fun addAttachment(noteId: Long, url: String, type: String, caption: String?): MediaAttachmentDto {
-        val note = noteRepo.findById(noteId) ?: throw IllegalArgumentException("Note $noteId not found")
-
-        val mediaType = try {
-            MediaType.valueOf(type.uppercase())
-        } catch (e: Exception) {
-            throw IllegalArgumentException("Invalid media type: $type")
-        }
-
-        val attachment = MediaAttachmentModel().apply {
-            this.note = note
-            this.url = url
-            this.type = mediaType
-            this.caption = caption
-        }
-        mediaAttachmentRepo.persist(attachment)
-        return attachment.toDto()
+    fun addAttachment(
+        noteId: Long,
+        fileStream: InputStream,
+        originalFilename: String
+    ): MediaAttachmentDto {
+        val note = noteRepo.findById(noteId)
+            ?: throw IllegalArgumentException("Note $noteId not found")
+        return noteAttachmentService.uploadForNote(
+            note,
+            fileStream,
+            originalFilename
+        )
     }
 
     fun listAttachments(noteId: Long): List<MediaAttachmentDto> {
-        return mediaAttachmentRepo.findByNoteId(noteId).map { it.toDto() }
+        return noteAttachmentService.listForNote( noteRepo.findById(noteId)!! )
     }
 }

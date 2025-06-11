@@ -1,7 +1,13 @@
 package ch.baunex.user.dto
 
+import ch.baunex.serialization.LocalDateSerializer
+import ch.baunex.serialization.LocalDateTimeSerializer
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
+import java.time.LocalDate
 import java.time.LocalDateTime
 
+@Serializable
 data class EmployeeDTO(
     val id: Long,
     val firstName: String,
@@ -16,6 +22,6 @@ data class EmployeeDTO(
     val zipCode: String?,
     val country: String?,
     val phone: String?,
-    val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime
+    @Serializable(with = LocalDateTimeSerializer::class) val createdAt: LocalDateTime,
+    @Serializable(with = LocalDateTimeSerializer::class) val updatedAt: LocalDateTime
 )

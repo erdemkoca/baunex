@@ -1,16 +1,11 @@
 package ch.baunex.web
 
-import ch.baunex.billing.dto.BillingDTO
 import ch.baunex.billing.facade.BillingFacade
-import ch.baunex.company.dto.CompanyDTO
 import ch.baunex.company.facade.CompanyFacade
 import ch.baunex.invoice.dto.InvoiceDTO
 import ch.baunex.invoice.facade.InvoiceFacade
 import ch.baunex.invoice.model.InvoiceStatus
-import ch.baunex.project.dto.ProjectDetailDTO
-import ch.baunex.project.dto.ProjectListDTO
 import ch.baunex.project.facade.ProjectFacade
-import io.quarkus.qute.TemplateInstance
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
@@ -29,6 +24,8 @@ import kotlinx.serialization.modules.contextual
 import org.jboss.logging.Logger
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import ch.baunex.serialization.SerializationUtils.json
+
 
 @Path("/invoice")
 @ApplicationScoped
@@ -47,26 +44,6 @@ class WebInvoiceController {
     lateinit var billingFacade: BillingFacade
 
     private val logger = Logger.getLogger(WebInvoiceController::class.java)
-
-    private object LocalDateSerializer : KSerializer<LocalDate> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LocalDate", PrimitiveKind.STRING)
-
-        override fun serialize(encoder: Encoder, value: LocalDate) {
-            encoder.encodeString(value.format(DateTimeFormatter.ISO_LOCAL_DATE))
-        }
-
-        override fun deserialize(decoder: Decoder): LocalDate {
-            return LocalDate.parse(decoder.decodeString(), DateTimeFormatter.ISO_LOCAL_DATE)
-        }
-    }
-
-    private val json = Json {
-        ignoreUnknownKeys = true
-        encodeDefaults = true
-        serializersModule = SerializersModule {
-            contextual(LocalDateSerializer)
-        }
-    }
 
     @GET
     @Produces(MediaType.TEXT_HTML)

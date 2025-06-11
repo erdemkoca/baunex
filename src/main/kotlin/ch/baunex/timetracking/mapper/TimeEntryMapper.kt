@@ -96,8 +96,6 @@ class TimeEntryMapper @Inject constructor(
                     hourlyRate = entry.hourlyRate,
                     billable = entry.billable,
                     invoiced = entry.invoiced,
-                    catalogItemDescription = entry.catalogItemDescription,
-                    catalogItemPrice = entry.catalogItemPrice,
                     catalogItems = entry.usedCatalogItems.map { item ->
                         TimeEntryCatalogItemDTO(
                             id = item.id,
@@ -164,8 +162,6 @@ class TimeEntryMapper @Inject constructor(
             this.hourlyRate = employee.hourlyRate
             this.billable = dto.billable
             this.invoiced = dto.invoiced
-            this.catalogItemDescription = dto.catalogItemDescription
-            this.catalogItemPrice = dto.catalogItemPrice
 
             this.hasNightSurcharge = dto.hasNightSurcharge
             this.hasWeekendSurcharge = dto.hasWeekendSurcharge

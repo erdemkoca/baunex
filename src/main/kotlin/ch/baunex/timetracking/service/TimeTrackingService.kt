@@ -41,8 +41,6 @@ class TimeTrackingService @Inject constructor(
             this.hourlyRate = employee.hourlyRate
             this.billable = dto.billable
             this.invoiced = dto.invoiced
-            this.catalogItemDescription = dto.catalogItemDescription
-            this.catalogItemPrice = dto.catalogItemPrice
             this.title=dto.title
             // 2. Notizen verarbeiten
             val parent = this
@@ -115,8 +113,6 @@ class TimeTrackingService @Inject constructor(
             this.hourlyRate = employee.hourlyRate
             this.billable = dto.billable
             this.invoiced = dto.invoiced
-            this.catalogItemDescription = dto.catalogItemDescription
-            this.catalogItemPrice = dto.catalogItemPrice
             
             // Surcharges
             this.hasNightSurcharge = dto.hasNightSurcharge

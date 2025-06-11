@@ -4,6 +4,7 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase
 import jakarta.persistence.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Contextual
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Entity
