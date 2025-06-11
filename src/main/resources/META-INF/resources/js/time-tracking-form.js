@@ -39,14 +39,14 @@ document.addEventListener('DOMContentLoaded', () => {
             removeNote(i) {
                 this.notes.splice(i, 1);
             },
-            // Called when user picks a file; stores it temporarily on the note
-            onFilePicked(i, e) {
-                this.notes[i].pendingFile = e.target.files[0];
+            // <-- this will now actually be called
+            onFilePicked(noteIndex, event) {
+                this.notes[noteIndex].pendingFile = event.target.files[0];
             },
             removeAttachment(i, ai) {
                 this.notes[i].attachments.splice(ai, 1);
             },
-            addCatalogItem() { /* … unchanged … */ },
+            addCatalogItem() { /* … */ },
             removeCatalogItem(i) { this.entry.catalogItems.splice(i, 1); },
 
             async saveEntry() {
@@ -102,13 +102,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             });
                             if (res.ok) {
                                 const dto = await res.json();
-                                // track this attachment in the UI
                                 note.attachments.push(dto);
                             }
                         }
                     }
 
-                    // 3) Redirect back to list
                     window.location.href = '/timetracking';
                 } catch (e) {
                     console.error(e);
@@ -207,7 +205,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                             </button>
                                         </div>
                                     </div>
-                                    <input type="file" @change="uploadAttachment(index, $event)" class="form-control">
+                                    <input 
+                                      type="file" 
+                                      @change="onFilePicked(index, $event)" 
+                                      class="form-control" 
+                                    />
                                 </div>
 
                                 <button type="button" class="btn btn-danger btn-sm mt-2" @click="removeNote(index)">
