@@ -169,7 +169,8 @@ class TimeTrackingRestController {
                 content       = noteContent,
                 category      = NoteCategory.valueOf(noteCategory ?: "INFO"),
                 tags          = emptyList(),
-                attachments   = emptyList()
+                attachments   = emptyList(),
+                createdById = employeeId
             )
         } else {
             null

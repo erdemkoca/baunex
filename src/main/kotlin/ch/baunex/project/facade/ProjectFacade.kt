@@ -70,4 +70,28 @@ class ProjectFacade @Inject constructor(
         project.notes.add(note)
     }
 
+    @Transactional
+    fun createOrUpdate(id: Long?, createDto: ProjectCreateDTO): Long {
+        return if (id != null && id > 0) {
+            // mappe vom Create‐ zum Update‐DTO
+            val upd = ProjectUpdateDTO(
+                name        = createDto.name,
+                customerId  = createDto.customerId,
+                budget      = createDto.budget,
+                startDate   = createDto.startDate,
+                endDate     = createDto.endDate,
+                description = createDto.description,
+                status      = createDto.status,
+                street      = createDto.street,
+                city        = createDto.city,
+                updatedNotes= createDto.initialNotes
+            )
+            updateProject(id, upd)
+            id
+        } else {
+            val detail = createProject(createDto)
+            detail.id
+        }
+    }
+
 }

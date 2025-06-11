@@ -13,5 +13,6 @@ data class NoteCreateDto(
     val content: String,
     val category: NoteCategory,
     val tags: List<String> = emptyList(),
-    val attachments: List<Long> = emptyList()
+    val attachments: List<Long> = emptyList(),
+    val createdById: Long
 )

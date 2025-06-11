@@ -8,6 +8,7 @@ import ch.baunex.catalog.facade.CatalogFacade
 import ch.baunex.catalog.facade.ProjectCatalogItemFacade
 import ch.baunex.notes.model.NoteCategory
 import ch.baunex.project.facade.ProjectFacade
+import ch.baunex.serialization.SerializationUtils.json
 import ch.baunex.user.dto.CustomerContactDTO
 import ch.baunex.user.dto.CustomerDTO
 import ch.baunex.user.facade.CustomerFacade
@@ -17,6 +18,7 @@ import jakarta.transaction.Transactional
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
+import kotlinx.serialization.encodeToString
 import java.net.URI
 import java.time.LocalDate
 
@@ -52,15 +54,15 @@ class WebCatalogController {
         val customers: List<CustomerDTO>         = customerFacade.listAll()
 
         val tpl = Templates.projectDetail(
-            project      = projectDetail,
+            projectJson      = json.encodeToString(projectDetail),
             activeMenu   = "projects",
             currentDate  = LocalDate.now(),
-            catalogItems = catalogItems,
-            billing      = billing,
-            contacts     = contacts,
-            customers    = customers,
-            categories = NoteCategory.entries,
-            employees = emptyList()
+            catalogItemsJson = json.encodeToString(catalogItems),
+            billingJson      = json.encodeToString(billing),
+            contactsJson     = json.encodeToString(contacts),
+            customersJson    = json.encodeToString(customers),
+            categoriesJson = json.encodeToString(NoteCategory.entries),
+            employeesJson = ""
 
         )
         return Response.ok(tpl.render()).build()

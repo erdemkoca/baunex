@@ -59,30 +59,34 @@ class WebController {
         ): TemplateInstance
 
         @JvmStatic
-        external fun projects(projects: List<ProjectListDTO>, currentDate: LocalDate, activeMenu: String): TemplateInstance
+        external fun projects(
+            projectsJson: String,
+            currentDate: LocalDate,
+            activeMenu: String)
+        : TemplateInstance
 
         @JvmStatic
         external fun projectDetail(
-            project: ProjectDetailDTO,
+            projectJson: String,
             activeMenu: String,
             currentDate: LocalDate,
-            catalogItems: List<CatalogItemDTO>,
-            billing: BillingDTO,
-            contacts: List<CustomerContactDTO>,
-            customers: List<CustomerDTO>,
-            categories: List<NoteCategory>,
-            employees: List<EmployeeDTO>
+            catalogItemsJson: String,
+            billingJson: String,
+            contactsJson: String,
+            customersJson: String,
+            categoriesJson: String,
+            employeesJson: String
         ): TemplateInstance
 
         @JvmStatic
         external fun projectNotes(
-            project: ProjectDetailDTO,
-            employees: List<EmployeeDTO>,
+            projectJson: String,
+            employeesJson: String,
             hasProjectNotes: Boolean,
             hasTimeEntryNotes: Boolean,
             activeMenu: String,
             currentDate: LocalDate,
-            categories: List<NoteCategory>,
+            categoriesJson: String
         ): TemplateInstance
 
         @JvmStatic

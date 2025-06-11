@@ -87,7 +87,8 @@ class TimeEntryMapper @Inject constructor(
                             content = noteModel.content,
                             category = noteModel.category,
                             tags = noteModel.tags,
-                            attachments = noteModel.attachments.map { it.id!! }
+                            attachments = noteModel.attachments.map { it.id!! },
+                            createdById = entry.employee.id!!
                         )
                     },
                     hourlyRate = entry.hourlyRate,

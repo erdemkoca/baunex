@@ -39,7 +39,8 @@ class SampleTimeEntryLoader {
                         content       = "Stromausfall führte zu Ausfall der Klimaanlage. Wir mussten sofort Ersatzgenerator einsetzen.",
                         category      = NoteCategory.NOTFALL,
                         tags          = listOf("Emergency", "Serverraum"),
-                        attachments   = emptyList()
+                        attachments   = emptyList(),
+                        createdById = 1
                     )
                 ),
                 hourlyRate         = 75.0,
@@ -94,7 +95,8 @@ class SampleTimeEntryLoader {
                         content       = "Hauptverteiler installiert, Verkabelung geprüft. Kleinere Anpassungen am Sicherungskasten notwendig.",
                         category      = NoteCategory.INFO,
                         tags          = listOf("Verteiler", "Installation"),
-                        attachments   = emptyList()
+                        attachments   = emptyList(),
+                        createdById = 2
                     )
                 ),
                 hourlyRate         = 65.0,
@@ -156,7 +158,8 @@ class SampleTimeEntryLoader {
                         content       = "Sicherung defekt, musste ausgetauscht werden. Kunde nicht vor Ort, Ersatzteil vorgehalten.",
                         category      = NoteCategory.FEHLER,
                         tags          = listOf("Feiertag", "Sicherung"),
-                        attachments   = emptyList()
+                        attachments   = emptyList(),
+                        createdById = 3
                     )
                 ),
                 hourlyRate         = 70.0,
@@ -204,7 +207,8 @@ class SampleTimeEntryLoader {
                         content       = "Lieferung der Klimaanlagenfilter verzögert sich um 2 Tage, Kunde informiert.",
                         category      = NoteCategory.MATERIALBEDARF,
                         tags          = listOf("Warten", "Filter"),
-                        attachments   = emptyList()
+                        attachments   = emptyList(),
+                        createdById = 1
                     )
                 ),
                 hourlyRate         = 65.0,
@@ -252,7 +256,8 @@ class SampleTimeEntryLoader {
                         content       = "Cat7-Kabel verlegt, Ports getestet. Switch konfiguriert.",
                         category      = NoteCategory.INFO,
                         tags          = listOf("Netzwerk", "Switch"),
-                        attachments   = emptyList()
+                        attachments   = emptyList(),
+                        createdById = 2
                     )
                 ),
                 hourlyRate         = 70.0,
@@ -307,7 +312,8 @@ class SampleTimeEntryLoader {
                         content       = "Alarmanlage defekt, Ersatzteil zufällig auf Lager, sofort eingebaut.",
                         category      = NoteCategory.NOTFALL,
                         tags          = listOf("Weekend", "Alarmanlage"),
-                        attachments   = emptyList()
+                        attachments   = emptyList(),
+                        createdById = 3
                     )
                 ),
                 hourlyRate         = 75.0,
@@ -355,7 +361,8 @@ class SampleTimeEntryLoader {
                         content       = "Überprüfung der Steckdosen und Leitungen im gesamten Erdgeschoss.",
                         category      = NoteCategory.INFO,
                         tags          = listOf("Routine", "Check"),
-                        attachments   = emptyList()
+                        attachments   = emptyList(),
+                        createdById = 1
                     )
                 ),
                 hourlyRate         = 65.0,
@@ -403,7 +410,8 @@ class SampleTimeEntryLoader {
                         content       = "Alle Lesegeräte eingerichtet, Karten funktionieren.",
                         category      = NoteCategory.INFO,
                         tags          = listOf("Sicherheit", "Konfiguration"),
-                        attachments   = emptyList()
+                        attachments   = emptyList(),
+                        createdById = 2
                     )
                 ),
                 hourlyRate         = 70.0,

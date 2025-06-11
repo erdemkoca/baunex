@@ -1,0 +1,17 @@
+{#include layout}
+  {#title}{#if project.id}Projekt bearbeiten{/if}{#else}Neues Projekt{/if}{/title}
+  {#header}{#if project.id}Projekt bearbeiten{/if}{#else}Neues Projekt{/if}{/header}
+  {#content}
+    <div id="project-detail-app"
+         data-project='{projectJson.raw}'
+         data-customers='{customersJson.raw}'
+         data-catalog-items='{catalogItemsJson.raw}'
+         data-billing='{billingJson.raw}'
+         data-contacts='{contactsJson.raw}'
+         data-categories='{categoriesJson.raw}'
+         data-employees='{employeesJson.raw}'
+         data-current-date="{currentDate}">
+    </div>
+    <script type="module" src="/js/project-detail-app.js"></script>
+  {/content}
+{/include}
