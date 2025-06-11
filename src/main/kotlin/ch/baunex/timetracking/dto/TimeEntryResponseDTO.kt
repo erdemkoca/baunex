@@ -1,6 +1,7 @@
 package ch.baunex.timetracking.dto
 
 import ch.baunex.notes.dto.NoteDto
+import ch.baunex.serialization.LocalDateSerializer
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
@@ -14,7 +15,8 @@ data class TimeEntryResponseDTO(
     val employeeLastName: String,
     val projectId: Long,
     val projectName: String,
-    @Contextual val date: LocalDate,
+    @Serializable(with = LocalDateSerializer::class)
+    val date: LocalDate,
     val hoursWorked: Double,
     val title: String,
     val notes: List<NoteDto> = emptyList(),

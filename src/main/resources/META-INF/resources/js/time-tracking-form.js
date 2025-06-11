@@ -31,7 +31,48 @@ document.addEventListener('DOMContentLoaded', () => {
             removeAttachment(i, ai) { this.notes[i].attachments.splice(ai, 1); },
             addCatalogItem() { /* same as original */ },
             removeCatalogItem(i) { this.entry.catalogItems.splice(i, 1); },
-            async saveEntry() { /* same as original */ }
+            async saveEntry() {
+                this.saving = true;
+                const payload = {
+                    id:                this.entry.id,                // may be null for new
+                    employeeId:        this.entry.employeeId,
+                    projectId:         this.entry.projectId,
+                    date:              this.entry.date,
+                    hoursWorked:       this.entry.hoursWorked,
+                    title:             this.entry.title,
+                    notes:             this.notes,
+                    hourlyRate:        this.entry.hourlyRate,
+                    billable:          this.entry.billable,
+                    invoiced:          this.entry.invoiced,
+                    catalogItems:      this.entry.catalogItems,
+                    hasNightSurcharge: this.entry.hasNightSurcharge,
+                    hasWeekendSurcharge:this.entry.hasWeekendSurcharge,
+                    hasHolidaySurcharge:this.entry.hasHolidaySurcharge,
+                    travelTimeMinutes: this.entry.travelTimeMinutes,
+                    disposalCost:      this.entry.disposalCost,
+                    hasWaitingTime:    this.entry.hasWaitingTime,
+                    waitingTimeMinutes:this.entry.waitingTimeMinutes
+                };
+
+                try {
+                    const response = await fetch('/timetracking/api/save', {
+                        method: 'POST',
+                        headers: {'Content-Type':'application/json'},
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) {
+                        const err = await response.text();
+                        alert('Fehler beim Speichern: ' + err);
+                        this.saving = false;
+                        return;
+                    }
+                    window.location.href = '/timetracking';
+                } catch(e) {
+                    console.error(e);
+                    alert('Fehler beim Speichern: ' + e.message);
+                    this.saving = false;
+                }
+            }
         },
         template: `
         <div class="container-fluid">
