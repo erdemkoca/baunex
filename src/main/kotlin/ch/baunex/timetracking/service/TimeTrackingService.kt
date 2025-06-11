@@ -44,16 +44,16 @@ class TimeTrackingService @Inject constructor(
             this.title=dto.title
             // 2. Notizen verarbeiten
             val parent = this
-            this.notes = dto.notes.map { noteDto ->
+            this.notes = dto.notes.map { noteCreateDto ->
                 NoteModel().apply {
-                    content    = noteDto.content
-                    title      = noteDto.title
-                    category   = noteDto.category
-                    tags       = noteDto.tags
-                    createdAt  = noteDto.createdAt
-                    updatedAt  = noteDto.updatedAt
-                    createdBy  = employeeService.findEmployeeById(noteDto.createdById)!!
+                    content    = noteCreateDto.content
+                    title      = noteCreateDto.title
+                    category   = noteCreateDto.category
+                    tags       = noteCreateDto.tags
                     timeEntry  = parent
+                    createdBy = employee
+                    createdAt = LocalDate.now()
+                    updatedAt = LocalDate.now()
                 }
             }.toMutableList()
         }
@@ -97,15 +97,16 @@ class TimeTrackingService @Inject constructor(
             this.hoursWorked = dto.hoursWorked
             this.title    = dto.title
             existingEntry.notes.clear()
-            val newNotes = dto.notes.map { noteDto ->
+            val newNotes = dto.notes.map { noteCreateDto ->
                 NoteModel().apply {
-                    this.content = noteDto.content
-                    this.title = noteDto.title
-                    this.category = noteDto.category
-                    this.tags = noteDto.tags
-                    this.createdAt = noteDto.createdAt
-                    createdBy  = employeeService.findEmployeeById(noteDto.createdById)!!
+                    this.content = noteCreateDto.content
+                    this.title = noteCreateDto.title
+                    this.category = noteCreateDto.category
+                    this.tags = noteCreateDto.tags
                     this.timeEntry = existingEntry
+                    createdBy  = employee
+                    createdAt  = LocalDate.now()
+                    updatedAt  = LocalDate.now()
                 }
             }
             existingEntry.notes.addAll(newNotes)

@@ -56,6 +56,16 @@ class NoteAttachmentService {
     }
 
     @Transactional
+    fun linkAttachmentToNote(note: NoteModel, attachmentId: Long) {
+        val attachment = mediaAttachmentRepository.findById(attachmentId)
+            ?: throw IllegalArgumentException("Attachment $attachmentId nicht gefunden")
+        // Remove von vorherigem Parent, falls nötig:
+        attachment.note = note
+        // Falls du Panache benutzt, genügt:
+        attachment.persist()
+    }
+
+    @Transactional
     fun deleteAttachment(attachmentId: Long): Boolean {
         val att = noteAttachmentRepository.findById(attachmentId) ?: return false
         // optionally: uploadService.deleteFile(att.url)

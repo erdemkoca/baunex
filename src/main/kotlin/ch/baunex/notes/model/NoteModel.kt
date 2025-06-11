@@ -57,4 +57,16 @@ class NoteModel : PanacheEntity() {
 
     @OneToMany(mappedBy = "note", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var attachments: MutableList<MediaAttachmentModel> = mutableListOf()
+
+    @PrePersist
+    fun onCreate() {
+        val now = LocalDate.now()
+        this.createdAt = now
+        this.updatedAt = now
+    }
+
+    @PreUpdate
+    fun onUpdate() {
+        this.updatedAt = LocalDate.now()
+    }
 }

@@ -17,18 +17,12 @@ class NoteAttachmentFacade {
     @Inject
     lateinit var noteRepository: NoteRepository
 
-    /**
-     * Liste aller Attachments fuer eine Note
-     */
     fun listAttachments(noteId: Long): List<MediaAttachmentDto> {
         val note = noteRepository.findById(noteId)
             ?: throw IllegalArgumentException("Note \$noteId nicht gefunden")
         return noteAttachmentService.listForNote(note)
     }
 
-    /**
-     * Upload eines Attachments fuer eine Note
-     */
     @Transactional
     fun uploadAttachment(
         noteId: Long,
@@ -44,9 +38,15 @@ class NoteAttachmentFacade {
         )
     }
 
-    /**
-     * Loeschen eines Attachments nach ID
-     */
+    @Transactional
+    fun linkAttachments(noteId: Long, attachmentIds: List<Long>) {
+        val note = noteRepository.findById(noteId)
+            ?: throw IllegalArgumentException("Note $noteId nicht gefunden")
+        attachmentIds.forEach { attachmentId ->
+            noteAttachmentService.linkAttachmentToNote(note, attachmentId)
+        }
+    }
+
     @Transactional
     fun deleteAttachment(attachmentId: Long): Boolean =
         noteAttachmentService.deleteAttachment(attachmentId)

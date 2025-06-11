@@ -1,7 +1,7 @@
 package ch.baunex.timetracking.controller
 
 import ch.baunex.catalog.facade.CatalogFacade
-import ch.baunex.notes.dto.NoteDto
+import ch.baunex.notes.dto.NoteCreateDto
 import ch.baunex.notes.facade.NoteAttachmentFacade
 import ch.baunex.notes.model.NoteCategory
 import ch.baunex.project.facade.ProjectFacade
@@ -159,16 +159,12 @@ class TimeTrackingRestController {
             )
         }
 
-        val singleNote: NoteDto? = if (!noteContent.isNullOrBlank()) {
-            NoteDto(
+        val singleNote: NoteCreateDto? = if (!noteContent.isNullOrBlank()) {
+            NoteCreateDto(
                 id            = 0L,               // 0L fuer neu (wird in Service ueberschrieben)
                 projectId     = projectId,        // oder null, je nachdem
                 timeEntryId   = null,             // im Create‐Fall wird erst TimeEntry gespeichert
                 documentId    = null,
-                createdById   = employeeId,  // z. B. Hero, aus Session holen
-                createdByName = employeeFacade.findById(employeeId).firstName + employeeFacade.findById(employeeId).lastName,
-                createdAt     = LocalDate.now(),
-                updatedAt     = null,
                 title         = noteTitle,
                 content       = noteContent,
                 category      = NoteCategory.valueOf(noteCategory ?: "INFO"),
@@ -260,13 +256,29 @@ class TimeTrackingRestController {
     @Path("/api/save")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    fun saveJson(entry: TimeEntryDTO): Response = try {
-        val result = if (entry.id == null) timeTrackingFacade.logTime(entry)
-        else timeTrackingFacade.updateTimeEntry(entry.id, entry)
-        Response.ok(result).build()
-    } catch (e: Exception) {
-        logger.error("Error saving time entry", e)
-        Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.message).build()
+    fun saveJson(entry: TimeEntryDTO): TimeEntryResponseDTO {
+        // 1) Persist entry (and its notes) first
+        val maybeSaved = if (entry.id == null) {
+            timeTrackingFacade.logTime(entry)
+        } else {
+            timeTrackingFacade.updateTimeEntry(entry.id, entry)
+        }
+        val saved = maybeSaved ?: throw WebApplicationException("Failed to save entry", 500)
+
+        // 2) Link attachments: requestNote.attachments is List<Long>
+        entry.notes.forEachIndexed { idx, requestNote ->
+            if (requestNote.attachments.isNotEmpty()) {
+                // Find the matching saved note by index
+                saved.notes.getOrNull(idx)?.let { savedNote ->
+                    noteAttachmentFacade.linkAttachments(
+                        noteId = savedNote.id,
+                        attachmentIds = requestNote.attachments
+                    )
+                }
+            }
+        }
+
+        return saved
     }
 
     @POST

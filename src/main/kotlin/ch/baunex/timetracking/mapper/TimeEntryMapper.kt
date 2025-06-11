@@ -1,5 +1,6 @@
 package ch.baunex.timetracking.mapper
 
+import ch.baunex.notes.dto.NoteCreateDto
 import ch.baunex.notes.dto.NoteDto
 import ch.baunex.notes.mapper.toDto
 import ch.baunex.notes.model.NoteModel
@@ -14,11 +15,11 @@ import ch.baunex.user.model.EmployeeModel
 import ch.baunex.user.service.EmployeeService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
+import java.time.LocalDate
 
 @ApplicationScoped
 class TimeEntryMapper @Inject constructor(
-    private val timeEntryCostService: TimeEntryCostService,
-    private val employeeService: EmployeeService
+    private val timeEntryCostService: TimeEntryCostService
 ) {
 
     fun toTimeEntryResponseDTO(entry: TimeEntryModel): TimeEntryResponseDTO {
@@ -77,20 +78,16 @@ class TimeEntryMapper @Inject constructor(
                     hoursWorked = entry.hoursWorked,
                     title = entry.title,
                     notes = entry.notes.map { noteModel ->
-                        NoteDto(
+                        NoteCreateDto(
                             id = noteModel.id!!,
                             projectId = noteModel.project?.id,
                             timeEntryId = noteModel.timeEntry?.id,
                             documentId = noteModel.document?.id,
-                            createdById = noteModel.createdBy.id!!,
-                            createdByName = "${noteModel.createdBy.person.firstName} ${noteModel.createdBy.person.lastName}",
-                            createdAt = noteModel.createdAt,
-                            updatedAt = noteModel.updatedAt,
                             title = noteModel.title,
                             content = noteModel.content,
                             category = noteModel.category,
                             tags = noteModel.tags,
-                            attachments = noteModel.attachments.map { it.toDto() }
+                            attachments = noteModel.attachments.map { it.id!! }
                         )
                     },
                     hourlyRate = entry.hourlyRate,
@@ -147,15 +144,16 @@ class TimeEntryMapper @Inject constructor(
             // Marke Dir eine Referenz auf das TimeEntryModel
             val timeEntryEntity = this
 
-            this.notes = dto.notes.map { noteDto ->
+            this.notes = dto.notes.map { noteCreateDto ->
                 NoteModel().apply {
-                    content = noteDto.content
-                    title = noteDto.title
-                    category = noteDto.category
-                    tags = noteDto.tags
-                    createdAt = noteDto.createdAt
-                    createdBy = employeeService.findEmployeeById(noteDto.createdById)!!
-                    timeEntry = timeEntryEntity
+                    content      = noteCreateDto.content
+                    title        = noteCreateDto.title
+                    category     = noteCreateDto.category
+                    tags         = noteCreateDto.tags
+                    timeEntry    = timeEntryEntity
+                    createdBy    = employee     // the EmployeeModel passed into toTimeEntryModel
+                    createdAt    = LocalDate.now()
+                    updatedAt    = LocalDate.now()
                 }
             }.toMutableList()
 

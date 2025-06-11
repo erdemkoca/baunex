@@ -25,49 +25,92 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         },
         methods: {
-            addNote() { this.notes.push({ title: '', category: '', content: '', tags: [], attachments: [] }); },
-            removeNote(i) { this.notes.splice(i, 1); },
-            async uploadAttachment(i, e) { /* same as original */ },
-            removeAttachment(i, ai) { this.notes[i].attachments.splice(ai, 1); },
-            addCatalogItem() { /* same as original */ },
+            addNote() {
+                this.notes.push({
+                    id: null,
+                    title: '',
+                    category: '',
+                    content: '',
+                    tags: [],
+                    attachments: [],
+                    pendingFile: null
+                });
+            },
+            removeNote(i) {
+                this.notes.splice(i, 1);
+            },
+            // Called when user picks a file; stores it temporarily on the note
+            onFilePicked(i, e) {
+                this.notes[i].pendingFile = e.target.files[0];
+            },
+            removeAttachment(i, ai) {
+                this.notes[i].attachments.splice(ai, 1);
+            },
+            addCatalogItem() { /* … unchanged … */ },
             removeCatalogItem(i) { this.entry.catalogItems.splice(i, 1); },
+
             async saveEntry() {
                 this.saving = true;
-                const payload = {
-                    id:                this.entry.id,                // may be null for new
-                    employeeId:        this.entry.employeeId,
-                    projectId:         this.entry.projectId,
-                    date:              this.entry.date,
-                    hoursWorked:       this.entry.hoursWorked,
-                    title:             this.entry.title,
-                    notes:             this.notes,
-                    hourlyRate:        this.entry.hourlyRate,
-                    billable:          this.entry.billable,
-                    invoiced:          this.entry.invoiced,
-                    catalogItems:      this.entry.catalogItems,
-                    hasNightSurcharge: this.entry.hasNightSurcharge,
-                    hasWeekendSurcharge:this.entry.hasWeekendSurcharge,
-                    hasHolidaySurcharge:this.entry.hasHolidaySurcharge,
-                    travelTimeMinutes: this.entry.travelTimeMinutes,
-                    disposalCost:      this.entry.disposalCost,
-                    hasWaitingTime:    this.entry.hasWaitingTime,
-                    waitingTimeMinutes:this.entry.waitingTimeMinutes
-                };
-
                 try {
-                    const response = await fetch('/timetracking/api/save', {
+                    // 1) Persist entry + notes (no attachments yet)
+                    const saveRes = await fetch('/timetracking/api/save', {
                         method: 'POST',
-                        headers: {'Content-Type':'application/json'},
-                        body: JSON.stringify(payload)
+                        headers: { 'Content-Type':'application/json' },
+                        body: JSON.stringify({
+                            id: this.entry.id,
+                            employeeId: this.entry.employeeId,
+                            projectId: this.entry.projectId,
+                            date: this.entry.date,
+                            hoursWorked: this.entry.hoursWorked,
+                            title: this.entry.title,
+                            notes: this.notes.map(n => ({
+                                id: n.id,
+                                title: n.title,
+                                category: n.category,
+                                content: n.content,
+                                tags: n.tags,
+                                attachments: []      // attachments handled next
+                            })),
+                            hourlyRate: this.entry.hourlyRate,
+                            billable: this.entry.billable,
+                            invoiced: this.entry.invoiced,
+                            catalogItems: this.entry.catalogItems,
+                            hasNightSurcharge: this.entry.hasNightSurcharge,
+                            hasWeekendSurcharge: this.entry.hasWeekendSurcharge,
+                            hasHolidaySurcharge: this.entry.hasHolidaySurcharge,
+                            travelTimeMinutes: this.entry.travelTimeMinutes,
+                            disposalCost: this.entry.disposalCost,
+                            hasWaitingTime: this.entry.hasWaitingTime,
+                            waitingTimeMinutes: this.entry.waitingTimeMinutes
+                        })
                     });
-                    if (!response.ok) {
-                        const err = await response.text();
-                        alert('Fehler beim Speichern: ' + err);
-                        this.saving = false;
-                        return;
+                    if (!saveRes.ok) {
+                        throw new Error(await saveRes.text());
                     }
+                    const saved = await saveRes.json();
+
+                    // 2) Now upload each note’s pending file, if any, using real note IDs
+                    for (let i = 0; i < this.notes.length; i++) {
+                        const note = this.notes[i];
+                        if (note.pendingFile) {
+                            const form = new FormData();
+                            form.append('noteId', saved.notes[i].id);
+                            form.append('file', note.pendingFile);
+                            const res = await fetch('/timetracking/api/upload/note-attachment', {
+                                method: 'POST',
+                                body: form
+                            });
+                            if (res.ok) {
+                                const dto = await res.json();
+                                // track this attachment in the UI
+                                note.attachments.push(dto);
+                            }
+                        }
+                    }
+
+                    // 3) Redirect back to list
                     window.location.href = '/timetracking';
-                } catch(e) {
+                } catch (e) {
                     console.error(e);
                     alert('Fehler beim Speichern: ' + e.message);
                     this.saving = false;
