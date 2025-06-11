@@ -46,7 +46,22 @@ document.addEventListener('DOMContentLoaded', () => {
             removeAttachment(i, ai) {
                 this.notes[i].attachments.splice(ai, 1);
             },
-            addCatalogItem() { /* … */ },
+            addCatalogItem() {
+                if (!this.selectedCatalogItem) {
+                    return alert('Bitte zuerst einen Artikel auswählen');
+                }
+                const item = this.catalogItems.find(ci => ci.id === this.selectedCatalogItem);
+                if (!item) return;
+                this.entry.catalogItems.push({
+                    catalogItemId: item.id,
+                    itemName:       item.name,
+                    quantity:       this.itemQuantity,
+                    unitPrice:      item.unitPrice,
+                    totalPrice:     item.unitPrice * this.itemQuantity
+                });
+                this.selectedCatalogItem = null;
+                this.itemQuantity = 1;
+            },
             removeCatalogItem(i) { this.entry.catalogItems.splice(i, 1); },
 
             async saveEntry() {
