@@ -8,35 +8,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     createApp({
         data() {
-            // a) Projekt-Notizen vorbereiten
-            const projNotes = project.notes.map(n => ({
-                ...n,
-                source: 'project'     // damit wir im Template unterscheiden können
-            }));
-            // b) TimeEntry-Notizen aus allen Einträgen zusammenziehen
-            const teNotes = project.timeEntries
-                .flatMap(entry =>
-                    (entry.notes || []).map(n => ({
-                        ...n,
-                        source:    'timeEntry',
-                        entryId:   entry.id,
-                        entryDate: entry.date,
-                        entryTitle: entry.title
-                    }))
-                );
+            const projNotes = project.notes.map(n => ({ ...n, source: 'project' }));
+            const teNotes = project.timeEntries.flatMap(entry =>
+                (entry.notes || []).map(n => ({
+                    ...n,
+                    source:     'timeEntry',
+                    entryId:    entry.id,
+                    entryDate:  entry.date,
+                    entryTitle: entry.title
+                }))
+            );
             return {
                 project,
                 categories,
                 employees,
-                // Nutze nur dieses Array zum Rendern
                 notes: [...projNotes, ...teNotes],
                 newNote: {
-                    title: '',
-                    category: null,
-                    content: '',
-                    tags: '',
-                    createdById: null,
-                    pendingFile: null
+                    title:         '',
+                    category:      null,
+                    content:       '',
+                    tags:          '',
+                    createdById:   null,
+                    pendingFile:   null,
+                    previewUrl:    null    // <<< für die Bildvorschau
                 }
             };
         },
@@ -45,7 +39,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 return new Date(d).toLocaleDateString('de-CH');
             },
             onFilePickedForNew(event) {
-                this.newNote.pendingFile = event.target.files[0];
+                const file = event.target.files[0];
+                if (!file) return;
+                this.newNote.pendingFile = file;
+                // URL für Vorschau erzeugen
+                this.newNote.previewUrl = URL.createObjectURL(file);
             },
             async removeAttachment(noteIndex, attIndex) {
                 const att = this.notes[noteIndex].attachments[attIndex];
@@ -64,7 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('Bitte eine Kategorie auswählen');
                     return;
                 }
-                // 1) Notiz anlegen
                 const payload = {
                     title:       this.newNote.title,
                     category:    this.newNote.category,
@@ -81,17 +78,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('Fehler beim Speichern: ' + await res.text());
                     return;
                 }
-
-                // 2) Gesamte Notizliste vom Server holen und in `notes` injizieren
                 const updatedNotes = await res.json();
                 this.notes = updatedNotes.map(n => ({
                     ...n,
-                    tags: n.tags || [],
+                    tags:        n.tags || [],
                     attachments: n.attachments || [],
-                    pendingFile: null
+                    pendingFile: null,
+                    previewUrl:  null
                 }));
-
-                // 3) Upload des Anhangs für die neueste Notiz (letztes Element)
                 const lastNote = this.notes[this.notes.length - 1];
                 if (this.newNote.pendingFile && lastNote) {
                     const form = new FormData();
@@ -105,10 +99,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         lastNote.attachments = [attDto];
                     }
                 }
-
-                // 4) Formular zurücksetzen
+                // Formular & Preview zurücksetzen
                 Object.assign(this.newNote, {
-                    title: '', category: null, content: '', tags: '', createdById: null, pendingFile: null
+                    title:       '',
+                    category:    null,
+                    content:     '',
+                    tags:        '',
+                    createdById: null,
+                    pendingFile: null,
+                    previewUrl:  null
                 });
             }
         },
@@ -142,12 +141,28 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div v-if="note.attachments?.length" class="mb-2">
               <small class="text-muted">Anhänge:</small>
-              <div v-for="(att, ai) in note.attachments || []" :key="att.id" class="d-flex align-items-center mb-1">
-                <a :href="att.url" target="_blank">{{ att.caption || 'Datei' }}</a>
-                <button type="button" class="btn btn-sm btn-outline-danger ms-2" @click="removeAttachment(i, ai)">
-                  <i class="bi bi-x"></i>
-                </button>
-              </div>
+                <div v-for="(att, ai) in note.attachments" :key="att.id" class="d-flex align-items-center mb-1">
+                  <!-- bevorzugt: Content-Type, den der Server in att.contentType mitliefert -->
+                  <template v-if="att.contentType && att.contentType.startsWith('image/')">
+                    <img
+                      :src="att.url"
+                      class="img-fluid img-thumbnail"
+                      style="max-width: 200px;"
+                      alt="Anhangsbild"
+                    />
+                  </template>
+                  <template v-else-if="/\\.(jpe?g|png|gif)$/i.test(att.filename)">
+                    <img
+                      :src="att.url"
+                      class="img-fluid img-thumbnail"
+                      style="max-width: 200px;"
+                      alt="Anhangsbild"
+                    />
+                  </template>
+                  <template v-else>
+                    <a :href="att.url" target="_blank">{{ att.caption || 'Datei' }}</a>
+                  </template>
+                </div>
             </div>
           </div>
         </div>
@@ -187,6 +202,16 @@ document.addEventListener('DOMContentLoaded', () => {
             <label class="form-label">Anhang (optional)</label>
             <input type="file" @change="onFilePickedForNew($event)" class="form-control" />
           </div>
+          <!-- Bild-Vorschau für neue Notiz -->
+            <div v-if="newNote.previewUrl" class="mb-3">
+               <label class="form-label">Vorschau</label>
+               <img
+                     :src="newNote.previewUrl"
+                     class="img-fluid img-thumbnail"
+                     style="max-width: 200px;"
+                     alt="Vorschau des Anhangs"
+                   />
+             </div>
           <button @click="saveNote" class="btn btn-primary">Notiz speichern</button>
         </div>
       </div>
