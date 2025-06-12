@@ -4,21 +4,28 @@ import ch.baunex.billing.dto.BillingDTO
 import ch.baunex.billing.facade.BillingFacade
 import ch.baunex.catalog.facade.CatalogFacade
 import ch.baunex.notes.dto.NoteCreateDto
+import ch.baunex.notes.dto.NoteDto
+import ch.baunex.notes.facade.NoteAttachmentFacade
 import ch.baunex.notes.model.NoteCategory
 import ch.baunex.project.dto.ProjectCreateDTO
 import ch.baunex.project.dto.ProjectDetailDTO
 import ch.baunex.project.facade.ProjectFacade
 import kotlinx.serialization.encodeToString
 import ch.baunex.serialization.SerializationUtils.json
+import org.jboss.resteasy.reactive.multipart.FileUpload
 import ch.baunex.user.dto.CustomerDTO
 import ch.baunex.user.facade.CustomerFacade
 import ch.baunex.user.facade.EmployeeFacade
+import ch.baunex.notes.mapper.toDto
 import ch.baunex.web.WebController.Templates
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
+import jakarta.ws.rs.core.GenericEntity
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
+import org.jboss.resteasy.reactive.RestForm
+import java.io.InputStream
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -31,6 +38,7 @@ class ProjectRestController {
     @Inject lateinit var billingFacade: BillingFacade
     @Inject lateinit var customerFacade: CustomerFacade
     @Inject lateinit var employeeFacade: EmployeeFacade
+    @Inject lateinit var noteAttachmentFacade: NoteAttachmentFacade
 
     private fun nowDate() = LocalDate.now()
     private fun nowDateTime() = LocalDateTime.now()
@@ -266,6 +274,39 @@ class ProjectRestController {
             note.content,
             note.tags
         )
-        return Response.ok().build()
+        val detail = projectFacade.getProjectWithDetails(projectId)
+            ?: throw NotFoundException()
+        val notesList = detail.notes
+        val generic = object : GenericEntity<List<NoteDto>>(notesList) {}
+        return Response.ok(generic).build()
+    }
+
+
+    @POST
+    @Path("/{projectId}/notes/{noteId}/attachment")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    fun uploadNoteAttachment(
+        @PathParam("noteId") noteId: Long,
+        @RestForm("file") fileStream: InputStream,
+        @RestForm("file") fileDetails: FileUpload?
+    ): Response {
+        if (fileDetails == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity(mapOf("error" to "No file uploaded"))
+                .build()
+        }
+        return try {
+            val dto = noteAttachmentFacade.uploadAttachment(
+                noteId,
+                fileStream,
+                fileDetails.fileName()
+            )
+            Response.ok(dto).build()
+        } catch (e: Exception) {
+            Response.serverError()
+                .entity(mapOf("error" to e.message))
+                .build()
+        }
     }
 }

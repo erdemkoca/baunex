@@ -12,12 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 project,
                 categories,
                 employees,
+                notes: project.notes.map(n => ({ ...n, pendingFile: null })),
                 newNote: {
                     title: '',
                     category: '',
                     content: '',
                     tags: '',
-                    createdById: null
+                    createdById: null,
+                    pendingFile: null
                 }
             };
         },
@@ -25,28 +27,69 @@ document.addEventListener('DOMContentLoaded', () => {
             formatDate(d) {
                 return new Date(d).toLocaleDateString('de-CH');
             },
-            /** Submit new note via JSON-API **/
+            onFilePicked(index, event) {
+                this.notes[index].pendingFile = event.target.files[0];
+            },
+            onFilePickedForNew(event) {
+                this.newNote.pendingFile = event.target.files[0];
+            },
+            async removeAttachment(noteIndex, attIndex) {
+                const att = this.notes[noteIndex].attachments[attIndex];
+                const res = await fetch(
+                    `/projects/${this.project.id}/notes/attachment/${att.id}`,
+                    { method: 'DELETE' }
+                );
+                if (res.ok) {
+                    this.notes[noteIndex].attachments.splice(attIndex, 1);
+                } else {
+                    alert('Fehler beim Löschen des Anhangs');
+                }
+            },
             async saveNote() {
+                if (!this.newNote.category) {
+                    alert('Bitte eine Kategorie auswählen');
+                    return;
+                }
+                // 1) Save note metadata
                 const payload = {
-                    projectId: this.project.id,
-                    title: this.newNote.title,
-                    category: this.newNote.category,
-                    content: this.newNote.content,
-                    tags: this.newNote.tags.split(',').map(t => t.trim()).filter(Boolean),
+                    title:       this.newNote.title,
+                    category:    this.newNote.category,
+                    content:     this.newNote.content,
+                    tags:        this.newNote.tags.split(',').map(t=>t.trim()).filter(Boolean),
                     createdById: this.newNote.createdById
                 };
-                const res = await fetch(`/projects/${this.project.id}/notes/save`, {
+                const res = await fetch(`/projects/${this.project.id}/notes`, {
                     method: 'POST',
-                    headers: {'Content-Type':'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
                 if (!res.ok) {
                     alert('Fehler beim Speichern: ' + await res.text());
                     return;
                 }
-                const note = await res.json();
-                this.project.notes.push(note);
-                Object.assign(this.newNote, { title:'', category:'', content:'', tags:'', createdById:null });
+                const savedNote = await res.json();
+
+                savedNote.attachments = savedNote.attachments || [];
+                savedNote.tags        = savedNote.tags || [];
+
+                // 2) Upload file if exists
+                if (this.newNote.pendingFile) {
+                    const form = new FormData();
+                    form.append('file', this.newNote.pendingFile);
+                    const up = await fetch(
+                        `/projects/${this.project.id}/notes/${savedNote.id}/attachment`,
+                        { method: 'POST', body: form }
+                    );
+                    if (up.ok) {
+                        const attDto = await up.json();
+                        savedNote.attachments = [ attDto ];
+                    }
+                }
+                // 3) Update UI
+                this.notes.push({ ...savedNote, pendingFile: null });
+                Object.assign(this.newNote, {
+                    title:'', category:'', content:'', tags:'', createdById:null, pendingFile:null
+                });
             }
         },
         template: `
@@ -57,122 +100,68 @@ document.addEventListener('DOMContentLoaded', () => {
           </a>
         </div>
 
-        <!-- Projekt-Notizen -->
-        <div class="card mb-4 shadow-sm">
+        <!-- Bestehende Notizen -->
+        <div v-for="(note, i) in notes" :key="note.id" class="card mb-4 shadow-sm">
           <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="bi bi-journal-text me-2"></i>Projekt-Notizen</h5>
+            <h5 class="mb-0">
+              <i class="bi bi-journal-text me-2"></i>{{ note.title || '–' }}
+            </h5>
           </div>
-          <div class="card-body p-0">
-            <div v-if="!project.notes.length" class="text-center text-muted py-4">
-              Keine Projekt-Notizen vorhanden.
+          <div class="card-body">
+            <p>{{ note.content }}</p>
+            <div v-if="note.tags?.length" class="mb-2">
+              <small class="text-muted">Tags:</small>
+              <span v-for="tag in note.tags" :key="tag" class="badge bg-info me-1">{{ tag }}</span>
             </div>
-            <div v-else class="accordion" id="projectNotesAccordion">
-              <div v-for="note in project.notes" :key="note.id" class="accordion-item mb-2 border-0">
-                <h2 class="accordion-header" :id="'projNoteHeader' + note.id">
-                  <button class="accordion-button collapsed shadow-sm" type="button"
-                          data-bs-toggle="collapse"
-                          :data-bs-target="'#projNote' + note.id"
-                          aria-expanded="false"
-                          :aria-controls="'projNote' + note.id">
-                    <div class="d-flex justify-content-between w-100 align-items-center">
-                      <div class="d-flex align-items-center">
-                        <span class="badge bg-primary me-2">{{ note.category }}</span>
-                        <div>
-                          <small class="text-muted d-block">{{ formatDate(note.createdAt) }}</small>
-                          <span class="text-primary">{{ note.createdByName }}</span>
-                        </div>
-                      </div>
-                      <div class="text-end">
-                        <h6 v-if="note.title" class="mb-0 text-dark">{{ note.title }}</h6>
-                      </div>
-                    </div>
-                  </button>
-                </h2>
-                <div :id="'projNote' + note.id"
-                     class="accordion-collapse collapse"
-                     data-bs-parent="#projectNotesAccordion">
-                  <div class="accordion-body bg-light p-3 rounded shadow-sm">
-                    <p class="mb-3">{{ note.content }}</p>
-                    <div v-if="note.tags.length" class="mb-2">
-                      <small class="text-muted">Tags:</small>
-                      <span v-for="tag in note.tags" :key="tag" class="badge bg-info me-1">{{ tag }}</span>
-                    </div>
-                    <div v-if="note.attachments.length">
-                      <small class="text-muted">Anhänge:</small>
-                      <a v-for="att in note.attachments" 
-                         :key="att.id"
-                         :href="att.url" 
-                         target="_blank"
-                         class="btn btn-sm btn-outline-secondary me-1">
-                        <i class="bi bi-paperclip me-1"></i>{{ att.caption || 'Datei' }}
-                      </a>
-                    </div>
-                  </div>
-                </div>
+            <div v-if="note.attachments?.length" class="mb-2">
+              <small class="text-muted">Anhänge:</small>
+              <div v-for="(att, ai) in note.attachments" :key="att.id" class="d-flex align-items-center mb-1">
+                <a :href="att.url" target="_blank">{{ att.caption || 'Datei' }}</a>
+                <button type="button" class="btn btn-sm btn-outline-danger ms-2" @click="removeAttachment(i, ai)">
+                  <i class="bi bi-x"></i>
+                </button>
               </div>
             </div>
+            <input type="file" class="form-control mt-2" @change="onFilePicked(i, $event)" />
           </div>
         </div>
 
         <!-- Neue Notiz -->
-        <div class="card shadow-sm">
-          <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Neue Notiz hinzufügen</h5>
+        <div class="card p-3">
+          <h5>Neue Notiz hinzufügen</h5>
+          <div class="mb-2">
+            <label class="form-label">Titel</label>
+            <input v-model="newNote.title" class="form-control" />
           </div>
-          <div class="card-body">
-            <form @submit.prevent="saveNote">
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">Titel (optional)</label>
-                  <input v-model="newNote.title"
-                         type="text"
-                         class="form-control"
-                         placeholder="Titel der Notiz" />
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">Kategorie</label>
-                  <select v-model="newNote.category"
-                          class="form-select"
-                          required>
-                    <option value="">-- wählen --</option>
-                    <option v-for="cat in categories" :key="cat" :value="cat">
-                      {{ cat }}
-                    </option>
-                  </select>
-                </div>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Inhalt</label>
-                <textarea v-model="newNote.content"
-                          class="form-control"
-                          rows="3"
-                          required></textarea>
-              </div>
-              <div class="row g-3 mb-3">
-                <div class="col-md-6">
-                  <label class="form-label">Tags (Komma-getrennt)</label>
-                  <input v-model="newNote.tags"
-                         type="text"
-                         class="form-control"
-                         placeholder="z. B. dringlich, Prüfung" />
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label">Erstellt von</label>
-                  <select v-model.number="newNote.createdById"
-                          class="form-select"
-                          required>
-                    <option value="">-- wählen --</option>
-                    <option v-for="emp in employees" :key="emp.id" :value="emp.id">
-                      {{ emp.firstName }} {{ emp.lastName }}
-                    </option>
-                  </select>
-                </div>
-              </div>
-              <button type="submit" class="btn btn-primary">
-                <i class="bi bi-plus-circle me-1"></i>Notiz speichern
-              </button>
-            </form>
+          <div class="mb-2">
+            <label class="form-label">Kategorie</label>
+            <select v-model="newNote.category" class="form-select" required>
+              <option :value="null" disabled>– wählen –</option>
+              <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+            </select>
           </div>
+          <div class="mb-2">
+            <label class="form-label">Inhalt</label>
+            <textarea v-model="newNote.content" class="form-control" rows="3" required></textarea>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Tags (Komma-getrennt)</label>
+            <input v-model="newNote.tags" class="form-control" />
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Erstellt von</label>
+            <select v-model.number="newNote.createdById" class="form-select" required>
+              <option value="">– wählen –</option>
+              <option v-for="e in employees" :key="e.id" :value="e.id">
+                {{ e.firstName }} {{ e.lastName }}
+              </option>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Anhang</label>
+            <input type="file" @change="onFilePickedForNew($event)" class="form-control" />
+          </div>
+          <button @click="saveNote" class="btn btn-primary">Notiz speichern</button>
         </div>
       </div>
     `
