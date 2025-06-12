@@ -12,10 +12,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 project,
                 categories,
                 employees,
+                // Nutze nur dieses Array zum Rendern
                 notes: project.notes.map(n => ({ ...n, pendingFile: null })),
                 newNote: {
                     title: '',
-                    category: '',
+                    category: null,
                     content: '',
                     tags: '',
                     createdById: null,
@@ -26,9 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
         methods: {
             formatDate(d) {
                 return new Date(d).toLocaleDateString('de-CH');
-            },
-            onFilePicked(index, event) {
-                this.notes[index].pendingFile = event.target.files[0];
             },
             onFilePickedForNew(event) {
                 this.newNote.pendingFile = event.target.files[0];
@@ -45,12 +43,60 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('Fehler beim Löschen des Anhangs');
                 }
             },
+            // async saveNote() {
+            //     if (!this.newNote.category) {
+            //         alert('Bitte eine Kategorie auswählen');
+            //         return;
+            //     }
+            //     // 1) Notiz speichern
+            //     const payload = {
+            //         title:       this.newNote.title,
+            //         category:    this.newNote.category,
+            //         content:     this.newNote.content,
+            //         tags:        this.newNote.tags.split(',').map(t=>t.trim()).filter(Boolean),
+            //         createdById: this.newNote.createdById
+            //     };
+            //     const res = await fetch(`/projects/${this.project.id}/notes`, {
+            //         method: 'POST',
+            //         headers: { 'Content-Type': 'application/json' },
+            //         body: JSON.stringify(payload)
+            //     });
+            //     if (!res.ok) {
+            //         alert('Fehler beim Speichern: ' + await res.text());
+            //         return;
+            //     }
+            //     //const savedNote = await res.json();
+            //     const updatedNotes: Array<any> = await res.json();
+            //     savedNote.attachments = savedNote.attachments || [];
+            //     savedNote.tags        = savedNote.tags        || [];
+            //
+            //     // 2) Anhang hochladen
+            //     if (this.newNote.pendingFile) {
+            //         const form = new FormData();
+            //         form.append('file', this.newNote.pendingFile);
+            //         const up = await fetch(
+            //             `/projects/${this.project.id}/notes/${savedNote.id}/attachment`,
+            //             { method: 'POST', body: form }
+            //         );
+            //         if (up.ok) {
+            //             const attDto = await up.json();
+            //             savedNote.attachments = [ attDto ];
+            //         }
+            //     }
+            //
+            //     // 3) Sofort neu rendern
+            //     //this.notes.push({ ...savedNote, pendingFile: null });
+            //     Object.assign(this.newNote, {
+            //         title: '', category: null, content: '', tags: '', createdById: null, pendingFile: null
+            //
+            //     });
+            // }
             async saveNote() {
                 if (!this.newNote.category) {
                     alert('Bitte eine Kategorie auswählen');
                     return;
                 }
-                // 1) Save note metadata
+                // 1) Notiz anlegen
                 const payload = {
                     title:       this.newNote.title,
                     category:    this.newNote.category,
@@ -67,28 +113,34 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('Fehler beim Speichern: ' + await res.text());
                     return;
                 }
-                const savedNote = await res.json();
 
-                savedNote.attachments = savedNote.attachments || [];
-                savedNote.tags        = savedNote.tags || [];
+                // 2) Gesamte Notizliste vom Server holen und in `notes` injizieren
+                const updatedNotes = await res.json();
+                this.notes = updatedNotes.map(n => ({
+                    ...n,
+                    tags: n.tags || [],
+                    attachments: n.attachments || [],
+                    pendingFile: null
+                }));
 
-                // 2) Upload file if exists
-                if (this.newNote.pendingFile) {
+                // 3) Upload des Anhangs für die neueste Notiz (letztes Element)
+                const lastNote = this.notes[this.notes.length - 1];
+                if (this.newNote.pendingFile && lastNote) {
                     const form = new FormData();
                     form.append('file', this.newNote.pendingFile);
                     const up = await fetch(
-                        `/projects/${this.project.id}/notes/${savedNote.id}/attachment`,
+                        `/projects/${this.project.id}/notes/${lastNote.id}/attachment`,
                         { method: 'POST', body: form }
                     );
                     if (up.ok) {
                         const attDto = await up.json();
-                        savedNote.attachments = [ attDto ];
+                        lastNote.attachments = [attDto];
                     }
                 }
-                // 3) Update UI
-                this.notes.push({ ...savedNote, pendingFile: null });
+
+                // 4) Formular zurücksetzen
                 Object.assign(this.newNote, {
-                    title:'', category:'', content:'', tags:'', createdById:null, pendingFile:null
+                    title: '', category: null, content: '', tags: '', createdById: null, pendingFile: null
                 });
             }
         },
@@ -100,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </a>
         </div>
 
-        <!-- Bestehende Notizen -->
+        <!-- Alle Notizen -->
         <div v-for="(note, i) in notes" :key="note.id" class="card mb-4 shadow-sm">
           <div class="card-header bg-primary text-white">
             <h5 class="mb-0">
@@ -115,14 +167,13 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div v-if="note.attachments?.length" class="mb-2">
               <small class="text-muted">Anhänge:</small>
-              <div v-for="(att, ai) in note.attachments" :key="att.id" class="d-flex align-items-center mb-1">
+              <div v-for="(att, ai) in note.attachments || []" :key="att.id" class="d-flex align-items-center mb-1">
                 <a :href="att.url" target="_blank">{{ att.caption || 'Datei' }}</a>
                 <button type="button" class="btn btn-sm btn-outline-danger ms-2" @click="removeAttachment(i, ai)">
                   <i class="bi bi-x"></i>
                 </button>
               </div>
             </div>
-            <input type="file" class="form-control mt-2" @change="onFilePicked(i, $event)" />
           </div>
         </div>
 
@@ -158,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </select>
           </div>
           <div class="mb-2">
-            <label class="form-label">Anhang</label>
+            <label class="form-label">Anhang (optional)</label>
             <input type="file" @change="onFilePickedForNew($event)" class="form-control" />
           </div>
           <button @click="saveNote" class="btn btn-primary">Notiz speichern</button>
