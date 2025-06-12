@@ -1,7 +1,9 @@
 {#include layout}
+    {#title}Abrechnung – Projekt {project.name}{/title}
+    {#header}Abrechnung – Projektübersicht{/header}
     {#content}
         <div id="billing-app"
-             data-billing='{billingJson.raw}'>
+             data-billing='{billingJson}'>
         </div>
         <script type="module" src="/js/project-billing-app.js"></script>
     {/content}

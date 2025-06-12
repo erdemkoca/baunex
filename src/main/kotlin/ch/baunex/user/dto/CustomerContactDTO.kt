@@ -1,6 +1,6 @@
 package ch.baunex.user.dto
 
-import kotlinx.serialization.Contextual
+import ch.baunex.serialization.LocalDateTimeSerializer
 import kotlinx.serialization.Serializable
 import java.time.LocalDateTime
 
@@ -18,6 +18,6 @@ data class CustomerContactDTO(
     val phone: String?,
     val role: String?,
     val isPrimary: Boolean,
-    @Contextual val createdAt: LocalDateTime,
-    @Contextual val updatedAt: LocalDateTime
+    @Serializable(with = LocalDateTimeSerializer::class) val createdAt: LocalDateTime,
+    @Serializable(with = LocalDateTimeSerializer::class) val updatedAt: LocalDateTime
 )

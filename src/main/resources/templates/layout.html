@@ -90,6 +90,22 @@
     <!-- Main content -->
     <div class="col-md-9 col-lg-10 px-4 py-3">
       <h2 class="mb-4">{#insert header}Dashboard{/}</h2>
+
+      {#if projectId != null && activeMenu == 'projects'}
+        <div class="mb-4 btn-group">
+          <a class="btn btn-outline-primary {activeSubMenu=='detail' ? 'active' : ''}"
+             href="/projects/{projectId}">Übersicht</a>
+          <a class="btn btn-outline-primary {activeSubMenu=='notes'  ? 'active' : ''}"
+             href="/projects/{projectId}/notes">Notizen</a>
+          <a class="btn btn-outline-primary {activeSubMenu=='contacts' ? 'active' : ''}"
+             href="/projects/{projectId}/contacts">Kontakte</a>
+          <a class="btn btn-outline-primary {activeSubMenu=='catalog'  ? 'active' : ''}"
+             href="/projects/{projectId}/catalog">Katalog</a>
+          <a class="btn btn-outline-primary {activeSubMenu=='billing'  ? 'active' : ''}"
+             href="/projects/{projectId}/billing">Abrechnung</a>
+        </div>
+      {/if}
+
       {#insert content}No content provided{/}
     </div>
   </div>

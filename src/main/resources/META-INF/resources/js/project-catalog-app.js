@@ -1,107 +1,179 @@
-import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('project-catalog-app');
-    const projectId = el.dataset.projectId;
+    if (!el) {
+        console.error('Element #project-catalog-app not found');
+        return;
+    }
+
+    // Aus dem einen data-Attribut holen wir das gesamte Projekt-Objekt
+    const project      = JSON.parse(el.dataset.project      || '{}');
     const catalogItems = JSON.parse(el.dataset.catalogItems || '[]');
-    const currentItems = JSON.parse(el.dataset.currentItems || '[]');
+
+    // Debug logging
+    console.log('Project data:', project);
+    console.log('Project catalog items:', project.catalogItems);
+    console.log('Available catalog items:', catalogItems);
 
     createApp({
         data() {
             return {
-                projectId,
+                project,
                 catalogItems,
-                items: currentItems,
-                newItem: { catalogItemId: '', itemName: '', quantity: 1, unitPrice: 0 }
+                // Hier nutzen wir direkt project.catalogItems
+                items: project.catalogItems || [],
+                newItem: {
+                    catalogItemId: '',
+                    itemName: '',
+                    quantity: 1,
+                    unitPrice: 0
+                }
             };
         },
         methods: {
-            async addCatalogItem() {
-                const form = new FormData();
-                form.append('catalogItemId', this.newItem.catalogItemId);
-                form.append('itemName', this.newItem.itemName);
-                form.append('quantity', this.newItem.quantity);
-                form.append('unitPrice', this.newItem.unitPrice);
-                const res = await fetch(`/projects/${this.projectId}/catalog/save`, {
-                    method: 'POST', body: form
-                });
-                if (res.ok) {
-                    const dto = await res.json();
-                    this.items.push(dto);
-                    this.newItem = { catalogItemId: '', itemName: '', quantity: 1, unitPrice: 0 };
-                } else {
-                    alert('Fehler beim Hinzufügen des Artikels');
+            formatCurrency(value) {
+                return new Intl.NumberFormat('de-CH', {
+                    style: 'currency',
+                    currency: 'CHF'
+                }).format(value);
+            },
+            async saveItem() {
+                try {
+                    const resp = await fetch(
+                        `/projects/${this.project.id}/catalog/save`,
+                        {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: new URLSearchParams({
+                                itemName: this.newItem.itemName,
+                                quantity: this.newItem.quantity,
+                                unitPrice: this.newItem.unitPrice,
+                                catalogItemId: this.newItem.catalogItemId || ''
+                            })
+                        }
+                    );
+                    if (!resp.ok) throw new Error('Fehler beim Speichern');
+                    window.location.reload();
+                } catch (e) {
+                    console.error(e);
+                    alert('Fehler beim Speichern des Artikels');
                 }
             },
-            async removeCatalogItem(item) {
-                if (!confirm('Diesen Artikel löschen?')) return;
-                const res = await fetch(`/projects/${this.projectId}/catalog/${item.id}/delete`, {
-                    method: 'POST'
-                });
-                if (res.ok) {
-                    this.items = this.items.filter(ci => ci.id !== item.id);
-                } else {
+            async deleteItem(itemId) {
+                if (!confirm('Möchten Sie diesen Artikel wirklich löschen?')) return;
+                try {
+                    const resp = await fetch(
+                        `/projects/${this.project.id}/catalog/${itemId}/delete`
+                    );
+                    if (!resp.ok) throw new Error('Fehler beim Löschen');
+                    window.location.reload();
+                } catch (e) {
+                    console.error(e);
                     alert('Fehler beim Löschen des Artikels');
                 }
             },
-            formatCurrency(v) {
-                return v.toFixed(2) + ' CHF';
+            selectCatalogItem(item) {
+                if (!item) return;
+                this.newItem.catalogItemId = item.id;
+                this.newItem.itemName      = item.name;
+                this.newItem.unitPrice     = item.unitPrice;
+            },
+            resetForm() {
+                this.newItem = {
+                    catalogItemId: '',
+                    itemName: '',
+                    quantity: 1,
+                    unitPrice: 0
+                };
             }
         },
         template: `
-      <div class="card mb-4">
+      <div class="card">
         <div class="card-body">
-          <h5>Katalogartikel</h5>
-          <div class="row g-3 mb-4">
-            <div class="col-md-4">
-              <label class="form-label">Aus Katalog auswählen (optional)</label>
-              <select v-model="newItem.catalogItemId" class="form-select">
-                <option value="">-- Aus Katalog auswählen --</option>
-                <option v-for="ci in catalogItems" :key="ci.id" :value="ci.id">
-                  {{ ci.name }} ({{ formatCurrency(ci.unitPrice) }})
-                </option>
-              </select>
+          <h5 class="mb-4">Katalogartikel</h5>
+
+          <!-- Bestehende Einträge -->
+          <div class="table-responsive mb-4">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Bezeichnung</th>
+                  <th>Menge</th>
+                  <th>Einzelpreis</th>
+                  <th>Gesamtpreis</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in items" :key="item.id">
+                  <td>{{ item.itemName }}</td>
+                  <td>{{ item.quantity }}</td>
+                  <td>{{ formatCurrency(item.unitPrice) }}</td>
+                  <td>{{ formatCurrency(item.totalPrice) }}</td>
+                  <td>
+                    <button class="btn btn-sm btn-danger"
+                            @click="deleteItem(item.id)">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr v-if="!items.length">
+                  <td colspan="5" class="text-center text-muted">
+                    Noch keine Katalogartikel vorhanden.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Formular zum Hinzufügen -->
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">Neuer Artikel</h5>
             </div>
-            <div class="col-md-4">
-              <label class="form-label">Oder eigenen Artikel</label>
-              <input v-model="newItem.itemName" type="text" class="form-control" placeholder="Artikelname">
-            </div>
-            <div class="col-md-2">
-              <label class="form-label">Menge</label>
-              <input v-model.number="newItem.quantity" type="number" min="1" class="form-control">
-            </div>
-            <div class="col-md-2">
-              <label class="form-label">Einzelpreis (CHF)</label>
-              <input v-model.number="newItem.unitPrice" type="number" step="0.01" class="form-control">
+            <div class="card-body">
+              <form @submit.prevent="saveItem">
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <label class="form-label">Artikel aus Katalog</label>
+                    <select class="form-select"
+                            v-model="newItem.catalogItemId"
+                            @change="selectCatalogItem(
+                              catalogItems.find(i => i.id === newItem.catalogItemId)
+                            )">
+                      <option value="">-- Neuer Artikel--</option>
+                      <option v-for="i in catalogItems" :key="i.id" :value="i.id">
+                        {{ i.name }} ({{ formatCurrency(i.unitPrice) }})
+                      </option>
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Bezeichnung</label>
+                    <input type="text" class="form-control"
+                           v-model="newItem.itemName" required>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Menge</label>
+                    <input type="number" class="form-control"
+                           v-model="newItem.quantity" min="1" required>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Einzelpreis (CHF)</label>
+                    <input type="number" class="form-control"
+                           v-model="newItem.unitPrice" step="0.01" required>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                  Artikel speichern
+                </button>
+              </form>
             </div>
           </div>
-          <button class="btn btn-success mb-4" @click="addCatalogItem">
-            <i class="bi bi-plus-circle me-1"></i>Artikel hinzufügen
-          </button>
-
-          <p v-if="items.length === 0" class="text-muted">Noch keine Artikel hinzugefügt.</p>
-          <table v-else class="table table-bordered align-middle">
-            <thead>
-              <tr>
-                <th>Artikel</th><th>Menge</th><th>Einzelpreis</th><th>Gesamt</th><th>Aktionen</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="item in items" :key="item.id">
-                <td>{{ item.itemName }}</td>
-                <td>{{ item.quantity }}</td>
-                <td>{{ formatCurrency(item.unitPrice) }}</td>
-                <td>{{ formatCurrency(item.totalPrice) }}</td>
-                <td>
-                  <button class="btn btn-sm btn-outline-danger" @click="removeCatalogItem(item)">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
         </div>
       </div>
     `
-    }).mount(el);
+    }).mount('#project-catalog-app');
 });

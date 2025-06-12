@@ -4,26 +4,21 @@ import ch.baunex.billing.dto.BillingDTO
 import ch.baunex.billing.facade.BillingFacade
 import ch.baunex.catalog.facade.CatalogFacade
 import ch.baunex.notes.dto.NoteCreateDto
-import ch.baunex.notes.facade.NoteAttachmentFacade
 import ch.baunex.notes.model.NoteCategory
 import ch.baunex.project.dto.ProjectCreateDTO
 import ch.baunex.project.dto.ProjectDetailDTO
-import ch.baunex.project.dto.ProjectListDTO
 import ch.baunex.project.facade.ProjectFacade
 import kotlinx.serialization.encodeToString
 import ch.baunex.serialization.SerializationUtils.json
 import ch.baunex.user.dto.CustomerDTO
-import ch.baunex.user.dto.EmployeeDTO
 import ch.baunex.user.facade.CustomerFacade
 import ch.baunex.user.facade.EmployeeFacade
 import ch.baunex.web.WebController.Templates
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
-import jakarta.transaction.Transactional
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
-import java.net.URI
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -59,7 +54,6 @@ class ProjectRestController {
     @Produces(MediaType.TEXT_HTML)
     fun newForm(): Response {
         val customers    = customerFacade.listAll()
-        val employees   = employeeFacade.listAll()
         val catalogItems = catalogFacade.getAllItems()
         val now          = nowDateTime()
         val emptyCust = CustomerDTO(
@@ -110,16 +104,18 @@ class ProjectRestController {
             employeesJson    = json.encodeToString(employeeFacade.listAll()),
             catalogItemsJson = json.encodeToString(catalogItems),
             billingJson      = json.encodeToString(BillingDTO(0, emptyList(), emptyList(), 0.0,0.0,0.0)),
-            categoriesJson   = json.encodeToString(NoteCategory.values().toList()),
+            categoriesJson   = json.encodeToString(NoteCategory.values().map { it.name }),
             currentDate      = nowDate(),
             activeMenu       = "projects",
-            contactsJson     = "[]"
+            contactsJson     = "[]",
+            projectId    = 0,
+            activeSubMenu = "detail"
         )
         return Response.ok(tpl.render()).build()
     }
 
     @GET
-    @Path("/{id}")
+    @Path("/{id}") //Übersicht
     @Produces(MediaType.TEXT_HTML)
     fun editForm(@PathParam("id") id: Long): Response {
         val detail       = projectFacade.getProjectWithDetails(id) ?: return Response.status(404).build()
@@ -129,16 +125,81 @@ class ProjectRestController {
             employeesJson    = json.encodeToString(employeeFacade.listAll()),
             catalogItemsJson = json.encodeToString(catalogFacade.getAllItems()),
             billingJson      = json.encodeToString(billingFacade.getBillingForProject(id)),
-            categoriesJson   = json.encodeToString(NoteCategory.values().toList()),
+            categoriesJson   = json.encodeToString(NoteCategory.values().map { it.name }),
             currentDate      = nowDate(),
             activeMenu       = "projects",
-            contactsJson     = json.encodeToString(detail.contacts)
+            contactsJson     = json.encodeToString(detail.contacts),
+            projectId        = detail.id,
+            activeSubMenu    = "detail"
         )
         return Response.ok(tpl.render()).build()
     }
 
     @GET
-    @Path("/{id}/notes")
+    @Path("/{id}/contacts")
+    @Produces(MediaType.TEXT_HTML)
+    fun viewContacts(@PathParam("id") id: Long): Response {
+        val detail     = projectFacade.getProjectWithDetails(id) ?: return Response.status(404).build()
+        val tpl = Templates.projectContacts(
+            projectJson      = json.encodeToString(detail),
+            customersJson    = json.encodeToString(customerFacade.listAll()),
+            employeesJson    = json.encodeToString(employeeFacade.listAll()),
+            catalogItemsJson = json.encodeToString(catalogFacade.getAllItems()),
+            billingJson      = json.encodeToString(billingFacade.getBillingForProject(id)),
+            categoriesJson   = json.encodeToString(NoteCategory.values().map { it.name }),
+            currentDate      = nowDate(),
+            activeMenu       = "projects",
+            contactsJson     = json.encodeToString(detail.contacts),
+            projectId        = detail.id,
+            activeSubMenu    = "contacts"
+        )
+        return Response.ok(tpl.render()).build()
+    }
+
+    @GET
+    @Path("/{id}/catalog")
+    @Produces(MediaType.TEXT_HTML)
+    fun viewCatalog(@PathParam("id") id: Long): Response {
+        val detail     = projectFacade.getProjectWithDetails(id) ?: return Response.status(404).build()
+        val tpl = Templates.projectCatalog(
+            projectJson      = json.encodeToString(detail),
+            customersJson    = json.encodeToString(customerFacade.listAll()),
+            employeesJson    = json.encodeToString(employeeFacade.listAll()),
+            catalogItemsJson = json.encodeToString(catalogFacade.getAllItems()),
+            billingJson      = json.encodeToString(billingFacade.getBillingForProject(id)),
+            categoriesJson   = json.encodeToString(NoteCategory.values().map { it.name }),
+            currentDate      = nowDate(),
+            activeMenu       = "projects",
+            contactsJson     = json.encodeToString(detail.contacts),
+            projectId        = detail.id,
+            activeSubMenu    = "catalog"
+        )
+        return Response.ok(tpl.render()).build()
+    }
+
+    @GET
+    @Path("/{id}/billing")
+    @Produces(MediaType.TEXT_HTML)
+    fun viewBilling(@PathParam("id") id: Long): Response {
+        val detail     = projectFacade.getProjectWithDetails(id) ?: return Response.status(404).build()
+        val tpl = Templates.projectBilling(
+            projectJson      = json.encodeToString(detail),
+            customersJson    = json.encodeToString(customerFacade.listAll()),
+            employeesJson    = json.encodeToString(employeeFacade.listAll()),
+            catalogItemsJson = json.encodeToString(catalogFacade.getAllItems()),
+            billingJson      = json.encodeToString(billingFacade.getBillingForProject(id)),
+            categoriesJson   = json.encodeToString(NoteCategory.values().map { it.name }),
+            currentDate      = nowDate(),
+            activeMenu       = "projects",
+            contactsJson     = json.encodeToString(detail.contacts),
+            projectId        = detail.id,
+            activeSubMenu    = "billing"
+        )
+        return Response.ok(tpl.render()).build()
+    }
+
+    @GET
+    @Path("/{id}/notes") //Notes
     @Produces(MediaType.TEXT_HTML)
     fun viewNotes(@PathParam("id") id: Long): Response {
         val detail         = projectFacade.getProjectWithDetails(id) ?: return Response.status(404).build()
@@ -152,7 +213,9 @@ class ProjectRestController {
             hasTimeEntryNotes = hasTimeNotes,
             activeMenu        = "projects",
             currentDate       = nowDate(),
-            categoriesJson        = json.encodeToString(NoteCategory.values().toList())
+            categoriesJson        = json.encodeToString(NoteCategory.values().map { it.name }),
+            projectId        = detail.id,
+            activeSubMenu    = "notes"
         )
         return Response.ok(tpl.render()).build()
     }

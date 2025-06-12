@@ -55,15 +55,19 @@ class WebController {
             totalServiceCost: Double,
             totalCosts: Double,
             recentInvoiceDrafts: List<InvoiceDTO>,
-            company: CompanyDTO
+            company: CompanyDTO,
+            projectId: Long? = null,
+            activeSubMenu: String = ""
         ): TemplateInstance
 
         @JvmStatic
         external fun projects(
             projectsJson: String,
             currentDate: LocalDate,
-            activeMenu: String)
-        : TemplateInstance
+            activeMenu: String,
+            projectId: Long? = null,
+            activeSubMenu: String = ""
+        ): TemplateInstance
 
         @JvmStatic
         external fun projectDetail(
@@ -75,7 +79,54 @@ class WebController {
             contactsJson: String,
             customersJson: String,
             categoriesJson: String,
-            employeesJson: String
+            employeesJson: String,
+            projectId: Long? = null,
+            activeSubMenu: String = ""
+        ): TemplateInstance
+
+        @JvmStatic
+        external fun projectCatalog(
+            projectJson: String,
+            activeMenu: String,
+            currentDate: LocalDate,
+            catalogItemsJson: String,
+            billingJson: String,
+            contactsJson: String,
+            customersJson: String,
+            categoriesJson: String,
+            employeesJson: String,
+            projectId: Long? = null,
+            activeSubMenu: String = ""
+        ): TemplateInstance
+
+        @JvmStatic
+        external fun projectBilling(
+            projectJson: String,
+            activeMenu: String,
+            currentDate: LocalDate,
+            catalogItemsJson: String,
+            billingJson: String,
+            contactsJson: String,
+            customersJson: String,
+            categoriesJson: String,
+            employeesJson: String,
+            projectId: Long? = null,
+            activeSubMenu: String = ""
+        ): TemplateInstance
+
+        @JvmStatic
+        external fun projectContacts(
+            projectJson: String,
+            activeMenu: String,
+            currentDate: LocalDate,
+            catalogItemsJson: String,
+            billingJson: String,
+            contactsJson: String,
+            customersJson: String,
+            categoriesJson: String,
+            employeesJson: String,
+            projectId: Long? = null,
+            activeSubMenu: String = ""
         ): TemplateInstance
 
         @JvmStatic
@@ -86,7 +137,9 @@ class WebController {
             hasTimeEntryNotes: Boolean,
             activeMenu: String,
             currentDate: LocalDate,
-            categoriesJson: String
+            categoriesJson: String,
+            projectId: Long? = null,
+            activeSubMenu: String = ""
         ): TemplateInstance
 
         @JvmStatic

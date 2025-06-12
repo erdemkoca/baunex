@@ -1,6 +1,5 @@
 package ch.baunex.web
 
-//import ch.baunex.billing.facade.BillingFacade
 import ch.baunex.billing.facade.BillingFacade
 import ch.baunex.catalog.dto.CatalogItemDTO
 import ch.baunex.catalog.dto.ProjectCatalogItemDTO
@@ -53,17 +52,18 @@ class WebCatalogController {
         val contacts: List<CustomerContactDTO> = projectDetail.contacts
         val customers: List<CustomerDTO>         = customerFacade.listAll()
 
-        val tpl = Templates.projectDetail(
+        val tpl = Templates.projectCatalog(
             projectJson      = json.encodeToString(projectDetail),
-            activeMenu   = "projects",
-            currentDate  = LocalDate.now(),
+            activeMenu       = "projects",
+            currentDate      = LocalDate.now(),
             catalogItemsJson = json.encodeToString(catalogItems),
             billingJson      = json.encodeToString(billing),
             contactsJson     = json.encodeToString(contacts),
             customersJson    = json.encodeToString(customers),
-            categoriesJson = json.encodeToString(NoteCategory.entries),
-            employeesJson = ""
-
+            categoriesJson   = json.encodeToString(NoteCategory.values().map { it.name }),
+            employeesJson    = "",
+            projectId        = projectId,
+            activeSubMenu    = "catalog"
         )
         return Response.ok(tpl.render()).build()
     }
