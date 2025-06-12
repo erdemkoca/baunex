@@ -91,7 +91,7 @@
     <div class="col-md-9 col-lg-10 px-4 py-3">
       <h2 class="mb-4">{#insert header}Dashboard{/}</h2>
 
-      {#if projectId != null && activeMenu == 'projects'}
+      {#if activeMenu == 'projects' && projectId != null}
         <div class="mb-4 btn-group">
           <a class="btn btn-outline-primary {activeSubMenu=='detail' ? 'active' : ''}"
              href="/projects/{projectId}">Übersicht</a>
