@@ -1,31 +1,25 @@
 package ch.baunex.documentGenerator.pdf.core
 
 import ch.baunex.documentGenerator.model.DocumentModel
-import ch.baunex.documentGenerator.model.InvoiceDocumentModel
-import ch.baunex.documentGenerator.pdf.invoice.InvoiceHtmlBuilder
+import ch.baunex.documentGenerator.pdf.builder.PdfBuilder
+import ch.baunex.documentGenerator.pdf.builder.PdfBuilderFactory
 import jakarta.enterprise.context.ApplicationScoped
+import jakarta.inject.Inject
 import org.jboss.logging.Logger
 
 @ApplicationScoped
-class PdfGenerationService {
+class PdfGenerationService @Inject constructor(
+    private val factory: PdfBuilderFactory
+) {
     private val logger = Logger.getLogger(PdfGenerationService::class.java)
 
     /**
      * Erzeugt ein PDF‐Bytearray je nach DocumentModel‐Untertyp.
      */
     fun generatePdf(doc: DocumentModel): ByteArray {
-        try {
-            logger.info("Generiere PDF für Dokument ${doc.id} vom Typ ${doc.type}")
-            return when (doc) {
-                is InvoiceDocumentModel -> InvoiceHtmlBuilder.render(doc)
-                // hier weitere DocumentModel-Unterklassen abfangen, z.B.
-                // is DeliveryNoteDocumentModel -> DeliveryNoteHtmlBuilder.render(doc)
-                else -> throw IllegalArgumentException("Unsupported document type: ${doc.type}")
-            }
-        } catch (e: Exception) {
-            logger.error("Fehler beim Generieren der PDF für Dokument ${doc.id}: ${e.message}", e)
-            throw RuntimeException("Fehler beim Generieren der PDF: ${e.message}", e)
-        }
+        val builder = factory.getBuilder(doc.type)
+        @Suppress("UNCHECKED_CAST")
+        return (builder as PdfBuilder<DocumentModel>).render(doc)
     }
 
     /**

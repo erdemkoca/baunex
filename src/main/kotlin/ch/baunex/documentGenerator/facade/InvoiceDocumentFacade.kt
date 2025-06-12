@@ -18,9 +18,10 @@ class InvoiceDocumentFacade @Inject constructor(
 
     /** Return PDF bytes for download */
     fun generatePdf(invoiceDocId: Long): ByteArray =
-        service.generatePdfBytes(invoiceDocId)
+        service.generatePdfBytesForInvoice(invoiceDocId)
 
     /** List only the invoice‐type documents */
     fun listAllInvoices(): List<InvoiceDocumentResponseDTO> =
         service.listInvoices().map(mapper::toResponseDTO)
 }
+

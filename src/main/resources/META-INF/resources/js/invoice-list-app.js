@@ -106,13 +106,11 @@ createApp({
         },
         async downloadPdf(id) {
             try {
-                const response = await fetch(`/api/document/${id}/pdf`, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/pdf'
-                    }
-                });
-                
+                const response = await fetch(
+                    `/api/documents/invoices/${id}/pdf`,
+                    { method: 'GET', headers: { 'Accept': 'application/pdf' } }
+                );
+
                 if (!response.ok) {
                     throw new Error('PDF konnte nicht generiert werden');
                 }
