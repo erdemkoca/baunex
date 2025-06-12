@@ -1,33 +1,48 @@
 import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const el   = document.getElementById('project-notes-app');
-    const view = JSON.parse(el.dataset.notes || '{}');
-    console.log('dataset.notes:', view.notes); // nur zum Testen
-    console.log('dataset.id:', view.projectId); // nur zum Testen
-    console.log('dataset.employees:', view.employees); // nur zum Testen
-    console.log('dataset.categoreis:', view.categories); // nur zum Testen
-    console.log('dataset.proejctname:', view.projectName); // nur zum Testen
+    const el = document.getElementById('project-notes-app');
+    if (!el) {
+        console.error('Element with id "project-notes-app" not found');
+        return;
+    }
 
+    // Log the raw dataset for debugging
+    console.log('Raw dataset:', el.dataset);
+    
+    // Parse the project data with error handling
+    let view;
+    try {
+        view = JSON.parse(el.dataset.project || '{}');
+        console.log('Parsed view data:', view);
+    } catch (error) {
+        console.error('Error parsing project data:', error);
+        view = {};
+    }
+
+    // Log individual properties for debugging
+    console.log('Project ID:', view.projectId);
+    console.log('Project Name:', view.projectName);
+    console.log('Categories:', view.categories);
+    console.log('Employees:', view.employees);
+    console.log('Notes:', view.notes);
 
     createApp({
         data() {
-            // view ist nun dein Projekt-Notizen-DTO mit
-            // projectId, projectName, categories, employees, notes
             return {
-                projectId:   view.projectId,
-                projectName: view.projectName,
-                categories:  view.categories,
-                employees:   view.employees,
-                notes:       view.notes,
+                projectId: view.projectId || null,
+                projectName: view.projectName || '',
+                categories: view.categories || [],
+                employees: view.employees || [],
+                notes: view.notes || [],
                 newNote: {
-                    title:       '',
-                    category:    null,
-                    content:     '',
-                    tags:        '',
+                    title: '',
+                    category: null,
+                    content: '',
+                    tags: '',
                     createdById: null,
                     pendingFile: null,
-                    previewUrl:  null
+                    previewUrl: null
                 }
             };
         },
