@@ -5,6 +5,8 @@ import ch.baunex.notes.model.NoteModel
 import ch.baunex.project.dto.*
 import ch.baunex.project.mapper.ProjectMapper
 import ch.baunex.project.service.ProjectService
+import ch.baunex.user.facade.EmployeeFacade
+import ch.baunex.user.model.Role
 import ch.baunex.user.service.EmployeeService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
@@ -16,7 +18,8 @@ import java.time.LocalDateTime
 class ProjectFacade @Inject constructor(
     private val projectService: ProjectService,
     private val projectMapper: ProjectMapper,
-    private val employeeService: EmployeeService
+    private val employeeService: EmployeeService,
+    private val employeeFacade: EmployeeFacade
 ) {
     @Transactional
     fun createProject(createDto: ProjectCreateDTO): ProjectDetailDTO {
@@ -50,12 +53,12 @@ class ProjectFacade @Inject constructor(
         title: String?,
         category: NoteCategory,
         content: String,
-        tags: List<String>,
-        createdById: Long
+        tags: List<String>
     ) {
         val project = projectService.getProjectWithEntries(projectId)
             ?: throw IllegalArgumentException("Projekt nicht gefunden")
-        val creator = employeeService.getEmployee(createdById)
+        val adminId = employeeFacade.findByRole(Role.ADMIN).id
+        val creator = employeeService.getEmployee(adminId) //TOOO Right now hardcoded as Admin (JWT maybe)
             ?: throw IllegalArgumentException("Mitarbeiter nicht gefunden")
 
         val note = NoteModel().apply {

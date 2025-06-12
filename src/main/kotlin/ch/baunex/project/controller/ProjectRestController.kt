@@ -264,8 +264,7 @@ class ProjectRestController {
             note.title,
             note.category,
             note.content,
-            note.tags,
-            note.createdById
+            note.tags
         )
         return Response.ok().build()
     }
