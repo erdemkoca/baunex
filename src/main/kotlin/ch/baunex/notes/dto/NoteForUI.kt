@@ -12,6 +12,14 @@ data class NoteForUI(
     val category: NoteCategory,
     val tags: List<String>,
     val createdById: Long?,
-    @kotlinx.serialization.Serializable(with = LocalDateSerializer::class) val createdAt: LocalDate?,
-    val attachments: List<AttachmentForUI>
+
+    @kotlinx.serialization.Serializable(with = LocalDateSerializer::class)
+    val createdAt: LocalDate?,
+    val attachments: List<AttachmentForUI>,
+    val source: String,
+    val entryId: Long? = null,
+
+    @kotlinx.serialization.Serializable(with = LocalDateSerializer::class)
+    val entryDate: LocalDate? = null,
+    val entryTitle: String? = null
 )
