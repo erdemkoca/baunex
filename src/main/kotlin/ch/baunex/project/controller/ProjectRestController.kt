@@ -17,6 +17,7 @@ import ch.baunex.user.dto.CustomerDTO
 import ch.baunex.user.facade.CustomerFacade
 import ch.baunex.user.facade.EmployeeFacade
 import ch.baunex.notes.mapper.toDto
+import ch.baunex.project.dto.ProjectNotesViewDTO
 import ch.baunex.web.WebController.Templates
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
@@ -218,6 +219,13 @@ class ProjectRestController {
             projectId        = projectNotes.projectId
         )
         return Response.ok(tpl.render()).build()
+    }
+
+    @GET
+    @Path("/{id}/notes/json")
+    @Produces(MediaType.APPLICATION_JSON)
+    fun getNotesJson(@PathParam("id") id: Long): ProjectNotesViewDTO {
+        return projectFacade.getProjectNotesView(id)
     }
 
     /*** JSON ***/

@@ -15,7 +15,7 @@ fun MediaAttachmentModel.toDto(): MediaAttachmentDto {
 }
 
 fun MediaAttachmentDto.toAttachmentForUI(): AttachmentForUI {
-    val filename = URL(this.url).path.substringAfterLast("/")
+    val filename = this.url.substringAfterLast('/')
     val contentType = when {
         filename.endsWith(".png")  -> "image/png"
         filename.endsWith(".jpe")  -> "image/jpeg"

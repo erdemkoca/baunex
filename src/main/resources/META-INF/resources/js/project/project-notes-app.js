@@ -7,9 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Log the raw dataset for debugging
-    console.log('Raw dataset:', el.dataset);
-    
     // Parse the project data with error handling
     let view;
     try {
@@ -19,13 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Error parsing project data:', error);
         view = {};
     }
-
-    // Log individual properties for debugging
-    console.log('Project ID:', view.projectId);
-    console.log('Project Name:', view.projectName);
-    console.log('Categories:', view.categories);
-    console.log('Employees:', view.employees);
-    console.log('Notes:', view.notes);
 
     createApp({
         data() {
@@ -81,17 +71,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     tags:        this.newNote.tags.split(',').map(t=>t.trim()).filter(Boolean),
                     createdById: this.newNote.createdById
                 };
-                const res = await fetch(`/projects/${this.projectId}/notes`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if (!res.ok) {
-                    alert('Fehler beim Speichern: ' + await res.text());
+                const fullRes = await fetch(`/projects/${this.projectId}/notes/json`);
+                if (!fullRes.ok) {
+                    console.error('Konnte Notizen nicht neu laden', await fullRes.text());
                     return;
                 }
-                const updatedNotes = await res.json();
-                this.notes = updatedNotes.map(n => ({
+                const fullView = await fullRes.json();
+                this.notes = fullView.notes.map(n => ({
                     ...n,
                     tags:        n.tags || [],
                     attachments: n.attachments || [],
