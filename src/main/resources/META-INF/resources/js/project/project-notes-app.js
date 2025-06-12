@@ -8,12 +8,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     createApp({
         data() {
+            // a) Projekt-Notizen vorbereiten
+            const projNotes = project.notes.map(n => ({
+                ...n,
+                source: 'project'     // damit wir im Template unterscheiden können
+            }));
+            // b) TimeEntry-Notizen aus allen Einträgen zusammenziehen
+            const teNotes = project.timeEntries
+                .flatMap(entry =>
+                    (entry.notes || []).map(n => ({
+                        ...n,
+                        source:    'timeEntry',
+                        entryId:   entry.id,
+                        entryDate: entry.date,
+                        entryTitle: entry.title
+                    }))
+                );
             return {
                 project,
                 categories,
                 employees,
                 // Nutze nur dieses Array zum Rendern
-                notes: project.notes.map(n => ({ ...n, pendingFile: null })),
+                notes: [...projNotes, ...teNotes],
                 newNote: {
                     title: '',
                     category: null,
@@ -43,54 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('Fehler beim Löschen des Anhangs');
                 }
             },
-            // async saveNote() {
-            //     if (!this.newNote.category) {
-            //         alert('Bitte eine Kategorie auswählen');
-            //         return;
-            //     }
-            //     // 1) Notiz speichern
-            //     const payload = {
-            //         title:       this.newNote.title,
-            //         category:    this.newNote.category,
-            //         content:     this.newNote.content,
-            //         tags:        this.newNote.tags.split(',').map(t=>t.trim()).filter(Boolean),
-            //         createdById: this.newNote.createdById
-            //     };
-            //     const res = await fetch(`/projects/${this.project.id}/notes`, {
-            //         method: 'POST',
-            //         headers: { 'Content-Type': 'application/json' },
-            //         body: JSON.stringify(payload)
-            //     });
-            //     if (!res.ok) {
-            //         alert('Fehler beim Speichern: ' + await res.text());
-            //         return;
-            //     }
-            //     //const savedNote = await res.json();
-            //     const updatedNotes: Array<any> = await res.json();
-            //     savedNote.attachments = savedNote.attachments || [];
-            //     savedNote.tags        = savedNote.tags        || [];
-            //
-            //     // 2) Anhang hochladen
-            //     if (this.newNote.pendingFile) {
-            //         const form = new FormData();
-            //         form.append('file', this.newNote.pendingFile);
-            //         const up = await fetch(
-            //             `/projects/${this.project.id}/notes/${savedNote.id}/attachment`,
-            //             { method: 'POST', body: form }
-            //         );
-            //         if (up.ok) {
-            //             const attDto = await up.json();
-            //             savedNote.attachments = [ attDto ];
-            //         }
-            //     }
-            //
-            //     // 3) Sofort neu rendern
-            //     //this.notes.push({ ...savedNote, pendingFile: null });
-            //     Object.assign(this.newNote, {
-            //         title: '', category: null, content: '', tags: '', createdById: null, pendingFile: null
-            //
-            //     });
-            // }
             async saveNote() {
                 if (!this.newNote.category) {
                     alert('Bitte eine Kategorie auswählen');
@@ -158,6 +126,13 @@ document.addEventListener('DOMContentLoaded', () => {
             <h5 class="mb-0">
               <i class="bi bi-journal-text me-2"></i>{{ note.title || '–' }}
             </h5>
+          </div>
+          <div class="card-header">
+            <span v-if="note.source==='timeEntry'">
+              🕒 {{ formatDate(note.entryDate) }} – {{ note.entryTitle }}
+            </span>
+            <span v-else>📁 Projekt-Notiz</span>
+            {{ note.title }}
           </div>
           <div class="card-body">
             <p>{{ note.content }}</p>
