@@ -1,4 +1,4 @@
-package ch.baunex.documentGenerator.pdf
+package ch.baunex.documentGenerator.pdf.core
 
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
 import org.jboss.logging.Logger
