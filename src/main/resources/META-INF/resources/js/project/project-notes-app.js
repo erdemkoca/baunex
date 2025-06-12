@@ -1,36 +1,33 @@
 import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const el = document.getElementById('project-notes-app');
-    const project    = JSON.parse(el.dataset.project      || '{}');
-    const categories = JSON.parse(el.dataset.categories   || '[]');
-    const employees  = JSON.parse(el.dataset.employees    || '[]');
+    const el   = document.getElementById('project-notes-app');
+    const view = JSON.parse(el.dataset.notes || '{}');
+    console.log('dataset.notes:', view.notes); // nur zum Testen
+    console.log('dataset.id:', view.projectId); // nur zum Testen
+    console.log('dataset.employees:', view.employees); // nur zum Testen
+    console.log('dataset.categoreis:', view.categories); // nur zum Testen
+    console.log('dataset.proejctname:', view.projectName); // nur zum Testen
+
 
     createApp({
         data() {
-            const projNotes = project.notes.map(n => ({ ...n, source: 'project' }));
-            const teNotes = project.timeEntries.flatMap(entry =>
-                (entry.notes || []).map(n => ({
-                    ...n,
-                    source:     'timeEntry',
-                    entryId:    entry.id,
-                    entryDate:  entry.date,
-                    entryTitle: entry.title
-                }))
-            );
+            // view ist nun dein Projekt-Notizen-DTO mit
+            // projectId, projectName, categories, employees, notes
             return {
-                project,
-                categories,
-                employees,
-                notes: [...projNotes, ...teNotes],
+                projectId:   view.projectId,
+                projectName: view.projectName,
+                categories:  view.categories,
+                employees:   view.employees,
+                notes:       view.notes,
                 newNote: {
-                    title:         '',
-                    category:      null,
-                    content:       '',
-                    tags:          '',
-                    createdById:   null,
-                    pendingFile:   null,
-                    previewUrl:    null    // <<< für die Bildvorschau
+                    title:       '',
+                    category:    null,
+                    content:     '',
+                    tags:        '',
+                    createdById: null,
+                    pendingFile: null,
+                    previewUrl:  null
                 }
             };
         },
@@ -48,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
             async removeAttachment(noteIndex, attIndex) {
                 const att = this.notes[noteIndex].attachments[attIndex];
                 const res = await fetch(
-                    `/projects/${this.project.id}/notes/attachment/${att.id}`,
+                    `/projects/${this.projectId}/notes/attachment/${att.id}`,
                     { method: 'DELETE' }
                 );
                 if (res.ok) {
@@ -69,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     tags:        this.newNote.tags.split(',').map(t=>t.trim()).filter(Boolean),
                     createdById: this.newNote.createdById
                 };
-                const res = await fetch(`/projects/${this.project.id}/notes`, {
+                const res = await fetch(`/projects/${this.projectId}/notes`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -91,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const form = new FormData();
                     form.append('file', this.newNote.pendingFile);
                     const up = await fetch(
-                        `/projects/${this.project.id}/notes/${lastNote.id}/attachment`,
+                        `/projects/${this.projectId}/notes/${lastNote.id}/attachment`,
                         { method: 'POST', body: form }
                     );
                     if (up.ok) {
@@ -114,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
         template: `
       <div>
         <div class="mb-4">
-          <a :href="'/projects/' + project.id" class="btn btn-outline-secondary">
+          <a :href="'/projects/' + projectId" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>Zurück zur Projektübersicht
           </a>
         </div>

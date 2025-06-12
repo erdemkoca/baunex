@@ -210,20 +210,12 @@ class ProjectRestController {
     @Path("/{id}/notes") //Notes
     @Produces(MediaType.TEXT_HTML)
     fun viewNotes(@PathParam("id") id: Long): Response {
-        val detail         = projectFacade.getProjectWithDetails(id) ?: return Response.status(404).build()
-        val hasProjNotes   = detail.notes.isNotEmpty()
-        val hasTimeNotes   = detail.timeEntries.any { it.notes.isNotEmpty() }
-        val employees      = employeeFacade.listAll()
+        val projectNotes         = projectFacade.getProjectNotesView(id)
         val tpl = Templates.projectNotes(
-            projectJson           = json.encodeToString(detail),
-            employeesJson         = json.encodeToString(employees),
-            hasProjectNotes   = hasProjNotes,
-            hasTimeEntryNotes = hasTimeNotes,
+            projectNotesJson           = json.encodeToString(projectNotes),
             activeMenu        = "projects",
-            currentDate       = nowDate(),
-            categoriesJson        = json.encodeToString(NoteCategory.values().map { it.name }),
-            projectId        = detail.id,
-            activeSubMenu    = "notes"
+            activeSubMenu    = "notes",
+            projectId        = projectNotes.projectId
         )
         return Response.ok(tpl.render()).build()
     }

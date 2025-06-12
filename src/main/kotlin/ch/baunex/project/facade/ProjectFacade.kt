@@ -1,16 +1,21 @@
 package ch.baunex.project.facade
 
+import ch.baunex.notes.dto.AttachmentForUI
+import ch.baunex.notes.dto.NoteForUI
 import ch.baunex.notes.model.NoteCategory
 import ch.baunex.notes.model.NoteModel
 import ch.baunex.project.dto.*
 import ch.baunex.project.mapper.ProjectMapper
 import ch.baunex.project.service.ProjectService
+import ch.baunex.user.dto.EmployeeDTO
+import ch.baunex.user.dto.EmployeeReferenceDTO
 import ch.baunex.user.facade.EmployeeFacade
 import ch.baunex.user.model.Role
 import ch.baunex.user.service.EmployeeService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
+import java.net.URL
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -96,5 +101,60 @@ class ProjectFacade @Inject constructor(
             detail.id
         }
     }
+
+    @Transactional
+    fun getProjectNotesView(id: Long): ProjectNotesViewDTO {
+        // Projekt mitsamt Notizen & TimeEntries laden
+        val project = projectService.getProjectWithEntries(id)
+            ?: throw IllegalArgumentException("Projekt mit ID $id nicht gefunden")
+
+        // Mitarbeiter-Liste für das Dropdown
+        val employees = employeeFacade.listAll()
+            .map { EmployeeReferenceDTO(it.id, it.firstName, it.lastName) }
+
+        // Kategorien aus dem Enum (als String-Liste)
+        val categories = NoteCategory.values().map { it.name }
+
+        // Notizen auf UI-Form bringen
+        val notesForUI = project.notes.map { note ->
+            NoteForUI(
+                id            = note.id,
+                title         = note.title,
+                content       = note.content,
+                category      = note.category,
+                tags          = note.tags,
+                createdById = note.createdBy.id,
+                createdAt     = note.createdAt,
+                attachments   = note.attachments.map { att ->
+                    // Hier musst du filename/contentType ermitteln,
+                    // z.B. aus URL oder aus zusätzlichen Feldern in deinem Modell
+                    val inferredFilename = URL(att.url).path.substringAfterLast("/")
+                    val inferredContentType = when {
+                        inferredFilename.endsWith(".png")  -> "image/png"
+                        inferredFilename.endsWith(".jpg")  -> "image/jpeg"
+                        inferredFilename.endsWith(".jpeg") -> "image/jpeg"
+                        inferredFilename.endsWith(".gif")  -> "image/gif"
+                        else                               -> "application/octet-stream"
+                    }
+                    AttachmentForUI(
+                        id          = att.id,
+                        url         = att.url,
+                        caption     = att.caption,
+                        filename    = inferredFilename,
+                        contentType = inferredContentType
+                    )
+                }
+            )
+        }
+
+        return ProjectNotesViewDTO(
+            projectId   = project.id,
+            projectName = project.name,
+            categories  = categories,
+            employees   = employees,
+            notes       = notesForUI
+        )
+    }
+
 
 }
