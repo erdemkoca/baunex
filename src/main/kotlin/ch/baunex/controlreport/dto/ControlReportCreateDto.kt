@@ -4,7 +4,8 @@ import ch.baunex.controlreport.model.ContractorType
 import java.time.LocalDateTime
 
 data class ControlReportCreateDto(
-    val customerId: Long,                // neu
+    var projectId: Long,
+    val customerId: Long,
     val reportNumber: String,
     val pageCount: Int = 1,
     val currentPage: Int = 1,

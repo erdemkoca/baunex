@@ -1,6 +1,8 @@
 package ch.baunex.controlreport.controller
 
+import ch.baunex.controlreport.dto.ControlReportCreateDto
 import ch.baunex.controlreport.dto.ControlReportDto
+import ch.baunex.controlreport.dto.ControlReportUpdateDto
 import ch.baunex.controlreport.facade.ControlReportFacade
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.serialization.SerializationUtils.json
@@ -23,27 +25,44 @@ class ProjectControlReportController {
     @Inject
     lateinit var reportFacade: ControlReportFacade
 
+//    @GET
+//    @Produces(MediaType.TEXT_HTML)
+//    fun show(@PathParam("projectId") projectId: Long): Response {
+//        val project = projectFacade.getProjectWithDetails(projectId)
+//            ?: throw NotFoundException()
+//
+//        val reports: List<ControlReportDto> =
+//            reportFacade.listReportsByProject(projectId)
+//
+//        val reportsJson = json.encodeToString(reports)
+//        // val singleReportJson = json.encodeToString(reports.firstOrNull())
+//
+//        val tpl = WebController.Templates.projectControlReport(
+//            projectJson       = json.encodeToString(project),
+//            controlReportsJson = reportsJson,
+//            currentDate       = LocalDate.now(),
+//            activeMenu        = "projects",
+//            projectId         = projectId,
+//            activeSubMenu     = "controlreport"
+//        )
+//
+//        return Response.ok(tpl.render()).build()
+//    }
+
     @GET
     @Produces(MediaType.TEXT_HTML)
-    fun show(@PathParam("projectId") projectId: Long): Response {
+    fun editOrNew(@PathParam("projectId") projectId: Long): Response {
         val project = projectFacade.getProjectWithDetails(projectId)
             ?: throw NotFoundException()
-
-        val reports: List<ControlReportDto> =
-            reportFacade.listReportsByProject(projectId)
-
-        val reportsJson = json.encodeToString(reports)
-        // val singleReportJson = json.encodeToString(reports.firstOrNull())
-
+        val maybeReport = reportFacade.getReportByProjectId(projectId)  // returns nullable
         val tpl = WebController.Templates.projectControlReport(
-            projectJson       = json.encodeToString(project),
-            controlReportsJson = reportsJson,
-            currentDate       = LocalDate.now(),
-            activeMenu        = "projects",
-            projectId         = projectId,
-            activeSubMenu     = "controlreport"
+            projectJson        = json.encodeToString(project),
+            controlReportsJson  = json.encodeToString(maybeReport),     // null → "null"
+            currentDate        = LocalDate.now(),
+            activeMenu         = "projects",
+            projectId          = projectId,
+            activeSubMenu      = "controlreport"
         )
-
         return Response.ok(tpl.render()).build()
     }
 
@@ -51,4 +70,24 @@ class ProjectControlReportController {
     @Produces(MediaType.APPLICATION_JSON)
     fun getReportsByProject(@PathParam("projectId") projectId: Long): List<ControlReportDto> =
         reportFacade.listReportsByProject(projectId)
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    fun create(
+        dto: ControlReportCreateDto
+    ): ControlReportDto {
+        return reportFacade.createReport(dto)
+    }
+
+    @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    fun update(
+        @PathParam("projectId") projectId: Long,
+        dto: ControlReportUpdateDto
+    ): ControlReportDto {
+        return reportFacade.updateReport(projectId, dto)
+            ?: throw NotFoundException()
+    }
 }

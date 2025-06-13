@@ -3,7 +3,7 @@
   {#header}Kontrollbericht{/header}
   {#content}
     <div id="project-controlreport-app"
-         data-report='{controlReportJson.raw}'>
+         data-report='{controlReportJson.raw ?: "{}"}'>
     </div>
     <script type="module" src="/js/project/project-controlreport-app.js"></script>
   {/content}

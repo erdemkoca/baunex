@@ -140,7 +140,7 @@ class WebController {
             currentDate: LocalDate,
             activeMenu: String,
             projectId: Long? = null,
-            activeSubMenu: String
+            activeSubMenu: String = ""
         ): TemplateInstance
 
 

@@ -17,6 +17,10 @@ class ControlReportFacade(
         return controlReportService.listControlReports()
     }
 
+    fun getReportByProjectId(projectId: Long): ControlReportDto? =
+        controlReportService.listReportsByProject(projectId)
+            .firstOrNull()
+
     fun listReportsByProject(projectId: Long): List<ControlReportDto> =
         controlReportService.listReportsByProject(projectId)
 
