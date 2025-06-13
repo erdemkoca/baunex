@@ -1,0 +1,41 @@
+package ch.baunex.controlreport.dto
+
+import ch.baunex.controlreport.model.ContractorType
+import java.time.LocalDateTime
+
+data class ControlReportCreateDto(
+    val customerId: Long,                // neu
+    val reportNumber: String,
+    val pageCount: Int = 1,
+    val currentPage: Int = 1,
+
+    val contractorType: ContractorType,
+    val contractorCompany: String,
+    val contractorStreet: String,
+    val contractorHouseNumber: String,
+    val contractorPostalCode: String,
+    val contractorCity: String,
+
+    val installationStreet: String,
+    val installationHouseNumber: String,
+    val installationPostalCode: String,
+    val installationCity: String,
+    val buildingType: String?,
+    val parcelNumber: String?,
+
+    val controlDate: LocalDateTime,
+    val controlScope: String,
+    val controllerName: String,
+    val controllerPhone: String,
+    val hasDefects: Boolean,
+    val deadlineNote: String?,
+
+    val generalNotes: String?,
+
+    val defectPositions: List<DefectPositionCreateDto> = emptyList(),
+
+    val defectResolverNote: String?,
+    val completionDate: LocalDateTime?,
+    val companyStamp: String?,
+    val completionSignature: String?
+)

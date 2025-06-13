@@ -1,5 +1,6 @@
 package ch.baunex.notes.model
 
+import ch.baunex.controlreport.model.ControlReportModel
 import ch.baunex.documentGenerator.model.DocumentModel
 import ch.baunex.invoice.model.InvoiceModel
 import ch.baunex.project.model.ProjectModel
@@ -23,6 +24,10 @@ class NoteModel : PanacheEntity() {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "time_entry_id", nullable = true)
     var timeEntry: TimeEntryModel? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "control_report_id")
+    var controlReport: ControlReportModel? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "invoice_id", nullable = true)
