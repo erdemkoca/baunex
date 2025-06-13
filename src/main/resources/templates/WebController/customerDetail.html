@@ -1,0 +1,201 @@
+{#include layout}
+
+  {#title}
+    {#if customer.id != null}
+      Customer –
+      {#if customer.companyName}
+        {customer.companyName}
+      {#else}
+        {customer.firstName} {customer.lastName}
+      {/if}
+    {#else}
+      New Customer
+    {/if}
+  {/title}
+
+  {#header}
+    {#if customer.id != null}
+      Customer Details
+    {#else}
+      New Customer
+    {/if}
+  {/header}
+
+  {#content}
+
+    <ul class="nav nav-tabs mb-3" role="tablist">
+      <li class="nav-item">
+        <a class="nav-link active" data-bs-toggle="tab" href="#overview" role="tab">Overview</a>
+      </li>
+      {#if customer.id != null}
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="tab" href="#contacts" role="tab">Contacts</a>
+        </li>
+      {/if}
+    </ul>
+
+    <div class="tab-content">
+
+      <!-- Overview Tab -->
+      <div class="tab-pane fade show active" id="overview" role="tabpanel">
+        <form action="/customers/save" method="post">
+          {#if customer.id != null}
+            <input type="hidden" name="id" value="{customer.id}" />
+          {/if}
+          <div class="card mb-4">
+            <div class="card-header">
+              {#if customer.id != null}Edit Customer{#else}Create New Customer{/if}
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="firstName" class="form-label">First Name</label>
+                  <input type="text" id="firstName" name="firstName" class="form-control"
+                         value="{customer.firstName}" required />
+                </div>
+                <div class="col-md-6">
+                  <label for="lastName" class="form-label">Last Name</label>
+                  <input type="text" id="lastName" name="lastName" class="form-control"
+                         value="{customer.lastName}" required />
+                </div>
+                <div class="col-md-6">
+                  <label for="email" class="form-label">Email</label>
+                  <input type="email" id="email" name="email" class="form-control"
+                         value="{customer.email}" />
+                </div>
+                <div class="col-md-6">
+                  <label for="phone" class="form-label">Phone</label>
+                  <input type="text" id="phone" name="phone" class="form-control"
+                         value="{customer.phone}" />
+                </div>
+                <div class="col-md-6">
+                  <label for="street" class="form-label">Street</label>
+                  <input type="text" id="street" name="street" class="form-control"
+                         value="{customer.street}" />
+                </div>
+                <div class="col-md-6">
+                  <label for="city" class="form-label">City</label>
+                  <input type="text" id="city" name="city" class="form-control"
+                         value="{customer.city}" />
+                </div>
+                <div class="col-md-4">
+                  <label for="zipCode" class="form-label">ZIP Code</label>
+                  <input type="text" id="zipCode" name="zipCode" class="form-control"
+                         value="{customer.zipCode}" />
+                </div>
+                <div class="col-md-4">
+                  <label for="country" class="form-label">Country</label>
+                  <input type="text" id="country" name="country" class="form-control"
+                         value="{customer.country}" />
+                </div>
+                <div class="col-md-4">
+                  <label for="customerNumber" class="form-label">Customer No.</label>
+                  <input type="text" id="customerNumber" name="customerNumber" class="form-control"
+                         value="{customer.customerNumber}" required />
+                </div>
+                <div class="col-md-6">
+                  <label for="companyName" class="form-label">Company Name</label>
+                  <input type="text" id="companyName" name="companyName" class="form-control"
+                         value="{customer.companyName}" />
+                </div>
+                <div class="col-md-6">
+                  <label for="paymentTerms" class="form-label">Payment Terms</label>
+                  <input type="text" id="paymentTerms" name="paymentTerms" class="form-control"
+                         value="{customer.paymentTerms}" />
+                </div>
+                <div class="col-md-4">
+                  <label for="creditLimit" class="form-label">Credit Limit</label>
+                  <div class="input-group">
+                    <span class="input-group-text">CHF</span>
+                    <input type="number" step="0.01" id="creditLimit" name="creditLimit" class="form-control"
+                           value="{customer.creditLimit}" />
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <label for="industry" class="form-label">Industry</label>
+                  <input type="text" id="industry" name="industry" class="form-control"
+                         value="{customer.industry}" />
+                </div>
+                <div class="col-md-4">
+                  <label for="discountRate" class="form-label">Discount Rate (%)</label>
+                  <input type="number" step="0.01" id="discountRate" name="discountRate" class="form-control"
+                         value="{customer.discountRate}" />
+                </div>
+                <div class="col-md-6">
+                  <label for="preferredLanguage" class="form-label">Language</label>
+                  <input type="text" id="preferredLanguage" name="preferredLanguage" class="form-control"
+                         value="{customer.preferredLanguage}" />
+                </div>
+                <div class="col-md-6 form-check mt-4">
+                  <input type="checkbox" id="marketingConsent" name="marketingConsent" class="form-check-input"
+                         {#if customer.marketingConsent}checked{/if} />
+                  <label for="marketingConsent" class="form-check-label">Marketing Consent</label>
+                </div>
+                <div class="col-md-12">
+                  <label for="taxId" class="form-label">Tax ID</label>
+                  <input type="text" id="taxId" name="taxId" class="form-control"
+                         value="{customer.taxId}" />
+                </div>
+              </div>
+
+              <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-save me-2"></i>
+                  {#if customer.id != null}Update Customer{#else}Create Customer{/if}
+                </button>
+                <a href="/customers" class="btn btn-outline-secondary">Cancel</a>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Contacts Tab -->
+      {#if customer.id != null}
+        <div class="tab-pane fade" id="contacts" role="tabpanel">
+          <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <span>Contacts</span>
+              <a href="/customers/{customer.id}/contacts/new" class="btn btn-sm btn-success">
+                <i class="bi bi-plus-circle me-1"></i>Add Contact
+              </a>
+            </div>
+            <div class="card-body">
+              {#if contacts.isEmpty()}
+                <p class="text-muted">No contacts for this customer.</p>
+              {#else}
+                <ul class="list-group">
+                  {#for c in contacts}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                      <div>
+                        {#if c.role}
+                          <strong>{c.role}</strong>
+                        {#else}
+                          <strong>Contact</strong>
+                        {/if}
+                        &ndash; {c.firstName} {c.lastName}
+                      </div>
+                      <div class="btn-group">
+                        <a href="/customers/{customer.id}/contacts/{c.id}/edit"
+                           class="btn btn-sm btn-outline-primary" title="Edit">
+                          <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="/customers/{customer.id}/contacts/{c.id}/delete"
+                           class="btn btn-sm btn-outline-danger" title="Delete"
+                           onclick="return confirm('Delete this contact?');">
+                          <i class="bi bi-trash"></i>
+                        </a>
+                      </div>
+                    </li>
+                  {/for}
+                </ul>
+              {/if}
+            </div>
+          </div>
+        </div>
+      {/if}
+
+    </div>
+
+  {/content}
+{/include}

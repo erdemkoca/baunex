@@ -1,0 +1,64 @@
+{#include layout}
+  {#title}Mitarbeiter – Baunex Business Management{/title}
+  {#header}Mitarbeiter{/header}
+  {#content}
+    <div class="mb-4">
+      <a href="/employees/new" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Neuer Mitarbeiter
+      </a>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Alle Mitarbeiter</div>
+      <div class="card-body">
+        {#if employees.isEmpty()}
+          <p class="text-muted">Keine Mitarbeiter gefunden.</p>
+        {#else}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead>
+              <tr>
+                <th>Vorname</th>
+                <th>Nachname</th>
+                <th>E-Mail</th>
+                <th>Rolle</th>
+                <th>AHV</th>
+                <th>IBAN</th>
+                <th>Stundensatz</th>
+                <th>Aktionen</th>
+              </tr>
+              </thead>
+              <tbody>
+              {#for emp in employees}
+                <tr>
+                  <td>{emp.firstName}</td>
+                  <td>{emp.lastName}</td>
+                  <td>{emp.email}</td>
+                  <td>{emp.role}</td>
+                  <td>{emp.ahvNumber}</td>
+                  <td>{emp.bankIban ?: '–'}</td>
+                  <td>{emp.hourlyRate} CHF</td>
+                  <td>
+                    <div class="btn-group">
+                      <a href="/employees/{emp.id}/edit" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-pencil"></i>
+                      </a>
+                      <a
+                              href="/employees/{emp.id}/delete"
+                              class="btn btn-sm btn-outline-danger"
+                              onclick="return confirm('Möchten Sie diesen Mitarbeiter wirklich löschen?')"
+                      >
+                        <i class="bi bi-trash"></i>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              {/for}
+              </tbody>
+            </table>
+          </div>
+        {/if}
+      </div>
+    </div>
+  {/content}
+{/include}

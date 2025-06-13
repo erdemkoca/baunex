@@ -1,0 +1,114 @@
+package ch.baunex.timetracking.service
+
+import ch.baunex.timetracking.dto.TimeEntryDTO
+import ch.baunex.timetracking.dto.TimeEntryResponseDTO
+import ch.baunex.timetracking.model.TimeEntryModel
+import ch.baunex.timetracking.mapper.TimeEntryMapper
+import ch.baunex.timetracking.repository.TimeEntryRepository
+import ch.baunex.user.repository.EmployeeRepository
+import ch.baunex.project.repository.ProjectRepository
+import ch.baunex.catalog.service.CatalogService
+import jakarta.enterprise.context.ApplicationScoped
+import jakarta.inject.Inject
+import jakarta.transaction.Transactional
+
+@ApplicationScoped
+class TimeTrackingService @Inject constructor(
+    private val timeEntryRepository: TimeEntryRepository,
+    private val employeeRepository: EmployeeRepository,
+    private val projectRepository: ProjectRepository,
+    private val timeEntryMapper: TimeEntryMapper,
+    private val timeEntryCatalogItemService: TimeEntryCatalogItemService,
+    private val catalogService: CatalogService
+) {
+
+    @Transactional
+    fun logTime(dto: TimeEntryDTO): TimeEntryModel {
+        val employee = employeeRepository.findById(dto.employeeId)
+            ?: throw IllegalArgumentException("Employee not found with id: ${dto.employeeId}")
+        val project = projectRepository.findById(dto.projectId)
+            ?: throw IllegalArgumentException("Project not found with id: ${dto.projectId}")
+
+        val timeEntry = timeEntryMapper.toTimeEntryModel(dto, employee, project)
+        timeEntryRepository.persist(timeEntry)
+
+        // Handle catalog items
+        dto.catalogItems.forEach { catalogItemDto ->
+            val catalogItemId = catalogItemDto.catalogItemId ?: throw IllegalArgumentException("Catalog item ID cannot be null")
+            val catalogItem = catalogService.getCatalogItemById(catalogItemId)
+                ?: throw IllegalArgumentException("Catalog item not found with id: $catalogItemId")
+            timeEntryCatalogItemService.addCatalogItemToTimeEntry(timeEntry, catalogItem, catalogItemDto.quantity)
+        }
+
+        return timeEntry
+    }
+
+    fun getAllTimeEntries(): List<TimeEntryModel> {
+        return timeEntryRepository.listAll()
+    }
+
+    fun getTimeEntryById(id: Long): TimeEntryModel? {
+        return timeEntryRepository.findById(id)
+    }
+
+    @Transactional
+    fun updateTimeEntry(id: Long, dto: TimeEntryDTO): TimeEntryModel? {
+        val existingEntry = timeEntryRepository.findById(id) ?: return null
+        val employee = employeeRepository.findById(dto.employeeId)
+            ?: throw IllegalArgumentException("Employee not found with id: ${dto.employeeId}")
+        val project = projectRepository.findById(dto.projectId)
+            ?: throw IllegalArgumentException("Project not found with id: ${dto.projectId}")
+
+        // Update the existing entry instead of creating a new one
+        existingEntry.apply {
+            this.employee = employee
+            this.project = project
+            this.date = dto.date
+            this.hoursWorked = dto.hoursWorked
+            this.note = dto.note
+            this.hourlyRate = employee.hourlyRate
+            this.billable = dto.billable
+            this.invoiced = dto.invoiced
+            this.catalogItemDescription = dto.catalogItemDescription
+            this.catalogItemPrice = dto.catalogItemPrice
+            
+            // Surcharges
+            this.hasNightSurcharge = dto.hasNightSurcharge
+            this.hasWeekendSurcharge = dto.hasWeekendSurcharge
+            this.hasHolidaySurcharge = dto.hasHolidaySurcharge
+            
+            // Additional Costs
+            this.travelTimeMinutes = dto.travelTimeMinutes
+            this.disposalCost = dto.disposalCost
+            this.hasWaitingTime = dto.hasWaitingTime
+            this.waitingTimeMinutes = dto.waitingTimeMinutes
+        }
+
+        // Handle catalog items
+        // First delete existing catalog items
+        timeEntryCatalogItemService.deleteByTimeEntryId(id)
+        // Then add new ones
+        dto.catalogItems.forEach { catalogItemDto ->
+            val catalogItemId = catalogItemDto.catalogItemId ?: throw IllegalArgumentException("Catalog item ID cannot be null")
+            val catalogItem = catalogService.getCatalogItemById(catalogItemId)
+                ?: throw IllegalArgumentException("Catalog item not found with id: $catalogItemId")
+            timeEntryCatalogItemService.addCatalogItemToTimeEntry(existingEntry, catalogItem, catalogItemDto.quantity)
+        }
+
+        return existingEntry
+    }
+
+    fun getEntriesForEmployee(employeeId: Long): List<TimeEntryModel> =
+        timeEntryRepository.list("employee.id", employeeId)
+
+    fun getEntriesForProject(projectId: Long): List<TimeEntryModel> =
+        timeEntryRepository.list("project.id", projectId)
+
+    @Transactional
+    fun deleteEntry(id: Long): Boolean {
+        // First delete associated catalog items
+        timeEntryCatalogItemService.deleteByTimeEntryId(id)
+        // Then delete the time entry
+        return timeEntryRepository.deleteById(id)
+    }
+}

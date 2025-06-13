@@ -1,52 +1,75 @@
 package ch.baunex.project
 
-import ch.baunex.project.dto.ProjectRequest
-import ch.baunex.project.dto.ProjectResponse
+import ch.baunex.project.dto.*
+import ch.baunex.project.facade.ProjectFacade
 import jakarta.inject.Inject
+import jakarta.transaction.Transactional
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 
-@Path("/project")
+@Path("/api/projects")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 class ProjectController {
 
-    @Inject lateinit var projectHandler: ProjectHandler
+    @Inject
+    lateinit var projectFacade: ProjectFacade
 
+    /**
+     * Create
+     */
     @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    fun addProject(dto: ProjectRequest): Response {
-        projectHandler.saveProject(dto)
-        return Response.ok().build()
+    fun addProject(dto: ProjectCreateDTO): Response {
+        val created: ProjectDetailDTO = projectFacade.createProject(dto)
+        return Response
+            .status(Response.Status.CREATED)
+            .entity(created)
+            .build()
     }
 
+    /**
+     * List
+     */
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    fun getAllProjects(): Response {
-        return Response.ok(ProjectResponse(projectHandler.getAllProjects())).build()
+    fun listProjects(): List<ProjectListDTO> {
+        return projectFacade.getAllProjects()
     }
-    
+
+    /**
+     * Detail
+     */
     @GET
     @Path("/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    fun getProjectById(@PathParam("id") id: Long): Response {
-        val project = projectHandler.getProjectById(id) ?: return Response.status(Response.Status.NOT_FOUND).build()
-        return Response.ok(project).build()
+    fun getProject(@PathParam("id") id: Long): Response {
+        val detail = projectFacade.getProjectWithDetails(id)
+            ?: return Response.status(Response.Status.NOT_FOUND).build()
+        return Response.ok(detail).build()
     }
-    
+
+    /**
+     * Update
+     */
     @PUT
     @Path("/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    fun updateProject(@PathParam("id") id: Long, dto: ProjectRequest): Response {
-        val updated = projectHandler.updateProject(id, dto)
-        return if (updated) Response.ok().build() else Response.status(Response.Status.NOT_FOUND).build()
+    @Transactional
+    fun updateProject(
+        @PathParam("id") id: Long,
+        dto: ProjectUpdateDTO
+    ): Response {
+        val success = projectFacade.updateProject(id, dto)
+        return if (success) Response.noContent().build()
+        else          Response.status(Response.Status.NOT_FOUND).build()
     }
-    
+
+    /**
+     * Delete
+     */
     @DELETE
     @Path("/{id}")
+    @Transactional
     fun deleteProject(@PathParam("id") id: Long): Response {
-        projectHandler.deleteProject(id)
-        return Response.ok().build()
+        projectFacade.deleteProject(id)
+        return Response.noContent().build()
     }
 }

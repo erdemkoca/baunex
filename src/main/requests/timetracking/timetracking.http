@@ -1,0 +1,60 @@
+### 🟣 1️⃣ Login as Superadmin and get a JWT token
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "superadmin@example.com",
+  "password": "superadminpassword"
+}
+
+### create a test project
+POST http://localhost:8080/api/project
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJzdXBlcmFkbWluQGV4YW1wbGUuY29tIiwiaWQiOjEsInJvbGUiOiJBRE1JTiIsImlzcyI6ImJhdW5leCIsImlhdCI6MTc0MzAzMDUwNiwiZXhwIjoxNzQzMTE2OTA2fQ.ugmAAfE0B_hnbOdpoaLdBCVqT3EF0lu3Fq3_bnzT_gOriu-F_qr6ro6NjNtroCSTg6Qtj5NZZFEcvBCCoqoyzO94GPw_4zTJXFglAqbqspbFcZF6QJDjEYQP7MidJl3LAMQ2HPbpxkLJkko0qteq8hFDu81QpwibB3Sp3HDFgcPXtwLLIu9ziY6cISainBv6CHCOtEuAVdSVmrzBHzPGS2DUEMeYKCpl0oGhqvx8hIRYwAlTMJ--2NoHpAxDgDHcOWP0q9jxb3LEmlg7t5w8ojs4uc3ApglvsvEE-M7R5W18ErCSpQEBO4yuT8y2lfiUeTuCoEs04eKx2vnEaqVTQQ
+
+{
+    "name": "testProject2",
+    "budget": 1002,
+    "client": "testclient2",
+    "contact": "No Infoasfg"
+}
+
+
+### Log working time
+POST http://localhost:8080/api/time-tracking
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJzdXBlcmFkbWluQGV4YW1wbGUuY29tIiwiaWQiOjEsInJvbGUiOiJBRE1JTiIsImlzcyI6ImJhdW5leCIsImlhdCI6MTc0MzAzMDUwNiwiZXhwIjoxNzQzMTE2OTA2fQ.ugmAAfE0B_hnbOdpoaLdBCVqT3EF0lu3Fq3_bnzT_gOriu-F_qr6ro6NjNtroCSTg6Qtj5NZZFEcvBCCoqoyzO94GPw_4zTJXFglAqbqspbFcZF6QJDjEYQP7MidJl3LAMQ2HPbpxkLJkko0qteq8hFDu81QpwibB3Sp3HDFgcPXtwLLIu9ziY6cISainBv6CHCOtEuAVdSVmrzBHzPGS2DUEMeYKCpl0oGhqvx8hIRYwAlTMJ--2NoHpAxDgDHcOWP0q9jxb3LEmlg7t5w8ojs4uc3ApglvsvEE-M7R5W18ErCSpQEBO4yuT8y2lfiUeTuCoEs04eKx2vnEaqVTQQ
+
+{
+  "userId": 1,
+  "projectId": 6,
+  "date": "2025-03-26",
+  "hoursWorked": 8.0,
+  "note": "Worked on foundation"
+}
+
+### GET All Time Entries
+GET http://localhost:8080/api/time-tracking
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJzdXBlcmFkbWluQGV4YW1wbGUuY29tIiwiaWQiOjEsInJvbGUiOiJBRE1JTiIsImlzcyI6ImJhdW5leCIsImlhdCI6MTc0MzAzMDUwNiwiZXhwIjoxNzQzMTE2OTA2fQ.ugmAAfE0B_hnbOdpoaLdBCVqT3EF0lu3Fq3_bnzT_gOriu-F_qr6ro6NjNtroCSTg6Qtj5NZZFEcvBCCoqoyzO94GPw_4zTJXFglAqbqspbFcZF6QJDjEYQP7MidJl3LAMQ2HPbpxkLJkko0qteq8hFDu81QpwibB3Sp3HDFgcPXtwLLIu9ziY6cISainBv6CHCOtEuAVdSVmrzBHzPGS2DUEMeYKCpl0oGhqvx8hIRYwAlTMJ--2NoHpAxDgDHcOWP0q9jxb3LEmlg7t5w8ojs4uc3ApglvsvEE-M7R5W18ErCSpQEBO4yuT8y2lfiUeTuCoEs04eKx2vnEaqVTQQ
+
+
+###  GET Time Entry by ID
+GET http://localhost:8080/api/time-tracking/2
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJzdXBlcmFkbWluQGV4YW1wbGUuY29tIiwiaWQiOjEsInJvbGUiOiJBRE1JTiIsImlzcyI6ImJhdW5leCIsImlhdCI6MTc0MzAzMDUwNiwiZXhwIjoxNzQzMTE2OTA2fQ.ugmAAfE0B_hnbOdpoaLdBCVqT3EF0lu3Fq3_bnzT_gOriu-F_qr6ro6NjNtroCSTg6Qtj5NZZFEcvBCCoqoyzO94GPw_4zTJXFglAqbqspbFcZF6QJDjEYQP7MidJl3LAMQ2HPbpxkLJkko0qteq8hFDu81QpwibB3Sp3HDFgcPXtwLLIu9ziY6cISainBv6CHCOtEuAVdSVmrzBHzPGS2DUEMeYKCpl0oGhqvx8hIRYwAlTMJ--2NoHpAxDgDHcOWP0q9jxb3LEmlg7t5w8ojs4uc3ApglvsvEE-M7R5W18ErCSpQEBO4yuT8y2lfiUeTuCoEs04eKx2vnEaqVTQQ
+
+### PUT Update Time Entry
+PUT http://localhost:8080/api/time-tracking/2
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJzdXBlcmFkbWluQGV4YW1wbGUuY29tIiwiaWQiOjEsInJvbGUiOiJBRE1JTiIsImlzcyI6ImJhdW5leCIsImlhdCI6MTc0MzAzMDUwNiwiZXhwIjoxNzQzMTE2OTA2fQ.ugmAAfE0B_hnbOdpoaLdBCVqT3EF0lu3Fq3_bnzT_gOriu-F_qr6ro6NjNtroCSTg6Qtj5NZZFEcvBCCoqoyzO94GPw_4zTJXFglAqbqspbFcZF6QJDjEYQP7MidJl3LAMQ2HPbpxkLJkko0qteq8hFDu81QpwibB3Sp3HDFgcPXtwLLIu9ziY6cISainBv6CHCOtEuAVdSVmrzBHzPGS2DUEMeYKCpl0oGhqvx8hIRYwAlTMJ--2NoHpAxDgDHcOWP0q9jxb3LEmlg7t5w8ojs4uc3ApglvsvEE-M7R5W18ErCSpQEBO4yuT8y2lfiUeTuCoEs04eKx2vnEaqVTQQ
+
+{
+  "userId": 1,
+  "projectId": 6,
+  "date": "2025-03-27",
+  "hoursWorked": 7.5,
+  "note": "Adjusted time after discussion"
+}
+
+### delete
+DELETE http://localhost:8080/api/time-tracking/1
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJzdXBlcmFkbWluQGV4YW1wbGUuY29tIiwiaWQiOjEsInJvbGUiOiJBRE1JTiIsImlzcyI6ImJhdW5leCIsImlhdCI6MTc0MzAzMDUwNiwiZXhwIjoxNzQzMTE2OTA2fQ.ugmAAfE0B_hnbOdpoaLdBCVqT3EF0lu3Fq3_bnzT_gOriu-F_qr6ro6NjNtroCSTg6Qtj5NZZFEcvBCCoqoyzO94GPw_4zTJXFglAqbqspbFcZF6QJDjEYQP7MidJl3LAMQ2HPbpxkLJkko0qteq8hFDu81QpwibB3Sp3HDFgcPXtwLLIu9ziY6cISainBv6CHCOtEuAVdSVmrzBHzPGS2DUEMeYKCpl0oGhqvx8hIRYwAlTMJ--2NoHpAxDgDHcOWP0q9jxb3LEmlg7t5w8ojs4uc3ApglvsvEE-M7R5W18ErCSpQEBO4yuT8y2lfiUeTuCoEs04eKx2vnEaqVTQQ

@@ -1,105 +1,86 @@
-# Baunex Business Management
+# baunex
 
-A business management application for managing workers and projects, built with Quarkus, Kotlin, and Qute templating engine.
+This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
-## Features
+If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
 
-- **Project Management**: Create, view, edit, and delete projects
-- **Worker Management**: Manage your workforce with detailed information
-- **Dashboard**: Get an overview of your business with key statistics
-- **Responsive UI**: Modern, mobile-friendly user interface
+## Running the application in dev mode
 
-## Screenshots
+You can run your application in dev mode that enables live coding using:
 
-![Dashboard](https://via.placeholder.com/800x450.png?text=Dashboard+Screenshot)
-![Projects](https://via.placeholder.com/800x450.png?text=Projects+Screenshot)
-![Workers](https://via.placeholder.com/800x450.png?text=Workers+Screenshot)
-
-## Prerequisites
-
-- JDK 11+ installed
-- Maven 3.8.1+
-- (Optional) Docker for containerized deployment
-
-## Running the Application
-
-### Development Mode
-
-```bash
-./mvnw compile quarkus:dev
+```shell script
+./mvnw quarkus:dev
 ```
 
-This command starts the application in development mode with hot reload enabled.
+> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
 
-### Production Mode
+## Packaging and running the application
 
-```bash
+The application can be packaged using:
+
+```shell script
 ./mvnw package
-java -jar target/quarkus-app/quarkus-run.jar
 ```
 
-### Docker
+It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
+Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
 
-```bash
-./mvnw package
-docker build -f src/main/docker/Dockerfile.jvm -t baunex/business-management .
-docker run -i --rm -p 8080:8080 baunex/business-management
+The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
+
+If you want to build an _über-jar_, execute the following command:
+
+```shell script
+./mvnw package -Dquarkus.package.jar.type=uber-jar
 ```
 
-## Accessing the Application
+The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
 
-Once the application is running, you can access it at:
+## Creating a native executable
 
-```
-http://localhost:8080
-```
+You can create a native executable using:
 
-## Database
-
-The application uses PostgreSQL as the database. Before running the application, make sure you have PostgreSQL installed and running with the following configuration:
-
-```properties
-# PostgreSQL configuration
-quarkus.datasource.db-kind=postgresql
-quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/baunex
-quarkus.datasource.username=postgres
-quarkus.datasource.password=postgres
+```shell script
+./mvnw package -Dnative
 ```
 
-You'll need to create a database named 'baunex' in your PostgreSQL server:
+Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
 
-```sql
-CREATE DATABASE baunex;
+```shell script
+./mvnw package -Dnative -Dquarkus.native.container-build=true
 ```
 
-Sample data is automatically loaded on startup when the database is empty.
+You can then execute your native executable with: `./target/baunex-1.0-SNAPSHOT-runner`
 
-## Project Structure
+If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
 
-- `src/main/kotlin/ch/baunex/project`: Project-related components
-- `src/main/kotlin/ch/baunex/worker`: Worker-related components
-- `src/main/kotlin/ch/baunex/web`: Web controllers for the frontend
-- `src/main/resources/templates`: Qute templates for the UI
-- `src/main/resources/META-INF/resources`: Static resources (CSS, JS)
+## Related Guides
 
-## Technologies Used
+- REST ([guide](https://quarkus.io/guides/rest)): A Jakarta REST implementation utilizing build time processing and
+  Vert.x. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on
+  it.
+- REST Jackson ([guide](https://quarkus.io/guides/rest#json-serialisation)): Jackson serialization support for Quarkus
+  REST. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it
+- Kotlin ([guide](https://quarkus.io/guides/kotlin)): Write your services in Kotlin
+- JDBC Driver - PostgreSQL ([guide](https://quarkus.io/guides/datasource)): Connect to the PostgreSQL database via JDBC
 
-- **Backend**: Quarkus, Kotlin, RESTEasy, Hibernate ORM with Panache
-- **Frontend**: Qute templating, Bootstrap 5, JavaScript
-- **Database**: PostgreSQL
+## Provided Code
 
-## Contributing
+### REST
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Commit your changes: `git commit -am 'Add my feature'`
-4. Push to the branch: `git push origin feature/my-feature`
-5. Submit a pull request
+Easily start your REST Web Services
 
-## License
+[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
 
-This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Contact
+## Assign fixed port to docker
+Instead of letting Docker assign a random port like 55395, you can explicitly bind 5432:5432 like:
 
-For questions or support, please contact [your-email@example.com](mailto:your-email@example.com).
+```shell script
+docker run -d \
+  -p 5432:5432 \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=baunex \
+  postgres:17
+
+```

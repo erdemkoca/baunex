@@ -1,0 +1,92 @@
+{#include layout}
+  {#title}Kunden – Baunex Business Management{/title}
+  {#header}Kunden{/header}
+  {#content}
+
+    <div class="mb-4">
+      <a href="/customers/new" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Neuer Kunde
+      </a>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Alle Kunden</div>
+      <div class="card-body">
+        {#if customers.isEmpty()}
+          <p class="text-muted">Keine Kunden gefunden.</p>
+        {#else}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead>
+              <tr>
+                <th>Name</th>
+                <th>Kundennummer</th>
+                <th>Ort</th>
+                <th>Hauptkontakt</th>
+                <th>Aktionen</th>
+              </tr>
+              </thead>
+              <tbody>
+              {#for customer in customers}
+                <tr>
+                  <td>
+                    {#if customer.companyName}
+                      {customer.companyName}
+                    {#else}
+                      {customer.firstName} {customer.lastName}
+                    {/if}
+                  </td>
+                  <td>{customer.customerNumber ?: '—'}</td>
+                  <td>{customer.city ?: '—'}</td>
+                  <td>
+                    {#if customer.contacts.size > 0}
+                      {#for contact in customer.contacts}
+                        {#if contact.isPrimary}
+                          {contact.firstName} {contact.lastName}
+                        {/if}
+                      {/for}
+                    {#else}
+                      —
+                    {/if}
+                  </td>
+                  <td>
+                    <div class="btn-group">
+                      <a href="/customers/{customer.id}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-eye"></i>
+                      </a>
+                      <a href="/customers/{customer.id}/edit" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-pencil"></i>
+                      </a>
+                      <a
+                              href="/customers/{customer.id}/delete"
+                              class="btn btn-sm btn-outline-danger"
+                              onclick="return confirm('Möchten Sie diesen Kunden wirklich löschen?')"
+                      >
+                        <i class="bi bi-trash"></i>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              {/for}
+              </tbody>
+            </table>
+          </div>
+        {/if}
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".customer-row").forEach(row => {
+          row.addEventListener("click", function (e) {
+            // don't navigate if a button/link was clicked
+            if (!e.target.closest("a")) {
+              window.location.href = row.dataset.href;
+            }
+          });
+        });
+      });
+    </script>
+
+  {/content}
+{/include}

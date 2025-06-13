@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice Draft Editor</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        .editor-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .editor-title {
+            font-size: 24px;
+            color: #333;
+        }
+        .editor-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .editor-content {
+            margin-bottom: 20px;
+        }
+        .editor-toolbar {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .editor-toolbar button {
+            margin-right: 5px;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+        }
+        .editor-toolbar button:hover {
+            background: #f0f0f0;
+        }
+        .CodeMirror {
+            height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .preview-content {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 500px;
+        }
+        .split-view {
+            display: flex;
+            gap: 20px;
+        }
+        .editor-panel, .preview-panel {
+            flex: 1;
+        }
+        .invoice-info {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .invoice-info h3 {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <div class="editor-header">
+            <h1 class="editor-title">Invoice Draft Editor</h1>
+            <div class="editor-actions">
+                <button class="btn btn-secondary" onclick="window.close()">Close</button>
+                <button class="btn btn-primary" onclick="saveDocument()">Save</button>
+                <button class="btn btn-info" onclick="generatePdf()">Generate PDF</button>
+            </div>
+        </div>
+
+        <div class="invoice-info">
+            <h3>Invoice Information</h3>
+            <p><strong>Invoice Number:</strong> {invoice.invoiceNumber}</p>
+            <p><strong>Date:</strong> {invoice.invoiceDate}</p>
+            <p><strong>Due Date:</strong> {invoice.dueDate}</p>
+            <p><strong>Customer:</strong> {invoice.customerName}</p>
+        </div>
+
+        <div class="split-view">
+            <div class="editor-panel">
+                <div class="editor-toolbar">
+                    <button onclick="insertTable()">Insert Table</button>
+                    <button onclick="insertRow()">Insert Row</button>
+                    <button onclick="insertText()">Insert Text</button>
+                    <button onclick="toggleBold()">Bold</button>
+                    <button onclick="toggleItalic()">Italic</button>
+                    <button onclick="insertLink()">Insert Link</button>
+                    <button onclick="insertImage()">Insert Image</button>
+                </div>
+
+                <div class="editor-content">
+                    <textarea id="editor"></textarea>
+                </div>
+            </div>
+
+            <div class="preview-panel">
+                <div class="preview-content" id="preview">
+                    {#insert content /}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let editor;
+        let currentContent;
+        let invoiceId = {invoiceId};
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize EasyMDE
+            editor = new EasyMDE({
+                element: document.getElementById('editor'),
+                spellChecker: false,
+                autofocus: true,
+                toolbar: false, // We'll use our custom toolbar
+                status: false,
+                previewRender: function(plainText) {
+                    // Update preview
+                    document.getElementById('preview').innerHTML = marked.parse(plainText);
+                    return marked.parse(plainText);
+                }
+            });
+
+            // Load initial content
+            const previewContent = document.getElementById('preview').innerHTML;
+            editor.value(previewContent);
+            currentContent = previewContent;
+        });
+
+        function insertTable() {
+            const table = `
+| Header 1 | Header 2 | Header 3 |
+|----------|----------|----------|
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |
+`;
+            editor.codemirror.replaceSelection(table);
+        }
+
+        function insertRow() {
+            const row = `| New Row | Value | Value |\n`;
+            editor.codemirror.replaceSelection(row);
+        }
+
+        function insertText() {
+            const text = prompt('Enter text to insert:');
+            if (text) {
+                editor.codemirror.replaceSelection(text);
+            }
+        }
+
+        function toggleBold() {
+            const selectedText = editor.codemirror.getSelection();
+            if (selectedText) {
+                editor.codemirror.replaceSelection(`**${selectedText}**`);
+            }
+        }
+
+        function toggleItalic() {
+            const selectedText = editor.codemirror.getSelection();
+            if (selectedText) {
+                editor.codemirror.replaceSelection(`*${selectedText}*`);
+            }
+        }
+
+        function insertLink() {
+            const text = prompt('Enter link text:');
+            const url = prompt('Enter URL:');
+            if (text && url) {
+                editor.codemirror.replaceSelection(`[${text}](${url})`);
+            }
+        }
+
+        function insertImage() {
+            const alt = prompt('Enter image alt text:');
+            const url = prompt('Enter image URL:');
+            if (alt && url) {
+                editor.codemirror.replaceSelection(`![${alt}](${url})`);
+            }
+        }
+
+        function saveDocument() {
+            const content = editor.value();
+            fetch(`/invoice-drafts/${invoiceId}/update`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ content: content })
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Document saved successfully!');
+                } else {
+                    alert('Error saving document');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error saving document');
+            });
+        }
+
+        function generatePdf() {
+            window.location.href = `/invoice-drafts/${invoiceId}/generate`;
+        }
+    </script>
+</body>
+</html> 

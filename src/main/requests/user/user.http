@@ -1,0 +1,72 @@
+### 🟢 1️⃣ Create a new user (Regular User)
+POST http://localhost:8080/api/users
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlkIjoxLCJyb2xlIjoiQURNSU4iLCJpc3MiOiJiYXVuZXgiLCJleHAiOjE3NDIzNDEyMTcsImlhdCI6MTc0MjI1NDgxN30.rFIpNuZmZ7VWsMBzOROrbVV0n1XK_81ntwUsJrSyaLyVva0uDHpsTFurkZ6wnnk395NPh_pwSn49lOixcgXaMoj0npOGKmbBGv3bTwLMx7cwEkSKWY9aWn4E_hWJUsNd3ASKC79cyVmsweqmm0mqEMujhbUBGU2hUtdTn0w1Q1NfShz6HJ_k4sfdgDrh_lZ88g4uHNpOeYwvq8_QAa5LaSbP4lePUTPQE0WZB9Q7Q6gDGZXCbJG_lqB5tiJJjso_kH-vLaPUEp3ZpJZJRTFvL_vNNjq2coHxkqtAhjM7_wdZy5f4oMGyMlejOysCREGGe5tpzq3P_8iuVCA_0MZu-w
+
+{
+  "email": "user1@example.com",
+  "password": "userpassword",
+  "role": "USER"
+}
+
+### 🟢 2️⃣ Login as the newly created user
+# Login with the credentials of user to get the JWT token
+POST http://localhost:8080/api/users/login
+Content-Type: application/json
+
+{
+  "email": "user1@example.com",
+  "password": "userpassword"
+}
+
+### 🔵 3️⃣ Create another user (Regular User)
+# This request creates another user for testing
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "email": "user2@example.com",
+  "password": "userpassword",
+  "role": "USER"
+}
+
+### 🟡 8️⃣ Test invalid login (wrong credentials, Expected: 401 Unauthorized)
+POST http://localhost:8080/api/users/login
+Content-Type: application/json
+
+{
+  "email": "user1@example.com",
+  "password": "wrongpassword"
+}
+
+### Fetch all users
+GET http://localhost:8080/api/users/allUsers
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlkIjo1MSwicm9sZSI6IkFETUlOIiwiaXNzIjoiYmF1bmV4IiwiZXhwIjoxNzQyMTM5NjMzLCJpYXQiOjE3NDIwNTMyMzN9.YKRln4EVx088s-TyxsjEqSX1JWFjQKWUqqz1tPnwLy3TBgdVKQPQzHjcaVZNk50CGOgpvMfeauTtYuGZ7BjYXNJiZSsqq3kPRya9O8kiNu0AfzkJNmAJNkcBAfd6sCn68IKweIEd8o-JztrWZzU0hdFIMKzEke21xcSlDuc2eEeKotcNftT16ShHG9WygXGTwKrWTcX-32LWzjRMTd-z5TV6XQpJBpGg8tzGPTCLNEbwQT08NAbLMW7PQ8dB0wmFCOb1MWgse_n225P6rUCsczYoo0ElnGTPo7fJ_dZJFfFhQ8qS-YL6-Nl3u69NDGgoy0Wo0Zyb3wHZDzLVTYIB-Q
+
+
+######################### update User
+
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "securepassword",
+  "role": "USER",
+  "phone": "+123456789",
+  "street": "123 Main St",
+  "city": "Zurich"
+}
+
+############################ update User
+PUT http://localhost:8080/api/users/2
+Content-Type: application/json
+
+{
+  "email": "updatedemail@example.com",
+  "phone": "+491234567890",
+  "password": "newpassword123"
+}
+
+
