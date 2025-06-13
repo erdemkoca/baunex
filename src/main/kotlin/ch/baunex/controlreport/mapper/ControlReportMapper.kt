@@ -27,13 +27,11 @@ class ControlReportMapper {
             type       = m.contractorType?.name.orEmpty(),
             company    = m.contractorCompany.orEmpty(),
             street     = m.contractorStreet.orEmpty(),
-            houseNumber= m.contractorHouseNumber.orEmpty(),
             postalCode = m.contractorPostalCode.orEmpty(),
             city       = m.contractorCity.orEmpty()
         ),
         installationLocation  = InstallationLocationDto(
             street     = m.installationStreet.orEmpty(),
-            houseNumber= m.installationHouseNumber.orEmpty(),
             postalCode = m.installationPostalCode.orEmpty(),
             city       = m.installationCity.orEmpty(),
             buildingType = m.buildingType,

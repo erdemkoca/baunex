@@ -56,12 +56,12 @@ class ProjectControlReportController {
     @GET
     @Produces(MediaType.TEXT_HTML)
     fun editOrNew(@PathParam("projectId") projectId: Long): Response {
-        val project = projectFacade.getProjectWithDetails(projectId)
+        val project      = projectFacade.getProjectWithDetails(projectId)
             ?: throw NotFoundException()
-        val maybeReport = reportFacade.getReportByProjectId(projectId)
-        val tpl = WebController.Templates.projectControlReport(
+        val reportDto    = reportFacade.getOrInitializeReport(projectId)
+        val tpl          = WebController.Templates.projectControlReport(
             projectJson       = json.encodeToString(project),
-            controlReportJson = json.encodeToString(maybeReport),
+            controlReportJson = json.encodeToString(reportDto),
             currentDate       = LocalDate.now(),
             activeMenu        = "projects",
             projectId         = projectId,

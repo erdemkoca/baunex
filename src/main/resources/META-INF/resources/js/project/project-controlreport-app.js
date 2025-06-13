@@ -132,12 +132,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <input v-model="draft.contractor.company" class="form-control" />
               </div>
               <div class="col-md-4 mb-3">
-                <label class="form-label">Straße</label>
+                <label class="form-label">Strasse</label>
                 <input v-model="draft.contractor.street" class="form-control" />
-              </div>
-              <div class="col-md-2 mb-3">
-                <label class="form-label">Hausnr.</label>
-                <input v-model="draft.contractor.houseNumber" class="form-control" />
               </div>
               <div class="col-md-2 mb-3">
                 <label class="form-label">PLZ</label>
@@ -153,20 +149,16 @@ document.addEventListener('DOMContentLoaded', () => {
             <h6>Installationsort</h6>
             <div class="row">
               <div class="col-md-6 mb-3">
-                <label class="form-label">Straße</label>
-                <input v-model="draft.installationStreet" class="form-control" />
-              </div>
-              <div class="col-md-2 mb-3">
-                <label class="form-label">Hausnr.</label>
-                <input v-model="draft.installationHouseNumber" class="form-control" />
+                <label class="form-label">Strasse</label>
+                <input v-model="draft.installationLocation.street" class="form-control" />
               </div>
               <div class="col-md-2 mb-3">
                 <label class="form-label">PLZ</label>
-                <input v-model="draft.installationPostalCode" class="form-control" />
+                <input v-model="draft.installationLocation.postalCode" class="form-control" />
               </div>
               <div class="col-md-2 mb-3">
                 <label class="form-label">Ort</label>
-                <input v-model="draft.installationCity" class="form-control" />
+                <input v-model="draft.installationLocation.city" class="form-control" />
               </div>
               <div class="col-md-4 mb-3">
                 <label class="form-label">Gebäudetyp</label>
