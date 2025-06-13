@@ -5,20 +5,51 @@ document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('project-controlreport-app');
     if (!el) return;
 
-    const reportData = JSON.parse(el.dataset.report || '{}');
+    let reportData;
+    try {
+        const rawData = el.dataset.report || '{}';
+        reportData = JSON.parse(rawData);
+        if (reportData === null) {
+            reportData = {};
+        }
+    } catch (e) {
+        console.error('Error parsing report data:', e);
+        reportData = {};
+    }
+
+    // Initialize default structure if data is empty
+    const defaultReport = {
+        controlData: {
+            controlDate: '',
+            controllerName: '',
+            hasDefects: false,
+            deadlineNote: ''
+        },
+        generalNotes: '',
+        reportNumber: ''
+    };
+
+    // Merge default structure with actual data
+    const initialReport = {
+        ...defaultReport,
+        ...reportData,
+        controlData: {
+            ...defaultReport.controlData,
+            ...(reportData.controlData || {})
+        }
+    };
 
     createApp({
         data() {
             return {
-                report: reportData,
-                // falls du ein Bearbeitungs-Formular brauchst:
+                report: initialReport,
                 editMode: false,
-                draft: JSON.parse(JSON.stringify(reportData))
+                draft: JSON.parse(JSON.stringify(initialReport))
             };
         },
         methods: {
             async saveReport() {
-                // Beispiel: PUT /api/controlreport/{id}
+                // Example: PUT /api/controlreport/{id}
                 const res = await fetch(`/api/controlreport/${this.report.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -39,19 +70,18 @@ document.addEventListener('DOMContentLoaded', () => {
         template: `
       <div class="card">
         <div class="card-body">
-          <h5>Kontrollbericht {{ report.reportNumber }}</h5>
+          <h5>Kontrollbericht {{ report.reportNumber || 'Neu' }}</h5>
           <button class="btn btn-sm btn-outline-primary mb-3" @click="toggleEdit">
             {{ editMode ? 'Abbrechen' : 'Bearbeiten' }}
           </button>
 
           <div v-if="!editMode">
-            <p><strong>Kontrolldatum:</strong> {{ report.controlData.controlDate }}</p>
-            <p><strong>Kontrolleur:</strong> {{ report.controlData.controllerName }}</p>
+            <p><strong>Kontrolldatum:</strong> {{ report.controlData.controlDate || '-' }}</p>
+            <p><strong>Kontrolleur:</strong> {{ report.controlData.controllerName || '-' }}</p>
             <p><strong>Mängel:</strong> {{ report.controlData.hasDefects ? 'Ja' : 'Nein' }}</p>
-            <p><strong>Frist:</strong> {{ report.controlData.deadlineNote }}</p>
+            <p><strong>Frist:</strong> {{ report.controlData.deadlineNote || '-' }}</p>
             <hr>
-            <p><strong>Allgemeine Hinweise:</strong> {{ report.generalNotes }}</p>
-            <!-- mehr Felder nach Bedarf… -->
+            <p><strong>Allgemeine Hinweise:</strong> {{ report.generalNotes || '-' }}</p>
           </div>
 
           <form v-else @submit.prevent="saveReport">
