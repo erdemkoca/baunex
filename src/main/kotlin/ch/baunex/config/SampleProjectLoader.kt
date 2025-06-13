@@ -1,5 +1,7 @@
 package ch.baunex.config.sample
 
+import ch.baunex.notes.dto.NoteDto
+import ch.baunex.notes.model.NoteCategory
 import ch.baunex.project.dto.ProjectCreateDTO
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.project.model.ProjectStatus
@@ -54,7 +56,39 @@ class SampleProjectLoader {
                 description = "Elektroinstallation für neues Einfamilienhaus in Zürich.",
                 status      = ProjectStatus.IN_PROGRESS,
                 street      = "Weinbergstrasse 12",
-                city        = "Zürich"
+                city        = "Zürich",
+                initialNotes = listOf(
+                    NoteDto(
+                        id            = 0L,
+                        projectId     = null,
+                        timeEntryId   = null,
+                        documentId    = null,
+                        createdById   = 1L,
+                        createdByName = "Max Mustermann",
+                        createdAt     = LocalDate.now().minusDays(29),
+                        updatedAt     = null,
+                        title         = "Kundengespräch abgeschlossen",
+                        content       = "Am 05.05.2025 mit Herrn Müller abgesprochen, dass die Elektroinstallation bis Ende August fertig sein soll.",
+                        category      = NoteCategory.INFO,
+                        tags          = listOf("Planung", "Kunde"),
+                        attachments   = emptyList()
+                    ),
+                    NoteDto(
+                        id            = 0L,
+                        projectId     = null,
+                        timeEntryId   = null,
+                        documentId    = null,
+                        createdById   = 1L,
+                        createdByName = "Max Mustermann",
+                        createdAt     = LocalDate.now().minusDays(25),
+                        updatedAt     = null,
+                        title         = "Materialbedarf prüfen",
+                        content       = "Benötigen 50m NYM-J 5x1.5, 30m NYM-J 3x1.5, sowie 10 Sicherungsautomaten Typ B16.",
+                        category      = NoteCategory.MATERIALBEDARF,
+                        tags          = listOf("Material", "Einkauf"),
+                        attachments   = emptyList()
+                    )
+                )
             ),
             ProjectCreateDTO(
                 name        = "Ladestation Garage Basel",
@@ -65,7 +99,24 @@ class SampleProjectLoader {
                 description = "Installation von 3 Ladepunkten in Tiefgarage.",
                 status      = ProjectStatus.PLANNED,
                 street      = "Steinenvorstadt 99",
-                city        = "Basel"
+                city        = "Basel",
+                initialNotes = listOf(
+                    NoteDto(
+                        id            = 0L,
+                        projectId     = null,
+                        timeEntryId   = null,
+                        documentId    = null,
+                        createdById   = 1L,
+                        createdByName = "Max Mustermann",
+                        createdAt     = LocalDate.now().minusDays(9),
+                        updatedAt     = null,
+                        title         = "Planung Vorerst",
+                        content       = "Standort wurde besichtigt, Stromanschluss ist 63A vorhanden. Genehmigung durch Parkplatzbetreiber steht noch aus.",
+                        category      = NoteCategory.VORBEREITUNG,
+                        tags          = listOf("Planung", "Genehmigung"),
+                        attachments   = emptyList()
+                    )
+                )
             ),
             ProjectCreateDTO(
                 name        = "Altbau-Umbau Luzern",
@@ -76,7 +127,39 @@ class SampleProjectLoader {
                 description = "Modernisierung Elektroinstallation in MFH.",
                 status      = ProjectStatus.IN_PROGRESS,
                 street      = "Museggstrasse 3",
-                city        = "Luzern"
+                city        = "Luzern",
+                initialNotes = listOf(
+                    NoteDto(
+                        id            = 0L,
+                        projectId     = null,
+                        timeEntryId   = null,
+                        documentId    = null,
+                        createdById   = 1L,
+                        createdByName = "Max Mustermann",
+                        createdAt     = LocalDate.now().minusDays(20),
+                        updatedAt     = null,
+                        title         = "Erster Rundgang",
+                        content       = "Bestandsaufnahme alter Kabel und Verteilerschrank. Fotos angehängt für späteren Vergleich.",
+                        category      = NoteCategory.SKIZZE,
+                        tags          = listOf("Bestandsaufnahme"),
+                        attachments   = emptyList()
+                    ),
+                    NoteDto(
+                        id            = 0L,
+                        projectId     = null,
+                        timeEntryId   = null,
+                        documentId    = null,
+                        createdById   = 1L,
+                        createdByName = "Max Mustermann",
+                        createdAt     = LocalDate.now().minusDays(15),
+                        updatedAt     = null,
+                        title         = "Fehler im Altkasten",
+                        content       = "Sicherungskasten ist zu klein, muss gegen neuen 13-Reihen-Schrank getauscht werden.",
+                        category      = NoteCategory.FEHLER,
+                        tags          = listOf("Altbau", "Kasten-Erneuerung"),
+                        attachments   = emptyList()
+                    )
+                )
             ),
             ProjectCreateDTO(
                 name        = "Bürobeleuchtung Bern",
@@ -87,7 +170,24 @@ class SampleProjectLoader {
                 description = "LED-Beleuchtung in Grossraumbüro.",
                 status      = ProjectStatus.PLANNED,
                 street      = "Bundesgasse 45",
-                city        = "Bern"
+                city        = "Bern",
+                initialNotes = listOf(
+                    NoteDto(
+                        id            = 0L,
+                        projectId     = null,
+                        timeEntryId   = null,
+                        documentId    = null,
+                        createdById   = 1L,
+                        createdByName = "Max Mustermann",
+                        createdAt     = LocalDate.now().minusDays(4),
+                        updatedAt     = null,
+                        title         = "Lichtkonzept erstellen",
+                        content       = "Architekturbüro hat Anforderungen übermittelt: dimmbare LED-Panels gewünscht.",
+                        category      = NoteCategory.VORBEREITUNG,
+                        tags          = listOf("Konzept", "Architekt"),
+                        attachments   = emptyList()
+                    )
+                )
             )
         )
 

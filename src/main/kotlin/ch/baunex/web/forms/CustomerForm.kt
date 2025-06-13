@@ -69,7 +69,6 @@ class CustomerForm {
             zipCode          = zipCode,
             country          = country,
             phone            = phone,
-            customerNumber   = customerNumber!!,
             companyName      = companyName,
             paymentTerms     = paymentTerms,
             creditLimit      = creditLimit,

@@ -1,16 +1,18 @@
 package ch.baunex.timetracking.service
 
 import ch.baunex.timetracking.dto.TimeEntryDTO
-import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.timetracking.model.TimeEntryModel
 import ch.baunex.timetracking.mapper.TimeEntryMapper
 import ch.baunex.timetracking.repository.TimeEntryRepository
 import ch.baunex.user.repository.EmployeeRepository
 import ch.baunex.project.repository.ProjectRepository
 import ch.baunex.catalog.service.CatalogService
+import ch.baunex.notes.model.NoteModel
+import ch.baunex.user.service.EmployeeService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
+import java.time.LocalDate
 
 @ApplicationScoped
 class TimeTrackingService @Inject constructor(
@@ -19,7 +21,8 @@ class TimeTrackingService @Inject constructor(
     private val projectRepository: ProjectRepository,
     private val timeEntryMapper: TimeEntryMapper,
     private val timeEntryCatalogItemService: TimeEntryCatalogItemService,
-    private val catalogService: CatalogService
+    private val catalogService: CatalogService,
+    private val employeeService: EmployeeService
 ) {
 
     @Transactional
@@ -29,12 +32,39 @@ class TimeTrackingService @Inject constructor(
         val project = projectRepository.findById(dto.projectId)
             ?: throw IllegalArgumentException("Project not found with id: ${dto.projectId}")
 
-        val timeEntry = timeEntryMapper.toTimeEntryModel(dto, employee, project)
+        // 1. TimeEntryModel neu anlegen
+        val timeEntry = TimeEntryModel().apply {
+            this.employee = employee
+            this.project = project
+            this.date = dto.date
+            this.hoursWorked = dto.hoursWorked
+            this.hourlyRate = employee.hourlyRate
+            this.billable = dto.billable
+            this.invoiced = dto.invoiced
+            this.title=dto.title
+            // 2. Notizen verarbeiten
+            val parent = this
+            this.notes = dto.notes.map { noteCreateDto ->
+                NoteModel().apply {
+                    content    = noteCreateDto.content
+                    title      = noteCreateDto.title
+                    category   = noteCreateDto.category
+                    tags       = noteCreateDto.tags
+                    timeEntry  = parent
+                    createdBy = employee
+                    createdAt = LocalDate.now()
+                    updatedAt = LocalDate.now()
+                }
+            }.toMutableList()
+        }
+
+        // 3. speichern
         timeEntryRepository.persist(timeEntry)
 
-        // Handle catalog items
+        // 4. Katalog-Items verknüpfen
         dto.catalogItems.forEach { catalogItemDto ->
-            val catalogItemId = catalogItemDto.catalogItemId ?: throw IllegalArgumentException("Catalog item ID cannot be null")
+            val catalogItemId = catalogItemDto.catalogItemId
+                ?: throw IllegalArgumentException("Catalog item ID cannot be null")
             val catalogItem = catalogService.getCatalogItemById(catalogItemId)
                 ?: throw IllegalArgumentException("Catalog item not found with id: $catalogItemId")
             timeEntryCatalogItemService.addCatalogItemToTimeEntry(timeEntry, catalogItem, catalogItemDto.quantity)
@@ -65,12 +95,25 @@ class TimeTrackingService @Inject constructor(
             this.project = project
             this.date = dto.date
             this.hoursWorked = dto.hoursWorked
-            this.note = dto.note
+            this.title    = dto.title
+            existingEntry.notes.clear()
+            val newNotes = dto.notes.map { noteCreateDto ->
+                NoteModel().apply {
+                    this.content = noteCreateDto.content
+                    this.title = noteCreateDto.title
+                    this.category = noteCreateDto.category
+                    this.tags = noteCreateDto.tags
+                    this.timeEntry = existingEntry
+                    createdBy  = employee
+                    createdAt  = LocalDate.now()
+                    updatedAt  = LocalDate.now()
+                }
+            }
+            existingEntry.notes.addAll(newNotes)
+
             this.hourlyRate = employee.hourlyRate
             this.billable = dto.billable
             this.invoiced = dto.invoiced
-            this.catalogItemDescription = dto.catalogItemDescription
-            this.catalogItemPrice = dto.catalogItemPrice
             
             // Surcharges
             this.hasNightSurcharge = dto.hasNightSurcharge
@@ -111,4 +154,16 @@ class TimeTrackingService @Inject constructor(
         // Then delete the time entry
         return timeEntryRepository.deleteById(id)
     }
+
+    @Transactional
+    fun approveEntry(entryId: Long, approverId: Long): Boolean {
+        val entry = getTimeEntryById(entryId) ?: return false
+        val approver = employeeService.findEmployeeById(approverId) ?: return false
+
+        entry.approved = true
+        entry.approvedBy = approver
+        entry.approvedAt = LocalDate.now()
+        return true
+    }
+
 }

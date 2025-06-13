@@ -19,8 +19,8 @@
             <table class="table table-hover align-middle">
               <thead>
               <tr>
+                <th>ID</th>
                 <th>Name</th>
-                <th>Kundennummer</th>
                 <th>Ort</th>
                 <th>Hauptkontakt</th>
                 <th>Aktionen</th>
@@ -29,6 +29,7 @@
               <tbody>
               {#for customer in customers}
                 <tr>
+                  <td>{customer.formattedCustomerNumber ?: '—'}</td>
                   <td>
                     {#if customer.companyName}
                       {customer.companyName}
@@ -36,7 +37,6 @@
                       {customer.firstName} {customer.lastName}
                     {/if}
                   </td>
-                  <td>{customer.customerNumber ?: '—'}</td>
                   <td>{customer.city ?: '—'}</td>
                   <td>
                     {#if customer.contacts.size > 0}

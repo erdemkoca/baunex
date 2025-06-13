@@ -1,0 +1,12 @@
+{#include layout}
+    {#title}Katalog – Projekt {project.name}{/title}
+    {#header}Katalog – Projektübersicht{/header}
+    {#content}
+        <div id="project-catalog-app"
+             data-project='{projectJson}'
+             data-catalog-items='{catalogItemsJson}'>
+        </div>
+        <script type="module" src="/js/project/project-catalog-app.js?v=12345"></script>
+    {/content}
+{/include}
+

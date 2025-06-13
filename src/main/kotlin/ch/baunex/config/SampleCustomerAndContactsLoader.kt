@@ -156,7 +156,6 @@ class SampleCustomerAndContactsLoader @Inject constructor(
             zipCode = zipCode,
             country = country,
             phone = phone,
-            customerNumber = "CUST-${String.format("%06d", customerNumberCounter.getAndIncrement())}",
             companyName = companyName,
             paymentTerms = "30 Tage",
             creditLimit = 20000.0,

@@ -2,16 +2,14 @@ package ch.baunex.web
 
 import ch.baunex.billing.dto.BillingDTO
 import ch.baunex.catalog.dto.CatalogItemDTO
-import ch.baunex.catalog.dto.ProjectCatalogItemDTO
 import ch.baunex.company.dto.CompanyDTO
 import ch.baunex.company.facade.CompanyFacade
 import ch.baunex.invoice.dto.InvoiceDTO
-import ch.baunex.invoice.dto.InvoiceDraftDTO
-import ch.baunex.invoice.facade.InvoiceDraftFacade
+import ch.baunex.invoice.facade.InvoiceFacade
+import ch.baunex.notes.model.NoteCategory
 import ch.baunex.project.dto.ProjectDetailDTO
 import ch.baunex.project.dto.ProjectListDTO
 import ch.baunex.project.facade.ProjectFacade
-import ch.baunex.timetracking.dto.TimeEntryCatalogItemDTO
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.timetracking.facade.TimeTrackingFacade
 import ch.baunex.user.dto.CustomerContactDTO
@@ -35,7 +33,7 @@ class WebController {
     lateinit var timeTrackingFacade: TimeTrackingFacade
 
     @Inject
-    lateinit var invoiceDraftFacade: InvoiceDraftFacade
+    lateinit var invoiceFacade: InvoiceFacade
 
     @Inject
     lateinit var companyFacade: CompanyFacade
@@ -56,22 +54,87 @@ class WebController {
             totalMaterialCost: Double,
             totalServiceCost: Double,
             totalCosts: Double,
-            recentInvoiceDrafts: List<InvoiceDraftDTO>,
-            company: CompanyDTO
+            recentInvoiceDrafts: List<InvoiceDTO>,
+            company: CompanyDTO,
+            projectId: Long? = null,
+            activeSubMenu: String = ""
         ): TemplateInstance
 
         @JvmStatic
-        external fun projects(projects: List<ProjectListDTO>, currentDate: LocalDate, activeMenu: String): TemplateInstance
+        external fun projects(
+            projectsJson: String,
+            currentDate: LocalDate,
+            activeMenu: String,
+            projectId: Long? = null,
+            activeSubMenu: String = ""
+        ): TemplateInstance
 
         @JvmStatic
         external fun projectDetail(
-            project: ProjectDetailDTO,
+            projectJson: String,
             activeMenu: String,
             currentDate: LocalDate,
-            catalogItems: List<CatalogItemDTO>,
-            billing: BillingDTO,
-            contacts: List<CustomerContactDTO>,
-            customers: List<CustomerDTO>
+            catalogItemsJson: String,
+            billingJson: String,
+            contactsJson: String,
+            customersJson: String,
+            categoriesJson: String,
+            employeesJson: String,
+            projectId: Long? = null,
+            activeSubMenu: String = ""
+        ): TemplateInstance
+
+        @JvmStatic
+        external fun projectCatalog(
+            projectJson: String,
+            activeMenu: String,
+            currentDate: LocalDate,
+            catalogItemsJson: String,
+            billingJson: String,
+            contactsJson: String,
+            customersJson: String,
+            categoriesJson: String,
+            employeesJson: String,
+            projectId: Long? = null,
+            activeSubMenu: String = ""
+        ): TemplateInstance
+
+        @JvmStatic
+        external fun projectBilling(
+            projectJson: String,
+            activeMenu: String,
+            currentDate: LocalDate,
+            catalogItemsJson: String,
+            billingJson: String,
+            contactsJson: String,
+            customersJson: String,
+            categoriesJson: String,
+            employeesJson: String,
+            projectId: Long? = null,
+            activeSubMenu: String = ""
+        ): TemplateInstance
+
+        @JvmStatic
+        external fun projectContacts(
+            projectJson: String,
+            activeMenu: String,
+            currentDate: LocalDate,
+            catalogItemsJson: String,
+            billingJson: String,
+            contactsJson: String,
+            customersJson: String,
+            categoriesJson: String,
+            employeesJson: String,
+            projectId: Long? = null,
+            activeSubMenu: String = ""
+        ): TemplateInstance
+
+        @JvmStatic
+        external fun projectNotes(
+            projectNotesJson: String,
+            activeMenu: String,
+            projectId: Long? = null,
+            activeSubMenu: String = ""
         ): TemplateInstance
 
         @JvmStatic
@@ -81,22 +144,24 @@ class WebController {
         external fun employeeForm(employee: EmployeeDTO?, currentDate: LocalDate, activeMenu: String, roles: List<String>): TemplateInstance
 
         @JvmStatic
-        external fun timetracking(
+        external fun timeTracking(
             activeMenu: String,
-            timeEntries: List<TimeEntryResponseDTO>,
+            timeEntriesJson: String,
             currentDate: String,
-            employees: List<EmployeeDTO>,
-            projects: List<ProjectListDTO>,
-            entry: TimeEntryResponseDTO? = null): TemplateInstance
+            employeesJson: String,
+            projectsJson: String,
+            entryJson: String //TODO maybe just timeEntriesJson is needed, the rest can be deleted
+        ): TemplateInstance
 
         @JvmStatic
-        external fun timetrackingForm(
-            entry: TimeEntryResponseDTO?,
-            employees: List<EmployeeDTO>,
-            projects: List<ProjectListDTO>,
-            currentDate: String,
+        external fun timeTrackingForm(
             activeMenu: String,
-            catalogItems: List<CatalogItemDTO>
+            entryJson: String,
+            employeesJson: String,
+            projectsJson: String,
+            categoriesJson: String,
+            catalogItemsJson: String,
+            currentDate: String
         ): TemplateInstance
 
         @JvmStatic
@@ -131,42 +196,30 @@ class WebController {
         ): TemplateInstance
 
         @JvmStatic
-        external fun companySettings(company: CompanyDTO?, activeMenu: String, currentDate: LocalDate): TemplateInstance
+        external fun companySettings(
+            companyJson: String,
+            activeMenu: String,
+            currentDate: LocalDate
+        ): TemplateInstance
+
+        @JvmStatic
+        external fun invoiceShell(activeMenu: String = "invoice"): TemplateInstance
 
         @JvmStatic
         external fun invoiceList(
-            invoices: List<InvoiceDTO>,
-            projects: List<ProjectListDTO>,
+            invoicesJson: String,
+            projectsJson: String,
             currentDate: LocalDate,
             activeMenu: String
         ): TemplateInstance
 
         @JvmStatic
         external fun invoiceDetail(
-            invoice: InvoiceDTO,
+            invoiceJson: String,
             currentDate: LocalDate,
-            activeMenu: String
-        ): TemplateInstance
-
-        @JvmStatic
-        external fun invoiceDraftList(
-            drafts: List<InvoiceDraftDTO>,
-            projects: List<ProjectListDTO>,
-            currentDate: LocalDate,
-            activeMenu: String
-        ): TemplateInstance
-
-        @JvmStatic
-        external fun invoiceDraftForm(
-            draft: InvoiceDraftDTO?,
-            customers: List<CustomerDTO>,
-            projects: List<ProjectListDTO>,
-            currentDate: LocalDate,
-            dueDate: LocalDate,
             activeMenu: String,
-            selectedProject: ProjectDetailDTO? = null,
-            company: CompanyDTO? = null,
-            billing: BillingDTO? = null
+            companyJson: String,
+            billingJson: String,
         ): TemplateInstance
     }
 
@@ -183,14 +236,14 @@ class WebController {
         val currentDate = LocalDate.now()
         val projects = projectFacade.getAllProjects()
         val timeEntries = timeTrackingFacade.getAllTimeEntries()
-        val invoiceDrafts = invoiceDraftFacade.getAll()
+        val invoice = invoiceFacade.getAll()
         val company = companyFacade.getCompany() ?: throw IllegalStateException("Company information not found")
 
         // Calculate statistics
         val totalProjects = projects.size
         val totalTimeEntries = timeEntries.size
-        val totalInvoiceDrafts = invoiceDrafts.size
-        val totalInvoicedAmount = invoiceDrafts.sumOf { it.totalBrutto ?: 0.0 }
+        val totalInvoice = invoice.size
+        val totalInvoicedAmount = invoice.sumOf { it.totalAmount ?: 0.0 }
         val totalTimeHours = timeEntries.sumOf { it.hoursWorked }
         
         // Calculate material costs from project details
@@ -205,7 +258,7 @@ class WebController {
         // Get recent items
         val recentProjects = projects.take(5)
         val recentTimeEntries = timeEntries.take(5)
-        val recentInvoiceDrafts = invoiceDrafts.take(5)
+        val recentInvoiceDrafts = invoice.take(5)
 
         val template = Templates.index(
             projects = recentProjects,
@@ -214,7 +267,7 @@ class WebController {
             activeMenu = "dashboard",
             totalProjects = totalProjects,
             totalTimeEntries = totalTimeEntries,
-            totalInvoiceDrafts = totalInvoiceDrafts,
+            totalInvoiceDrafts = totalInvoice,
             totalInvoicedAmount = totalInvoicedAmount,
             totalTimeHours = totalTimeHours,
             totalMaterialCost = totalMaterialCost,
@@ -227,7 +280,7 @@ class WebController {
     }
 
     @GET
-    @Path("/documents/{type}/preview")
+    @Path("/document/{type}/preview")
     fun documentPreview(
         @PathParam("type") type: String,
         @QueryParam("projectId") projectId: Long

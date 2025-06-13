@@ -1,41 +1,34 @@
 package ch.baunex.invoice.dto
 
 import ch.baunex.invoice.model.InvoiceStatus
+import ch.baunex.notes.dto.NoteDto
+import ch.baunex.serialization.LocalDateSerializer
+import kotlinx.serialization.Serializable
 import java.time.LocalDate
-import java.text.NumberFormat
-import java.util.Locale
 
+@Serializable
 data class InvoiceDTO(
     val id: Long? = null,
     val invoiceNumber: String,
-    val invoiceDate: LocalDate,
-    val dueDate: LocalDate,
+    @Serializable(with = LocalDateSerializer::class) val invoiceDate: LocalDate,
+    @Serializable(with = LocalDateSerializer::class) val dueDate: LocalDate,
     val customerId: Long,
-    val customerName: String,
-    val customerAddress: String,
+    val customerName: String = "",
+    val customerAddress: String = "",
     val projectId: Long,
-    val projectName: String,
-    val projectDescription: String?,
-    val status: String,
-    val totalAmount: Double,
-    val vatAmount: Double,
-    val grandTotal: Double,
-    val formattedGrandTotal: String = NumberFormat.getCurrencyInstance(Locale.GERMANY).format(grandTotal),
-    val notes: String?,
-    val items: List<InvoiceItemDTO> = emptyList()
-)
-
-data class InvoiceItemDTO(
-    val id: Long? = null,
-    val type: String,
-    val description: String? = null,
-    val quantity: Double,
-    val unitPrice: Double,
+    val projectName: String = "",
+    val projectDescription: String? = null,
+    val invoiceStatus: InvoiceStatus,
+    val items: List<InvoiceItemDTO>,
+    val totalAmount: Double = 0.0,
+    val vatAmount: Double = 0.0,
+    val grandTotal: Double = 0.0,
     val vatRate: Double,
-    val totalAmount: Double,
-    val vatAmount: Double,
-    val grandTotal: Double,
-    val order: Int = 0,
-    val timeEntryId: Long? = null,
-    val catalogItemId: Long? = null
-) 
+    val notes: List<NoteDto> = emptyList(),
+) {
+    val status: String
+        get() = invoiceStatus.name
+
+    val formattedGrandTotal: String
+        get() = "%.2f".format(grandTotal)
+}

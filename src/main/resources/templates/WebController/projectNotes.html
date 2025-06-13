@@ -1,0 +1,10 @@
+{#include layout}
+    {#title}Notizen – Projekt {project.name}{/title}
+    {#header}Notizen – Projektübersicht{/header}
+    {#content}
+        <div id="project-notes-app"
+             data-project='{projectNotesJson.raw}'>
+        </div>
+        <script type="module" src="/js/project/project-notes-app.js"></script>
+    {/content}
+{/include}

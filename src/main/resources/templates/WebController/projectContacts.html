@@ -1,0 +1,12 @@
+{#include layout}
+    {#title}Kontakte – Projekt {project.name}{/title}
+    {#header}Kontakte – Projektübersicht{/header}
+    {#content}
+        <div id="project-contacts-app"
+             data-project='{projectJson}'
+             data-contacts='{contactsJson}'
+             data-customers='{customersJson}'>
+        </div>
+        <script type="module" src="/js/project/project-customer-contacts-app.js"></script>
+    {/content}
+{/include}

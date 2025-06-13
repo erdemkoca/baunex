@@ -49,7 +49,8 @@ class WebCustomerController {
             zipCode          = null,
             country          = null,
             phone            = null,
-            customerNumber   = "",
+            customerNumber   = 0,
+            formattedCustomerNumber = "",
             companyName      = null,
             paymentTerms     = null,
             creditLimit      = null,
@@ -73,7 +74,7 @@ class WebCustomerController {
     @Transactional
     fun saveCustomer(@BeanParam form: CustomerForm): Response {
         val id = form.id
-        if (id == null) {
+        if (id == null || id == 0L) {
             customerFacade.create(form.toCreateDTO())
         } else {
             customerFacade.update(id, form.toCreateDTO())

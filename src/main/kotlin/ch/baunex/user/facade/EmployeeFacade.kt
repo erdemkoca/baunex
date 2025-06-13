@@ -4,6 +4,7 @@ package ch.baunex.user.facade
 import ch.baunex.user.dto.EmployeeCreateDTO
 import ch.baunex.user.dto.EmployeeDTO
 import ch.baunex.user.mapper.toEmployeeDTO
+import ch.baunex.user.model.Role
 import ch.baunex.user.service.EmployeeService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
@@ -38,5 +39,9 @@ class EmployeeFacade @Inject constructor(
     @Transactional
     fun delete(id: Long) {
         employeeService.deleteEmployee(id)
+    }
+
+    fun findByRole(role: Role): EmployeeDTO{
+        return employeeService.findByRole(role).toEmployeeDTO()
     }
 }

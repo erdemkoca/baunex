@@ -24,9 +24,18 @@ class CustomerService {
     @Transactional
     fun createCustomer(dto: CustomerCreateDTO): CustomerDTO {
         val entity = mapper.toEntity(dto)
+        entity.customerNumber = generateNextCustomerNumber()
         customerRepo.persist(entity)
         return mapper.toDTO(entity)
     }
+
+    fun generateNextCustomerNumber(): Int {
+        val max = customerRepo.listAllCustomers()
+            .map { it.customerNumber }
+            .maxOrNull() ?: 1000
+        return max + 1
+    }
+
 
     fun findCustomerById(id: Long): CustomerDTO? =
         customerRepo.findById(id)?.let { mapper.toDTO(it) }

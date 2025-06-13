@@ -4,11 +4,10 @@ import ch.baunex.project.dto.ProjectCreateDTO
 import ch.baunex.project.dto.ProjectDTO
 import ch.baunex.project.dto.ProjectUpdateDTO
 import ch.baunex.project.mapper.ProjectMapper
-import ch.baunex.project.mapper.applyTo
-import ch.baunex.project.mapper.toModel
 import ch.baunex.project.model.ProjectModel
 import ch.baunex.project.repository.ProjectRepository
 import ch.baunex.user.service.CustomerService
+import ch.baunex.user.service.EmployeeService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -17,14 +16,16 @@ import jakarta.transaction.Transactional
 class ProjectService @Inject constructor(
     private val projectRepository: ProjectRepository,
     private val customerService: CustomerService,
-    private val mapper: ProjectMapper
+    private val mapper: ProjectMapper,
+    private val projectMapper: ProjectMapper
 ) {
 
     @Transactional
     fun createProject(dto: ProjectCreateDTO): ProjectModel {
         val customer = customerService.findCustomerModelById(dto.customerId)
             ?: throw IllegalArgumentException("Kein Kunde mit ID ${dto.customerId}")
-        val project = dto.toModel(customer)
+        val project = projectMapper.createModel(dto, customer).apply {}
+        project.projectNumber = generateNextProjectNumber()
         projectRepository.persist(project)
         return project
     }
@@ -39,7 +40,7 @@ class ProjectService @Inject constructor(
             existing.customer = cust
         }
         // Rest-Felder mappen
-        dto.applyTo(existing)
+        projectMapper.updateModel(existing, dto)
         return existing
     }
 
@@ -77,5 +78,13 @@ class ProjectService @Inject constructor(
     @Transactional
     fun delete(id: Long): Boolean {
         return projectRepository.deleteById(id)
+    }
+
+    fun generateNextProjectNumber(): Int {
+        val maxNumber = projectRepository
+            .listAll()
+            .map { it.projectNumber }
+            .maxOrNull() ?: 1000
+        return maxNumber + 1
     }
 }

@@ -23,5 +23,8 @@ data class ProjectDTO(
         val timeEntries: List<TimeEntryResponseDTO> = emptyList(),
         val catalogItems: List<ProjectCatalogItemDTO> = emptyList(),
         val customerId: Long,
-        val customerName: String
+        val customerName: String,
+        val projectNumberFormatted: String,
+        val projectNumber: Int
+
 )

@@ -1,5 +1,8 @@
 package ch.baunex.timetracking.facade
 
+import ch.baunex.notes.dto.NoteDto
+import ch.baunex.notes.mapper.toDto
+import ch.baunex.timetracking.dto.ApprovalDTO
 import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.timetracking.dto.TimeEntryCatalogItemDTO
@@ -18,10 +21,10 @@ import java.time.LocalDate
 class TimeTrackingFacade @Inject constructor(
     private val timeEntryRepository: TimeEntryRepository,
     private val timeTrackingService: TimeTrackingService,
-    private val timeEntryCostService: TimeEntryCostService,
     private val timeEntryMapper: TimeEntryMapper
 ) {
 
+    @Transactional
     fun logTime(dto: TimeEntryDTO): TimeEntryResponseDTO {
         return timeEntryMapper.toTimeEntryResponseDTO(timeTrackingService.logTime(dto))
     }
@@ -63,54 +66,114 @@ class TimeTrackingFacade @Inject constructor(
         return timeEntryRepository.deleteById(id)
     }
 
-    private fun mapToResponseDTO(entry: TimeEntryModel): TimeEntryResponseDTO {
-        val dto = TimeEntryDTO(
-            employeeId = entry.employee.id ?: 0L,
-            projectId = entry.project.id ?: 0L,
-            date = entry.date,
-            hoursWorked = entry.hoursWorked,
-            note = entry.note,
-            hourlyRate = entry.hourlyRate,
-            billable = entry.billable,
-            invoiced = entry.invoiced,
-            catalogItemDescription = entry.catalogItemDescription,
-            catalogItemPrice = entry.catalogItemPrice,
-            catalogItems = entry.usedCatalogItems.map { mapToCatalogItemDTO(it) },
-            hasNightSurcharge = entry.hasNightSurcharge,
-            hasWeekendSurcharge = entry.hasWeekendSurcharge,
-            hasHolidaySurcharge = entry.hasHolidaySurcharge,
-            travelTimeMinutes = entry.travelTimeMinutes,
-            disposalCost = entry.disposalCost,
-            hasWaitingTime = entry.hasWaitingTime,
-            waitingTimeMinutes = entry.waitingTimeMinutes
-        )
+//    private fun mapToResponseDTO(entry: TimeEntryModel): TimeEntryResponseDTO {
+//        val dtoBase = TimeEntryResponseDTO(
+//            id               = entry.id,
+//            employeeId       = entry.employee.id ?: 0L,
+//            employeeEmail    = entry.employee.email,
+//            employeeFirstName= entry.employee.person.firstName,
+//            employeeLastName = entry.employee.person.lastName,
+//            projectId        = entry.project.id ?: 0L,
+//            projectName      = entry.project.name,
+//            date             = entry.date,
+//            hoursWorked      = entry.hoursWorked,
+//
+//            notes            = emptyList(),
+//
+//            hourlyRate       = entry.hourlyRate,
+//            cost             = entry.hoursWorked * entry.hourlyRate,
+//            billable         = entry.billable,
+//            invoiced         = entry.invoiced,
+//            catalogItemDescription = entry.catalogItemDescription,
+//            catalogItemPrice       = entry.catalogItemPrice,
+//            catalogItems     = entry.usedCatalogItems.map { mapToCatalogItemDTO(it) },
+//
+//            hasNightSurcharge   = entry.hasNightSurcharge,
+//            hasWeekendSurcharge = entry.hasWeekendSurcharge,
+//            hasHolidaySurcharge = entry.hasHolidaySurcharge,
+//
+//            travelTimeMinutes  = entry.travelTimeMinutes,
+//            disposalCost       = entry.disposalCost,
+//            hasWaitingTime     = entry.hasWaitingTime,
+//            waitingTimeMinutes = entry.waitingTimeMinutes,
+//
+//            costBreakdown = null,
+//
+//            approval = ApprovalDTO(
+//                approved   = entry.approvedBy != null,
+//                approverId = entry.approvedBy?.id,
+//                approverName = entry.approvedBy?.person?.let { "${it.firstName} ${it.lastName}" } ?: ""
+//            )
+//        )
+//
+//        return dtoBase.copy(
+//            costBreakdown = timeEntryCostService.calculateCostBreakdown(
+//                TimeEntryDTO(
+//                    employeeId = entry.employee.id ?: 0L,
+//                    projectId  = entry.project.id ?: 0L,
+//                    date       = entry.date,
+//                    hoursWorked= entry.hoursWorked,
+//
+//                    // Hier müssen wir eine List<NoteDto> konstruieren, nicht NoteModel:
+//                    notes = entry.notes.map { noteModel ->
+//                        NoteDto(
+//                            id             = noteModel.id!!,
+//                            projectId      = noteModel.project?.id,
+//                            timeEntryId    = noteModel.timeEntry?.id,
+//                            documentId     = noteModel.document?.id,
+//                            createdById    = noteModel.createdBy.id!!,
+//                            createdByName  = "${noteModel.createdBy.person.firstName} ${noteModel.createdBy.person.lastName}",
+//                            createdAt      = noteModel.createdAt,
+//                            updatedAt      = noteModel.updatedAt,
+//                            title          = noteModel.title,
+//                            content        = noteModel.content,
+//                            category       = noteModel.category,
+//                            tags           = noteModel.tags,
+//                            attachments    = noteModel.attachments.map { it.toDto() }
+//                        )
+//                    },
+//
+//                    hourlyRate      = entry.hourlyRate,
+//                    billable        = entry.billable,
+//                    invoiced        = entry.invoiced,
+//                    catalogItemDescription = entry.catalogItemDescription,
+//                    catalogItemPrice       = entry.catalogItemPrice,
+//                    catalogItems    = entry.usedCatalogItems.map { mapToCatalogItemDTO(it) },
+//
+//                    hasNightSurcharge   = entry.hasNightSurcharge,
+//                    hasWeekendSurcharge = entry.hasWeekendSurcharge,
+//                    hasHolidaySurcharge = entry.hasHolidaySurcharge,
+//
+//                    travelTimeMinutes  = entry.travelTimeMinutes,
+//                    disposalCost       = entry.disposalCost,
+//                    hasWaitingTime     = entry.hasWaitingTime,
+//                    waitingTimeMinutes = entry.waitingTimeMinutes,
+//
+//                    costBreakdown      = null
+//                )
+//            ),
+//
+//            // 3. Und hier tragen wir die „notes“ in den Response‐DTO ein
+//            notes = entry.notes.map { noteModel ->
+//                NoteDto(
+//                    id             = noteModel.id!!,
+//                    projectId      = noteModel.project?.id,
+//                    timeEntryId    = noteModel.timeEntry?.id,
+//                    documentId     = noteModel.document?.id,
+//                    createdById    = noteModel.createdBy.id!!,
+//                    createdByName  = "${noteModel.createdBy.person.firstName} ${noteModel.createdBy.person.lastName}",
+//                    createdAt      = noteModel.createdAt,
+//                    updatedAt      = noteModel.updatedAt,
+//                    title          = noteModel.title,
+//                    content        = noteModel.content,
+//                    category       = noteModel.category,
+//                    tags           = noteModel.tags,
+//                    attachments    = noteModel.attachments.map { it.toDto() }
+//                )
+//            }
+//        )
+//    }
 
-        return TimeEntryResponseDTO(
-            id = entry.id,
-            employeeId = entry.employee.id ?: 0L,
-            employeeEmail = entry.employee.email,
-            projectId = entry.project.id ?: 0L,
-            projectName = entry.project.name,
-            date = entry.date,
-            hoursWorked = entry.hoursWorked,
-            notes = entry.note,
-            hourlyRate = entry.hourlyRate,
-            cost = entry.hoursWorked * entry.hourlyRate,
-            billable = entry.billable,
-            invoiced = entry.invoiced,
-            catalogItemDescription = entry.catalogItemDescription,
-            catalogItemPrice = entry.catalogItemPrice,
-            catalogItems = entry.usedCatalogItems.map { mapToCatalogItemDTO(it) },
-            hasNightSurcharge = entry.hasNightSurcharge,
-            hasWeekendSurcharge = entry.hasWeekendSurcharge,
-            hasHolidaySurcharge = entry.hasHolidaySurcharge,
-            travelTimeMinutes = entry.travelTimeMinutes,
-            disposalCost = entry.disposalCost,
-            hasWaitingTime = entry.hasWaitingTime,
-            waitingTimeMinutes = entry.waitingTimeMinutes,
-            costBreakdown = timeEntryCostService.calculateCostBreakdown(dto)
-        )
-    }
 
     private fun mapToCatalogItemDTO(item: TimeEntryCatalogItemModel): TimeEntryCatalogItemDTO {
         return TimeEntryCatalogItemDTO(
@@ -120,5 +183,10 @@ class TimeTrackingFacade @Inject constructor(
             unitPrice = item.unitPrice,
             totalPrice = item.totalPrice
         )
+    }
+
+     fun approveEntry(entryId: Long, approverId: Long): Boolean {
+        timeTrackingService.approveEntry(entryId, approverId)
+        return true
     }
 }

@@ -9,7 +9,6 @@ data class CustomerCreateDTO(
     val zipCode: String?,
     val country: String?,
     val phone: String?,
-    val customerNumber: String,
     val companyName: String?,
     val paymentTerms: String?,
     val creditLimit: Double?,

@@ -5,11 +5,11 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class CompanyDTO(
     val id: Long? = null,
-    val name: String,
-    val street: String,
-    val city: String,
-    val zipCode: String,
-    val country: String,
+    val name: String = "",
+    val street: String = "",
+    val city: String = "",
+    val zipCode: String = "",
+    val country: String = "",
     val phone: String? = null,
     val email: String? = null,
     val website: String? = null,
@@ -21,5 +21,5 @@ data class CompanyDTO(
     val logo: String? = null,
     val defaultInvoiceFooter: String? = null,
     val defaultInvoiceTerms: String? = null,
-    val defaultVatRate: Double = 8.1
-) 
+    val defaultVatRate: Double = 0.0
+)

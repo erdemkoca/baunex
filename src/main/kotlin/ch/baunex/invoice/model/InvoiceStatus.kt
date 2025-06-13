@@ -1,9 +1,11 @@
 package ch.baunex.invoice.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 enum class InvoiceStatus {
     DRAFT,      // Rechnungsentwurf
-    CREATED,    // Rechnung erstellt
-    CONVERTED,  // Entwurf wurde in Rechnung umgewandelt
+    ISSUED,    // Rechnung erstellt
     PAID,       // Rechnung bezahlt
     CANCELLED   // Rechnung storniert
 } 

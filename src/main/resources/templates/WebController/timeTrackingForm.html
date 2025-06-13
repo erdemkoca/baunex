@@ -1,0 +1,15 @@
+{#include layout}
+  {#title}Zeiterfassung{/title}
+  {#header}Zeiterfassung{/header}
+  {#content}
+    <div id="time-tracking-form-app"
+         data-entry='{entryJson}'
+         data-employees='{employeesJson}'
+         data-projects='{projectsJson}'
+         data-categories='{categoriesJson}'
+         data-catalog-items='{catalogItemsJson}'
+         data-current-date="{currentDate}">
+    </div>
+    <script type="module" src="/js/time-tracking-form.js"></script>
+  {/content}
+{/include}

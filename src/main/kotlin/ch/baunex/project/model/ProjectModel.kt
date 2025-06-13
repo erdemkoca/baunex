@@ -1,6 +1,7 @@
 package ch.baunex.project.model
 
 import ch.baunex.catalog.model.ProjectCatalogItemModel
+import ch.baunex.notes.model.NoteModel
 import ch.baunex.timetracking.model.TimeEntryModel
 import ch.baunex.user.model.CustomerModel
 import io.quarkus.hibernate.orm.panache.PanacheEntity
@@ -46,4 +47,10 @@ class ProjectModel : PanacheEntity() {
     // Catalog items used in this project (services or products)
     @OneToMany(mappedBy = "project", cascade = [CascadeType.ALL], orphanRemoval = true)
     var usedItems: MutableList<ProjectCatalogItemModel> = mutableListOf()
+
+    @Column(name = "project_number", unique = true, nullable = false)
+    var projectNumber: Int = 0
+
+    @OneToMany(mappedBy = "project", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
+    var notes: MutableList<NoteModel> = mutableListOf()
 }

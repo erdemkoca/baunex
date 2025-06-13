@@ -1,12 +1,13 @@
 package ch.baunex.web
 
-//import ch.baunex.billing.facade.BillingFacade
 import ch.baunex.billing.facade.BillingFacade
 import ch.baunex.catalog.dto.CatalogItemDTO
 import ch.baunex.catalog.dto.ProjectCatalogItemDTO
 import ch.baunex.catalog.facade.CatalogFacade
 import ch.baunex.catalog.facade.ProjectCatalogItemFacade
+import ch.baunex.notes.model.NoteCategory
 import ch.baunex.project.facade.ProjectFacade
+import ch.baunex.serialization.SerializationUtils.json
 import ch.baunex.user.dto.CustomerContactDTO
 import ch.baunex.user.dto.CustomerDTO
 import ch.baunex.user.facade.CustomerFacade
@@ -16,6 +17,7 @@ import jakarta.transaction.Transactional
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
+import kotlinx.serialization.encodeToString
 import java.net.URI
 import java.time.LocalDate
 
@@ -50,14 +52,18 @@ class WebCatalogController {
         val contacts: List<CustomerContactDTO> = projectDetail.contacts
         val customers: List<CustomerDTO>         = customerFacade.listAll()
 
-        val tpl = Templates.projectDetail(
-            project      = projectDetail,
-            activeMenu   = "projects",
-            currentDate  = LocalDate.now(),
-            catalogItems = catalogItems,
-            billing      = billing,
-            contacts     = contacts,
-            customers    = customers
+        val tpl = Templates.projectCatalog(
+            projectJson      = json.encodeToString(projectDetail),
+            activeMenu       = "projects",
+            currentDate      = LocalDate.now(),
+            catalogItemsJson = json.encodeToString(catalogItems),
+            billingJson      = json.encodeToString(billing),
+            contactsJson     = json.encodeToString(contacts),
+            customersJson    = json.encodeToString(customers),
+            categoriesJson   = json.encodeToString(NoteCategory.values().map { it.name }),
+            employeesJson    = "",
+            projectId        = projectId,
+            activeSubMenu    = "catalog"
         )
         return Response.ok(tpl.render()).build()
     }

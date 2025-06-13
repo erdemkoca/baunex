@@ -1,120 +1,21 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>Rechnung {invoice.invoiceNumber}</title>
-    <link rel="stylesheet" href="/css/styles.css">
-</head>
-<body>
-    <div class="container">
-        <h1>Rechnung {invoice.invoiceNumber}</h1>
+{#include layout}
+    {#title}Rechnung{/title}
+    {#header}Rechnung{/header}
+    {#content}
+        <!-- EasyMDE CSS -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.css">
         
-        <div class="detail-container">
-            <div class="detail-section">
-                <h2>Allgemeine Informationen</h2>
-                <table class="detail-table">
-                    <tr>
-                        <th>Rechnungsnummer:</th>
-                        <td>{invoice.invoiceNumber}</td>
-                    </tr>
-                    <tr>
-                        <th>Rechnungsdatum:</th>
-                        <td>{invoice.invoiceDate}</td>
-                    </tr>
-                    <tr>
-                        <th>Fälligkeitsdatum:</th>
-                        <td>{invoice.dueDate}</td>
-                    </tr>
-                    <tr>
-                        <th>Status:</th>
-                        <td>{invoice.status}</td>
-                    </tr>
-                </table>
-            </div>
-
-            <div class="detail-section">
-                <h2>Kunde</h2>
-                <table class="detail-table">
-                    <tr>
-                        <th>Name:</th>
-                        <td>{invoice.customerName}</td>
-                    </tr>
-                    <tr>
-                        <th>Adresse:</th>
-                        <td>{invoice.customerAddress}</td>
-                    </tr>
-                </table>
-            </div>
-
-            <div class="detail-section">
-                <h2>Projekt</h2>
-                <table class="detail-table">
-                    <tr>
-                        <th>Name:</th>
-                        <td>{invoice.projectName}</td>
-                    </tr>
-                    <tr>
-                        <th>Beschreibung:</th>
-                        <td>{invoice.projectDescription}</td>
-                    </tr>
-                </table>
-            </div>
-
-            <div class="detail-section">
-                <h2>Notizen</h2>
-                <p>{invoice.notes ?: 'Keine Notizen vorhanden'}</p>
-            </div>
-
-            <div class="detail-actions">
-                {#if invoice.status == 'ISSUED'}
-                <button onclick="markAsPaid({invoice.id})" class="btn btn-success">Als bezahlt markieren</button>
-                <button onclick="cancelInvoice({invoice.id})" class="btn btn-danger">Stornieren</button>
-                {/if}
-                <button onclick="previewDocument({invoice.projectId})" class="btn btn-primary">Vorschau</button>
-                <button onclick="generateDocument({invoice.projectId})" class="btn btn-info">PDF generieren</button>
-                <a href="/invoices" class="btn btn-secondary">Zurück zur Übersicht</a>
-            </div>
+        <!-- Nur noch ein "Mount-Point" für Vue -->
+        <div id="invoice-app"
+             data-invoice='{invoiceJson}'
+             data-company='{companyJson}'
+             data-billing='{billingJson}'
+             data-current-date='{currentDate}'>
         </div>
-    </div>
 
-    <script>
-        function markAsPaid(id) {
-            if (confirm('Möchten Sie diese Rechnung als bezahlt markieren?')) {
-                fetch(`/invoices/${id}/mark-as-paid`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }).then(response => {
-                    if (response.ok) {
-                        window.location.reload();
-                    }
-                });
-            }
-        }
-
-        function cancelInvoice(id) {
-            if (confirm('Möchten Sie diese Rechnung wirklich stornieren?')) {
-                fetch(`/invoices/${id}/cancel`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }).then(response => {
-                    if (response.ok) {
-                        window.location.reload();
-                    }
-                });
-            }
-        }
-
-        function previewDocument(projectId) {
-            window.open(`/api/documents/INVOICE_DRAFT/preview?projectId=${projectId}`, '_blank', 'width=1000,height=800');
-        }
-
-        function generateDocument(projectId) {
-            window.location.href = `/api/documents/INVOICE_DRAFT/generate?projectId=${projectId}`;
-        }
-    </script>
-</body>
-</html> 
+        <!-- EasyMDE Script -->
+        <script src="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.js"></script>
+        <!-- Und hier wird Dein JS-Modul geladen -->
+        <script type="module" src="/js/invoice-app.js"></script>
+    {/content}
+{/include}
