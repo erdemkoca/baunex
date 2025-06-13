@@ -6,6 +6,7 @@ import ch.baunex.controlreport.dto.ControlReportUpdateDto
 import ch.baunex.controlreport.facade.ControlReportFacade
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.serialization.SerializationUtils.json
+import ch.baunex.user.facade.EmployeeFacade
 import ch.baunex.web.WebController
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
@@ -24,6 +25,9 @@ class ProjectControlReportController {
 
     @Inject
     lateinit var reportFacade: ControlReportFacade
+
+    @Inject
+    lateinit var employeeFacade: EmployeeFacade
 
 //    @GET
 //    @Produces(MediaType.TEXT_HTML)
@@ -54,14 +58,15 @@ class ProjectControlReportController {
     fun editOrNew(@PathParam("projectId") projectId: Long): Response {
         val project = projectFacade.getProjectWithDetails(projectId)
             ?: throw NotFoundException()
-        val maybeReport = reportFacade.getReportByProjectId(projectId)  // returns nullable
+        val maybeReport = reportFacade.getReportByProjectId(projectId)
         val tpl = WebController.Templates.projectControlReport(
-            projectJson        = json.encodeToString(project),
-            controlReportsJson  = json.encodeToString(maybeReport),     // null → "null"
-            currentDate        = LocalDate.now(),
-            activeMenu         = "projects",
-            projectId          = projectId,
-            activeSubMenu      = "controlreport"
+            projectJson       = json.encodeToString(project),
+            controlReportJson = json.encodeToString(maybeReport),
+            currentDate       = LocalDate.now(),
+            activeMenu        = "projects",
+            projectId         = projectId,
+            activeSubMenu     = "controlreport",
+            employeesJson     = json.encodeToString(employeeFacade.listAll())
         )
         return Response.ok(tpl.render()).build()
     }

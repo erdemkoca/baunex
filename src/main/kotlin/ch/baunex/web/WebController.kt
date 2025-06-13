@@ -136,11 +136,12 @@ class WebController {
         @JvmStatic
         external fun projectControlReport(
             projectJson: String,
-            controlReportsJson: String,
+            controlReportJson: String,
             currentDate: LocalDate,
             activeMenu: String,
             projectId: Long? = null,
-            activeSubMenu: String = ""
+            activeSubMenu: String = "",
+            employeesJson: String
         ): TemplateInstance
 
 
