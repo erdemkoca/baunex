@@ -1,7 +1,10 @@
 package ch.baunex.controlreport.dto
 
+import ch.baunex.serialization.LocalDateTimeSerializer
+import kotlinx.serialization.Serializable
 import java.time.LocalDateTime
 
+@Serializable
 data class ControlReportDto(
     val id: Long,
     val reportNumber: String,
@@ -16,6 +19,8 @@ data class ControlReportDto(
     val defectPositions: List<DefectPositionDto>,
     val defectResolverNote: String?,
     val completionConfirmation: CompletionConfirmationDto?,
+    @Serializable(with = LocalDateTimeSerializer::class)
     val createdAt: LocalDateTime,
+    @Serializable(with = LocalDateTimeSerializer::class)
     val updatedAt: LocalDateTime
 )

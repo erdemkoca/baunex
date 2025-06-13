@@ -11,7 +11,7 @@ class ControlReportRepository : PanacheRepository<ControlReportModel> {
      * Alle Berichte zu einem bestimmten Projekt
      */
     fun findByProjectId(projectId: Long): List<ControlReportModel> =
-        find("projectId", projectId).list()
+        find("project.id", projectId).list()
 
     /**
      * Alle Berichte zu einem bestimmten Kunden

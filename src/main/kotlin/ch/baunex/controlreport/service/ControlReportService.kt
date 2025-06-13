@@ -44,6 +44,10 @@ class ControlReportService(
         return repository.listAll().map { mapper.toDto(it) }
     }
 
+    fun listReportsByProject(projectId: Long): List<ControlReportDto> =
+        repository.findByProjectId(projectId)
+            .map { mapper.toDto(it) }
+
     @Transactional
     fun addDefectPosition(reportId: Long, dto: DefectPositionCreateDto): ControlReportDto? {
         val report = repository.findById(reportId) ?: return null

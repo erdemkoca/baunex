@@ -9,15 +9,16 @@ class ControlReportFacade(
     private val controlReportService: ControlReportService
 ) {
 
-    /** Report erstellen */
     fun createReport(createDto: ControlReportCreateDto): ControlReportDto {
         return controlReportService.createControlReport(createDto)
     }
 
-    /** Liste aller Reports */
     fun listReports(): List<ControlReportDto> {
         return controlReportService.listControlReports()
     }
+
+    fun listReportsByProject(projectId: Long): List<ControlReportDto> =
+        controlReportService.listReportsByProject(projectId)
 
     /** Einzelnen Report abfragen */
     fun getReport(id: Long): ControlReportDto? {

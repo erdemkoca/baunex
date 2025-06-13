@@ -1,13 +1,9 @@
 package ch.baunex.web
 
-import ch.baunex.billing.dto.BillingDTO
-import ch.baunex.catalog.dto.CatalogItemDTO
 import ch.baunex.company.dto.CompanyDTO
 import ch.baunex.company.facade.CompanyFacade
 import ch.baunex.invoice.dto.InvoiceDTO
 import ch.baunex.invoice.facade.InvoiceFacade
-import ch.baunex.notes.model.NoteCategory
-import ch.baunex.project.dto.ProjectDetailDTO
 import ch.baunex.project.dto.ProjectListDTO
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
@@ -136,6 +132,17 @@ class WebController {
             projectId: Long? = null,
             activeSubMenu: String = ""
         ): TemplateInstance
+
+        @JvmStatic
+        external fun projectControlReport(
+            projectJson: String,
+            controlReportsJson: String,
+            currentDate: LocalDate,
+            activeMenu: String,
+            projectId: Long? = null,
+            activeSubMenu: String
+        ): TemplateInstance
+
 
         @JvmStatic
         external fun employees(employees: List<EmployeeDTO>, currentDate: LocalDate, activeMenu: String): TemplateInstance
