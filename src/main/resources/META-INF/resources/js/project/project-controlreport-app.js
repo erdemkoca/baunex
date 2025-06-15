@@ -5,25 +5,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('project-controlreport-app');
     if (!el) return;
 
+    // Parse initial report data
     let report;
     try {
-        const rawData = el.dataset.controlReport;
-        if (!rawData) {
-            console.error('No data-control-report attribute found');
-            report = createEmptyReport();
-        } else {
-            report = JSON.parse(rawData);
-            if (report === null) {
-                report = createEmptyReport();
-            }
-        }
+        const raw = el.dataset.controlReport;
+        report = raw ? JSON.parse(raw) : createEmpty();
     } catch (e) {
-        console.error('Error parsing control report data:', e);
-        report = createEmptyReport();
+        console.error('Invalid controlReport JSON:', e);
+        report = createEmpty();
     }
 
-    function createEmptyReport() {
+    // Parse enum lists injected via data-attributes
+    const clientTypes = el.dataset.clientTypes
+        ? JSON.parse(el.dataset.clientTypes)
+        : [];
+    const contractorTypes = el.dataset.contractorTypes
+        ? JSON.parse(el.dataset.contractorTypes)
+        : [];
+
+    function createEmpty() {
         return {
+            id: null,
+            reportNumber: '',
             client: {
                 type: null,
                 name: '',
@@ -35,16 +38,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 type: null,
                 company: '',
                 street: '',
-                houseNumber: '',
                 postalCode: '',
                 city: ''
             },
-            installationStreet: '',
-            installationHouseNumber: '',
-            installationPostalCode: '',
-            installationCity: '',
-            buildingType: '',
-            parcelNumber: '',
+            installationLocation: {
+                street: '',
+                postalCode: '',
+                city: '',
+                buildingType: '',
+                parcelNumber: ''
+            },
             controlDate: '',
             controllerName: '',
             controllerPhone: '',
@@ -52,17 +55,20 @@ document.addEventListener('DOMContentLoaded', () => {
             hasDefects: false,
             deadlineNote: '',
             generalNotes: '',
-            completionDate: '',
-            companyStamp: '',
-            completionSignature: '',
-            reportNumber: ''
+            completionConfirmation: {
+                completionDate: '',
+                companyStamp: '',
+                completionSignature: ''
+            }
         };
     }
 
     createApp({
         data() {
             return {
-                draft: JSON.parse(JSON.stringify(report)) // deep copy
+                draft: JSON.parse(JSON.stringify(report)), // deep copy
+                clientTypes,
+                contractorTypes
             };
         },
         methods: {
@@ -82,67 +88,78 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
         template: `
-        <div class="card">
-          <div class="card-body">
-            <h5>Kontrollbericht {{ draft.reportNumber || 'Neu' }}</h5>
-            
-            <h6>Kunde</h6>
-            <div class="row">
-              <div class="col-md-4 mb-3">
-                <label class="form-label">Typ</label>
-                <select class="form-select" v-model="draft.client.type">
-                  <option :value="null">– wählen –</option>
-                  <option v-for="t in Object.values(draft.client.type?.constructor || {})" :key="t" :value="t">
-                    {{ t }}
-                  </option>
-                </select>
-              </div>
-              <div class="col-md-4 mb-3">
-                <label class="form-label">Name</label>
-                <input v-model="draft.client.name" class="form-control" />
-              </div>
-              <div class="col-md-4 mb-3">
-                <label class="form-label">Strasse</label>
-                <input v-model="draft.client.street" class="form-control" />
-              </div>
-              <div class="col-md-3 mb-3">
-                <label class="form-label">PLZ</label>
-                <input v-model="draft.client.postalCode" class="form-control" />
-              </div>
-              <div class="col-md-3 mb-3">
-                <label class="form-label">Ort</label>
-                <input v-model="draft.client.city" class="form-control" />
-              </div>
+      <div class="card">
+        <div class="card-body">
+          <h5>Kontrollbericht {{ draft.reportNumber || 'Neu' }}</h5>
+
+          <h6>Kunde</h6>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label class="form-label">Typ</label>
+              <select class="form-select" v-model="draft.client.type">
+                <option :value="null">– wählen –</option>
+                <option
+                  v-for="t in clientTypes"
+                  :key="t"
+                  :value="t"
+                >
+                  {{ t }}
+                </option>
+              </select>
             </div>
-            <hr>
-            
-            <h6>Auftragnehmer</h6>
-            <div class="row">
-              <div class="col-md-4 mb-3">
-                <label class="form-label">Typ</label>
-                <select class="form-select" v-model="draft.contractor.type">
-                  <option :value="null">– wählen –</option>
-                  <option v-for="t in Object.values(draft.contractor.type?.constructor || {})" :key="t" :value="t">
-                    {{ t }}
-                  </option>
-                </select>
-              </div>
-              <div class="col-md-4 mb-3">
-                <label class="form-label">Firma</label>
-                <input v-model="draft.contractor.company" class="form-control" />
-              </div>
-              <div class="col-md-4 mb-3">
-                <label class="form-label">Strasse</label>
-                <input v-model="draft.contractor.street" class="form-control" />
-              </div>
-              <div class="col-md-2 mb-3">
-                <label class="form-label">PLZ</label>
-                <input v-model="draft.contractor.postalCode" class="form-control" />
-              </div>
-              <div class="col-md-2 mb-3">
-                <label class="form-label">Ort</label>
-                <input v-model="draft.contractor.city" class="form-control" />
-              </div>
+            <div class="col-md-4">
+              <label class="form-label">Name</label>
+              <input v-model="draft.client.name" class="form-control" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Strasse</label>
+              <input v-model="draft.client.street" class="form-control" />
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-3">
+              <label class="form-label">PLZ</label>
+              <input v-model="draft.client.postalCode" class="form-control" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Ort</label>
+              <input v-model="draft.client.city" class="form-control" />
+            </div>
+          </div>
+          <hr />
+
+          <h6>Auftragnehmer</h6>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label class="form-label">Typ</label>
+              <select class="form-select" v-model="draft.contractor.type">
+                <option :value="null">– wählen –</option>
+                <option
+                  v-for="t in contractorTypes"
+                  :key="t"
+                  :value="t"
+                >
+                  {{ t }}
+                </option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Firma</label>
+              <input v-model="draft.contractor.company" class="form-control" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Strasse</label>
+              <input v-model="draft.contractor.street" class="form-control" />
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-2">
+              <label class="form-label">PLZ</label>
+              <input v-model="draft.contractor.postalCode" class="form-control" />
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Ort</label>
+              <input v-model="draft.contractor.city" class="form-control" />
             </div>
             <hr>
 
@@ -222,9 +239,9 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             </div>
 
-            <button @click="save" class="btn btn-primary">Speichern</button>
-          </div>
+          <button @click="save" class="btn btn-primary">Speichern</button>
         </div>
-        `
+      </div>
+    `
     }).mount(el);
 });
