@@ -11,6 +11,7 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import jakarta.ws.rs.NotFoundException
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @ApplicationScoped
@@ -79,13 +80,13 @@ class ControlReportService(
             installationLocation = installDto,
             controlScope         = "",
             controlData          = ControlDataDto(
-                controlDate    = LocalDateTime.now(),
+                controlDate = LocalDate.now(),
                 controllerId = 0,
                 controllerFirstName = "",
                 controllerLastName = "",
-                phoneNumber    = "",
-                hasDefects     = false,
-                deadlineNote   = null
+                phoneNumber = "",
+                hasDefects = false,
+                deadlineNote = null
             ),
             generalNotes         = "",
             defectPositions      = emptyList(),

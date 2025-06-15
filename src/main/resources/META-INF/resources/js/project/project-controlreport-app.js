@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('project-controlreport-app');
     if (!el) return;
 
-    // Parse initial report data
+    // 1) parse the incoming JSON or create an empty shell
     let report;
     try {
         const raw = el.dataset.controlReport;
@@ -15,41 +15,15 @@ document.addEventListener('DOMContentLoaded', () => {
         report = createEmpty();
     }
 
-    // Parse enum lists injected via data-attributes
-    const clientTypes = el.dataset.clientTypes
-        ? JSON.parse(el.dataset.clientTypes)
-        : [];
-    const contractorTypes = el.dataset.contractorTypes
-        ? JSON.parse(el.dataset.contractorTypes)
-        : [];
-    const employees = el.dataset.employees
-        ? JSON.parse(el.dataset.employees)
-        : [];
-
+    // 2) helper to build an empty report
     function createEmpty() {
         return {
             id: null,
             reportNumber: '',
-            client: {
-                type: null,
-                name: '',
-                street: '',
-                postalCode: '',
-                city: ''
-            },
-            contractor: {
-                type: null,
-                company: '',
-                street: '',
-                postalCode: '',
-                city: ''
-            },
+            client: { type: null, name: '', street: '', postalCode: '', city: '' },
+            contractor: { type: null, company: '', street: '', postalCode: '', city: '' },
             installationLocation: {
-                street: '',
-                postalCode: '',
-                city: '',
-                buildingType: '',
-                parcelNumber: ''
+                street: '', postalCode: '', city: '', buildingType: '', parcelNumber: ''
             },
             controlDate: '',
             controllerId: null,
@@ -65,11 +39,25 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    // 3) pull enum & employee lists from data-attributes
+    const clientTypes     = el.dataset.clientTypes     ? JSON.parse(el.dataset.clientTypes)     : [];
+    const contractorTypes = el.dataset.contractorTypes ? JSON.parse(el.dataset.contractorTypes) : [];
+    const employees       = el.dataset.employees       ? JSON.parse(el.dataset.employees)       : [];
+
+    // 4) mount our Vue app
     createApp({
         data() {
-
+            // deep-copy and normalize completionConfirmation so it's never null
+            const d = JSON.parse(JSON.stringify(report));
+            if (!d.completionConfirmation) {
+                d.completionConfirmation = {
+                    completionDate: '',
+                    companyStamp: '',
+                    completionSignature: ''
+                };
+            }
             return {
-                draft: JSON.parse(JSON.stringify(report)), // deep copy
+                draft: d,
                 clientTypes,
                 contractorTypes,
                 employees
@@ -77,18 +65,27 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         methods: {
             async save() {
-                const url = `/api/controlreport/${this.draft.id}`;
-                const res = await fetch(url, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(this.draft)
-                });
-                if (!res.ok) {
+                try {
+                    const res = await fetch(`/api/controlreport/${this.draft.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(this.draft)
+                    });
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    this.draft = await res.json();
+                    // normalize on save, too
+                    if (!this.draft.completionConfirmation) {
+                        this.draft.completionConfirmation = {
+                            completionDate: '',
+                            companyStamp: '',
+                            completionSignature: ''
+                        };
+                    }
+                    alert('Gespeichert!');
+                } catch (e) {
+                    console.error(e);
                     alert('Fehler beim Speichern');
-                    return;
                 }
-                this.draft = await res.json();
-                alert('Gespeichert!');
             }
         },
         template: `
@@ -189,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="row g-3 mb-3">
             <div class="col-md-4">
               <label class="form-label">Datum</label>
-              <input v-model="draft.controlDate" type="datetime-local" class="form-control" />
+              <input v-model="draft.controlDate" type="date" class="form-control" />
             </div>
             <div class="col-md-4">
               <label class="form-label">Kontrolleur</label>
@@ -229,15 +226,25 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="row g-3 mb-4">
             <div class="col-md-4">
               <label class="form-label">Datum</label>
-              <input v-model="draft.completionConfirmation.completionDate" type="datetime-local" class="form-control" />
+              <input
+                v-model="draft.completionConfirmation.completionDate"
+                type="datetime-local"
+                class="form-control"
+              />
             </div>
             <div class="col-md-4">
               <label class="form-label">Stempel</label>
-              <input v-model="draft.completionConfirmation.companyStamp" class="form-control" />
+              <input
+                v-model="draft.completionConfirmation.companyStamp"
+                class="form-control"
+              />
             </div>
             <div class="col-md-4">
               <label class="form-label">Unterschrift</label>
-              <input v-model="draft.completionConfirmation.completionSignature" class="form-control" />
+              <input
+                v-model="draft.completionConfirmation.completionSignature"
+                class="form-control"
+              />
             </div>
           </div>
 

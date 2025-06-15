@@ -1,9 +1,11 @@
 package ch.baunex.controlreport.dto
 
 import ch.baunex.controlreport.model.ContractorType
+import ch.baunex.serialization.LocalDateSerializer
 import ch.baunex.serialization.LocalDateTimeSerializer
 import ch.baunex.user.model.CustomerType
 import kotlinx.serialization.Serializable
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 
@@ -38,8 +40,8 @@ data class ControlReportUpdateDto(
     val parcelNumber: String? = null,
 
     // Kontrolldaten
-    @Serializable(with = LocalDateTimeSerializer::class)
-    val controlDate: LocalDateTime? = null,
+    @Serializable(with = LocalDateSerializer::class)
+    val controlDate: LocalDate? = null,
     val controlScope: String? = null,
     val controllerId: Long?,
     val hasDefects: Boolean,

@@ -6,6 +6,7 @@ import ch.baunex.controlreport.model.*
 import ch.baunex.user.model.CustomerModel
 import jakarta.enterprise.context.ApplicationScoped
 import java.time.LocalDateTime
+import java.time.LocalDate
 
 @ApplicationScoped
 class ControlReportMapper {
@@ -24,7 +25,7 @@ class ControlReportMapper {
             city       = m.customer?.person?.details?.city.orEmpty()
         ),
         contractor            = ContractorDto(
-            type       = m.contractorType?.name.orEmpty(),
+            type       = m.contractorType.name,
             company    = m.contractorCompany.orEmpty(),
             street     = m.contractorStreet.orEmpty(),
             postalCode = m.contractorPostalCode.orEmpty(),
@@ -39,13 +40,13 @@ class ControlReportMapper {
         ),
         controlScope          = m.controlScope.orEmpty(),
         controlData           = ControlDataDto(
-            controlDate    = m.controlDate ?: LocalDateTime.now(),
+            controlDate = m.controlDate ?: LocalDate.now(),
             controllerId = m.employee?.id,
             controllerFirstName = m.employee?.person?.firstName,
             controllerLastName = m.employee?.person?.lastName,
-            phoneNumber    = m.employee?.person?.details?.phone.orEmpty(),
-            hasDefects     = m.hasDefects,
-            deadlineNote   = m.deadlineNote
+            phoneNumber = m.employee?.person?.details?.phone.orEmpty(),
+            hasDefects = m.hasDefects,
+            deadlineNote = m.deadlineNote
         ),
         generalNotes          = m.generalNotes.orEmpty(),
         defectPositions       = m.defectPositions.map { toDefectPositionDto(it) },

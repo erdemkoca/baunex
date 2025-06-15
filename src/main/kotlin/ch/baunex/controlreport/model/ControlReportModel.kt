@@ -8,6 +8,7 @@ import ch.baunex.user.model.CustomerModel
 import ch.baunex.user.model.EmployeeModel
 import jakarta.persistence.*
 import kotlinx.serialization.Serializable
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Entity
@@ -17,7 +18,7 @@ class ControlReportModel : PanacheEntity() {
     var reportNumber: String? = null
 
     @Serializable(with = LocalDateSerializer::class)
-    var controlDate: LocalDateTime? = null
+    var controlDate: LocalDate? = null
 
     var pageCount: Int = 1
     var currentPage: Int = 1
@@ -33,7 +34,7 @@ class ControlReportModel : PanacheEntity() {
 
     // Contractor information
     @Enumerated(EnumType.STRING)
-    var contractorType: ContractorType? = ContractorType.CONTROL_ORGAN
+    var contractorType: ContractorType = ContractorType.CONTROL_ORGAN
     var contractorCompany: String? = null
     var contractorStreet: String? = null
     var contractorHouseNumber: String? = null

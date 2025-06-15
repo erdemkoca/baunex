@@ -2,6 +2,7 @@ package ch.baunex.controlreport.dto
 
 import ch.baunex.controlreport.model.ContractorType
 import ch.baunex.project.model.ProjectType
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class ControlReportCreateDto(
@@ -25,7 +26,7 @@ data class ControlReportCreateDto(
     val buildingType: ProjectType,
     val parcelNumber: String?,
 
-    val controlDate: LocalDateTime,
+    val controlDate: LocalDate,
     val controlScope: String,
     val controllerId: Long?,
     val controllerPhone: String,

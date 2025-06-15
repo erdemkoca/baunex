@@ -1,13 +1,13 @@
 package ch.baunex.controlreport.dto
 
 import ch.baunex.serialization.LocalDateTimeSerializer
-import java.time.LocalDateTime
 import kotlinx.serialization.Serializable
+import java.time.LocalDate
 
 @Serializable
 data class ControlDataDto(
     @Serializable(with = LocalDateTimeSerializer::class)
-    val controlDate: LocalDateTime,
+    val controlDate: LocalDate,
     val controllerId: Long?,
     val controllerFirstName: String?,
     val controllerLastName: String?,
