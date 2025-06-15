@@ -161,8 +161,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <input v-model="draft.installationLocation.city" class="form-control" />
               </div>
               <div class="col-md-4 mb-3">
-                <label class="form-label">Gebäudetyp</label>
-                <input v-model="draft.buildingType" class="form-control" />
+                <label class="form-label">GebäudetypTODO</label>
+                <input v-model="draft.installationLocation.buildingType" class="form-control" />
               </div>
               <div class="col-md-4 mb-3">
                 <label class="form-label">Parzelle</label>

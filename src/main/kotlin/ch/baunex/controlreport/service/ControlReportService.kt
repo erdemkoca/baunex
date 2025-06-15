@@ -49,7 +49,7 @@ class ControlReportService(
         // pull whatever you need: customer, your company, etc.
         val clientDto = ClientDto(
             type       = ClientType.OWNER,
-            name       = project.customer.person.firstName + project.customer.person.lastName,
+            name       = project.customer.person.firstName + " " + project.customer.person.lastName,
             street     = project.customer.person.details.street.orEmpty(),
             postalCode = project.customer.person.details.zipCode.orEmpty(),
             city       = project.customer.person.details.city.orEmpty()
@@ -65,7 +65,7 @@ class ControlReportService(
             street       = project.customer.person.details.street.orEmpty(),
             postalCode   = project.customer.person.details.zipCode.orEmpty(),
             city         = project.customer.person.details.city.orEmpty(),
-            buildingType = "Mehrfamilienhaus", //TODO maybe an enum with Mehrfamilienhaus, Wohnung etc
+            buildingType = project.buildingType,
             parcelNumber = "" // TODO maybe needed idk project.parcelNumber
         )
         // finally hand back a ControlReportDto

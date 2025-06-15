@@ -53,4 +53,8 @@ class ProjectModel : PanacheEntity() {
 
     @OneToMany(mappedBy = "project", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var notes: MutableList<NoteModel> = mutableListOf()
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    var buildingType: ProjectType = ProjectType.UNDEFINED
 }

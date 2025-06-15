@@ -34,7 +34,7 @@ class ControlReportMapper {
             street     = m.installationStreet.orEmpty(),
             postalCode = m.installationPostalCode.orEmpty(),
             city       = m.installationCity.orEmpty(),
-            buildingType = m.buildingType,
+            buildingType = m.project?.buildingType,
             parcelNumber = m.parcelNumber
         ),
         controlScope          = m.controlScope.orEmpty(),
@@ -77,7 +77,7 @@ class ControlReportMapper {
             installationHouseNumber = dto.installationHouseNumber
             installationPostalCode  = dto.installationPostalCode
             installationCity        = dto.installationCity
-            buildingType       = dto.buildingType
+            project.buildingType       = dto.buildingType
             parcelNumber       = dto.parcelNumber
             controlScope       = dto.controlScope
             controllerName     = dto.controllerName

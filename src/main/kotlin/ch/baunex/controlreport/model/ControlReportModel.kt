@@ -23,7 +23,7 @@ class ControlReportModel : PanacheEntity() {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id")
-    var project: ProjectModel? = null
+    lateinit var project: ProjectModel
 
     // Client information
     @ManyToOne(fetch = FetchType.LAZY)
@@ -45,7 +45,6 @@ class ControlReportModel : PanacheEntity() {
     var installationHouseNumber: String? = null
     var installationPostalCode: String? = null
     var installationCity: String? = null
-    var buildingType: String? = null
     var parcelNumber: String? = null
 
     // Control data
