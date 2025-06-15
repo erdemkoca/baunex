@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <input v-model="draft.client.name" class="form-control" />
               </div>
               <div class="col-md-4 mb-3">
-                <label class="form-label">Straße</label>
+                <label class="form-label">Strasse</label>
                 <input v-model="draft.client.street" class="form-control" />
               </div>
               <div class="col-md-3 mb-3">
@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <input v-model="draft.installationLocation.city" class="form-control" />
               </div>
               <div class="col-md-4 mb-3">
-                <label class="form-label">GebäudetypTODO</label>
+                <label class="form-label">Gebäudetyp</label>
                 <input v-model="draft.installationLocation.buildingType" class="form-control" />
               </div>
               <div class="col-md-4 mb-3">
