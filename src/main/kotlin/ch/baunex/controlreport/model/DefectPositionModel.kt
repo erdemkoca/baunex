@@ -1,5 +1,6 @@
 package ch.baunex.controlreport.model
 
+import ch.baunex.notes.model.NoteModel
 import io.quarkus.hibernate.orm.panache.PanacheEntity
 import jakarta.persistence.*
 import java.time.LocalDateTime
@@ -8,9 +9,11 @@ import java.time.LocalDateTime
 @Table(name = "defect_positions")
 class DefectPositionModel : PanacheEntity() {
 
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "note_id", unique = true)
+    lateinit var note: NoteModel
+
     var positionNumber: Int = 0
-    var photoUrl: String? = null
-    var description: String? = null
 
     @ElementCollection
     @CollectionTable(name = "defect_position_norm_references", joinColumns = [JoinColumn(name = "defect_position_id")])

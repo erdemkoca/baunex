@@ -10,5 +10,6 @@ enum class NoteCategory {
     MATERIALBEDARF,
     NOTFALL,
     SKIZZE,
-    VORBEREITUNG
+    VORBEREITUNG,
+    MÄNGEL
 }
