@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('project-controlreport-app');
     if (!el) return;
 
-    // 1) parse the incoming JSON or create an empty shell
+    // 1) parse initial JSON or create empty
     let report;
     try {
         const raw = el.dataset.controlReport;
@@ -15,45 +15,46 @@ document.addEventListener('DOMContentLoaded', () => {
         report = createEmpty();
     }
 
-    // 2) helper to build an empty report
+    // 2) helper to build an empty report (default controlDate = now)
     function createEmpty() {
+        const now = new Date().toISOString().slice(0,16);
         return {
             id: null,
             reportNumber: '',
-            client: { type: null, name: '', street: '', postalCode: '', city: '' },
-            contractor: { type: null, company: '', street: '', postalCode: '', city: '' },
+            client:    { type: null, name:'', street:'', postalCode:'', city:'' },
+            contractor:{ type: null, company:'', street:'', postalCode:'', city:'' },
             installationLocation: {
-                street: '', postalCode: '', city: '', buildingType: '', parcelNumber: ''
+                street:'', postalCode:'', city:'', buildingType:'', parcelNumber:''
             },
-            controlDate: '',
+            controlDate: now,
             controllerId: null,
+            controllerPhone: '',
             controlScope: '',
             hasDefects: false,
             deadlineNote: '',
             generalNotes: '',
             completionConfirmation: {
-                completionDate: '',
+                completionDate: now,
                 companyStamp: '',
                 completionSignature: ''
             }
         };
     }
 
-    // 3) pull enum & employee lists from data-attributes
-    const clientTypes     = el.dataset.clientTypes     ? JSON.parse(el.dataset.clientTypes)     : [];
-    const contractorTypes = el.dataset.contractorTypes ? JSON.parse(el.dataset.contractorTypes) : [];
-    const employees       = el.dataset.employees       ? JSON.parse(el.dataset.employees)       : [];
+    // 3) pull lists from data-attributes
+    const clientTypes     = JSON.parse(el.dataset.clientTypes      || '[]');
+    const contractorTypes = JSON.parse(el.dataset.contractorTypes  || '[]');
+    const employees       = JSON.parse(el.dataset.employees        || '[]');
 
-    // 4) mount our Vue app
+    // 4) mount Vue
     createApp({
         data() {
-            // deep-copy and normalize completionConfirmation so it's never null
+            // deep copy so we never mutate the original
             const d = JSON.parse(JSON.stringify(report));
+            if (!d.controlDate) d.controlDate = new Date().toISOString().slice(0,16);
             if (!d.completionConfirmation) {
                 d.completionConfirmation = {
-                    completionDate: '',
-                    companyStamp: '',
-                    completionSignature: ''
+                    completionDate: '', companyStamp:'', completionSignature:''
                 };
             }
             return {
@@ -63,24 +64,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 employees
             };
         },
+        watch: {
+            // when you pick a controller, update its phone
+            'draft.controllerId'(newId) {
+                if (!newId) {
+                    this.draft.controllerPhone = '';
+                    return;
+                }
+                const emp = this.employees.find(e => e.id === newId);
+                // adjust path if your JSON shape differs
+                this.draft.controllerPhone = emp?.person?.details?.phone || '';
+            }
+        },
         methods: {
             async save() {
                 try {
                     const res = await fetch(`/api/controlreport/${this.draft.id}`, {
                         method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type':'application/json' },
                         body: JSON.stringify(this.draft)
                     });
                     if (!res.ok) throw new Error('HTTP ' + res.status);
                     this.draft = await res.json();
-                    // normalize on save, too
-                    if (!this.draft.completionConfirmation) {
-                        this.draft.completionConfirmation = {
-                            completionDate: '',
-                            companyStamp: '',
-                            completionSignature: ''
-                        };
-                    }
                     alert('Gespeichert!');
                 } catch (e) {
                     console.error(e);
@@ -184,18 +189,36 @@ document.addEventListener('DOMContentLoaded', () => {
           <!-- Kontrolldaten -->
           <h6 class="mt-4">Kontrolldaten</h6>
           <div class="row g-3 mb-3">
+            <!-- Datum -->
             <div class="col-md-4">
               <label class="form-label">Datum</label>
-              <input v-model="draft.controlDate" type="date" class="form-control" />
+              <input v-model="draft.controlDate"
+                     type="date"
+                     class="form-control" />
             </div>
+            <!-- Kontrolleur -->
             <div class="col-md-4">
               <label class="form-label">Kontrolleur</label>
               <select v-model="draft.controllerId" class="form-select">
                 <option :value="null">– wählen –</option>
-                <option v-for="e in employees" :key="e.id" :value="e.id">
+                <option
+                  v-for="e in employees"
+                  :key="e.id"
+                  :value="e.id"
+                >
                   {{ e.firstName }} {{ e.lastName }}
                 </option>
               </select>
+            </div>
+            <!-- Telefonnummer -->
+            <div class="col-md-4">
+              <label class="form-label">Telefon</label>
+              <input
+                v-model="draft.controllerPhone"
+                type="text"
+                class="form-control"
+                readonly
+              />
             </div>
             <div class="col-md-4 form-check align-self-end">
               <input v-model="draft.hasDefects" type="checkbox" class="form-check-input" id="hasDefects" />
