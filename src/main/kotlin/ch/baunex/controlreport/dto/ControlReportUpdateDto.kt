@@ -1,8 +1,8 @@
 package ch.baunex.controlreport.dto
 
-import ch.baunex.controlreport.model.ClientType
 import ch.baunex.controlreport.model.ContractorType
 import ch.baunex.serialization.LocalDateTimeSerializer
+import ch.baunex.user.model.CustomerType
 import kotlinx.serialization.Serializable
 import java.time.LocalDateTime
 
@@ -14,7 +14,7 @@ data class ControlReportUpdateDto(
     val currentPage: Int,
 
     // Auftraggeber
-    val clientType: ClientType? = null,
+    val clientType: CustomerType? = null,
     val clientName: String? = null,
     val clientStreet: String? = null,
     val clientHouseNumber: String? = null,
@@ -41,8 +41,7 @@ data class ControlReportUpdateDto(
     @Serializable(with = LocalDateTimeSerializer::class)
     val controlDate: LocalDateTime? = null,
     val controlScope: String? = null,
-    val controllerName: String? = null,
-    val controllerPhone: String? = null,
+    val controllerId: Long?,
     val hasDefects: Boolean,
     val deadlineNote: String? = null,
 

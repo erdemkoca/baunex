@@ -20,6 +20,10 @@ class CustomerModel : PanacheEntityBase() {
     @JoinColumn(name = "person_id")
     lateinit var person: PersonModel
 
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    var customerType: CustomerType = CustomerType.OWNER
+
     @OneToMany(
         mappedBy = "customer",
         cascade = [CascadeType.ALL],

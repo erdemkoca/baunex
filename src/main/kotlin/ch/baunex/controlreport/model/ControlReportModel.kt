@@ -5,6 +5,7 @@ import ch.baunex.notes.model.NoteModel
 import ch.baunex.project.model.ProjectModel
 import ch.baunex.serialization.LocalDateSerializer
 import ch.baunex.user.model.CustomerModel
+import ch.baunex.user.model.EmployeeModel
 import jakarta.persistence.*
 import kotlinx.serialization.Serializable
 import java.time.LocalDateTime
@@ -29,11 +30,10 @@ class ControlReportModel : PanacheEntity() {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id")
     var customer: CustomerModel? = null
-    var clientType: ClientType? = ClientType.OWNER
 
     // Contractor information
     @Enumerated(EnumType.STRING)
-    var contractorType: ContractorType? = null
+    var contractorType: ContractorType? = ContractorType.CONTROL_ORGAN
     var contractorCompany: String? = null
     var contractorStreet: String? = null
     var contractorHouseNumber: String? = null
@@ -49,8 +49,10 @@ class ControlReportModel : PanacheEntity() {
 
     // Control data
     var controlScope: String? = null
-    var controllerName: String? = null
-    var controllerPhone: String? = null
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "controller_id")
+    var employee: EmployeeModel? = null
+
     var hasDefects: Boolean = false
     var deadlineNote: String? = null
     var generalNotes: String? = null

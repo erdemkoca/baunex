@@ -8,8 +8,10 @@ import kotlinx.serialization.Serializable
 data class ControlDataDto(
     @Serializable(with = LocalDateTimeSerializer::class)
     val controlDate: LocalDateTime,
-    val controllerName: String,
-    val phoneNumber: String,
+    val controllerId: Long?,
+    val controllerFirstName: String?,
+    val controllerLastName: String?,
+    val phoneNumber: String?,
     val hasDefects: Boolean,
     val deadlineNote: String?
 )

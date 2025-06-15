@@ -4,9 +4,11 @@ import ch.baunex.controlreport.dto.ControlReportCreateDto
 import ch.baunex.controlreport.dto.ControlReportDto
 import ch.baunex.controlreport.dto.ControlReportUpdateDto
 import ch.baunex.controlreport.facade.ControlReportFacade
+import ch.baunex.controlreport.model.ContractorType
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.serialization.SerializationUtils.json
 import ch.baunex.user.facade.EmployeeFacade
+import ch.baunex.user.model.CustomerType
 import ch.baunex.web.WebController
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
@@ -56,20 +58,26 @@ class ProjectControlReportController {
     @GET
     @Produces(MediaType.TEXT_HTML)
     fun editOrNew(@PathParam("projectId") projectId: Long): Response {
-        val project      = projectFacade.getProjectWithDetails(projectId)
-            ?: throw NotFoundException()
-        val reportDto    = reportFacade.getOrInitializeReport(projectId)
-        val tpl          = WebController.Templates.projectControlReport(
-            projectJson       = json.encodeToString(project),
-            controlReportJson = json.encodeToString(reportDto),
-            currentDate       = LocalDate.now(),
-            activeMenu        = "projects",
-            projectId         = projectId,
-            activeSubMenu     = "controlreport",
-            employeesJson     = json.encodeToString(employeeFacade.listAll())
+        val project       = projectFacade.getProjectWithDetails(projectId) ?: throw NotFoundException()
+        val reportDto     = reportFacade.getOrInitializeReport(projectId)
+        val customerTypes   = CustomerType.values().map { it.name }
+        val contractorTypes = ContractorType.values().map { it.name }
+        val employees = employeeFacade.listAll()
+
+        val tpl = WebController.Templates.projectControlReport(
+            projectJson            = json.encodeToString(project),
+            controlReportJson      = json.encodeToString(reportDto),
+            customerTypesJson        = json.encodeToString(customerTypes),
+            contractorTypesJson    = json.encodeToString(contractorTypes),
+            currentDate            = LocalDate.now(),
+            activeMenu             = "projects",
+            projectId              = projectId,
+            activeSubMenu          = "controlreport",
+            employeesJson          = json.encodeToString(employees)
         )
         return Response.ok(tpl.render()).build()
     }
+
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)

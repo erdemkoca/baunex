@@ -1,11 +1,11 @@
 package ch.baunex.controlreport.dto
 
-import ch.baunex.controlreport.model.ClientType
+import ch.baunex.user.model.CustomerType
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class ClientDto(
-    val type: ClientType?,
+    val type: CustomerType?,
     val name: String,
     val street: String,
     val postalCode: String,

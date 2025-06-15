@@ -56,5 +56,5 @@ class ProjectModel : PanacheEntity() {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    var buildingType: ProjectType = ProjectType.UNDEFINED
+    var buildingType: ProjectType = ProjectType.DIVERSE
 }

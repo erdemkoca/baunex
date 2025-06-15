@@ -137,6 +137,8 @@ class WebController {
         external fun projectControlReport(
             projectJson: String,
             controlReportJson: String,
+            customerTypesJson: String,
+            contractorTypesJson: String,
             currentDate: LocalDate,
             activeMenu: String,
             projectId: Long? = null,

@@ -3,10 +3,10 @@ package ch.baunex.controlreport.service
 import ch.baunex.company.repository.CompanyRepository
 import ch.baunex.controlreport.dto.*
 import ch.baunex.controlreport.mapper.ControlReportMapper
-import ch.baunex.controlreport.model.ClientType
 import ch.baunex.controlreport.model.DefectPositionModel
 import ch.baunex.controlreport.repository.ControlReportRepository
 import ch.baunex.project.repository.ProjectRepository
+import ch.baunex.user.model.CustomerType
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -48,7 +48,7 @@ class ControlReportService(
             ?: throw NotFoundException("Project $projectId")
         // pull whatever you need: customer, your company, etc.
         val clientDto = ClientDto(
-            type       = ClientType.OWNER,
+            type       = CustomerType.OWNER,
             name       = project.customer.person.firstName + " " + project.customer.person.lastName,
             street     = project.customer.person.details.street.orEmpty(),
             postalCode = project.customer.person.details.zipCode.orEmpty(),
@@ -80,7 +80,9 @@ class ControlReportService(
             controlScope         = "",
             controlData          = ControlDataDto(
                 controlDate    = LocalDateTime.now(),
-                controllerName = "",
+                controllerId = 0,
+                controllerFirstName = "",
+                controllerLastName = "",
                 phoneNumber    = "",
                 hasDefects     = false,
                 deadlineNote   = null

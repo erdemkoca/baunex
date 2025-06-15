@@ -27,7 +27,7 @@ data class ControlReportCreateDto(
 
     val controlDate: LocalDateTime,
     val controlScope: String,
-    val controllerName: String,
+    val controllerId: Long?,
     val controllerPhone: String,
     val hasDefects: Boolean,
     val deadlineNote: String?,

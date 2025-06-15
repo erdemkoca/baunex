@@ -17,7 +17,7 @@ class ControlReportMapper {
         pageCount             = m.pageCount,
         currentPage           = m.currentPage,
         client                = ClientDto(
-            type       = m.clientType,
+            type       = m.project.customer.customerType,
             name       = m.customer?.companyName.orEmpty(),
             street     = m.customer?.person?.details?.street.orEmpty(),
             postalCode = m.customer?.person?.details?.zipCode.orEmpty(),
@@ -40,8 +40,10 @@ class ControlReportMapper {
         controlScope          = m.controlScope.orEmpty(),
         controlData           = ControlDataDto(
             controlDate    = m.controlDate ?: LocalDateTime.now(),
-            controllerName = m.controllerName.orEmpty(),
-            phoneNumber    = m.controllerPhone.orEmpty(),
+            controllerId = m.employee?.id,
+            controllerFirstName = m.employee?.person?.firstName,
+            controllerLastName = m.employee?.person?.lastName,
+            phoneNumber    = m.employee?.person?.details?.phone.orEmpty(),
             hasDefects     = m.hasDefects,
             deadlineNote   = m.deadlineNote
         ),
@@ -80,8 +82,6 @@ class ControlReportMapper {
             project.buildingType       = dto.buildingType
             parcelNumber       = dto.parcelNumber
             controlScope       = dto.controlScope
-            controllerName     = dto.controllerName
-            controllerPhone    = dto.controllerPhone
             hasDefects         = dto.hasDefects
             deadlineNote       = dto.deadlineNote
             generalNotes       = dto.generalNotes
@@ -108,8 +108,6 @@ class ControlReportMapper {
             pageCount       = dto.pageCount
             currentPage     = dto.currentPage
             controlScope    = dto.controlScope
-            controllerName  = dto.controllerName
-            controllerPhone = dto.controllerPhone
             hasDefects      = dto.hasDefects
             deadlineNote    = dto.deadlineNote
             generalNotes    = dto.generalNotes
