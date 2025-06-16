@@ -65,12 +65,44 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 const payload = {
-                    title:       this.newNote.title,
-                    category:    this.newNote.category,
-                    content:     this.newNote.content,
-                    tags:        this.newNote.tags.split(',').map(t=>t.trim()).filter(Boolean),
-                    createdById: this.newNote.createdById
+                    projectId: this.projectId,
+                    title: this.newNote.title,
+                    category: this.newNote.category,
+                    content: this.newNote.content,
+                    tags: this.newNote.tags.split(',').map(t=>t.trim()).filter(Boolean),
+                    createdById: this.newNote.createdById,
+                    attachments: []
                 };
+
+                console.log('Sending POST request to create note:', {
+                    url: `/projects/${this.projectId}/notes`,
+                    payload: payload
+                });
+
+                // First create the new note
+                const createRes = await fetch(`/projects/${this.projectId}/notes`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                console.log('Create note response:', {
+                    status: createRes.status,
+                    statusText: createRes.statusText,
+                    ok: createRes.ok
+                });
+
+                if (!createRes.ok) {
+                    const errorText = await createRes.text();
+                    console.error('Failed to create note:', errorText);
+                    alert('Fehler beim Speichern der Notiz: ' + errorText);
+                    return;
+                }
+
+                // Then fetch the updated list
                 const fullRes = await fetch(`/projects/${this.projectId}/notes/json`);
                 if (!fullRes.ok) {
                     console.error('Konnte Notizen nicht neu laden', await fullRes.text());
@@ -79,11 +111,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const fullView = await fullRes.json();
                 this.notes = fullView.notes.map(n => ({
                     ...n,
-                    tags:        n.tags || [],
+                    tags: n.tags || [],
                     attachments: n.attachments || [],
                     pendingFile: null,
-                    previewUrl:  null
+                    previewUrl: null
                 }));
+
+                // Handle attachment if there is one
                 const lastNote = this.notes[this.notes.length - 1];
                 if (this.newNote.pendingFile && lastNote) {
                     const form = new FormData();
@@ -97,15 +131,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         lastNote.attachments = [attDto];
                     }
                 }
-                // Formular & Preview zurücksetzen
+
+                // Reset form & preview
                 Object.assign(this.newNote, {
-                    title:       '',
-                    category:    null,
-                    content:     '',
-                    tags:        '',
+                    title: '',
+                    category: null,
+                    content: '',
+                    tags: '',
                     createdById: null,
                     pendingFile: null,
-                    previewUrl:  null
+                    previewUrl: null
                 });
             }
         },

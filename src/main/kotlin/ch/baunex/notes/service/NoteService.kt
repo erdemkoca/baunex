@@ -49,32 +49,24 @@ class NoteService(
      */
     @Transactional
     fun createNote(createDto: NoteCreateDto, creatorUserId: Long): NoteDto {
-        // resolve FKs
-        val projectModel = createDto.projectId
-            ?.let { projectRepo.findById(it) ?: throw IllegalArgumentException("Project $it not found") }
-        val timeEntryModel = createDto.timeEntryId
-            ?.let { timeEntryRepo.findById(it) ?: throw IllegalArgumentException("TimeEntry $it not found") }
-        val documentModel = createDto.documentId
-            ?.let { documentRepo.findById(it) ?: throw IllegalArgumentException("Document $it not found") }
-        val userModel = employeeRepo.findById(creatorUserId)
-            ?: throw IllegalArgumentException("User $creatorUserId not found")
-
-        // build and persist note
         val note = NoteModel().apply {
-            this.project   = projectModel
-            this.timeEntry = timeEntryModel
-            this.document  = documentModel
-            this.createdBy = userModel
+            this.project = createDto.projectId?.let { projectRepo.findById(it) }
+                ?: throw IllegalArgumentException("Project ${createDto.projectId} not found")
+            this.timeEntry = createDto.timeEntryId?.let { timeEntryRepo.findById(it) }
+                ?: throw IllegalArgumentException("TimeEntry ${createDto.timeEntryId} not found")
+            this.document = createDto.documentId?.let { documentRepo.findById(it) }
+                ?: throw IllegalArgumentException("Document ${createDto.documentId} not found")
+            this.createdBy = employeeRepo.findById(creatorUserId)
+                ?: throw IllegalArgumentException("User $creatorUserId not found")
             this.createdAt = LocalDate.now()
             this.updatedAt = LocalDate.now()
-            this.title     = createDto.title
-            this.content   = createDto.content
-            this.category  = createDto.category
-            this.tags      = createDto.tags
+            this.title = createDto.title
+            this.content = createDto.content
+            this.category = createDto.category
+            this.tags = createDto.tags
         }
         noteRepo.persist(note)
 
-        // if it's a defect‐note, branch off a defect position
         if (createDto.category == NoteCategory.MÄNGEL) {
             defectPositionService.createFromNote(note)
         }
@@ -92,10 +84,10 @@ class NoteService(
         }
 
         existing.apply {
-            title     = updateDto.title
-            content   = updateDto.content
-            category  = updateDto.category
-            tags      = updateDto.tags
+            title = updateDto.title
+            content = updateDto.content
+            category = updateDto.category
+            tags = updateDto.tags
             updatedAt = LocalDate.now()
         }
 

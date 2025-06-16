@@ -22,9 +22,7 @@ import java.time.LocalDate
 @ApplicationScoped
 class ProjectFacade @Inject constructor(
     private val projectService: ProjectService,
-    private val projectMapper: ProjectMapper,
-    private val employeeService: EmployeeService,
-    private val employeeFacade: EmployeeFacade
+    private val projectMapper: ProjectMapper
 ) {
     @Transactional
     fun createProject(createDto: ProjectCreateDTO): ProjectDetailDTO {
@@ -53,32 +51,6 @@ class ProjectFacade @Inject constructor(
     }
 
     @Transactional
-    fun addNoteToProject(
-        projectId: Long,
-        title: String?,
-        category: NoteCategory,
-        content: String,
-        tags: List<String>
-    ) {
-        val project = projectService.getProjectWithEntries(projectId)
-            ?: throw IllegalArgumentException("Projekt nicht gefunden")
-        val adminId = employeeFacade.findByRole(Role.ADMIN).id
-        val creator = employeeService.getEmployee(adminId) //TOOO Right now hardcoded as Admin (JWT maybe)
-            ?: throw IllegalArgumentException("Mitarbeiter nicht gefunden")
-
-        val note = NoteModel().apply {
-            this.title = title
-            this.category = category
-            this.content = content
-            this.tags = tags
-            this.createdAt = LocalDate.now()
-            this.createdBy = creator
-            this.project = project
-        }
-        project.notes.add(note)
-    }
-
-    @Transactional
     fun createOrUpdate(id: Long?, createDto: ProjectCreateDTO): Long {
         return if (id != null && id > 0) {
             // mappe vom Create‐ zum Update‐DTO
@@ -100,65 +72,5 @@ class ProjectFacade @Inject constructor(
             val detail = createProject(createDto)
             detail.id
         }
-    }
-
-    @Transactional
-    fun getProjectNotesView(id: Long): ProjectNotesViewDTO {
-        val project = projectService.getProjectWithEntries(id)
-            ?: throw IllegalArgumentException("Projekt mit ID $id nicht gefunden")
-
-        val employees = employeeFacade.listAll()
-            .map { EmployeeReferenceDTO(it.id, it.firstName, it.lastName) }
-        val categories = NoteCategory.values().map { it.name }
-
-        // 1) Projekt-Notizen
-        val projNotes = project.notes.map { note ->
-            NoteForUI(
-                id          = note.id,
-                title       = note.title,
-                content     = note.content,
-                category    = note.category,
-                tags        = note.tags,
-                createdById = note.createdBy.id,
-                createdAt   = note.createdAt,
-                attachments = note.attachments.map { model ->
-                    val dto = model.toDto()
-                    dto.toAttachmentForUI() },
-                source      = "project"
-            )
-        }
-
-        // 2) TimeEntry-Notizen
-        val teNotes = project.timeEntries.flatMap { entry ->
-            entry.notes.map { note ->
-                NoteForUI(
-                    id          = note.id,
-                    title       = note.title,
-                    content     = note.content,
-                    category    = note.category,
-                    tags        = note.tags,
-                    createdById = note.createdBy.id,
-                    createdAt   = note.createdAt,
-                    attachments = note.attachments.map { model ->
-                        val dto = model.toDto()
-                        dto.toAttachmentForUI() },
-                    source      = "timeEntry",
-                    entryId     = entry.id,
-                    entryDate   = entry.date,
-                    entryTitle  = entry.title
-                )
-            }
-        }
-
-        val allNotes = (projNotes + teNotes)
-            .sortedByDescending { it.createdAt }
-
-        return ProjectNotesViewDTO(
-            projectId   = project.id,
-            projectName = project.name,
-            categories  = categories,
-            employees   = employees,
-            notes       = allNotes
-        )
     }
 }

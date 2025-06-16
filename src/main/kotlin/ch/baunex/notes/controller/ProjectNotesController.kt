@@ -3,6 +3,7 @@ package ch.baunex.notes.controller
 import ch.baunex.notes.dto.NoteCreateDto
 import ch.baunex.notes.dto.NoteDto
 import ch.baunex.notes.facade.NoteAttachmentFacade
+import ch.baunex.notes.facade.NoteFacade
 import ch.baunex.project.dto.ProjectNotesViewDTO
 import ch.baunex.project.facade.ProjectFacade
 import kotlinx.serialization.encodeToString
@@ -26,51 +27,42 @@ class ProjectNotesController {
     lateinit var projectFacade: ProjectFacade
 
     @Inject
+    lateinit var noteFacade: NoteFacade
+
+    @Inject
     lateinit var noteAttachmentFacade: NoteAttachmentFacade
 
     @GET
     @Produces(MediaType.TEXT_HTML)
     fun viewNotes(@PathParam("projectId") projectId: Long): Response {
-        val projectNotes = projectFacade.getProjectNotesView(projectId)
+        val projectNotes = noteFacade.getProjectNotesView(projectId)
         val tpl = Templates.projectNotes(
             projectNotesJson = json.encodeToString(projectNotes),
-            activeMenu       = "projects",
-            activeSubMenu    = "notes",
-            projectId        = projectId
+            activeMenu = "projects",
+            activeSubMenu = "notes",
+            projectId = projectId
         )
         return Response.ok(tpl.render()).build()
     }
 
-    /*** JSON ***/
-
     @GET
     @Path("/json")
     @Produces(MediaType.APPLICATION_JSON)
-    fun getNotesJson(@PathParam("projectId") projectId: Long): ProjectNotesViewDTO {
-        return projectFacade.getProjectNotesView(projectId)
-    }
+    fun getNotesJson(@PathParam("projectId") projectId: Long): ProjectNotesViewDTO =
+        noteFacade.getProjectNotesView(projectId)
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     fun addNoteJson(
         @PathParam("projectId") projectId: Long,
-        note: NoteCreateDto
+        createDto: NoteCreateDto
     ): Response {
-        projectFacade.addNoteToProject(
-            projectId,
-            note.title,
-            note.category,
-            note.content,
-            note.tags
-        )
-        // Danach die aktualisierte Liste zurückliefern
-        val detail = projectFacade.getProjectWithDetails(projectId)
-            ?: throw NotFoundException()
-        val notesList = detail.notes
-        //val notesList = projectFacade.getProjectNotesView(projectId).notes
-        val generic  = object : GenericEntity<List<NoteDto>>(notesList) {}
-        return Response.ok(generic).build()
+        // Wir übergeben das ganze DTO und die projectId in einer Methode
+        val created: NoteDto = noteFacade.createNoteForProject(projectId, createDto)
+
+        // Liefern das frisch erstellte NoteDto zurück
+        return Response.ok(created).build()
     }
 
     @POST
