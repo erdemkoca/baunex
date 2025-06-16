@@ -151,7 +151,7 @@ class ProjectFacade @Inject constructor(
         }
 
         val allNotes = (projNotes + teNotes)
-            .sortedByDescending { it.createdAt }  // optional: nach Datum sortieren
+            .sortedByDescending { it.createdAt }
 
         return ProjectNotesViewDTO(
             projectId   = project.id,

@@ -18,7 +18,7 @@ import jakarta.ws.rs.core.Response
 import org.jboss.resteasy.reactive.RestForm
 import java.io.InputStream
 
-@Path("/projects/{projectId}")
+@Path("/projects/{projectId}/notes")
 @ApplicationScoped
 class ProjectNotesController {
 
@@ -28,10 +28,7 @@ class ProjectNotesController {
     @Inject
     lateinit var noteAttachmentFacade: NoteAttachmentFacade
 
-    /*** HTML ***/
-
     @GET
-    @Path("/notes")
     @Produces(MediaType.TEXT_HTML)
     fun viewNotes(@PathParam("projectId") projectId: Long): Response {
         val projectNotes = projectFacade.getProjectNotesView(projectId)
@@ -47,14 +44,13 @@ class ProjectNotesController {
     /*** JSON ***/
 
     @GET
-    @Path("/notes/json")
+    @Path("/json")
     @Produces(MediaType.APPLICATION_JSON)
     fun getNotesJson(@PathParam("projectId") projectId: Long): ProjectNotesViewDTO {
         return projectFacade.getProjectNotesView(projectId)
     }
 
     @POST
-    @Path("/notes")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     fun addNoteJson(
@@ -78,7 +74,7 @@ class ProjectNotesController {
     }
 
     @POST
-    @Path("/notes/{noteId}/attachment")
+    @Path("/{noteId}/attachment")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     fun uploadNoteAttachment(

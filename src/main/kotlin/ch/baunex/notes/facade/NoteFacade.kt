@@ -11,4 +11,9 @@ class NoteFacade(private val noteService: NoteService) {
 
     fun getNote(noteId: Long): NoteDto =
         noteService.getNoteById(noteId)
+
+    /** Erzeugt eine neue Projekt-Note und ggf. eine DefectPosition */
+//    fun createNoteForProject(projectId: Long, dto: NoteCreateDto): List<NoteDto> {
+//        return noteService.createNoteForProject(projectId, dto)
+//    }
 }

@@ -3,6 +3,7 @@ package ch.baunex.controlreport.mapper
 
 import ch.baunex.controlreport.dto.*
 import ch.baunex.controlreport.model.*
+import ch.baunex.notes.mapper.toDto
 import ch.baunex.user.model.CustomerModel
 import jakarta.enterprise.context.ApplicationScoped
 import java.time.LocalDateTime
@@ -91,8 +92,6 @@ class ControlReportMapper {
             m.defectPositions.add(
                 DefectPositionModel().apply {
                     positionNumber = cp.positionNumber
-                    photoUrl       = cp.photoUrl
-                    description    = cp.description
                     normReferences += cp.normReferences
                     controlReport  = m
                 }
@@ -119,15 +118,8 @@ class ControlReportMapper {
     /** DefectPosition → DefectPositionDto */
     private fun toDefectPositionDto(p: DefectPositionModel) = DefectPositionDto(
         positionNumber = p.positionNumber,
-        photoUrl       = p.photoUrl.orEmpty(),
-        description    = p.description.orEmpty(),
-        normReferences = p.normReferences.toList(),
-        resolutionConfirmation = p.resolutionSignature?.let {
-            ResolutionConfirmationDto(
-                resolvedAt = p.resolvedAt ?: LocalDateTime.now(),
-                stamp      = p.resolutionStamp.orEmpty(),
-                signature  = p.resolutionSignature.orEmpty()
-            )
-        }
+        photoUrl       = p.note.attachments.first().toDto(),
+        description    = p.note.content,
+        normReferences = p.normReferences.toList()
     )
 }

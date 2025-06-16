@@ -31,30 +31,6 @@ class ProjectControlReportController {
     @Inject
     lateinit var employeeFacade: EmployeeFacade
 
-//    @GET
-//    @Produces(MediaType.TEXT_HTML)
-//    fun show(@PathParam("projectId") projectId: Long): Response {
-//        val project = projectFacade.getProjectWithDetails(projectId)
-//            ?: throw NotFoundException()
-//
-//        val reports: List<ControlReportDto> =
-//            reportFacade.listReportsByProject(projectId)
-//
-//        val reportsJson = json.encodeToString(reports)
-//        // val singleReportJson = json.encodeToString(reports.firstOrNull())
-//
-//        val tpl = WebController.Templates.projectControlReport(
-//            projectJson       = json.encodeToString(project),
-//            controlReportsJson = reportsJson,
-//            currentDate       = LocalDate.now(),
-//            activeMenu        = "projects",
-//            projectId         = projectId,
-//            activeSubMenu     = "controlreport"
-//        )
-//
-//        return Response.ok(tpl.render()).build()
-//    }
-
     @GET
     @Produces(MediaType.TEXT_HTML)
     fun editOrNew(@PathParam("projectId") projectId: Long): Response {

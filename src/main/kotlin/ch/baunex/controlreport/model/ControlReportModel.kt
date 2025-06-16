@@ -61,6 +61,9 @@ class ControlReportModel : PanacheEntity() {
     @OneToMany(mappedBy = "controlReport", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.EAGER)
     var defectPositions: MutableList<DefectPositionModel> = mutableListOf()
 
+    @OneToMany(mappedBy = "controlReport", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
+    var notes: MutableList<NoteModel> = mutableListOf()
+
     // Completion information
     var defectResolverNote: String? = null
     var completionDate: LocalDateTime? = null

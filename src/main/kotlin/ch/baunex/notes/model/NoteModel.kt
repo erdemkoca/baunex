@@ -10,7 +10,6 @@ import ch.baunex.user.model.EmployeeModel
 import io.quarkus.hibernate.orm.panache.PanacheEntity
 import jakarta.persistence.*
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 @Entity
 @Table(name = "note")
@@ -28,7 +27,10 @@ class NoteModel : PanacheEntity() {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "control_report_id")
-    var defectPositionsControlReport: DefectPositionModel? = null
+    var controlReport: ControlReportModel? = null
+
+    @OneToOne(mappedBy = "note", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
+    var defectPosition: DefectPositionModel? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "invoice_id", nullable = true)

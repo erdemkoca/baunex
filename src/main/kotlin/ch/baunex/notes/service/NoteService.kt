@@ -1,15 +1,15 @@
 package ch.baunex.notes.service
 
+import ch.baunex.controlreport.service.DefectPositionService
 import ch.baunex.documentGenerator.repository.DocumentRepository
 import ch.baunex.notes.dto.MediaAttachmentDto
 import ch.baunex.notes.dto.NoteCreateDto
 import ch.baunex.notes.dto.NoteDto
 import ch.baunex.notes.mapper.toDto
-import ch.baunex.notes.model.MediaAttachmentModel
-import ch.baunex.notes.model.MediaType
+import ch.baunex.notes.model.NoteCategory
 import ch.baunex.notes.model.NoteModel
-import ch.baunex.notes.repository.MediaAttachmentRepository
 import ch.baunex.notes.repository.NoteRepository
+import ch.baunex.notes.repository.MediaAttachmentRepository
 import ch.baunex.project.repository.ProjectRepository
 import ch.baunex.timetracking.repository.TimeEntryRepository
 import ch.baunex.user.repository.EmployeeRepository
@@ -17,7 +17,6 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import java.io.InputStream
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 @ApplicationScoped
 class NoteService(
@@ -27,92 +26,91 @@ class NoteService(
     private val timeEntryRepo: TimeEntryRepository,
     private val documentRepo: DocumentRepository,
     private val employeeRepo: EmployeeRepository,
-    private val noteAttachmentService: NoteAttachmentService
+    private val noteAttachmentService: NoteAttachmentService,
+    private val defectPositionService: DefectPositionService
 ) {
 
-    fun listNotesByProject(projectId: Long): List<NoteDto> {
-        return noteRepo.findByProjectId(projectId).map { it.toDto() }
-    }
+    fun listNotesByProject(projectId: Long): List<NoteDto> =
+        noteRepo.findByProjectId(projectId).map { it.toDto() }
 
-    fun listNotesByTimeEntry(timeEntryId: Long): List<NoteDto> {
-        return noteRepo.findByTimeEntryId(timeEntryId).map { it.toDto() }
-    }
+    fun listNotesByTimeEntry(timeEntryId: Long): List<NoteDto> =
+        noteRepo.findByTimeEntryId(timeEntryId).map { it.toDto() }
 
-    fun listNotesByDocument(documentId: Long): List<NoteDto> {
-        return noteRepo.findByDocumentId(documentId).map { it.toDto() }
-    }
+    fun listNotesByDocument(documentId: Long): List<NoteDto> =
+        noteRepo.findByDocumentId(documentId).map { it.toDto() }
 
-    fun getNoteById(noteId: Long): NoteDto {
-        val note = noteRepo.findById(noteId) ?: throw IllegalArgumentException("Note with id $noteId not found")
+    fun getNoteById(noteId: Long): NoteDto =
+        noteRepo.findById(noteId)
+            ?.toDto()
+            ?: throw IllegalArgumentException("Note with id $noteId not found")
+
+    /**
+     * Create a new note.  If category == MÄNGEL, also create a DefectPosition.
+     */
+    @Transactional
+    fun createNote(createDto: NoteCreateDto, creatorUserId: Long): NoteDto {
+        // resolve FKs
+        val projectModel = createDto.projectId
+            ?.let { projectRepo.findById(it) ?: throw IllegalArgumentException("Project $it not found") }
+        val timeEntryModel = createDto.timeEntryId
+            ?.let { timeEntryRepo.findById(it) ?: throw IllegalArgumentException("TimeEntry $it not found") }
+        val documentModel = createDto.documentId
+            ?.let { documentRepo.findById(it) ?: throw IllegalArgumentException("Document $it not found") }
+        val userModel = employeeRepo.findById(creatorUserId)
+            ?: throw IllegalArgumentException("User $creatorUserId not found")
+
+        // build and persist note
+        val note = NoteModel().apply {
+            this.project   = projectModel
+            this.timeEntry = timeEntryModel
+            this.document  = documentModel
+            this.createdBy = userModel
+            this.createdAt = LocalDate.now()
+            this.updatedAt = LocalDate.now()
+            this.title     = createDto.title
+            this.content   = createDto.content
+            this.category  = createDto.category
+            this.tags      = createDto.tags
+        }
+        noteRepo.persist(note)
+
+        // if it's a defect‐note, branch off a defect position
+        if (createDto.category == NoteCategory.MÄNGEL) {
+            defectPositionService.createFromNote(note)
+        }
+
         return note.toDto()
     }
 
     @Transactional
-    fun createNote(createDto: NoteCreateDto, creatorUserId: Long): NoteDto {
-        // 1. FK-Entitäten auflösen
-        val projectModel = createDto.projectId?.let { id ->
-            projectRepo.findById(id) ?: throw IllegalArgumentException("Project $id not found")
-        }
-        val timeEntryModel = createDto.timeEntryId?.let { id ->
-            timeEntryRepo.findById(id) ?: throw IllegalArgumentException("TimeEntry $id not found")
-        }
-        val documentModel = createDto.documentId?.let { id ->
-            documentRepo.findById(id) ?: throw IllegalArgumentException("Document $id not found")
-        }
-
-        val userModel = employeeRepo.findById(creatorUserId)
-            ?: throw IllegalArgumentException("User $creatorUserId not found")
-
-        // 2. Neue NoteModel-Instanz erstellen und Felder setzen
-        val noteEntity = NoteModel().apply {
-            this.project = projectModel
-            this.timeEntry = timeEntryModel
-            this.document = documentModel
-            this.createdBy = userModel
-            this.createdAt = LocalDate.now()
-            this.title = createDto.title
-            this.content = createDto.content
-            this.category = createDto.category
-            this.tags = createDto.tags
-        }
-
-        // 3. Persistieren
-        noteRepo.persist(noteEntity)
-
-        return noteEntity.toDto()
-    }
-
-    @Transactional
     fun updateNote(noteId: Long, updateDto: NoteCreateDto, updaterUserId: Long): NoteDto {
-        val existing = noteRepo.findById(noteId) ?: throw IllegalArgumentException("Note $noteId not found")
+        val existing = noteRepo.findById(noteId)
+            ?: throw IllegalArgumentException("Note $noteId not found")
 
-        // Nur Ersteller oder Admin/Projektleiter darf bearbeiten
-        if (existing.createdBy.id != updaterUserId /*&& !isAdmin(updaterUserId)*/) {
+        if (existing.createdBy.id != updaterUserId) {
             throw IllegalAccessException("User $updaterUserId cannot edit note $noteId")
         }
 
-        existing.title = updateDto.title
-        existing.content = updateDto.content
-        existing.category = updateDto.category
-        existing.tags = updateDto.tags
-        existing.updatedAt = LocalDate.now()
+        existing.apply {
+            title     = updateDto.title
+            content   = updateDto.content
+            category  = updateDto.category
+            tags      = updateDto.tags
+            updatedAt = LocalDate.now()
+        }
 
-        // Projekt/TimeEntry/Document-Verknüpfung kann optional geändert werden, wenn nötig:
-        // existing.project = updateDto.projectId?.let { projectRepo.findById(it) }
-
-        // Panache managed entity, kein explizites merge nötig
         return existing.toDto()
     }
 
     @Transactional
     fun deleteNote(noteId: Long, deleterUserId: Long) {
-        val existing = noteRepo.findById(noteId) ?: throw IllegalArgumentException("Note $noteId not found")
+        val existing = noteRepo.findById(noteId)
+            ?: throw IllegalArgumentException("Note $noteId not found")
 
-        if (existing.createdBy.id != deleterUserId /*&& !isAdmin(deleterUserId)*/) {
+        if (existing.createdBy.id != deleterUserId) {
             throw IllegalAccessException("User $deleterUserId cannot delete note $noteId")
         }
         noteRepo.delete(existing)
-        // CascadeType.ALL sorgt dafür, dass attachments mitgelöscht werden
     }
 
     @Transactional
@@ -131,6 +129,8 @@ class NoteService(
     }
 
     fun listAttachments(noteId: Long): List<MediaAttachmentDto> {
-        return noteAttachmentService.listForNote( noteRepo.findById(noteId)!! )
+        val note = noteRepo.findById(noteId)
+            ?: throw IllegalArgumentException("Note $noteId not found")
+        return noteAttachmentService.listForNote(note)
     }
 }

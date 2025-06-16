@@ -128,8 +128,6 @@ class ControlReportService(
         val report = repository.findById(reportId) ?: return null
         val pos = DefectPositionModel().apply {
             positionNumber = dto.positionNumber
-            photoUrl       = dto.photoUrl
-            description    = dto.description
             normReferences += dto.normReferences
             controlReport  = report
         }
@@ -148,13 +146,8 @@ class ControlReportService(
             ?: return null
         // direkt hier updaten – kein weiterer Mapper-Call nötig
         pos.apply {
-            photoUrl            = dto.photoUrl
-            description         = dto.description
             normReferences.clear()
             normReferences.addAll(dto.normReferences)
-            resolvedAt          = dto.resolvedAt
-            resolutionStamp     = dto.resolutionStamp
-            resolutionSignature = dto.resolutionSignature
         }
         return mapper.toDto(report)
     }
