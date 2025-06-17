@@ -32,7 +32,10 @@ fun NoteModel.toNoteForUI(source: String, entryId: Long? = null, entryDate: Loca
         tags = this.tags,
         createdById = this.createdBy.id!!,
         createdAt = this.createdAt,
-        attachments = this.attachments.map { it.toDto().toAttachmentForUI() },
+        attachments = this.attachments.map { 
+            val dto = it.toDto()
+            dto.copy(url = "/api/upload/files/${dto.url.substringAfterLast('/')}").toAttachmentForUI() 
+        },
         source = source,
         entryId = entryId,
         entryDate = entryDate,

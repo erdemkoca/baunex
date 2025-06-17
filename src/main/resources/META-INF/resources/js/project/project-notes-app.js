@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 projectName: view.projectName || '',
                 categories:  view.categories || [],
                 employees:   view.employees || [],
-                notes:       view.notes || [],
+                notes:       (view.notes || []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
                 newNote: {
                     title:        '',
                     category:     null,
@@ -86,8 +86,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 const newNoteDto = await createRes.json();
 
-                // 2) Push it immediately into your list
-                this.notes.push({
+                // 2) Push it immediately into your list at the beginning
+                this.notes.unshift({
                     ...newNoteDto,
                     tags:        newNoteDto.tags || [],
                     attachments: []
@@ -151,11 +151,11 @@ document.addEventListener('DOMContentLoaded', () => {
               <small class="text-muted">Tags:</small>
               <span v-for="tag in note.tags" :key="tag" class="badge bg-info me-1">{{ tag }}</span>
             </div>
-            <div v-if="note.attachments.length" class="mb-2">
+            <div v-if="note.attachments && note.attachments.length" class="mb-2">
               <small class="text-muted">Anhänge:</small>
               <div v-for="(att, ai) in note.attachments" :key="att.id"
                    class="d-flex align-items-center mb-1">
-                <template v-if="att.type==='IMAGE'">
+                <template v-if="att.contentType.startsWith('image/')">
                   <img :src="att.url" class="img-fluid img-thumbnail" style="max-width:200px;" />
                 </template>
                 <template v-else>
