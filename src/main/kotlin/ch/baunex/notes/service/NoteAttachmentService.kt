@@ -6,6 +6,7 @@ import ch.baunex.notes.model.MediaAttachmentModel
 import ch.baunex.notes.model.NoteModel
 import ch.baunex.notes.repository.MediaAttachmentRepository
 import ch.baunex.upload.service.UploadService
+import ch.baunex.upload.spi.StorageService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -23,6 +24,9 @@ class NoteAttachmentService {
     @Inject
     lateinit var mediaAttachmentRepository: MediaAttachmentRepository
 
+    @Inject
+    lateinit var storageService: StorageService
+
     fun listForNote(note: NoteModel): List<MediaAttachmentDto> {
         val noteId = note.id ?: throw IllegalArgumentException("Note ID darf nicht null sein")
         return mediaAttachmentRepository
@@ -31,27 +35,18 @@ class NoteAttachmentService {
     }
 
     @Transactional
-    fun uploadForNote(
-        note: NoteModel,
-        fileStream: InputStream,
-        originalFilename: String
-    ): MediaAttachmentDto {
-        // 1) write file to disk (or s3, etc) and get URL
-        val url = uploadService.saveFile(fileStream, originalFilename)
+    fun uploadForNote(note: NoteModel, stream: InputStream, filename: String): MediaAttachmentDto {
+        // 1) hand off to storage layer
+        val url = storageService.save(stream, filename)
 
-        // 2) create & persist DB entity
-        val attachment = MediaAttachmentModel().apply {
-            this.note = note
-            this.url = url
-            this.caption = originalFilename
-            // optionally infer type from extension
+        // 2) persist DB entity
+        val att = MediaAttachmentModel().apply {
+            this.note    = note
+            this.url     = url
+            this.caption = filename
         }
-        // since NoteModel has cascade ALL, either:
-        // note.attachments.add(attachment); note.persist()
-        // or persist directly:
-        attachment.persist()
-
-        return attachment.toDto()
+        mediaAttachmentRepository.persist(att)
+        return att.toDto()
     }
 
     @Transactional
@@ -66,8 +61,8 @@ class NoteAttachmentService {
 
     @Transactional
     fun deleteAttachment(attachmentId: Long): Boolean {
-        val att = noteAttachmentRepository.findById(attachmentId) ?: return false
-        // optionally: uploadService.deleteFile(att.url)
+        val att = mediaAttachmentRepository.findById(attachmentId) ?: return false
+        storageService.delete(att.url)
         att.delete()
         return true
     }

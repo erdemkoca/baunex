@@ -25,13 +25,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 employees:   view.employees || [],
                 notes:       view.notes || [],
                 newNote: {
-                    title:         '',
-                    category:      null,
-                    content:       '',
-                    tags:          '',
-                    createdById:   null,
-                    pendingFile:   null,
-                    previewUrl:    null
+                    title:        '',
+                    category:     null,
+                    content:      '',
+                    tags:         '',
+                    createdById:  null,
+                    pendingFile:  null,
+                    previewUrl:   null
                 }
             };
         },
@@ -46,13 +46,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.newNote.previewUrl   = URL.createObjectURL(file);
             },
             async removeAttachment(noteIndex, attIndex) {
-                const att = this.notes[noteIndex].attachments[attIndex];
-                const res = await fetch(
-                    `/api/timetracking/note-attachment/${att.id}`,
+                const note = this.notes[noteIndex];
+                const att  = note.attachments[attIndex];
+                const res  = await fetch(
+                    `/projects/${this.projectId}/notes/${note.id}/attachments/${att.id}`,
                     { method: 'DELETE' }
                 );
                 if (res.ok) {
-                    this.notes[noteIndex].attachments.splice(attIndex, 1);
+                    note.attachments.splice(attIndex, 1);
                 } else {
                     alert('Fehler beim Löschen des Anhangs');
                 }
@@ -64,12 +65,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 // 1) Note anlegen
                 const payload = {
-                    projectId:    this.projectId,
-                    title:        this.newNote.title,
-                    category:     this.newNote.category,
-                    content:      this.newNote.content,
-                    tags:         this.newNote.tags.split(',').map(t=>t.trim()).filter(Boolean),
-                    createdById:  this.newNote.createdById
+                    projectId:   this.projectId,
+                    title:       this.newNote.title,
+                    category:    this.newNote.category,
+                    content:     this.newNote.content,
+                    tags:        this.newNote.tags.split(',').map(t => t.trim()).filter(Boolean),
+                    createdById: this.newNote.createdById
                 };
 
                 const createRes = await fetch(
@@ -77,22 +78,22 @@ document.addEventListener('DOMContentLoaded', () => {
                         method:  'POST',
                         headers: { 'Content-Type':'application/json' },
                         body:    JSON.stringify(payload)
-                    });
-
+                    }
+                );
                 if (!createRes.ok) {
                     const text = await createRes.text();
                     console.error('Failed to create note:', text);
                     return alert('Fehler beim Speichern der Notiz: ' + text);
                 }
 
-                // 2) aktuelle Liste holen
+                // 2) gesamte Liste neu laden
                 const fullRes = await fetch(`/projects/${this.projectId}/notes/json`);
                 if (!fullRes.ok) {
                     console.error('Reload notes failed:', await fullRes.text());
                     return;
                 }
                 const fullView = await fullRes.json();
-                this.notes = fullView.notes.map(n=>({
+                this.notes = fullView.notes.map(n => ({
                     ...n,
                     tags:        n.tags        || [],
                     attachments: n.attachments || [],
@@ -100,20 +101,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     previewUrl:  null
                 }));
 
-                // 3) falls Anhang ausgewählt, direkt danach hochladen
+                // 3) falls ein Anhang gewählt, direkt danach hochladen
+                const lastNote = this.notes[this.notes.length - 1];
                 if (this.newNote.pendingFile && lastNote) {
                     const form = new FormData();
                     form.append('file', this.newNote.pendingFile);
 
-                    // ↓ this was relative → becomes absolute
                     const up = await fetch(
                         `/projects/${this.projectId}/notes/${lastNote.id}/attachments`,
-                        {
-                            method: 'POST',
-                            body: form
-                        }
+                        { method: 'POST', body: form }
                     );
-
                     if (up.ok) {
                         const attDto = await up.json();
                         lastNote.attachments.push(attDto);
@@ -122,20 +119,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                await fetch(
-                    `/projects/${this.projectId}/notes/${note.id}/attachments/${att.id}`,
-                    { method: 'DELETE' }
-                );
-
-                // 4) Form zurücksetzen
+                // 4) Formular zurücksetzen
                 Object.assign(this.newNote, {
-                    title:       '',
-                    category:    null,
-                    content:     '',
-                    tags:        '',
-                    createdById: null,
-                    pendingFile: null,
-                    previewUrl:  null
+                    title:        '',
+                    category:     null,
+                    content:      '',
+                    tags:         '',
+                    createdById:  null,
+                    pendingFile:  null,
+                    previewUrl:   null
                 });
             }
         },
@@ -146,11 +138,12 @@ document.addEventListener('DOMContentLoaded', () => {
             <i class="bi bi-arrow-left me-1"></i>Zurück zur Projektübersicht
           </a>
         </div>
-
         <!-- Notizen-Liste -->
         <div v-for="(note, i) in notes" :key="note.id" class="card mb-4 shadow-sm">
           <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="bi bi-journal-text me-2"></i>{{ note.title || '–' }}</h5>
+            <h5 class="mb-0">
+              <i class="bi bi-journal-text me-2"></i>{{ note.title || '–' }}
+            </h5>
           </div>
           <div class="card-header">
             <span v-if="note.source==='timeEntry'">
@@ -178,7 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </div>
         </div>
-
         <!-- Neue Notiz -->
         <div class="card p-3">
           <h5>Neue Notiz hinzufügen</h5>

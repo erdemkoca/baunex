@@ -72,7 +72,7 @@ class ProjectNotesController {
         @RestForm("file")       fileStream: InputStream,
         @RestForm("file")       fileMeta:   FileUpload?
     ): Response {
-        // Resteasy Reactive FileUpload has a `size` property
+        // Resteasy Reactive FileUploada has a `size` property
         if (fileMeta == null || fileMeta.size() == 0L) {
             return Response
                 .status(Response.Status.BAD_REQUEST)
