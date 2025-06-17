@@ -1,4 +1,4 @@
-import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('project-notes-app');
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     attachments: []
                 });
 
-                // 3) If there’s a file, upload it *to that exact ID*
+                // 3) If there's a file, upload it *to that exact ID*
                 if (this.newNote.pendingFile) {
                     const form = new FormData();
                     form.append('file', this.newNote.pendingFile);

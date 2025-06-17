@@ -23,12 +23,12 @@ class LocalDiskStorage : StorageService {
         val stored = "attachment_${UUID.randomUUID()}$ext"
         val target = uploadsDir.resolve(stored)
         Files.copy(stream, target, StandardCopyOption.REPLACE_EXISTING)
-        return "/uploads/$stored"
+        return "/api/upload/files/$stored"
     }
 
     override fun delete(fileUrl: String) {
-        val key = fileUrl.removePrefix("/")
-        val f = uploadsDir.resolve(key.substringAfter("uploads/"))
+        val key = fileUrl.substringAfterLast('/')
+        val f = uploadsDir.resolve(key)
         Files.deleteIfExists(f)
     }
 }
