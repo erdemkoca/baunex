@@ -49,26 +49,6 @@ class ProjectNotesController {
     fun getNotesJson(@PathParam("projectId") projectId: Long): ProjectNotesViewDTO =
         noteFacade.getProjectNotesView(projectId)
 
-//    @POST
-//    @Consumes(MediaType.APPLICATION_JSON)
-//    @Produces(MediaType.APPLICATION_JSON)
-//    fun addNoteJson(
-//        @PathParam("projectId") projectId: Long,
-//        note: NoteCreateDto
-//    ): Response {
-//        noteFacade.addNoteToProject(
-//            projectId = projectId,
-//            title = note.title,
-//            category = note.category,
-//            content = note.content,
-//            tags = note.tags
-//        )
-//
-//        // Return the updated project notes view
-//        val updatedView = noteFacade.getProjectNotesView(projectId)
-//        return Response.ok(updatedView).build()
-//    }
-
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -83,30 +63,43 @@ class ProjectNotesController {
     }
 
     @POST
-    @Path("/{noteId}/attachment")
+    @Path("/{noteId}/attachments")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     fun uploadNoteAttachment(
-        @PathParam("noteId") noteId: Long,
-        @RestForm("file") fileStream: InputStream,
-        @RestForm("file") fileDetails: FileUpload?
+        @PathParam("projectId") projectId: Long,
+        @PathParam("noteId")    noteId:    Long,
+        @RestForm("file")       fileStream: InputStream,
+        @RestForm("file")       fileMeta:   FileUpload?
     ): Response {
-        if (fileDetails == null) {
-            return Response.status(Response.Status.BAD_REQUEST)
+        // Resteasy Reactive FileUpload has a `size` property
+        if (fileMeta == null || fileMeta.size() == 0L) {
+            return Response
+                .status(Response.Status.BAD_REQUEST)
                 .entity(mapOf("error" to "No file uploaded"))
                 .build()
         }
-        return try {
-            val dto = noteAttachmentFacade.uploadAttachment(
-                noteId,
-                fileStream,
-                fileDetails.fileName()
-            )
-            Response.ok(dto).build()
-        } catch (e: Exception) {
-            Response.serverError()
-                .entity(mapOf("error" to e.message))
-                .build()
+
+        val dto = noteAttachmentFacade.uploadAttachment(
+            noteId,
+            fileStream,
+            fileMeta.fileName()
+        )
+        return Response.ok(dto).build()
+    }
+
+    @DELETE
+    @Path("/{noteId}/attachments/{attachmentId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    fun deleteAttachment(
+        @PathParam("projectId")   projectId:    Long,
+        @PathParam("noteId")      noteId:       Long,
+        @PathParam("attachmentId") attachmentId: Long
+    ): Response {
+        return if (noteAttachmentFacade.deleteAttachment(attachmentId)) {
+            Response.noContent().build()
+        } else {
+            Response.status(Response.Status.NOT_FOUND).build()
         }
     }
 }

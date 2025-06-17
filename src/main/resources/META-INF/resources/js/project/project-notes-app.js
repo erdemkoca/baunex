@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Parse the project data with error handling
     let view;
     try {
         view = JSON.parse(el.dataset.project || '{}');
@@ -20,19 +19,19 @@ document.addEventListener('DOMContentLoaded', () => {
     createApp({
         data() {
             return {
-                projectId: view.projectId || null,
+                projectId:   view.projectId || null,
                 projectName: view.projectName || '',
-                categories: view.categories || [],
-                employees: view.employees || [],
-                notes: view.notes || [],
+                categories:  view.categories || [],
+                employees:   view.employees || [],
+                notes:       view.notes || [],
                 newNote: {
-                    title: '',
-                    category: null,
-                    content: '',
-                    tags: '',
-                    createdById: null,
-                    pendingFile: null,
-                    previewUrl: null
+                    title:         '',
+                    category:      null,
+                    content:       '',
+                    tags:          '',
+                    createdById:   null,
+                    pendingFile:   null,
+                    previewUrl:    null
                 }
             };
         },
@@ -44,13 +43,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const file = event.target.files[0];
                 if (!file) return;
                 this.newNote.pendingFile = file;
-                // URL für Vorschau erzeugen
-                this.newNote.previewUrl = URL.createObjectURL(file);
+                this.newNote.previewUrl   = URL.createObjectURL(file);
             },
             async removeAttachment(noteIndex, attIndex) {
                 const att = this.notes[noteIndex].attachments[attIndex];
                 const res = await fetch(
-                    `/projects/${this.projectId}/notes/attachment/${att.id}`,
+                    `/api/timetracking/note-attachment/${att.id}`,
                     { method: 'DELETE' }
                 );
                 if (res.ok) {
@@ -64,83 +62,80 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('Bitte eine Kategorie auswählen');
                     return;
                 }
+                // 1) Note anlegen
                 const payload = {
-                    projectId: this.projectId,
-                    title: this.newNote.title,
-                    category: this.newNote.category,
-                    content: this.newNote.content,
-                    tags: this.newNote.tags.split(',').map(t=>t.trim()).filter(Boolean),
-                    createdById: this.newNote.createdById,
-                    attachments: []
+                    projectId:    this.projectId,
+                    title:        this.newNote.title,
+                    category:     this.newNote.category,
+                    content:      this.newNote.content,
+                    tags:         this.newNote.tags.split(',').map(t=>t.trim()).filter(Boolean),
+                    createdById:  this.newNote.createdById
                 };
 
-                console.log('Sending POST request to create note:', {
-                    url: `/projects/${this.projectId}/notes`,
-                    payload: payload
-                });
-
-                // First create the new note
-                const createRes = await fetch(`/projects/${this.projectId}/notes`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                console.log('Create note response:', {
-                    status: createRes.status,
-                    statusText: createRes.statusText,
-                    ok: createRes.ok
-                });
+                const createRes = await fetch(
+                    `/projects/${this.projectId}/notes`, {
+                        method:  'POST',
+                        headers: { 'Content-Type':'application/json' },
+                        body:    JSON.stringify(payload)
+                    });
 
                 if (!createRes.ok) {
-                    const errorText = await createRes.text();
-                    console.error('Failed to create note:', errorText);
-                    alert('Fehler beim Speichern der Notiz: ' + errorText);
-                    return;
+                    const text = await createRes.text();
+                    console.error('Failed to create note:', text);
+                    return alert('Fehler beim Speichern der Notiz: ' + text);
                 }
 
-                // Then fetch the updated list
+                // 2) aktuelle Liste holen
                 const fullRes = await fetch(`/projects/${this.projectId}/notes/json`);
                 if (!fullRes.ok) {
-                    console.error('Konnte Notizen nicht neu laden', await fullRes.text());
+                    console.error('Reload notes failed:', await fullRes.text());
                     return;
                 }
                 const fullView = await fullRes.json();
-                this.notes = fullView.notes.map(n => ({
+                this.notes = fullView.notes.map(n=>({
                     ...n,
-                    tags: n.tags || [],
+                    tags:        n.tags        || [],
                     attachments: n.attachments || [],
                     pendingFile: null,
-                    previewUrl: null
+                    previewUrl:  null
                 }));
 
-                // Handle attachment if there is one
-                const lastNote = this.notes[this.notes.length - 1];
+                // 3) falls Anhang ausgewählt, direkt danach hochladen
                 if (this.newNote.pendingFile && lastNote) {
                     const form = new FormData();
                     form.append('file', this.newNote.pendingFile);
+
+                    // ↓ this was relative → becomes absolute
                     const up = await fetch(
-                        `/projects/${this.projectId}/notes/${lastNote.id}/attachment`,
-                        { method: 'POST', body: form }
+                        `/projects/${this.projectId}/notes/${lastNote.id}/attachments`,
+                        {
+                            method: 'POST',
+                            body: form
+                        }
                     );
+
                     if (up.ok) {
                         const attDto = await up.json();
-                        lastNote.attachments = [attDto];
+                        lastNote.attachments.push(attDto);
+                    } else {
+                        console.error('Upload failed:', await up.text());
                     }
                 }
 
-                // Reset form & preview
+                await fetch(
+                    `/projects/${this.projectId}/notes/${note.id}/attachments/${att.id}`,
+                    { method: 'DELETE' }
+                );
+
+                // 4) Form zurücksetzen
                 Object.assign(this.newNote, {
-                    title: '',
-                    category: null,
-                    content: '',
-                    tags: '',
+                    title:       '',
+                    category:    null,
+                    content:     '',
+                    tags:        '',
                     createdById: null,
                     pendingFile: null,
-                    previewUrl: null
+                    previewUrl:  null
                 });
             }
         },
@@ -152,50 +147,34 @@ document.addEventListener('DOMContentLoaded', () => {
           </a>
         </div>
 
-        <!-- Alle Notizen -->
+        <!-- Notizen-Liste -->
         <div v-for="(note, i) in notes" :key="note.id" class="card mb-4 shadow-sm">
           <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">
-              <i class="bi bi-journal-text me-2"></i>{{ note.title || '–' }}
-            </h5>
+            <h5 class="mb-0"><i class="bi bi-journal-text me-2"></i>{{ note.title || '–' }}</h5>
           </div>
           <div class="card-header">
             <span v-if="note.source==='timeEntry'">
               🕒 {{ formatDate(note.entryDate) }} – {{ note.entryTitle }}
             </span>
             <span v-else>📁 Projekt-Notiz</span>
-            {{ note.title }}
           </div>
           <div class="card-body">
             <p>{{ note.content }}</p>
-            <div v-if="note.tags?.length" class="mb-2">
+            <div v-if="note.tags.length" class="mb-2">
               <small class="text-muted">Tags:</small>
               <span v-for="tag in note.tags" :key="tag" class="badge bg-info me-1">{{ tag }}</span>
             </div>
-            <div v-if="note.attachments?.length" class="mb-2">
+            <div v-if="note.attachments.length" class="mb-2">
               <small class="text-muted">Anhänge:</small>
-                <div v-for="(att, ai) in note.attachments" :key="att.id" class="d-flex align-items-center mb-1">
-                  <!-- bevorzugt: Content-Type, den der Server in att.contentType mitliefert -->
-                  <template v-if="att.contentType && att.contentType.startsWith('image/')">
-                    <img
-                      :src="att.url"
-                      class="img-fluid img-thumbnail"
-                      style="max-width: 200px;"
-                      alt="Anhangsbild"
-                    />
-                  </template>
-                  <template v-else-if="/\\.(jpe?g|png|gif)$/i.test(att.filename)">
-                    <img
-                      :src="att.url"
-                      class="img-fluid img-thumbnail"
-                      style="max-width: 200px;"
-                      alt="Anhangsbild"
-                    />
-                  </template>
-                  <template v-else>
-                    <a :href="att.url" target="_blank">{{ att.caption || 'Datei' }}</a>
-                  </template>
-                </div>
+              <div v-for="(att, ai) in note.attachments" :key="att.id" class="d-flex align-items-center mb-1">
+                <template v-if="att.type==='IMAGE'">
+                  <img :src="att.url" class="img-fluid img-thumbnail" style="max-width:200px;" />
+                </template>
+                <template v-else>
+                  <a :href="att.url" target="_blank">{{ att.caption || 'Datei' }}</a>
+                </template>
+                <button @click="removeAttachment(i, ai)" class="btn btn-sm btn-outline-danger ms-2">✕</button>
+              </div>
             </div>
           </div>
         </div>
@@ -233,18 +212,12 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div class="mb-2">
             <label class="form-label">Anhang (optional)</label>
-            <input type="file" @change="onFilePickedForNew($event)" class="form-control" />
+            <input type="file" @change="onFilePickedForNew" class="form-control" />
           </div>
-          <!-- Bild-Vorschau für neue Notiz -->
-            <div v-if="newNote.previewUrl" class="mb-3">
-               <label class="form-label">Vorschau</label>
-               <img
-                     :src="newNote.previewUrl"
-                     class="img-fluid img-thumbnail"
-                     style="max-width: 200px;"
-                     alt="Vorschau des Anhangs"
-                   />
-             </div>
+          <div v-if="newNote.previewUrl" class="mb-3">
+            <label class="form-label">Vorschau</label>
+            <img :src="newNote.previewUrl" class="img-fluid img-thumbnail" style="max-width:200px;" />
+          </div>
           <button @click="saveNote" class="btn btn-primary">Notiz speichern</button>
         </div>
       </div>

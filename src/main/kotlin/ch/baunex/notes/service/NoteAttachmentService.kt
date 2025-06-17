@@ -1,6 +1,5 @@
 package ch.baunex.notes.service
 
-import ch.baunex.notes.controller.NoteAttachmentController
 import ch.baunex.notes.dto.MediaAttachmentDto
 import ch.baunex.notes.mapper.toDto
 import ch.baunex.notes.model.MediaAttachmentModel
