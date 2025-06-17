@@ -1,7 +1,6 @@
 package ch.baunex.notes.controller
 
 import ch.baunex.notes.dto.NoteCreateDto
-import ch.baunex.notes.dto.NoteDto
 import ch.baunex.notes.facade.NoteAttachmentFacade
 import ch.baunex.notes.facade.NoteFacade
 import ch.baunex.project.dto.ProjectNotesViewDTO
@@ -13,7 +12,6 @@ import org.jboss.resteasy.reactive.multipart.FileUpload
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
-import jakarta.ws.rs.core.GenericEntity
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import org.jboss.resteasy.reactive.RestForm
@@ -51,18 +49,37 @@ class ProjectNotesController {
     fun getNotesJson(@PathParam("projectId") projectId: Long): ProjectNotesViewDTO =
         noteFacade.getProjectNotesView(projectId)
 
+//    @POST
+//    @Consumes(MediaType.APPLICATION_JSON)
+//    @Produces(MediaType.APPLICATION_JSON)
+//    fun addNoteJson(
+//        @PathParam("projectId") projectId: Long,
+//        note: NoteCreateDto
+//    ): Response {
+//        noteFacade.addNoteToProject(
+//            projectId = projectId,
+//            title = note.title,
+//            category = note.category,
+//            content = note.content,
+//            tags = note.tags
+//        )
+//
+//        // Return the updated project notes view
+//        val updatedView = noteFacade.getProjectNotesView(projectId)
+//        return Response.ok(updatedView).build()
+//    }
+
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     fun addNoteJson(
         @PathParam("projectId") projectId: Long,
         createDto: NoteCreateDto
-    ): Response {
-        // Wir übergeben das ganze DTO und die projectId in einer Methode
-        val created: NoteDto = noteFacade.createNoteForProject(projectId, createDto)
-
-        // Liefern das frisch erstellte NoteDto zurück
-        return Response.ok(created).build()
+    ): ProjectNotesViewDTO {
+        // 1) Delegiere an die Facade
+        noteFacade.addNoteToProject(createDto, createDto.createdById)
+        // 2) neue Ansicht zurückliefern
+        return noteFacade.getProjectNotesView(projectId)
     }
 
     @POST

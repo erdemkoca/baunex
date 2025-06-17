@@ -49,30 +49,50 @@ class NoteService(
      */
     @Transactional
     fun createNote(createDto: NoteCreateDto, creatorUserId: Long): NoteDto {
+        // 1) NoteModel-Instanz anlegen und erforderliche Fremd­schlüssel auflösen
         val note = NoteModel().apply {
-            this.project = createDto.projectId?.let { projectRepo.findById(it) }
+            // a) Projekt–Verknüpfung (Pflichtfeld für Projekt-Notizen)
+            this.project = createDto.projectId
+                ?.let { projectRepo.findById(it) }
                 ?: throw IllegalArgumentException("Project ${createDto.projectId} not found")
-            this.timeEntry = createDto.timeEntryId?.let { timeEntryRepo.findById(it) }
-                ?: throw IllegalArgumentException("TimeEntry ${createDto.timeEntryId} not found")
-            this.document = createDto.documentId?.let { documentRepo.findById(it) }
-                ?: throw IllegalArgumentException("Document ${createDto.documentId} not found")
+
+            // b) TimeEntry–Verknüpfung (optional – nur, wenn eine TimeEntry-Note)
+            this.timeEntry = createDto.timeEntryId
+                ?.let { timeEntryRepo.findById(it) }
+                ?: null  // kein Fehler, wenn timeEntryId == null
+
+            // c) Document–Verknüpfung (optional – z.B. Notiz zu einem PDF-Dokument)
+            this.document = createDto.documentId
+                ?.let { documentRepo.findById(it) }
+                ?: null
+
+            // d) Wer hat die Notiz erstellt?
             this.createdBy = employeeRepo.findById(creatorUserId)
                 ?: throw IllegalArgumentException("User $creatorUserId not found")
+
+            // e) Timestamps
             this.createdAt = LocalDate.now()
             this.updatedAt = LocalDate.now()
-            this.title = createDto.title
-            this.content = createDto.content
+
+            // f) Restliche Felder aus dem DTO
+            this.title    = createDto.title
+            this.content  = createDto.content
             this.category = createDto.category
-            this.tags = createDto.tags
+            this.tags     = createDto.tags
         }
+
+        // 2) In die Datenbank speichern
         noteRepo.persist(note)
 
+        // 3) Spezialfall „MÄNGEL“-Notiz → DefectPosition anlegen
         if (createDto.category == NoteCategory.MÄNGEL) {
             defectPositionService.createFromNote(note)
         }
 
+        // 4) DTO für die API-Antwort zurückgeben
         return note.toDto()
     }
+
 
     @Transactional
     fun updateNote(noteId: Long, updateDto: NoteCreateDto, updaterUserId: Long): NoteDto {

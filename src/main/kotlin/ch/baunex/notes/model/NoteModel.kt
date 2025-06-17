@@ -15,33 +15,38 @@ import java.time.LocalDate
 @Table(name = "note")
 class NoteModel : PanacheEntity() {
 
-    // id kommt von PanacheEntity: `@Id @GeneratedValue var id: Long? = null`
+    // Pflicht-Relation: Jede Note gehört (mindestens) zu einem Projekt
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "project_id", nullable = false)
+    lateinit var project: ProjectModel
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_id")
-    var project: ProjectModel? = null
-
-    @ManyToOne(fetch = FetchType.LAZY)
+    // Optional: nur wenn die Note an einen TimeEntry hängt
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "time_entry_id", nullable = true)
     var timeEntry: TimeEntryModel? = null
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "control_report_id")
+    // Optional: nur wenn die Note innerhalb eines ControlReports erstellt wurde
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "control_report_id", nullable = true)
     var controlReport: ControlReportModel? = null
 
+    // Verbindung zur automatisch erzeugten DefectPosition (falls category == MÄNGEL)
     @OneToOne(mappedBy = "note", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var defectPosition: DefectPositionModel? = null
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    // Optional: Notiz zu einer Rechnung
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "invoice_id", nullable = true)
     var invoice: InvoiceModel? = null
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "document_id")
+    // Optional: Notiz zu einem generierten Dokument
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "document_id", nullable = true)
     var document: DocumentModel? = null
 
+    // Wer hat die Note geschrieben? Pflichtfeld
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "created_by_id")
+    @JoinColumn(name = "created_by_id", nullable = false)
     lateinit var createdBy: EmployeeModel
 
     @Column(name = "created_at", nullable = false)
@@ -66,15 +71,12 @@ class NoteModel : PanacheEntity() {
     @OneToMany(mappedBy = "note", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var attachments: MutableList<MediaAttachmentModel> = mutableListOf()
 
-    @PrePersist
-    fun onCreate() {
+    @PrePersist fun onCreate() {
         val now = LocalDate.now()
-        this.createdAt = now
-        this.updatedAt = now
+        createdAt = now
+        updatedAt = now
     }
-
-    @PreUpdate
-    fun onUpdate() {
-        this.updatedAt = LocalDate.now()
+    @PreUpdate fun onUpdate() {
+        updatedAt = LocalDate.now()
     }
 }

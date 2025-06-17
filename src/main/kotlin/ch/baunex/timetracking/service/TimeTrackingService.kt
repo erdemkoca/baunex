@@ -34,34 +34,37 @@ class TimeTrackingService @Inject constructor(
 
         // 1. TimeEntryModel neu anlegen
         val timeEntry = TimeEntryModel().apply {
-            this.employee = employee
-            this.project = project
-            this.date = dto.date
+            this.employee    = employee
+            this.project     = project
+            this.date        = dto.date
             this.hoursWorked = dto.hoursWorked
-            this.hourlyRate = employee.hourlyRate
-            this.billable = dto.billable
-            this.invoiced = dto.invoiced
-            this.title=dto.title
+            this.hourlyRate  = employee.hourlyRate
+            this.billable    = dto.billable
+            this.invoiced    = dto.invoiced
+            this.title       = dto.title
+
             // 2. Notizen verarbeiten
             val parent = this
             this.notes = dto.notes.map { noteCreateDto ->
                 NoteModel().apply {
-                    content    = noteCreateDto.content
-                    title      = noteCreateDto.title
-                    category   = noteCreateDto.category
-                    tags       = noteCreateDto.tags
-                    timeEntry  = parent
-                    createdBy = employee
-                    createdAt = LocalDate.now()
-                    updatedAt = LocalDate.now()
+                    this.project   = parent.project   // ← ganz wichtig!
+                    this.timeEntry = parent
+                    this.createdBy = employee
+                    this.createdAt = LocalDate.now()
+                    this.updatedAt = LocalDate.now()
+
+                    this.title    = noteCreateDto.title
+                    this.content  = noteCreateDto.content
+                    this.category = noteCreateDto.category
+                    this.tags     = noteCreateDto.tags
                 }
             }.toMutableList()
         }
 
-        // 3. speichern
+        // 3. speichern (inkl. Cascade auf notes)
         timeEntryRepository.persist(timeEntry)
 
-        // 4. Katalog-Items verknüpfen
+        // 4. Katalog-Items verknüpfen ...
         dto.catalogItems.forEach { catalogItemDto ->
             val catalogItemId = catalogItemDto.catalogItemId
                 ?: throw IllegalArgumentException("Catalog item ID cannot be null")
@@ -72,6 +75,7 @@ class TimeTrackingService @Inject constructor(
 
         return timeEntry
     }
+
 
     fun getAllTimeEntries(): List<TimeEntryModel> {
         return timeEntryRepository.listAll()

@@ -76,28 +76,33 @@ class NoteFacade(
     }
 
     @Transactional
-    fun addNoteToProject(
-        projectId: Long,
-        title: String?,
-        category: NoteCategory,
-        content: String,
-        tags: List<String>
-    ) {
-        val project = projectService.getProjectWithEntries(projectId)
-            ?: throw IllegalArgumentException("Projekt nicht gefunden")
-        val adminId = employeeFacade.findByRole(Role.ADMIN).id
-        val creator = employeeService.getEmployee(adminId)
-            ?: throw IllegalArgumentException("Mitarbeiter nicht gefunden")
-
-        val note = NoteModel().apply {
-            this.title = title
-            this.category = category
-            this.content = content
-            this.tags = tags
-            this.createdAt = LocalDate.now()
-            this.createdBy = creator
-            this.project = project
-        }
-        project.notes.add(note)
+    fun addNoteToProject(dto: NoteCreateDto, creatorUserId: Long) {
+        noteService.createNote(dto, creatorUserId)
     }
+
+//    @Transactional
+//    fun addNoteToProject(
+//        projectId: Long,
+//        title: String?,
+//        category: NoteCategory,
+//        content: String,
+//        tags: List<String>
+//    ) {
+//        val project = projectService.getProjectWithEntries(projectId)
+//            ?: throw IllegalArgumentException("Projekt nicht gefunden")
+//        val adminId = employeeFacade.findByRole(Role.ADMIN).id
+//        val creator = employeeService.getEmployee(adminId)
+//            ?: throw IllegalArgumentException("Mitarbeiter nicht gefunden")
+//
+//        val note = NoteModel().apply {
+//            this.title = title
+//            this.category = category
+//            this.content = content
+//            this.tags = tags
+//            this.createdAt = LocalDate.now()
+//            this.createdBy = creator
+//            this.project = project
+//        }
+//        project.notes.add(note)
+//    }
 }
