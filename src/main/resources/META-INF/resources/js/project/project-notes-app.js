@@ -60,19 +60,18 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             async saveNote() {
                 if (!this.newNote.category) {
-                    alert('Bitte eine Kategorie auswählen');
-                    return;
+                    return alert('Bitte eine Kategorie auswählen');
                 }
-                // 1) Note anlegen
+
+                // 1) Create the note, get back a NoteDto with its id
                 const payload = {
                     projectId:   this.projectId,
                     title:       this.newNote.title,
                     category:    this.newNote.category,
                     content:     this.newNote.content,
-                    tags:        this.newNote.tags.split(',').map(t => t.trim()).filter(Boolean),
+                    tags:        this.newNote.tags.split(',').map(t=>t.trim()).filter(Boolean),
                     createdById: this.newNote.createdById
                 };
-
                 const createRes = await fetch(
                     `/projects/${this.projectId}/notes`, {
                         method:  'POST',
@@ -81,45 +80,41 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 );
                 if (!createRes.ok) {
-                    const text = await createRes.text();
-                    console.error('Failed to create note:', text);
-                    return alert('Fehler beim Speichern der Notiz: ' + text);
+                    const txt = await createRes.text();
+                    console.error('Create note failed:', txt);
+                    return alert('Fehler beim Speichern der Notiz: ' + txt);
                 }
+                const newNoteDto = await createRes.json();
 
-                // 2) gesamte Liste neu laden
-                const fullRes = await fetch(`/projects/${this.projectId}/notes/json`);
-                if (!fullRes.ok) {
-                    console.error('Reload notes failed:', await fullRes.text());
-                    return;
-                }
-                const fullView = await fullRes.json();
-                this.notes = fullView.notes.map(n => ({
-                    ...n,
-                    tags:        n.tags        || [],
-                    attachments: n.attachments || [],
-                    pendingFile: null,
-                    previewUrl:  null
-                }));
+                // 2) Push it immediately into your list
+                this.notes.push({
+                    ...newNoteDto,
+                    tags:        newNoteDto.tags || [],
+                    attachments: []
+                });
 
-                // 3) falls ein Anhang gewählt, direkt danach hochladen
-                const lastNote = this.notes[this.notes.length - 1];
-                if (this.newNote.pendingFile && lastNote) {
+                // 3) If there’s a file, upload it *to that exact ID*
+                if (this.newNote.pendingFile) {
                     const form = new FormData();
                     form.append('file', this.newNote.pendingFile);
 
-                    const up = await fetch(
-                        `/projects/${this.projectId}/notes/${lastNote.id}/attachments`,
+                    const upRes = await fetch(
+                        `/projects/${this.projectId}/notes/${newNoteDto.id}/attachments`,
                         { method: 'POST', body: form }
                     );
-                    if (up.ok) {
-                        const attDto = await up.json();
-                        lastNote.attachments.push(attDto);
+                    if (upRes.ok) {
+                        const attDto = await upRes.json();
+                        // find the note we just added and append its attachment
+                        const idx = this.notes.findIndex(n => n.id === newNoteDto.id);
+                        if (idx !== -1) {
+                            this.notes[idx].attachments.push(attDto);
+                        }
                     } else {
-                        console.error('Upload failed:', await up.text());
+                        console.error('Attachment upload failed:', await upRes.text());
                     }
                 }
 
-                // 4) Formular zurücksetzen
+                // 4) reset the form
                 Object.assign(this.newNote, {
                     title:        '',
                     category:     null,
@@ -138,12 +133,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <i class="bi bi-arrow-left me-1"></i>Zurück zur Projektübersicht
           </a>
         </div>
+
         <!-- Notizen-Liste -->
         <div v-for="(note, i) in notes" :key="note.id" class="card mb-4 shadow-sm">
           <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">
-              <i class="bi bi-journal-text me-2"></i>{{ note.title || '–' }}
-            </h5>
+            <h5 class="mb-0"><i class="bi bi-journal-text me-2"></i>{{ note.title || '–' }}</h5>
           </div>
           <div class="card-header">
             <span v-if="note.source==='timeEntry'">
@@ -159,18 +153,21 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div v-if="note.attachments.length" class="mb-2">
               <small class="text-muted">Anhänge:</small>
-              <div v-for="(att, ai) in note.attachments" :key="att.id" class="d-flex align-items-center mb-1">
+              <div v-for="(att, ai) in note.attachments" :key="att.id"
+                   class="d-flex align-items-center mb-1">
                 <template v-if="att.type==='IMAGE'">
                   <img :src="att.url" class="img-fluid img-thumbnail" style="max-width:200px;" />
                 </template>
                 <template v-else>
                   <a :href="att.url" target="_blank">{{ att.caption || 'Datei' }}</a>
                 </template>
-                <button @click="removeAttachment(i, ai)" class="btn btn-sm btn-outline-danger ms-2">✕</button>
+                <button @click="removeAttachment(i, ai)"
+                        class="btn btn-sm btn-outline-danger ms-2">✕</button>
               </div>
             </div>
           </div>
         </div>
+
         <!-- Neue Notiz -->
         <div class="card p-3">
           <h5>Neue Notiz hinzufügen</h5>

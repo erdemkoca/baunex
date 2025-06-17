@@ -1,6 +1,7 @@
 package ch.baunex.notes.controller
 
 import ch.baunex.notes.dto.NoteCreateDto
+import ch.baunex.notes.dto.NoteDto
 import ch.baunex.notes.facade.NoteAttachmentFacade
 import ch.baunex.notes.facade.NoteFacade
 import ch.baunex.project.dto.ProjectNotesViewDTO
@@ -55,11 +56,9 @@ class ProjectNotesController {
     fun addNoteJson(
         @PathParam("projectId") projectId: Long,
         createDto: NoteCreateDto
-    ): ProjectNotesViewDTO {
-        // 1) Delegiere an die Facade
-        noteFacade.addNoteToProject(createDto, createDto.createdById)
-        // 2) neue Ansicht zurückliefern
-        return noteFacade.getProjectNotesView(projectId)
+    ): NoteDto {
+        // now return just the newly created note
+        return noteFacade.addNoteToProject(createDto, createDto.createdById)
     }
 
     @POST

@@ -1,13 +1,8 @@
 package ch.baunex.notes.mapper
 
-import ch.baunex.notes.dto.MediaAttachmentDto
-import ch.baunex.notes.dto.NoteCreateDto
 import ch.baunex.notes.dto.NoteDto
 import ch.baunex.notes.dto.NoteForUI
-import ch.baunex.notes.model.MediaAttachmentModel
 import ch.baunex.notes.model.NoteModel
-import ch.baunex.project.model.ProjectModel
-import ch.baunex.user.model.EmployeeModel
 import java.time.LocalDate
 
 fun NoteModel.toDto(): NoteDto {
