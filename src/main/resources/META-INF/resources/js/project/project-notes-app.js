@@ -58,9 +58,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('Fehler beim Löschen des Anhangs');
                 }
             },
+            isImageAttachment(att) {
+                if (!att) return false;
+                if (att.type === 'IMAGE') return true;
+                if (att.contentType && att.contentType.startsWith('image/')) return true;
+                return false;
+            },
             async saveNote() {
                 if (!this.newNote.category) {
                     return alert('Bitte eine Kategorie auswählen');
+                }
+                if (!this.newNote.createdById) {
+                    return alert('Bitte einen Ersteller auswählen');
                 }
 
                 // 1) Create the note, get back a NoteDto with its id
@@ -72,6 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     tags:        this.newNote.tags.split(',').map(t=>t.trim()).filter(Boolean),
                     createdById: this.newNote.createdById
                 };
+                console.log('Sending payload:', payload); // Debug log
+
                 const createRes = await fetch(
                     `/projects/${this.projectId}/notes`, {
                         method:  'POST',
@@ -85,6 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return alert('Fehler beim Speichern der Notiz: ' + txt);
                 }
                 const newNoteDto = await createRes.json();
+                console.log('Created note:', newNoteDto); // Debug log
 
                 // 2) Push it immediately into your list at the beginning
                 this.notes.unshift({
@@ -104,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     );
                     if (upRes.ok) {
                         const attDto = await upRes.json();
+                        console.log('Uploaded attachment:', attDto); // Debug log
                         // find the note we just added and append its attachment
                         const idx = this.notes.findIndex(n => n.id === newNoteDto.id);
                         if (idx !== -1) {
@@ -147,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div class="card-body">
             <p>{{ note.content }}</p>
-            <div v-if="note.tags.length" class="mb-2">
+            <div v-if="note.tags && note.tags.length" class="mb-2">
               <small class="text-muted">Tags:</small>
               <span v-for="tag in note.tags" :key="tag" class="badge bg-info me-1">{{ tag }}</span>
             </div>
@@ -155,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <small class="text-muted">Anhänge:</small>
               <div v-for="(att, ai) in note.attachments" :key="att.id"
                    class="d-flex align-items-center mb-1">
-                <template v-if="att.contentType.startsWith('image/')">
+                <template v-if="isImageAttachment(att)">
                   <img :src="att.url" class="img-fluid img-thumbnail" style="max-width:200px;" />
                 </template>
                 <template v-else>
