@@ -66,12 +66,17 @@ class NoteFacade(
     }
 
     @Transactional
-    fun createNoteForProject(projectId: Long, createDto: NoteCreateDto): NoteDto {
-        return noteService.createNote(createDto, projectId)
+    fun addNoteToProject(createDto: NoteCreateDto, userId: Long): NoteDto {
+        return noteService.createNote(createDto, userId)
     }
 
     @Transactional
-    fun addNoteToProject(createDto: NoteCreateDto, userId: Long): NoteDto {
-        return noteService.createNote(createDto, userId)
+    fun updateNoteOfProject(
+        noteId: Long,
+        updateDto: NoteCreateDto,
+        userId: Long
+    ): NoteDto {
+        // this will throw if the note isn't found or the user isn't allowed
+        return noteService.updateNote(noteId, updateDto, userId)
     }
 }

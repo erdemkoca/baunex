@@ -1,5 +1,6 @@
 package ch.baunex.notes.controller
 
+import ch.baunex.notes.dto.MediaAttachmentDto
 import ch.baunex.notes.dto.NoteCreateDto
 import ch.baunex.notes.dto.NoteDto
 import ch.baunex.notes.facade.NoteAttachmentFacade
@@ -60,6 +61,28 @@ class ProjectNotesController {
         // now return just the newly created note
         return noteFacade.addNoteToProject(createDto, createDto.createdById)
     }
+
+    @PUT
+    @Path("/{noteId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    fun updateNoteJson(
+        @PathParam("projectId") projectId: Long,
+        @PathParam("noteId")    noteId:    Long,
+        updateDto: NoteCreateDto
+    ): NoteDto {
+        // delegate to facade
+        return noteFacade.updateNoteOfProject(noteId, updateDto, updateDto.createdById)
+    }
+
+    @GET
+    @Path("/{noteId}/attachments")
+    @Produces(MediaType.APPLICATION_JSON)
+    fun listAttachmentsJson(
+        @PathParam("noteId") noteId: Long
+    ): List<MediaAttachmentDto> =
+        noteAttachmentFacade.listAttachments(noteId)
+
 
     @POST
     @Path("/{noteId}/attachments")
