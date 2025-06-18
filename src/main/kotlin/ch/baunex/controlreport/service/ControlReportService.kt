@@ -5,9 +5,13 @@ import ch.baunex.controlreport.dto.*
 import ch.baunex.controlreport.mapper.ControlReportMapper
 import ch.baunex.controlreport.model.ContractorType
 import ch.baunex.controlreport.model.ControlReportModel
+import ch.baunex.controlreport.model.DefectPositionModel
 import ch.baunex.controlreport.repository.ControlReportRepository
+import ch.baunex.controlreport.repository.DefectPositionRepository
+import ch.baunex.notes.repository.NoteRepository
 import ch.baunex.project.repository.ProjectRepository
 import ch.baunex.user.repository.EmployeeRepository
+import ch.baunex.user.service.EmployeeService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -23,6 +27,8 @@ class ControlReportService(
     @Inject lateinit var projectRepository: ProjectRepository
     @Inject lateinit var companyRepository: CompanyRepository
     @Inject lateinit var employeeRepository: EmployeeRepository
+    @Inject lateinit var defectPositionRepository: DefectPositionRepository
+    @Inject lateinit var noteRepository: NoteRepository
 
 
     @Transactional
@@ -93,15 +99,31 @@ class ControlReportService(
 
     @Transactional
     fun updateByProjectId(projectId: Long, dto: ControlReportUpdateDto): ControlReportDto? {
-        val model = controlReportRepository.findByProjectId(projectId).firstOrNull() ?: return null
+        val report = controlReportRepository.findByProjectId(projectId).firstOrNull() ?: return null
 
-        mapper.applyUpdate(model, dto)
+        // 1) Report-Felder aktualisieren
+        mapper.applyUpdate(report, dto)
 
-        model.employee = dto.controllerId
-            ?.let { employeeRepository.findById(it) }
-            ?: null
+        // 2) Jede Mängel-DTO verarbeiten
+        dto.defectPositions?.forEach { dpDto ->
+            val dpModel = if (dpDto.id != null) {
+                defectPositionRepository.findById(dpDto.id)!!
+            } else {
+                // neu anlegen
+                DefectPositionModel().apply {
+                    this.controlReport = report
+                    report.defectPositions.add(this)
+                }
+            }
+            // Norm-Referenzen
+            dpModel.normReferences = dpDto.normReferences.toMutableList()
+            // Note updaten
+            val note = noteRepository.findById(dpDto.noteId)!!
+            note.content = dpDto.noteContent
+        }
 
-        return mapper.toDto(model)
+        // 3) Persist und DTO zurückliefern
+        return mapper.toDto(report)
     }
 
     fun listReportsByProject(projectId: Long): List<ControlReportDto> =

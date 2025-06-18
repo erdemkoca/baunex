@@ -39,7 +39,6 @@ class DefectPositionService(
             this.note           = note
             this.controlReport  = report
             this.positionNumber = nextNumber
-            this.description    = note.content
             this.createdAt      = LocalDateTime.now()
         }
         defectPositionRepo.persist(defect)
@@ -72,7 +71,6 @@ class DefectPositionService(
         resolutionSignature: String?
     ): DefectPositionModel {
         val defect = getById(id)
-        description?.let    { defect.description = it }
         normReferences?.let { defect.normReferences = it.toMutableList() }
         return defect
     }

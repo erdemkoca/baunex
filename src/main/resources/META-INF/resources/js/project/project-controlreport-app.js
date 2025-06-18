@@ -117,7 +117,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         generalNotes:          this.draft.generalNotes,
 
-                        defectPositions:       this.draft.defectPositions,  // if your DTO accepts it
+                        defectPositions: this.draft.defectPositions.map(pos => ({
+                            id:            pos.id || null,
+                            noteId:        pos.photoUrl.noteId,    // oder wo auch immer Du die Note-ID speicherst
+                            noteContent:   pos.description,        // das, was vorher description war
+                            normReferences: pos.normReferences || []
+                        })),
                         defectResolverNote:    this.draft.defectResolverNote,
 
                         completionDate:        this.draft.completionConfirmation?.completionDate
