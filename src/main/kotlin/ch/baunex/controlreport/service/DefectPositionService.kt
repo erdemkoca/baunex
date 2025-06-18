@@ -14,38 +14,39 @@ class DefectPositionService(
     private val controlReportService: ControlReportService
 ) {
 
-    /**
-     * Create a DefectPosition based on a Note of category MÄNGEL.
-     * The Note must already reference a ControlReport.
-     */
     @Transactional
     fun createFromNote(note: NoteModel): DefectPositionModel {
-        // 1) find-or-create the report model
+        // 1) find‐or‐create the ControlReportModel
         val report: ControlReportModel = note.controlReport
-            ?: controlReportService
-                .getOrInitializeModel(note.project?.id
-                    ?: throw IllegalArgumentException("Note ${note.id} has no project"))
-                .also { newReport ->
-                    // link the freshly created report to your note
-                    note.controlReport = newReport
-                    // make sure to persist that FK on NoteModel
-                    note.persist()
-                }
+            ?: run {
+                // bootstrap a report for this note’s project
+                val newReport = controlReportService
+                    .getOrInitializeModel(
+                        note.project?.id
+                            ?: throw IllegalArgumentException("Note ${note.id} has no project")
+                    )
+                // link & persist the FK on NoteModel
+                note.controlReport = newReport
+                note.persist()
+                newReport
+            }
 
         // 2) determine next position number
         val nextNumber = (report.defectPositions.maxOfOrNull { it.positionNumber } ?: 0) + 1
 
-        // 3) build & save the DefectPosition
+        // 3) build & save the DefectPosition, wiring both sides
         val defect = DefectPositionModel().apply {
-            controlReport  = report
-            positionNumber = nextNumber
-            description    = note.content
-            createdAt      = LocalDateTime.now()
+            this.note           = note
+            this.controlReport  = report
+            this.positionNumber = nextNumber
+            this.description    = note.content
+            this.createdAt      = LocalDateTime.now()
         }
         defectPositionRepo.persist(defect)
 
-        // 4) link it back into the report
+        // 4) add to the in‐memory list to keep Hibernate happy
         report.defectPositions.add(defect)
+
         return defect
     }
 

@@ -14,6 +14,7 @@ import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import jakarta.ws.rs.NotFoundException
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @ApplicationScoped
 class ControlReportService(
@@ -37,88 +38,66 @@ class ControlReportService(
      */
     @Transactional
     fun getOrInitializeModel(projectId: Long): ControlReportModel {
-        repository.findByProjectId(projectId).firstOrNull()?.let { return it }
+        // 1) Return existing if there is one
+        repository.findByProjectId(projectId).firstOrNull()
+            ?.let { return it }
 
+        // 2) Otherwise bootstrap a blank report
         val project = projectRepository.findById(projectId)
             ?: throw NotFoundException("Project $projectId")
         val company = companyRepository.findFirst()
             ?: throw IllegalStateException("No company configured")
 
-        // prepare the same pieces you already have…
-        val clientDto = ClientDto(
-            type       = CustomerType.OWNER,
-            name       = project.customer.person.firstName + " " + project.customer.person.lastName,
-            street     = project.customer.person.details.street.orEmpty(),
-            postalCode = project.customer.person.details.zipCode.orEmpty(),
-            city       = project.customer.person.details.city.orEmpty()
-        )
-        val contractorDto = ContractorDto(
-            type    = "", //TODO make a default inspector field in company. One Employee is the default inspector companyRepository.defaultInspectorType,
-            company = company?.name ?: "",
-            street  = company?.street ?: "",
-            postalCode    = company?.zipCode ?: "",
-            city          = company?.city ?: ""
-        )
-        val installDto = InstallationLocationDto(
-            street       = project.customer.person.details.street.orEmpty(),
-            postalCode   = project.customer.person.details.zipCode.orEmpty(),
-            city         = project.customer.person.details.city.orEmpty(),
-            buildingType = project.buildingType,
-            parcelNumber = "" // TODO maybe needed idk project.parcelNumber
-        )
-        val controlDataDto = ControlDataDto(
-            controlDate = LocalDate.now(),
-            controllerId = 0,
-            controllerFirstName = "",
-            controllerLastName = "",
-            phoneNumber = "",
-            hasDefects = false,
-            deadlineNote = null
-        )
+        val model = ControlReportModel().apply {
+            // link the owning project
+            this.project = project
 
-        // **HERE**: build a CreateDto, not a ControlReportDto
-        val createDto = ControlReportCreateDto(
-            projectId            = projectId,
-            customerId           = project.customer.id!!,
-            reportNumber         = "",
-            pageCount            = 1,
-            currentPage          = 1,
+            // client = the project’s customer
+            this.customer = project.customer
 
-            // fill in your contractor fields—here I'm faking a type
-            contractorType       = ContractorType.ELECTRICIAN,
-            contractorCompany    = company.name,
-            contractorStreet     = company.street,
-            contractorPostalCode = company.zipCode,
-            contractorCity       = company.city,
+            // contractor defaults
+            this.contractorType        = ContractorType.CONTROL_ORGAN
+            this.contractorCompany     = company.name
+            this.contractorStreet      = company.street
+            this.contractorHouseNumber = null
+            this.contractorPostalCode  = company.zipCode
+            this.contractorCity        = company.city
 
-            installationStreet   = project.customer.person.details.street.orEmpty(),
-            installationPostalCode  = project.customer.person.details.zipCode.orEmpty(),
-            installationCity        = project.customer.person.details.city.orEmpty(),
-            buildingType            = project.buildingType,
-            parcelNumber            = project.parcelNumber,
+            // installation location defaults
+            this.installationStreet      = project.customer.person.details.street.orEmpty()
+            this.installationHouseNumber = null
+            this.installationPostalCode  = project.customer.person.details.zipCode.orEmpty()
+            this.installationCity        = project.customer.person.details.city.orEmpty()
+            this.parcelNumber            = project.parcelNumber ?: ""
 
-            controlDate         = LocalDate.now(),
-            controlScope        = "",
-            controllerId        = null,
-            controllerPhone     = "",
-            hasDefects          = false,
-            deadlineNote        = null,
+            // control data defaults
+            this.controlDate    = LocalDate.now()
+            this.controlScope   = ""
+            this.employee       = null       // no controller yet
+            this.hasDefects     = false
+            this.deadlineNote   = null
+            this.generalNotes   = ""
 
-            generalNotes        = "",
+            // empty collections (they’re already initialized)
+            // this.defectPositions = mutableListOf()
+            // this.notes           = mutableListOf()
 
-            defectPositions     = emptyList<DefectPositionCreateDto>(),
+            // completion defaults
+            this.defectResolverNote  = null
+            this.completionDate      = null
+            this.companyStamp        = null
+            this.completionSignature = null
 
-            defectResolverNote  = null,
-            completionDate      = null,
-            companyStamp        = null,
-            completionSignature = null
-        )
+            // metadata timestamps
+            this.createdAt = LocalDateTime.now()
+            this.updatedAt = LocalDateTime.now()
+        }
 
-        // now mapper.toModel() matches CreateDto's type
-        val model = mapper.toModel(createDto)
         model.persist()
         return model
     }
+
+
     /**
      * Standard “create” endpoint, untouched.
      */
