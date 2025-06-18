@@ -1,35 +1,34 @@
 package ch.baunex.project.model
 
-enum class ProjectType {
-    // Wohnbauten
-    SINGLE_FAMILY_HOUSE,    // Einfamilienhaus
-    TWO_FAMILY_HOUSE,       // Zweifamilienhaus
-    TERRACED_HOUSE,         // Reihenhaus
-    MULTI_FAMILY_HOUSE,     // Mehrfamilienhaus
-    RESIDENTIAL_COMPLEX,    // Wohnanlage (Stadthäuser, Wohnblöcke)
+enum class ProjectType(val displayName: String) {
+    SINGLE_FAMILY_HOUSE("Einfamilienhaus"),
+    TWO_FAMILY_HOUSE("Zweifamilienhaus"),
+    TERRACED_HOUSE("Reihenhaus"),
+    MULTI_FAMILY_HOUSE("Mehrfamilienhaus"),
+    RESIDENTIAL_COMPLEX("Wohnanlage"),
 
     // Gewerbliche Bauten
-    COMMERCIAL_BUILDING,    // Büro, Laden, Hotel etc.
+    COMMERCIAL_BUILDING("Gewerbebau (Büro, Laden, Hotel)"),
 
     // Industriebauten
-    INDUSTRIAL_BUILDING,    // Fabrik, Lagerhalle
+    INDUSTRIAL_BUILDING("Industriebau (Fabrik, Lagerhalle)"),
 
     // Infrastruktur
-    INFRASTRUCTURE,         // Trafostation, Straßenbeleuchtung, Ladeinfrastruktur
+    INFRASTRUCTURE("Infrastruktur (Trafostation, Straßenbeleuchtung)"),
 
     // Öffentliche Bauten
-    PUBLIC_BUILDING,        // Schule, Krankenhaus, Rathaus
+    PUBLIC_BUILDING("Öffentliches Gebäude (Schule, Krankenhaus)"),
 
     // Erneuerbare Energien
-    RENEWABLE_ENERGY,       // Photovoltaik, Windpark etc.
+    RENEWABLE_ENERGY("Erneuerbare Energie (Photovoltaik, Windpark)"),
 
     // Landwirtschaft
-    AGRICULTURAL_BUILDING,  // Stall, Gewächshaus
+    AGRICULTURAL_BUILDING("Landwirtschaftliches Gebäude (Stall, Gewächshaus)"),
 
     // Temporäre / Mobile Installationen
-    TEMPORARY_INSTALLATION, // Baustellen-Container, Event-Technik
+    TEMPORARY_INSTALLATION("Temporäre Installation (Baustelle, Event)"),
 
     // Sonstiges / nicht definiert
-    DIVERSE,
-    UNDEFINED
+    DIVERSE("Sonstiges"),
+    UNDEFINED("Nicht definiert")
 }

@@ -15,7 +15,7 @@ import java.time.LocalDateTime
 @Table(name = "control_reports")
 class ControlReportModel : PanacheEntity() {
 
-    var reportNumber: String? = null
+    var reportNumber: Int? = null
 
     @Serializable(with = LocalDateSerializer::class)
     var controlDate: LocalDate? = null

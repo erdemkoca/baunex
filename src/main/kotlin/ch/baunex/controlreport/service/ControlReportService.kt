@@ -91,12 +91,9 @@ class ControlReportService(
             // metadata timestamps
             this.createdAt = LocalDateTime.now()
             this.updatedAt = LocalDateTime.now()
-
-            val nextSeq = (controlReportRepository.countByProjectId(projectId) ?: 0) + 1
-            reportNumber = "CR-%04d".format(nextSeq)
         }
-
         model.persist()
+        model.reportNumber = model.reportNumber?.plus(1000)
         return model
     }
 

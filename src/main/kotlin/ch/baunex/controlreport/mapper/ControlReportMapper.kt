@@ -14,7 +14,7 @@ class ControlReportMapper {
     /** Entity → Read-DTO */
     fun toDto(m: ControlReportModel): ControlReportDto = ControlReportDto(
         id                    = m.id,
-        reportNumber          = m.reportNumber.orEmpty(),
+        reportNumber          = "CR-${m.id + 1000}",
         pageCount             = m.pageCount,
         currentPage           = m.currentPage,
         client               = ClientDto(
@@ -62,7 +62,7 @@ class ControlReportMapper {
             updatedAt       = LocalDateTime.now()
 
             // core fields
-            reportNumber    = dto.reportNumber
+            reportNumber    = dto.reportNumber?.removePrefix("CR-")?.toInt()
             pageCount       = dto.pageCount
             currentPage     = dto.currentPage
 
