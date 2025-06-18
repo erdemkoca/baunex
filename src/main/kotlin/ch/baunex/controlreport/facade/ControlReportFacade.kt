@@ -67,12 +67,4 @@ class ControlReportFacade(
     ): ControlReportDto? {
         return controlReportService.removeDefectPosition(reportId, positionNumber)
     }
-
-    /** Abschlussbestätigung hinzufügen (gibt den aktualisierten Report zurück) */
-    fun addCompletionConfirmation(
-        reportId: Long,
-        createDto: CompletionConfirmationCreateDto
-    ): ControlReportDto? {
-        return controlReportService.addCompletionConfirmation(reportId, createDto)
-    }
 }

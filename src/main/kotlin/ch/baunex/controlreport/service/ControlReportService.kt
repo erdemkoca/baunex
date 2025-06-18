@@ -85,8 +85,6 @@ class ControlReportService(
             // completion defaults
             this.defectResolverNote  = null
             this.completionDate      = null
-            this.companyStamp        = null
-            this.completionSignature = null
 
             // metadata timestamps
             this.createdAt = LocalDateTime.now()
@@ -162,18 +160,6 @@ class ControlReportService(
         val pos = report.defectPositions.firstOrNull { it.positionNumber == positionNumber }
             ?: return null
         report.defectPositions.remove(pos)
-        return mapper.toDto(report)
-    }
-
-    @Transactional
-    fun addCompletionConfirmation(
-        reportId: Long,
-        confirmationDto: CompletionConfirmationCreateDto
-    ): ControlReportDto? {
-        val report = repository.findById(reportId) ?: return null
-        report.completionDate      = confirmationDto.resolvedAt
-        report.companyStamp        = confirmationDto.companyStamp
-        report.completionSignature = confirmationDto.signature
         return mapper.toDto(report)
     }
 }

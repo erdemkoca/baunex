@@ -67,8 +67,6 @@ class ControlReportModel : PanacheEntity() {
     // Completion information
     var defectResolverNote: String? = null
     var completionDate: LocalDateTime? = null
-    var companyStamp: String? = null
-    var completionSignature: String? = null
 
     // Metadata
     var createdAt: LocalDateTime = LocalDateTime.now()

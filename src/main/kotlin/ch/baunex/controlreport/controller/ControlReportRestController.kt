@@ -116,18 +116,4 @@ class ControlReportRestController {
         log.info("DefectPosition entfernt")
         return updated
     }
-
-    @POST
-    @Path("/{id}/complete")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    fun addCompletion(
-        @PathParam("id") id: Long,
-        confirmationDto: CompletionConfirmationCreateDto
-    ): ControlReportDto? {
-        log.info("Füge Abschlussbestätigung zu Report $id hinzu: $confirmationDto")
-        val updated = facade.addCompletionConfirmation(id, confirmationDto)
-        log.info("Abschlussbestätigung hinzugefügt")
-        return updated
-    }
 }

@@ -52,13 +52,7 @@ class ControlReportMapper {
         generalNotes          = m.generalNotes.orEmpty(),
         defectPositions       = m.defectPositions.map { toDefectPositionDto(it) },
         defectResolverNote    = m.defectResolverNote,
-        completionConfirmation= m.completionDate?.let {
-            CompletionConfirmationDto(
-                resolvedAt   = it,
-                companyStamp = m.companyStamp.orEmpty(),
-                signature    = m.completionSignature.orEmpty()
-            )
-        },
+        completionConfirmation= m.completionDate,
         createdAt             = m.createdAt,
         updatedAt             = m.updatedAt
     )
