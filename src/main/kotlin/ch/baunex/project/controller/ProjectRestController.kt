@@ -94,6 +94,7 @@ class ProjectRestController {
             customerId             = 0,
             customerName           = "",
             budget                 = 0,
+            parcelNumber           = "",
             customer               = emptyCust,
             startDate              = null,
             endDate                = null,

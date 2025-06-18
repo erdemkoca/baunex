@@ -1,5 +1,6 @@
 package ch.baunex.controlreport.service
 
+import ch.baunex.controlreport.model.ControlReportModel
 import ch.baunex.controlreport.model.DefectPositionModel
 import ch.baunex.notes.model.NoteModel
 import ch.baunex.controlreport.repository.DefectPositionRepository
@@ -9,7 +10,8 @@ import java.time.LocalDateTime
 
 @ApplicationScoped
 class DefectPositionService(
-    private val defectPositionRepo: DefectPositionRepository
+    private val defectPositionRepo: DefectPositionRepository,
+    private val controlReportService: ControlReportService
 ) {
 
     /**
@@ -18,20 +20,31 @@ class DefectPositionService(
      */
     @Transactional
     fun createFromNote(note: NoteModel): DefectPositionModel {
-        val report = note.controlReport
-            ?: throw IllegalArgumentException("Note ${note.id} is not linked to a ControlReport")
+        // 1) find-or-create the report model
+        val report: ControlReportModel = note.controlReport
+            ?: controlReportService
+                .getOrInitializeModel(note.project?.id
+                    ?: throw IllegalArgumentException("Note ${note.id} has no project"))
+                .also { newReport ->
+                    // link the freshly created report to your note
+                    note.controlReport = newReport
+                    // make sure to persist that FK on NoteModel
+                    note.persist()
+                }
 
-        // determine next position number
+        // 2) determine next position number
         val nextNumber = (report.defectPositions.maxOfOrNull { it.positionNumber } ?: 0) + 1
 
+        // 3) build & save the DefectPosition
         val defect = DefectPositionModel().apply {
             controlReport  = report
             positionNumber = nextNumber
             description    = note.content
             createdAt      = LocalDateTime.now()
-            // you can add normReferences etc. later
         }
         defectPositionRepo.persist(defect)
+
+        // 4) link it back into the report
         report.defectPositions.add(defect)
         return defect
     }

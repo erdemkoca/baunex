@@ -28,6 +28,7 @@ class ProjectMapper @Inject constructor(
             customerName = model.customer.companyName ?: "",
             status = model.status.name,
             budget = model.budget,
+            parcelNumber = model.parcelNumber,
             startDate = model.startDate,
             endDate = model.endDate,
             projectNumberFormatted = "PR-" + model.projectNumber.toString().padStart(4, '0')
@@ -40,6 +41,7 @@ class ProjectMapper @Inject constructor(
         customerId   = model.customer.id!!,
         customerName = model.customer.companyName ?: "",
         budget       = model.budget,
+        parcelNumber      = model.parcelNumber,
         customer     = customerMapper.toDTO(model.customer),
         startDate    = model.startDate,
         endDate      = model.endDate,

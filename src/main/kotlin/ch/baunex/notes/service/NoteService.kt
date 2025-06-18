@@ -124,25 +124,4 @@ class NoteService(
         }
         noteRepo.delete(existing)
     }
-
-    @Transactional
-    fun addAttachment(
-        noteId: Long,
-        fileStream: InputStream,
-        originalFilename: String
-    ): MediaAttachmentDto {
-        val note = noteRepo.findById(noteId)
-            ?: throw IllegalArgumentException("Note $noteId not found")
-        return noteAttachmentService.uploadForNote(
-            note,
-            fileStream,
-            originalFilename
-        )
-    }
-
-    fun listAttachments(noteId: Long): List<MediaAttachmentDto> {
-        val note = noteRepo.findById(noteId)
-            ?: throw IllegalArgumentException("Note $noteId not found")
-        return noteAttachmentService.listForNote(note)
-    }
 }

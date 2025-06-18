@@ -18,6 +18,7 @@ data class ProjectDetailDTO(
     val customerId: Long,
     val customerName: String,
     val budget: Int,
+    val parcelNumber: String?,
     @Serializable(with = LocalDateSerializer::class) val startDate: LocalDate?,
     @Serializable(with = LocalDateSerializer::class) val endDate: LocalDate?,
     val description: String?,

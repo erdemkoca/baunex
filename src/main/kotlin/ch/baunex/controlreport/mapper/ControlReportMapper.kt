@@ -74,11 +74,9 @@ class ControlReportMapper {
             contractorType     = dto.contractorType
             contractorCompany  = dto.contractorCompany
             contractorStreet   = dto.contractorStreet
-            contractorHouseNumber = dto.contractorHouseNumber
             contractorPostalCode  = dto.contractorPostalCode
             contractorCity        = dto.contractorCity
             installationStreet     = dto.installationStreet
-            installationHouseNumber = dto.installationHouseNumber
             installationPostalCode  = dto.installationPostalCode
             installationCity        = dto.installationCity
             project.buildingType       = dto.buildingType

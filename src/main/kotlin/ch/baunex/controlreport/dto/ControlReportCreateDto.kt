@@ -15,12 +15,10 @@ data class ControlReportCreateDto(
     val contractorType: ContractorType,
     val contractorCompany: String,
     val contractorStreet: String,
-    val contractorHouseNumber: String,
     val contractorPostalCode: String,
     val contractorCity: String,
 
     val installationStreet: String,
-    val installationHouseNumber: String,
     val installationPostalCode: String,
     val installationCity: String,
     val buildingType: ProjectType,

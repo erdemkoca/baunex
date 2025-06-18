@@ -22,6 +22,9 @@ class ProjectModel : PanacheEntity() {
     @Column(nullable = false)
     var budget: Int = 0
 
+    @Column(nullable = false)
+    var parcelNumber: String = ""
+
     @Column(name = "start_date")
     var startDate: LocalDate? = null
 

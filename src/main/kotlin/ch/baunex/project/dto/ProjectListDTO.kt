@@ -14,6 +14,7 @@ data class ProjectListDTO(
     val customerName: String,
     val status: String,
     val budget: Int? = null,
+    val parcelNumber: String? = "",
     @Contextual val startDate: LocalDate? = null,
     @Contextual val endDate: LocalDate? = null
 )

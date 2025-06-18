@@ -3,6 +3,8 @@ package ch.baunex.controlreport.service
 import ch.baunex.company.repository.CompanyRepository
 import ch.baunex.controlreport.dto.*
 import ch.baunex.controlreport.mapper.ControlReportMapper
+import ch.baunex.controlreport.model.ContractorType
+import ch.baunex.controlreport.model.ControlReportModel
 import ch.baunex.controlreport.model.DefectPositionModel
 import ch.baunex.controlreport.repository.ControlReportRepository
 import ch.baunex.project.repository.ProjectRepository
@@ -12,42 +14,37 @@ import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import jakarta.ws.rs.NotFoundException
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 @ApplicationScoped
 class ControlReportService(
     private val mapper: ControlReportMapper
 ) {
-    @Inject
-    lateinit var repository: ControlReportRepository
+    @Inject lateinit var repository: ControlReportRepository
+    @Inject lateinit var projectRepository: ProjectRepository
+    @Inject lateinit var companyRepository: CompanyRepository
 
-    @Inject
-    lateinit var projectRepository: ProjectRepository
-
-    @Inject
-    lateinit var companyRepository: CompanyRepository
-
+    /**
+     * Exposed endpoint: returns a DTO, creating the report if needed.
+     */
     @Transactional
-    fun createControlReport(dto: ControlReportCreateDto): ControlReportDto {
-        val model = mapper.toModel(dto)
-        model.persist()
+    fun getOrInitializeByProjectId(projectId: Long): ControlReportDto {
+        val model = getOrInitializeModel(projectId)
         return mapper.toDto(model)
     }
 
+    /**
+     * Internal helper: find or create the ControlReportModel.
+     */
     @Transactional
-    fun getOrInitializeByProjectId(projectId: Long): ControlReportDto {
-        // 1) Try existing
-        val existing = repository.findByProjectId(projectId)
-            .firstOrNull()
-        if (existing != null) {
-            return mapper.toDto(existing)
-        }
+    fun getOrInitializeModel(projectId: Long): ControlReportModel {
+        repository.findByProjectId(projectId).firstOrNull()?.let { return it }
 
-        val company = companyRepository.findFirst()
-        // 2) No report yet → build a blank one
         val project = projectRepository.findById(projectId)
             ?: throw NotFoundException("Project $projectId")
-        // pull whatever you need: customer, your company, etc.
+        val company = companyRepository.findFirst()
+            ?: throw IllegalStateException("No company configured")
+
+        // prepare the same pieces you already have…
         val clientDto = ClientDto(
             type       = CustomerType.OWNER,
             name       = project.customer.person.firstName + " " + project.customer.person.lastName,
@@ -69,39 +66,71 @@ class ControlReportService(
             buildingType = project.buildingType,
             parcelNumber = "" // TODO maybe needed idk project.parcelNumber
         )
-        // finally hand back a ControlReportDto
-        return ControlReportDto(
-            id                   = 0L,          // zero signals “new”
+        val controlDataDto = ControlDataDto(
+            controlDate = LocalDate.now(),
+            controllerId = 0,
+            controllerFirstName = "",
+            controllerLastName = "",
+            phoneNumber = "",
+            hasDefects = false,
+            deadlineNote = null
+        )
+
+        // **HERE**: build a CreateDto, not a ControlReportDto
+        val createDto = ControlReportCreateDto(
+            projectId            = projectId,
+            customerId           = project.customer.id!!,
             reportNumber         = "",
             pageCount            = 1,
             currentPage          = 1,
-            client               = clientDto,
-            contractor           = contractorDto,
-            installationLocation = installDto,
-            controlScope         = "",
-            controlData          = ControlDataDto(
-                controlDate = LocalDate.now(),
-                controllerId = 0,
-                controllerFirstName = "",
-                controllerLastName = "",
-                phoneNumber = "",
-                hasDefects = false,
-                deadlineNote = null
-            ),
-            generalNotes         = "",
-            defectPositions      = emptyList(),
-            defectResolverNote   = null,
-            completionConfirmation = null,
-            createdAt            = LocalDateTime.now(),
-            updatedAt            = LocalDateTime.now()
+
+            // fill in your contractor fields—here I'm faking a type
+            contractorType       = ContractorType.ELECTRICIAN,
+            contractorCompany    = company.name,
+            contractorStreet     = company.street,
+            contractorPostalCode = company.zipCode,
+            contractorCity       = company.city,
+
+            installationStreet   = project.customer.person.details.street.orEmpty(),
+            installationPostalCode  = project.customer.person.details.zipCode.orEmpty(),
+            installationCity        = project.customer.person.details.city.orEmpty(),
+            buildingType            = project.buildingType,
+            parcelNumber            = project.parcelNumber,
+
+            controlDate         = LocalDate.now(),
+            controlScope        = "",
+            controllerId        = null,
+            controllerPhone     = "",
+            hasDefects          = false,
+            deadlineNote        = null,
+
+            generalNotes        = "",
+
+            defectPositions     = emptyList<DefectPositionCreateDto>(),
+
+            defectResolverNote  = null,
+            completionDate      = null,
+            companyStamp        = null,
+            completionSignature = null
         )
+
+        // now mapper.toModel() matches CreateDto's type
+        val model = mapper.toModel(createDto)
+        model.persist()
+        return model
     }
-
-
-    fun getControlReport(id: Long): ControlReportDto? {
-        val model = repository.findById(id) ?: return null
+    /**
+     * Standard “create” endpoint, untouched.
+     */
+    @Transactional
+    fun createControlReport(dto: ControlReportCreateDto): ControlReportDto {
+        val model = mapper.toModel(dto)
+        model.persist()
         return mapper.toDto(model)
     }
+
+    fun getControlReport(id: Long): ControlReportDto? =
+        repository.findById(id)?.let(mapper::toDto)
 
     @Transactional
     fun updateControlReport(id: Long, dto: ControlReportUpdateDto): ControlReportDto? {
@@ -111,22 +140,19 @@ class ControlReportService(
     }
 
     @Transactional
-    fun deleteControlReport(id: Long) {
+    fun deleteControlReport(id: Long) =
         repository.deleteById(id)
-    }
 
-    fun listControlReports(): List<ControlReportDto> {
-        return repository.listAll().map { mapper.toDto(it) }
-    }
+    fun listControlReports(): List<ControlReportDto> =
+        repository.listAll().map(mapper::toDto)
 
     fun listReportsByProject(projectId: Long): List<ControlReportDto> =
-        repository.findByProjectId(projectId)
-            .map { mapper.toDto(it) }
+        repository.findByProjectId(projectId).map(mapper::toDto)
 
     @Transactional
     fun addDefectPosition(reportId: Long, dto: DefectPositionCreateDto): ControlReportDto? {
         val report = repository.findById(reportId) ?: return null
-        val pos = DefectPositionModel().apply {
+        val pos    = DefectPositionModel().apply {
             positionNumber = dto.positionNumber
             normReferences += dto.normReferences
             controlReport  = report
@@ -144,10 +170,9 @@ class ControlReportService(
         val report = repository.findById(reportId) ?: return null
         val pos = report.defectPositions.firstOrNull { it.positionNumber == positionNumber }
             ?: return null
-        // direkt hier updaten – kein weiterer Mapper-Call nötig
-        pos.apply {
-            normReferences.clear()
-            normReferences.addAll(dto.normReferences)
+        pos.normReferences.apply {
+            clear()
+            addAll(dto.normReferences)
         }
         return mapper.toDto(report)
     }
@@ -167,10 +192,9 @@ class ControlReportService(
         confirmationDto: CompletionConfirmationCreateDto
     ): ControlReportDto? {
         val report = repository.findById(reportId) ?: return null
-        // statt eines nicht vorhandenen Objekts setzen wir direkt die drei Felder:
-        report.completionDate        = confirmationDto.resolvedAt
-        report.companyStamp          = confirmationDto.companyStamp
-        report.completionSignature   = confirmationDto.signature
+        report.completionDate      = confirmationDto.resolvedAt
+        report.companyStamp        = confirmationDto.companyStamp
+        report.completionSignature = confirmationDto.signature
         return mapper.toDto(report)
     }
 }
