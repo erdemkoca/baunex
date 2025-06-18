@@ -105,10 +105,16 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="row g-3 mb-3">
             <div class="col-md-4">
               <label class="form-label">Typ</label>
-              <select class="form-select" v-model="draft.client.type">
-                <option :value="null">– wählen –</option>
-                <option v-for="t in clientTypes" :key="t" :value="t">{{ t }}</option>
-              </select>
+                <select class="form-select" v-model="draft.client.type">
+                  <option :value="null">– wählen –</option>
+                  <option
+                    v-for="opt in clientTypes"
+                    :key="opt.code"
+                    :value="opt.code"
+                  >
+                    {{ opt.label }}
+                  </option>
+                </select>
             </div>
             <div class="col-md-4">
               <label class="form-label">Name</label>
@@ -137,8 +143,14 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="col-md-4">
               <label class="form-label">Typ</label>
               <select class="form-select" v-model="draft.contractor.type">
-                <option :value="null">– wählen –</option>
-                <option v-for="t in contractorTypes" :key="t" :value="t">{{ t }}</option>
+                  <option :value="null">– wählen –</option>
+                  <option
+                    v-for="opt in contractorTypes"
+                    :key="opt.code"
+                    :value="opt.code"
+                  >
+                    {{ opt.label }}
+                  </option>
               </select>
             </div>
             <div class="col-md-4">

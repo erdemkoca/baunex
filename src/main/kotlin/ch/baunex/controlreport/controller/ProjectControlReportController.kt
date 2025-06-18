@@ -1,5 +1,6 @@
 package ch.baunex.controlreport.controller
 
+import ch.baunex.common.dto.EnumOption
 import ch.baunex.controlreport.dto.ControlReportCreateDto
 import ch.baunex.controlreport.dto.ControlReportDto
 import ch.baunex.controlreport.dto.ControlReportUpdateDto
@@ -36,8 +37,9 @@ class ProjectControlReportController {
     fun editOrNew(@PathParam("projectId") projectId: Long): Response {
         val project       = projectFacade.getProjectWithDetails(projectId) ?: throw NotFoundException()
         val reportDto     = reportFacade.getOrInitializeReport(projectId)
-        val customerTypes   = CustomerType.values().map { it.name }
-        val contractorTypes = ContractorType.values().map { it.name }
+        val customerTypes   = CustomerType.values().map { EnumOption(it.name, it.displayName) }
+        val contractorTypes = ContractorType.values().map { EnumOption(it.name, it.displayName) }
+
         val employees = employeeFacade.listAll()
 
         val tpl = WebController.Templates.projectControlReport(
