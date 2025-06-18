@@ -8,7 +8,6 @@ import ch.baunex.controlreport.model.ControlReportModel
 import ch.baunex.controlreport.model.DefectPositionModel
 import ch.baunex.controlreport.repository.ControlReportRepository
 import ch.baunex.project.repository.ProjectRepository
-import ch.baunex.user.model.CustomerType
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -24,18 +23,12 @@ class ControlReportService(
     @Inject lateinit var projectRepository: ProjectRepository
     @Inject lateinit var companyRepository: CompanyRepository
 
-    /**
-     * Exposed endpoint: returns a DTO, creating the report if needed.
-     */
     @Transactional
     fun getOrInitializeByProjectId(projectId: Long): ControlReportDto {
         val model = getOrInitializeModel(projectId)
         return mapper.toDto(model)
     }
 
-    /**
-     * Internal helper: find or create the ControlReportModel.
-     */
     @Transactional
     fun getOrInitializeModel(projectId: Long): ControlReportModel {
         // 1) Return existing if there is one
@@ -95,10 +88,6 @@ class ControlReportService(
         return model
     }
 
-
-    /**
-     * Standard “create” endpoint, untouched.
-     */
     @Transactional
     fun createControlReport(dto: ControlReportCreateDto): ControlReportDto {
         val model = mapper.toModel(dto)
@@ -106,60 +95,14 @@ class ControlReportService(
         return mapper.toDto(model)
     }
 
-    fun getControlReport(id: Long): ControlReportDto? =
-        repository.findById(id)?.let(mapper::toDto)
-
     @Transactional
-    fun updateControlReport(id: Long, dto: ControlReportUpdateDto): ControlReportDto? {
-        val model = repository.findById(id) ?: return null
+    fun updateByProjectId(projectId: Long, dto: ControlReportUpdateDto): ControlReportDto? {
+        val model = repository.findByProjectId(projectId).firstOrNull()
+            ?: return null
         mapper.applyUpdate(model, dto)
         return mapper.toDto(model)
     }
 
-    @Transactional
-    fun deleteControlReport(id: Long) =
-        repository.deleteById(id)
-
-    fun listControlReports(): List<ControlReportDto> =
-        repository.listAll().map(mapper::toDto)
-
     fun listReportsByProject(projectId: Long): List<ControlReportDto> =
         repository.findByProjectId(projectId).map(mapper::toDto)
-
-    @Transactional
-    fun addDefectPosition(reportId: Long, dto: DefectPositionCreateDto): ControlReportDto? {
-        val report = repository.findById(reportId) ?: return null
-        val pos    = DefectPositionModel().apply {
-            positionNumber = dto.positionNumber
-            normReferences += dto.normReferences
-            controlReport  = report
-        }
-        report.defectPositions.add(pos)
-        return mapper.toDto(report)
-    }
-
-    @Transactional
-    fun updateDefectPosition(
-        reportId: Long,
-        positionNumber: Int,
-        dto: DefectPositionUpdateDto
-    ): ControlReportDto? {
-        val report = repository.findById(reportId) ?: return null
-        val pos = report.defectPositions.firstOrNull { it.positionNumber == positionNumber }
-            ?: return null
-        pos.normReferences.apply {
-            clear()
-            addAll(dto.normReferences)
-        }
-        return mapper.toDto(report)
-    }
-
-    @Transactional
-    fun removeDefectPosition(reportId: Long, positionNumber: Int): ControlReportDto? {
-        val report = repository.findById(reportId) ?: return null
-        val pos = report.defectPositions.firstOrNull { it.positionNumber == positionNumber }
-            ?: return null
-        report.defectPositions.remove(pos)
-        return mapper.toDto(report)
-    }
 }

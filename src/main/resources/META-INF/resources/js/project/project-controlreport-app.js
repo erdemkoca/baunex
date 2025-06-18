@@ -81,17 +81,24 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             async save() {
                 try {
-                    const res = await fetch(`/projects/${this.draft.id}/controlreport`, {
+                    const projectId = Number(el.dataset.projectId)
+                    const res = await fetch(
+                        `/projects/${projectId}/controlreport`,
+                        {
                         method: 'PUT',
-                        headers: { 'Content-Type':'application/json' },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(this.draft)
                     });
-                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    if (!res.ok) {
+                        const errText = await res.text();
+                        console.error('Save failed — status:', res.status, 'body:', errText);
+                        throw new Error(`HTTP ${res.status}`);
+                    }
                     this.draft = await res.json();
                     alert('Gespeichert!');
                 } catch (e) {
-                    console.error(e);
-                    alert('Fehler beim Speichern');
+                    console.error('Unexpected error in save():', e);
+                    alert('Fehler beim Speichern: ' + (e.message || e));
                 }
             }
         },
@@ -205,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="row g-3 mb-3">
             <div class="col-md-4">
               <label class="form-label">Datum</label>
-              <input v-model="draft.controlData.controlDate" type="date" class="form-control" />
+              <input v-model="draft.controlDate" type="date" class="form-control" />
             </div>
             <div class="col-md-4">
               <label class="form-label">Kontrolleur</label>

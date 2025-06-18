@@ -19,7 +19,6 @@ data class ControlReportUpdateDto(
     val clientType: CustomerType? = null,
     val clientName: String? = null,
     val clientStreet: String? = null,
-    val clientHouseNumber: String? = null,
     val clientPostalCode: String? = null,
     val clientCity: String? = null,
 
@@ -27,13 +26,11 @@ data class ControlReportUpdateDto(
     val contractorType: ContractorType? = null,
     val contractorCompany: String? = null,
     val contractorStreet: String? = null,
-    val contractorHouseNumber: String? = null,
     val contractorPostalCode: String? = null,
     val contractorCity: String? = null,
 
     // Installationsort
     val installationStreet: String? = null,
-    val installationHouseNumber: String? = null,
     val installationPostalCode: String? = null,
     val installationCity: String? = null,
     val buildingType: String? = null,

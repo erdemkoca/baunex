@@ -71,14 +71,26 @@ class ProjectControlReportController {
         return reportFacade.createReport(dto)
     }
 
+//    @PUT
+//    @Consumes(MediaType.APPLICATION_JSON)
+//    @Produces(MediaType.APPLICATION_JSON)
+//    fun update(
+//        @PathParam("projectId") projectId: Long,
+//        dto: ControlReportUpdateDto
+//    ): ControlReportDto {
+//        return reportFacade.updateReport(projectId, dto)
+//            ?: throw NotFoundException()
+//    }
+
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     fun update(
         @PathParam("projectId") projectId: Long,
         dto: ControlReportUpdateDto
-    ): ControlReportDto {
-        return reportFacade.updateReport(projectId, dto)
-            ?: throw NotFoundException()
-    }
+    ): ControlReportDto =
+        reportFacade
+            .updateReportByProject(projectId, dto)
+            ?: throw NotFoundException("No report for project $projectId")
+
 }
