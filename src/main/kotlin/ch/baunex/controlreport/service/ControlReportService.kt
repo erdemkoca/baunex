@@ -111,6 +111,12 @@ class ControlReportService(
         // 2) Report-Felder updaten
         mapper.applyUpdate(report, dto)
 
+        // Update controller if specified
+        if (dto.controllerId != null) {
+            report.employee = employeeRepository.findById(dto.controllerId)
+                ?: throw NotFoundException("Employee ${dto.controllerId} nicht gefunden")
+        }
+
         // 3) Alle existierenden DefectPositions für diesen Report holen
         val existingPositions = defectPositionRepository.findByControlReportId(report.id)
         println("Found ${existingPositions.size} existing positions")
