@@ -1,7 +1,6 @@
 package ch.baunex.controlreport.controller
 
 import ch.baunex.common.dto.EnumOption
-import ch.baunex.controlreport.dto.ControlReportCreateDto
 import ch.baunex.controlreport.dto.ControlReportDto
 import ch.baunex.controlreport.dto.ControlReportUpdateDto
 import ch.baunex.controlreport.facade.ControlReportFacade
@@ -61,26 +60,6 @@ class ProjectControlReportController {
     @Produces(MediaType.APPLICATION_JSON)
     fun getReportsByProject(@PathParam("projectId") projectId: Long): List<ControlReportDto> =
         reportFacade.listReportsByProject(projectId)
-
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    fun create(
-        dto: ControlReportCreateDto
-    ): ControlReportDto {
-        return reportFacade.createReport(dto)
-    }
-
-//    @PUT
-//    @Consumes(MediaType.APPLICATION_JSON)
-//    @Produces(MediaType.APPLICATION_JSON)
-//    fun update(
-//        @PathParam("projectId") projectId: Long,
-//        dto: ControlReportUpdateDto
-//    ): ControlReportDto {
-//        return reportFacade.updateReport(projectId, dto)
-//            ?: throw NotFoundException()
-//    }
 
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)

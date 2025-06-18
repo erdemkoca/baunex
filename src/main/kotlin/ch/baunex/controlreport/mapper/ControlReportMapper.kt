@@ -1,108 +1,97 @@
-// ch/baunex/controlreport/mapper/ControlReportMapper.kt
 package ch.baunex.controlreport.mapper
 
 import ch.baunex.controlreport.dto.*
-import ch.baunex.controlreport.model.*
+import ch.baunex.controlreport.model.ControlReportModel
+import ch.baunex.controlreport.model.DefectPositionModel
 import ch.baunex.notes.mapper.toDto
-import ch.baunex.user.model.CustomerModel
 import jakarta.enterprise.context.ApplicationScoped
-import java.time.LocalDateTime
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @ApplicationScoped
 class ControlReportMapper {
 
     /** Entity → Read-DTO */
     fun toDto(m: ControlReportModel): ControlReportDto = ControlReportDto(
-        id                    = m.id,
-        reportNumber          = m.reportNumber.orEmpty(),
-        pageCount             = m.pageCount,
-        currentPage           = m.currentPage,
-        client                = ClientDto(
+        id                   = m.id,
+        reportNumber         = m.reportNumber.orEmpty(),
+        pageCount            = m.pageCount,
+        currentPage          = m.currentPage,
+        client               = ClientDto(
             type       = m.project.customer.customerType,
             name       = m.customer?.companyName.orEmpty(),
             street     = m.customer?.person?.details?.street.orEmpty(),
             postalCode = m.customer?.person?.details?.zipCode.orEmpty(),
             city       = m.customer?.person?.details?.city.orEmpty()
         ),
-        contractor            = ContractorDto(
+        contractor           = ContractorDto(
             type       = m.contractorType.name,
             company    = m.contractorCompany.orEmpty(),
             street     = m.contractorStreet.orEmpty(),
             postalCode = m.contractorPostalCode.orEmpty(),
             city       = m.contractorCity.orEmpty()
         ),
-        installationLocation  = InstallationLocationDto(
-            street     = m.installationStreet.orEmpty(),
-            postalCode = m.installationPostalCode.orEmpty(),
-            city       = m.installationCity.orEmpty(),
+        installationLocation = InstallationLocationDto(
+            street       = m.installationStreet.orEmpty(),
+            postalCode   = m.installationPostalCode.orEmpty(),
+            city         = m.installationCity.orEmpty(),
             buildingType = m.project.buildingType,
             parcelNumber = m.parcelNumber
         ),
-        controlScope          = m.controlScope.orEmpty(),
-        controlData           = ControlDataDto(
-            controlDate = m.controlDate ?: LocalDate.now(),
-            controllerId = m.employee?.id,
+        controlScope         = m.controlScope.orEmpty(),
+        controlData          = ControlDataDto(
+            controlDate         = m.controlDate ?: LocalDate.now(),
+            controllerId        = m.employee?.id,
             controllerFirstName = m.employee?.person?.firstName,
-            controllerLastName = m.employee?.person?.lastName,
-            phoneNumber = m.employee?.person?.details?.phone.orEmpty(),
-            hasDefects = m.hasDefects,
-            deadlineNote = m.deadlineNote
+            controllerLastName  = m.employee?.person?.lastName,
+            phoneNumber         = m.employee?.person?.details?.phone.orEmpty(),
+            hasDefects          = m.hasDefects,
+            deadlineNote        = m.deadlineNote
         ),
-        generalNotes          = m.generalNotes.orEmpty(),
-        defectPositions       = m.defectPositions.map { toDefectPositionDto(it) },
-        defectResolverNote    = m.defectResolverNote,
-        createdAt             = m.createdAt,
-        updatedAt             = m.updatedAt
-    )
+        generalNotes         = m.generalNotes.orEmpty(),
+        defectPositions      = m.defectPositions.map { toDefectPositionDto(it) },
+        defectResolverNote   = m.defectResolverNote,
+        createdAt            = m.createdAt,
+        updatedAt            = m.updatedAt,
+        controlDate    = m.controlDate ?: LocalDate.now()
+        )
 
-    /** Create-DTO → neues Entity */
-    fun toModel(dto: ControlReportCreateDto): ControlReportModel {
-        val m = ControlReportModel().apply {
-            reportNumber       = dto.reportNumber
-            controlDate        = dto.controlDate
-            pageCount          = dto.pageCount
-            currentPage        = dto.currentPage
-            customer           = CustomerModel().apply { id = dto.customerId }
-            contractorType     = dto.contractorType
-            contractorCompany  = dto.contractorCompany
-            contractorStreet   = dto.contractorStreet
-            contractorPostalCode  = dto.contractorPostalCode
-            contractorCity        = dto.contractorCity
-            installationStreet     = dto.installationStreet
-            installationPostalCode  = dto.installationPostalCode
-            installationCity        = dto.installationCity
-            project.buildingType       = dto.buildingType
-            parcelNumber       = dto.parcelNumber
-            controlScope       = dto.controlScope
-            hasDefects         = dto.hasDefects
-            deadlineNote       = dto.deadlineNote
-            generalNotes       = dto.generalNotes
-        }
-        dto.defectPositions.forEach { cp ->
-            m.defectPositions.add(
-                DefectPositionModel().apply {
-                    positionNumber = cp.positionNumber
-                    normReferences += cp.normReferences
-                    controlReport  = m
-                }
-            )
-        }
-        return m
-    }
-
-    /** Update-DTO → bestehendes Entity aktualisieren */
+    /** Update-DTO → bestehendes Entity aktualisieren (employee set in service) */
     fun applyUpdate(m: ControlReportModel, dto: ControlReportUpdateDto): ControlReportModel {
         return m.apply {
+            // metadata
+            updatedAt       = LocalDateTime.now()
+
+            // core fields
             reportNumber    = dto.reportNumber
-            controlDate     = dto.controlDate
             pageCount       = dto.pageCount
             currentPage     = dto.currentPage
-            controlScope    = dto.controlScope
-            hasDefects      = dto.hasDefects
-            deadlineNote    = dto.deadlineNote
-            generalNotes    = dto.generalNotes
-            updatedAt       = LocalDateTime.now()
+
+            // contractor
+            dto.contractorType?.let { contractorType = it }
+            contractorCompany    = dto.contractorCompany
+            contractorStreet     = dto.contractorStreet
+            contractorPostalCode = dto.contractorPostalCode
+            contractorCity       = dto.contractorCity
+
+            // installation
+            installationStreet     = dto.installationStreet
+            installationPostalCode = dto.installationPostalCode
+            installationCity       = dto.installationCity
+            parcelNumber           = dto.parcelNumber
+
+            // control data
+            controlDate    = dto.controlDate
+            controlScope   = dto.controlScope
+            hasDefects     = dto.hasDefects
+            deadlineNote   = dto.deadlineNote
+
+            // free text
+            generalNotes   = dto.generalNotes
+
+            // completion info
+            defectResolverNote = dto.defectResolverNote
+            completionDate     = dto.completionDate
         }
     }
 

@@ -40,8 +40,8 @@ data class ControlReportUpdateDto(
     @Serializable(with = LocalDateSerializer::class)
     val controlDate: LocalDate? = null,
     val controlScope: String? = null,
-    val controllerId: Long?,
-    val hasDefects: Boolean,
+    val controllerId: Long? = null,
+    val hasDefects: Boolean = false,
     val deadlineNote: String? = null,
 
     // Freie Notizen

@@ -9,10 +9,6 @@ class ControlReportFacade(
     private val controlReportService: ControlReportService
 ) {
 
-    fun createReport(createDto: ControlReportCreateDto): ControlReportDto {
-        return controlReportService.createControlReport(createDto)
-    }
-
     fun getOrInitializeReport(projectId: Long): ControlReportDto =
         controlReportService.getOrInitializeByProjectId(projectId)
 

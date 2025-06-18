@@ -45,6 +45,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const d = JSON.parse(JSON.stringify(report));
             if (!d.controlDate) d.controlDate = new Date().toISOString().slice(0,10);
             if (!d.defectPositions) d.defectPositions = [];
+
+            if (d.controlData) {
+                d.controllerId    = d.controlData.controllerId;
+                d.controllerPhone = d.controlData.phoneNumber;
+                d.hasDefects      = d.controlData.hasDefects;
+                d.deadlineNote    = d.controlData.deadlineNote;
+            }
+
             return { draft: d, clientTypes, contractorTypes, employees };
         },
         watch: {
@@ -101,11 +109,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         buildingType:          this.draft.installationLocation.buildingType,
                         parcelNumber:          this.draft.installationLocation.parcelNumber,
 
-                        controlDate:           this.draft.controlDate.split('T')[0],
+                        controlDate:           this.draft.controlDate,
                         controlScope:          this.draft.controlScope,
-                        controllerId:          this.draft.controlData.controllerId,
-                        hasDefects:            this.draft.controlData.hasDefects,
-                        deadlineNote:          this.draft.controlData.deadlineNote,
+                        controllerId:          this.draft.controllerId,
+                        hasDefects:            this.draft.hasDefects,
+                        deadlineNote:          this.draft.deadlineNote,
 
                         generalNotes:          this.draft.generalNotes,
 
@@ -128,7 +136,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.error('Save failed — status:', res.status, 'body:', errText);
                         throw new Error(`HTTP ${res.status}`);
                     }
-                    this.draft = await res.json();
+                    const newDto = await res.json();
+                    // 1) replace draft
+                    this.draft = newDto;
+                    // 2) flatten controlData back into draft
+                    if (this.draft.controlData) {
+                        this.draft.controllerId    = this.draft.controlData.controllerId;
+                        this.draft.controllerPhone = this.draft.controlData.phoneNumber;
+                        this.draft.hasDefects      = this.draft.controlData.hasDefects;
+                        this.draft.deadlineNote    = this.draft.controlData.deadlineNote;
+                    }
                     alert('Gespeichert!');
                 } catch (e) {
                     console.error('Unexpected error in save():', e);

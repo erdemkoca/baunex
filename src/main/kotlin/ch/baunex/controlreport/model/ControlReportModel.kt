@@ -37,13 +37,11 @@ class ControlReportModel : PanacheEntity() {
     var contractorType: ContractorType = ContractorType.CONTROL_ORGAN
     var contractorCompany: String? = null
     var contractorStreet: String? = null
-    var contractorHouseNumber: String? = null
     var contractorPostalCode: String? = null
     var contractorCity: String? = null
 
     // Installation location
     var installationStreet: String? = null
-    var installationHouseNumber: String? = null
     var installationPostalCode: String? = null
     var installationCity: String? = null
     var parcelNumber: String? = null
