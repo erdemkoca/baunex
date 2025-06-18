@@ -19,8 +19,6 @@ data class ControlReportDto(
     val defectPositions: List<DefectPositionDto>,
     val defectResolverNote: String?,
     @Serializable(with = LocalDateTimeSerializer::class)
-    val completionConfirmation: LocalDateTime?,
-    @Serializable(with = LocalDateTimeSerializer::class)
     val createdAt: LocalDateTime,
     @Serializable(with = LocalDateTimeSerializer::class)
     val updatedAt: LocalDateTime

@@ -52,7 +52,6 @@ class ControlReportMapper {
         generalNotes          = m.generalNotes.orEmpty(),
         defectPositions       = m.defectPositions.map { toDefectPositionDto(it) },
         defectResolverNote    = m.defectResolverNote,
-        completionConfirmation= m.completionDate,
         createdAt             = m.createdAt,
         updatedAt             = m.updatedAt
     )

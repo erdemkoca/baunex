@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-
+@Serializable
 data class ControlReportUpdateDto(
     // technische Metadaten
     val reportNumber: String? = null,
@@ -53,6 +53,5 @@ data class ControlReportUpdateDto(
     // Abschlussinfos
     val defectResolverNote: String? = null,
     @Serializable(with = LocalDateTimeSerializer::class)
-    val completionDate: LocalDateTime? = null,
-    val completionConfirmation: LocalDateTime? = null
+    val completionDate: LocalDateTime? = null
 )

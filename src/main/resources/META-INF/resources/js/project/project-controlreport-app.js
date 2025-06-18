@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function createEmpty() {
         const nowDate     = new Date().toISOString().slice(0,10)  // "YYYY-MM-DD"
-        const nowDateTime = new Date().toISOString().slice(0,16)  // "YYYY-MM-DDThh:mm"
         return {
             id: null,
             reportNumber: '',
@@ -33,12 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
             hasDefects: false,
             deadlineNote: '',
             generalNotes: '',
-            defectPositions: [],
-            completionConfirmation: {
-                completionDate: nowDateTime,
-                companyStamp: '',
-                completionSignature: ''
-            }
+            defectPositions: []
         };
     }
 
@@ -49,11 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
     createApp({
         data() {
             const d = JSON.parse(JSON.stringify(report));
-            if (!d.controlDate) d.controlDate = new Date().toISOString().slice(0,16);
+            if (!d.controlDate) d.controlDate = new Date().toISOString().slice(0,10);
             if (!d.defectPositions) d.defectPositions = [];
-            if (!d.completionConfirmation) {
-                d.completionConfirmation = { completionDate:'', companyStamp:'', completionSignature:'' };
-            }
             return { draft: d, clientTypes, contractorTypes, employees };
         },
         watch: {
@@ -81,14 +72,57 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             async save() {
                 try {
-                    const projectId = Number(el.dataset.projectId)
+                    // ensure this attribute exists on your <div>!
+                    const projectId = Number(el.dataset.projectId);
+                    if (isNaN(projectId)) {
+                        throw new Error("projectId is not set on the container element");
+                    }
+                    // build a payload matching ControlReportUpdateDto exactly
+                    const updateDto = {
+                        reportNumber:          this.draft.reportNumber,
+                        pageCount:             this.draft.pageCount,
+                        currentPage:           this.draft.currentPage,
+
+                        clientType:            this.draft.client.type,
+                        clientName:            this.draft.client.name,
+                        clientStreet:          this.draft.client.street,
+                        clientPostalCode:      this.draft.client.postalCode,
+                        clientCity:            this.draft.client.city,
+
+                        contractorType:        this.draft.contractor.type,
+                        contractorCompany:     this.draft.contractor.company,
+                        contractorStreet:      this.draft.contractor.street,
+                        contractorPostalCode:  this.draft.contractor.postalCode,
+                        contractorCity:        this.draft.contractor.city,
+
+                        installationStreet:    this.draft.installationLocation.street,
+                        installationPostalCode: this.draft.installationLocation.postalCode,
+                        installationCity:      this.draft.installationLocation.city,
+                        buildingType:          this.draft.installationLocation.buildingType,
+                        parcelNumber:          this.draft.installationLocation.parcelNumber,
+
+                        controlDate:           this.draft.controlDate.split('T')[0],
+                        controlScope:          this.draft.controlScope,
+                        controllerId:          this.draft.controlData.controllerId,
+                        hasDefects:            this.draft.controlData.hasDefects,
+                        deadlineNote:          this.draft.controlData.deadlineNote,
+
+                        generalNotes:          this.draft.generalNotes,
+
+                        defectPositions:       this.draft.defectPositions,  // if your DTO accepts it
+                        defectResolverNote:    this.draft.defectResolverNote,
+
+                        completionDate:        this.draft.completionConfirmation?.completionDate
+                    };
+
                     const res = await fetch(
                         `/projects/${projectId}/controlreport`,
                         {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(this.draft)
-                    });
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(updateDto)
+                        }
+                    );
                     if (!res.ok) {
                         const errText = await res.text();
                         console.error('Save failed — status:', res.status, 'body:', errText);
@@ -279,16 +313,6 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="row g-3 mb-4">
             <div class="col-md-4">
               <label class="form-label">Datum</label>
-              <input v-model="draft.completionConfirmation.completionDate"
-                     type="datetime-local" class="form-control" />
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Stempel</label>
-              <input v-model="draft.completionConfirmation.companyStamp" class="form-control" />
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Unterschrift</label>
-              <input v-model="draft.completionConfirmation.completionSignature" class="form-control" />
             </div>
           </div>
 
