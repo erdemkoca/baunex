@@ -36,7 +36,7 @@ class ControlReportMapper {
             street     = m.installationStreet.orEmpty(),
             postalCode = m.installationPostalCode.orEmpty(),
             city       = m.installationCity.orEmpty(),
-            buildingType = m.project?.buildingType,
+            buildingType = m.project.buildingType,
             parcelNumber = m.parcelNumber
         ),
         controlScope          = m.controlScope.orEmpty(),

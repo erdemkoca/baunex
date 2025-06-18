@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('project-controlreport-app');
     if (!el) return;
 
-    // 1) parse initial JSON or create empty
+    // parse initial JSON or create empty
     let report;
     try {
         const raw = el.dataset.controlReport;
@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
         report = createEmpty();
     }
 
-    // 2) helper to build an empty report (default controlDate = now)
     function createEmpty() {
         const now = new Date().toISOString().slice(0,16);
         return {
@@ -33,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
             hasDefects: false,
             deadlineNote: '',
             generalNotes: '',
+            defectPositions: [],
             completionConfirmation: {
                 completionDate: now,
                 companyStamp: '',
@@ -41,45 +41,40 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // 3) pull lists from data-attributes
     const clientTypes     = JSON.parse(el.dataset.clientTypes      || '[]');
     const contractorTypes = JSON.parse(el.dataset.contractorTypes  || '[]');
     const employees       = JSON.parse(el.dataset.employees        || '[]');
 
-    // 4) mount Vue
     createApp({
         data() {
-            // deep copy so we never mutate the original
             const d = JSON.parse(JSON.stringify(report));
             if (!d.controlDate) d.controlDate = new Date().toISOString().slice(0,16);
+            if (!d.defectPositions) d.defectPositions = [];
             if (!d.completionConfirmation) {
-                d.completionConfirmation = {
-                    completionDate: '', companyStamp:'', completionSignature:''
-                };
+                d.completionConfirmation = { completionDate:'', companyStamp:'', completionSignature:'' };
             }
-            return {
-                draft: d,
-                clientTypes,
-                contractorTypes,
-                employees
-            };
+            return { draft: d, clientTypes, contractorTypes, employees };
         },
         watch: {
-            // when you pick a controller, update its phone
             'draft.controllerId'(newId) {
                 if (!newId) {
                     this.draft.controllerPhone = '';
                     return;
                 }
                 const emp = this.employees.find(e => e.id === newId);
-                // adjust path if your JSON shape differs
                 this.draft.controllerPhone = emp?.person?.details?.phone || '';
             }
         },
         methods: {
+            formatDate(d) {
+                return new Date(d).toLocaleDateString('de-CH');
+            },
+            formatDateTime(d) {
+                return new Date(d).toLocaleString('de-CH');
+            },
             async save() {
                 try {
-                    const res = await fetch(`/api/controlreport/${this.draft.id}`, {
+                    const res = await fetch(`/projects/${this.draft.id}/controlreport`, {
                         method: 'PUT',
                         headers: { 'Content-Type':'application/json' },
                         body: JSON.stringify(this.draft)
@@ -97,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="card">
         <div class="card-body">
           <h5>Kontrollbericht {{ draft.reportNumber || 'Neu' }}</h5>
-          
+
           <!-- Kunde -->
           <h6 class="mt-4">Kunde</h6>
           <div class="row g-3 mb-3">
@@ -189,36 +184,22 @@ document.addEventListener('DOMContentLoaded', () => {
           <!-- Kontrolldaten -->
           <h6 class="mt-4">Kontrolldaten</h6>
           <div class="row g-3 mb-3">
-            <!-- Datum -->
             <div class="col-md-4">
               <label class="form-label">Datum</label>
-              <input v-model="draft.controlDate"
-                     type="date"
-                     class="form-control" />
+              <input v-model="draft.controlDate" type="date" class="form-control" />
             </div>
-            <!-- Kontrolleur -->
             <div class="col-md-4">
               <label class="form-label">Kontrolleur</label>
               <select v-model="draft.controllerId" class="form-select">
                 <option :value="null">– wählen –</option>
-                <option
-                  v-for="e in employees"
-                  :key="e.id"
-                  :value="e.id"
-                >
+                <option v-for="e in employees" :key="e.id" :value="e.id">
                   {{ e.firstName }} {{ e.lastName }}
                 </option>
               </select>
             </div>
-            <!-- Telefonnummer -->
             <div class="col-md-4">
               <label class="form-label">Telefon</label>
-              <input
-                v-model="draft.controllerPhone"
-                type="text"
-                class="form-control"
-                readonly
-              />
+              <input v-model="draft.controllerPhone" type="text" readonly class="form-control" />
             </div>
             <div class="col-md-4 form-check align-self-end">
               <input v-model="draft.hasDefects" type="checkbox" class="form-check-input" id="hasDefects" />
@@ -237,11 +218,27 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <hr />
 
+          <!-- Mängelpositionen -->
+          <h6 class="mt-4">Mängelpositionen</h6>
+          <div v-if="draft.defectPositions.length" class="mb-4">
+            <div v-for="pos in draft.defectPositions" :key="pos.id" class="border rounded p-2 mb-2">
+              <strong>#{{ pos.positionNumber }}</strong>
+              <small class="text-muted">({{ formatDateTime(pos.createdAt) }})</small>
+              <p class="mb-0">{{ pos.description }}</p>
+              <div v-if="pos.normReferences && pos.normReferences.length">
+                <small>Norm-Referenzen:</small>
+                <ul class="mb-0">
+                  <li v-for="ref in pos.normReferences" :key="ref">{{ ref }}</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div v-else class="text-muted mb-4">Keine Mängelpositionen vorhanden.</div>
+          <hr />
+
           <!-- Allgemeine Hinweise -->
           <h6 class="mt-4">Allgemeine Hinweise</h6>
-          <div class="mb-4">
-            <textarea v-model="draft.generalNotes" class="form-control" rows="3"></textarea>
-          </div>
+          <textarea v-model="draft.generalNotes" class="form-control mb-4" rows="3"></textarea>
           <hr />
 
           <!-- Abschlussbestätigung -->
@@ -249,25 +246,16 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="row g-3 mb-4">
             <div class="col-md-4">
               <label class="form-label">Datum</label>
-              <input
-                v-model="draft.completionConfirmation.completionDate"
-                type="datetime-local"
-                class="form-control"
-              />
+              <input v-model="draft.completionConfirmation.completionDate"
+                     type="datetime-local" class="form-control" />
             </div>
             <div class="col-md-4">
               <label class="form-label">Stempel</label>
-              <input
-                v-model="draft.completionConfirmation.companyStamp"
-                class="form-control"
-              />
+              <input v-model="draft.completionConfirmation.companyStamp" class="form-control" />
             </div>
             <div class="col-md-4">
               <label class="form-label">Unterschrift</label>
-              <input
-                v-model="draft.completionConfirmation.completionSignature"
-                class="form-control"
-              />
+              <input v-model="draft.completionConfirmation.completionSignature" class="form-control" />
             </div>
           </div>
 
