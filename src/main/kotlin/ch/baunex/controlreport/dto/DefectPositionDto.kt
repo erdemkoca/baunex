@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class DefectPositionDto(
     val positionNumber: Int,
-    val photoUrl: MediaAttachmentDto,
+    val photoUrl: MediaAttachmentDto?,
     val description: String,
     val normReferences: List<String>
 )

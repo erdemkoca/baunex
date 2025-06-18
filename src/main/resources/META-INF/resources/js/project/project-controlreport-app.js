@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function createEmpty() {
-        const nowDate     = new Date().toISOString().slice(0,10)  // "YYYY-MM-DD"
+        const nowDate = new Date().toISOString().slice(0,10);  // "YYYY-MM-DD"
         return {
             id: null,
             reportNumber: '',
@@ -46,13 +46,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!d.controlDate) d.controlDate = new Date().toISOString().slice(0,10);
             if (!d.defectPositions) d.defectPositions = [];
 
+            // Flatten controlData for initial state
             if (d.controlData) {
                 d.controllerId    = d.controlData.controllerId;
                 d.controllerPhone = d.controlData.phoneNumber;
                 d.hasDefects      = d.controlData.hasDefects;
                 d.deadlineNote    = d.controlData.deadlineNote;
             }
-
             return { draft: d, clientTypes, contractorTypes, employees };
         },
         watch: {
@@ -80,12 +80,11 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             async save() {
                 try {
-                    // ensure this attribute exists on your <div>!
                     const projectId = Number(el.dataset.projectId);
-                    if (isNaN(projectId)) {
-                        throw new Error("projectId is not set on the container element");
-                    }
-                    // build a payload matching ControlReportUpdateDto exactly
+                    console.log('Project ID:', projectId, 'Element dataset:', el.dataset);
+                    if (isNaN(projectId)) throw new Error("projectId ist nicht gesetzt");
+
+                    // Baue das DTO genau so, wie es Dein Kotlin erwartet:
                     const updateDto = {
                         reportNumber:          this.draft.reportNumber,
                         pageCount:             this.draft.pageCount,
@@ -104,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         contractorCity:        this.draft.contractor.city,
 
                         installationStreet:    this.draft.installationLocation.street,
-                        installationPostalCode: this.draft.installationLocation.postalCode,
+                        installationPostalCode:this.draft.installationLocation.postalCode,
                         installationCity:      this.draft.installationLocation.city,
                         buildingType:          this.draft.installationLocation.buildingType,
                         parcelNumber:          this.draft.installationLocation.parcelNumber,
@@ -117,48 +116,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         generalNotes:          this.draft.generalNotes,
 
+                        // WICHTIG: DefectPosition richtig mappen:
                         defectPositions: this.draft.defectPositions.map(pos => ({
-                            id:            pos.id || null,
-                            noteId:        pos.photoUrl.noteId,    // oder wo auch immer Du die Note-ID speicherst
-                            noteContent:   pos.description,        // das, was vorher description war
+                            id: pos.id ? Number(pos.id) : null,
+                            noteId: pos.photoUrl?.noteId ? Number(pos.photoUrl.noteId) : null,
+                            noteContent: pos.description ?? '',
                             normReferences: pos.normReferences || []
                         })),
-                        defectResolverNote:    this.draft.defectResolverNote,
 
+                        defectResolverNote:    this.draft.defectResolverNote,
                         completionDate:        this.draft.completionConfirmation?.completionDate
                     };
 
                     const res = await fetch(
-                        `/projects/${projectId}/controlreport`,
-                        {
+                        `/projects/${projectId}/controlreport`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(updateDto)
-                        }
-                    );
+                        });
+
                     if (!res.ok) {
-                        const errText = await res.text();
-                        console.error('Save failed — status:', res.status, 'body:', errText);
+                        const txt = await res.text();
+                        console.error('Save failed —', res.status, txt);
                         throw new Error(`HTTP ${res.status}`);
                     }
+
+                    // Antwort in draft zurückschreiben und controlData wieder flatten:
                     const newDto = await res.json();
-                    // 1) replace draft
                     this.draft = newDto;
-                    // 2) flatten controlData back into draft
-                    if (this.draft.controlData) {
-                        this.draft.controllerId    = this.draft.controlData.controllerId;
-                        this.draft.controllerPhone = this.draft.controlData.phoneNumber;
-                        this.draft.hasDefects      = this.draft.controlData.hasDefects;
-                        this.draft.deadlineNote    = this.draft.controlData.deadlineNote;
+                    if (newDto.controlData) {
+                        this.draft.controllerId    = newDto.controlData.controllerId;
+                        this.draft.controllerPhone = newDto.controlData.phoneNumber;
+                        this.draft.hasDefects      = newDto.controlData.hasDefects;
+                        this.draft.deadlineNote    = newDto.controlData.deadlineNote;
                     }
+
                     alert('Gespeichert!');
                 } catch (e) {
-                    console.error('Unexpected error in save():', e);
-                    alert('Fehler beim Speichern: ' + (e.message || e));
+                    console.error('Fehler in save():', e);
+                    alert('Fehler beim Speichern: ' + (e.message||e));
                 }
             }
         },
-        template: `
+        template: `  
       <div class="card">
         <div class="card-body">
           <h5>Kontrollbericht {{ draft.reportNumber || 'Neu' }}</h5>

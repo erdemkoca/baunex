@@ -67,9 +67,11 @@ class ProjectControlReportController {
     fun update(
         @PathParam("projectId") projectId: Long,
         dto: ControlReportUpdateDto
-    ): ControlReportDto =
-        reportFacade
+    ): ControlReportDto {
+        println("Received PUT request for project $projectId with DTO: $dto")
+        return reportFacade
             .updateReportByProject(projectId, dto)
             ?: throw NotFoundException("No report for project $projectId")
+    }
 
 }

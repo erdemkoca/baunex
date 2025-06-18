@@ -86,7 +86,8 @@ class NoteService(
 
         // 3) Spezialfall „MÄNGEL“-Notiz → DefectPosition anlegen
         if (createDto.category == NoteCategory.MÄNGEL) {
-            defectPositionService.createFromNote(note)
+            val defectPosition = defectPositionService.createFromNote(note)
+            note.defectPosition = defectPosition
         }
 
         // 4) DTO für die API-Antwort zurückgeben

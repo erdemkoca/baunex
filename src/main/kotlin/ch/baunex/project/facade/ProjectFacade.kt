@@ -29,8 +29,13 @@ class ProjectFacade @Inject constructor(
     }
 
     fun getProjectWithDetails(id: Long): ProjectDetailDTO? {
+        println("Getting project with ID: $id")
         return projectService.getProjectWithEntries(id)
-            ?.let { projectMapper.toDetailDTO(it) }
+            ?.let { 
+                println("Found project: ${it.name}")
+                projectMapper.toDetailDTO(it) 
+            }
+            ?.also { println("Project not found with ID: $id") }
     }
 
     @Transactional

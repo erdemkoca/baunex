@@ -16,7 +16,9 @@ class ControlReportFacade(
     fun listReportsByProject(projectId: Long): List<ControlReportDto> =
         controlReportService.listReportsByProject(projectId)
 
-    fun updateReportByProject(projectId: Long, dto: ControlReportUpdateDto): ControlReportDto? =
-        controlReportService.updateByProjectId(projectId, dto)
+    fun updateReportByProject(projectId: Long, dto: ControlReportUpdateDto): ControlReportDto? {
+        println("Updating control report for project $projectId with DTO: $dto")
+        return controlReportService.updateByProjectId(projectId, dto)
+    }
 
 }

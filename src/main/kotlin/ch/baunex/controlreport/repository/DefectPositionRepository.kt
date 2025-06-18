@@ -11,4 +11,8 @@ import jakarta.enterprise.context.ApplicationScoped
 class DefectPositionRepository : PanacheRepository<DefectPositionModel> {
     fun findByControlReportId(reportId: Long) =
         list("controlReport.id", reportId)
+
+    fun deleteByReportIdAndNotInIds(reportId: Long, keepIds: Collection<Long>) {
+        delete("controlReport.id = ?1 and id not in ?2", reportId, keepIds)
+    }
 }

@@ -8,6 +8,8 @@ import ch.baunex.controlreport.model.ControlReportModel
 import ch.baunex.controlreport.model.DefectPositionModel
 import ch.baunex.controlreport.repository.ControlReportRepository
 import ch.baunex.controlreport.repository.DefectPositionRepository
+import ch.baunex.notes.model.NoteCategory
+import ch.baunex.notes.model.NoteModel
 import ch.baunex.notes.repository.NoteRepository
 import ch.baunex.project.repository.ProjectRepository
 import ch.baunex.user.repository.EmployeeRepository
@@ -18,6 +20,7 @@ import jakarta.transaction.Transactional
 import jakarta.ws.rs.NotFoundException
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 
 @ApplicationScoped
 class ControlReportService(
@@ -53,7 +56,7 @@ class ControlReportService(
             // link the owning project
             this.project = project
 
-            // client = the project’s customer
+            // client = the project's customer
             this.customer = project.customer
 
             // contractor defaults
@@ -77,7 +80,7 @@ class ControlReportService(
             this.deadlineNote   = null
             this.generalNotes   = ""
 
-            // empty collections (they’re already initialized)
+            // empty collections (they're already initialized)
             // this.defectPositions = mutableListOf()
             // this.notes           = mutableListOf()
 
@@ -99,32 +102,46 @@ class ControlReportService(
 
     @Transactional
     fun updateByProjectId(projectId: Long, dto: ControlReportUpdateDto): ControlReportDto? {
-        val report = controlReportRepository.findByProjectId(projectId).firstOrNull() ?: return null
+        // 1) Report holen oder neu anlegen
+        val report = controlReportRepository
+            .findByProjectId(projectId)
+            .firstOrNull()
+            ?: getOrInitializeModel(projectId)
 
-        // 1) Report-Felder aktualisieren
+        // 2) Report-Felder updaten
         mapper.applyUpdate(report, dto)
 
-        // 2) Jede Mängel-DTO verarbeiten
-        dto.defectPositions?.forEach { dpDto ->
-            val dpModel = if (dpDto.id != null) {
-                defectPositionRepository.findById(dpDto.id)!!
-            } else {
-                // neu anlegen
-                DefectPositionModel().apply {
-                    this.controlReport = report
-                    report.defectPositions.add(this)
-                }
-            }
-            // Norm-Referenzen
-            dpModel.normReferences = dpDto.normReferences.toMutableList()
-            // Note updaten
-            val note = noteRepository.findById(dpDto.noteId)!!
-            note.content = dpDto.noteContent
+        // 3) Alle existierenden DefectPositions für diesen Report holen
+        val existingPositions = defectPositionRepository.findByControlReportId(report.id)
+        println("Found ${existingPositions.size} existing positions")
+        existingPositions.forEach { dp ->
+            println("Existing position ID: ${dp.id}")
         }
 
-        // 3) Persist und DTO zurückliefern
+        // 4) Jede Mängel-Position aktualisieren
+        dto.defectPositions?.forEach { dpDto ->
+            println("Looking for position with ID: ${dpDto.id}")
+            // Finde die entsprechende existierende Position
+            val dpModel = if (dpDto.id != null) {
+                existingPositions.find { it.id == dpDto.id }
+                    ?: throw NotFoundException("DefectPosition ${dpDto.id} nicht gefunden")
+            } else {
+                // Wenn keine ID angegeben ist, nehmen wir die erste Position
+                existingPositions.firstOrNull()
+                    ?: throw NotFoundException("Keine DefectPosition gefunden")
+            }
+
+            // Update die Felder
+            dpModel.normReferences = dpDto.normReferences.toMutableList()
+            dpModel.note.content = dpDto.noteContent
+            dpModel.note.updatedAt = LocalDate.now()
+        }
+
+        // 5) Am Ende das ReportModel mappen und zurückgeben
         return mapper.toDto(report)
     }
+
+
 
     fun listReportsByProject(projectId: Long): List<ControlReportDto> =
         controlReportRepository.findByProjectId(projectId).map(mapper::toDto)

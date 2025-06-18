@@ -13,10 +13,10 @@ class ControlReportMapper {
 
     /** Entity → Read-DTO */
     fun toDto(m: ControlReportModel): ControlReportDto = ControlReportDto(
-        id                   = m.id,
-        reportNumber         = m.reportNumber.orEmpty(),
-        pageCount            = m.pageCount,
-        currentPage          = m.currentPage,
+        id                    = m.id,
+        reportNumber          = m.reportNumber.orEmpty(),
+        pageCount             = m.pageCount,
+        currentPage           = m.currentPage,
         client               = ClientDto(
             type       = m.project.customer.customerType,
             name       = m.customer?.companyName.orEmpty(),
@@ -38,7 +38,7 @@ class ControlReportMapper {
             buildingType = m.project.buildingType,
             parcelNumber = m.parcelNumber
         ),
-        controlScope         = m.controlScope.orEmpty(),
+        controlScope          = m.controlScope.orEmpty(),
         controlData          = ControlDataDto(
             controlDate         = m.controlDate ?: LocalDate.now(),
             controllerId        = m.employee?.id,
@@ -48,18 +48,17 @@ class ControlReportMapper {
             hasDefects          = m.hasDefects,
             deadlineNote        = m.deadlineNote
         ),
-        generalNotes         = m.generalNotes.orEmpty(),
-        defectPositions      = m.defectPositions.map { toDefectPositionDto(it) },
-        defectResolverNote   = m.defectResolverNote,
-        createdAt            = m.createdAt,
-        updatedAt            = m.updatedAt,
-        controlDate    = m.controlDate ?: LocalDate.now()
-        )
+        generalNotes          = m.generalNotes.orEmpty(),
+        defectPositions       = m.defectPositions.map { toDefectPositionDto(it) },
+        defectResolverNote    = m.defectResolverNote,
+        createdAt             = m.createdAt,
+        updatedAt             = m.updatedAt,
+        controlDate           = m.controlDate ?: LocalDate.now()
+    )
 
-    /** Update-DTO → bestehendes Entity aktualisieren (employee set in service) */
-    fun applyUpdate(m: ControlReportModel, dto: ControlReportUpdateDto): ControlReportModel {
-        return m.apply {
-            // metadata
+    /** Update-DTO → Report (ohne Note/Defect-Logik) */
+    fun applyUpdate(m: ControlReportModel, dto: ControlReportUpdateDto): ControlReportModel =
+        m.apply {
             updatedAt       = LocalDateTime.now()
 
             // core fields
@@ -93,12 +92,10 @@ class ControlReportMapper {
             defectResolverNote = dto.defectResolverNote
             completionDate     = dto.completionDate
         }
-    }
 
-    /** DefectPosition → DefectPositionDto */
     private fun toDefectPositionDto(p: DefectPositionModel) = DefectPositionDto(
         positionNumber = p.positionNumber,
-        photoUrl       = p.note.attachments.first().toDto(),
+        photoUrl       = p.note.attachments.firstOrNull()?.toDto(),
         description    = p.note.content,
         normReferences = p.normReferences.toList()
     )
