@@ -1,11 +1,9 @@
-// project-controlreport-app.js
 import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('project-controlreport-app');
     if (!el) return;
 
-    // parse initial JSON or create empty
     let report;
     try {
         const raw = el.dataset.controlReport;
@@ -16,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function createEmpty() {
-        const nowDate = new Date().toISOString().slice(0,10);  // "YYYY-MM-DD"
+        const nowDate = new Date().toISOString().slice(0,10);
         return {
             id: null,
             reportNumber: '',
@@ -41,27 +39,46 @@ document.addEventListener('DOMContentLoaded', () => {
     const employees       = JSON.parse(el.dataset.employees        || '[]');
     const projectTypes    = JSON.parse(el.dataset.projectTypes     || '[]');
 
+    // 🧠 Fix initial Enum values if they were stored as displayName
+    function normalizeEnumField(value, options) {
+        const match = options.find(opt => opt.label === value || opt.code === value);
+        return match ? match.code : null;
+    }
+
+    // Apply normalizations
+    if (report) {
+        if (report.client) {
+            report.client.type = normalizeEnumField(report.client.type, clientTypes);
+        }
+        if (report.contractor) {
+            report.contractor.type = normalizeEnumField(report.contractor.type, contractorTypes);
+        }
+        if (report.installationLocation) {
+            report.installationLocation.buildingType = normalizeEnumField(report.installationLocation.buildingType, projectTypes);
+        }
+
+        report.client.type        = normalizeEnumField(report.client.type, clientTypes);
+        report.contractor.type    = normalizeEnumField(report.contractor.type, contractorTypes);
+        report.installationLocation.buildingType = normalizeEnumField(report.installationLocation.buildingType, projectTypes);
+    }
+
     createApp({
         data() {
             const d = JSON.parse(JSON.stringify(report));
             if (!d.controlDate) d.controlDate = new Date().toISOString().slice(0,10);
             if (!d.defectPositions) d.defectPositions = [];
 
-            // Flatten controlData for initial state
             if (d.controlData) {
                 d.controllerId    = d.controlData.controllerId;
                 d.controllerPhone = d.controlData.phoneNumber;
                 d.hasDefects      = d.controlData.hasDefects;
                 d.deadlineNote    = d.controlData.deadlineNote;
             }
+
             return { draft: d, clientTypes, contractorTypes, employees, projectTypes };
         },
         watch: {
             'draft.controllerId'(newId) {
-                if (!newId) {
-                    this.draft.controllerPhone = '';
-                    return;
-                }
                 const emp = this.employees.find(e => e.id === newId);
                 this.draft.controllerPhone = emp?.phone || '';
             }
@@ -74,18 +91,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 return new Date(d).toLocaleString('de-CH');
             },
             isImageAttachment(att) {
-                if (!att) return false;
-                if (att.type === 'IMAGE') return true;
-                if (att.contentType && att.contentType.startsWith('image/')) return true;
-                return false;
+                return att && (att.type === 'IMAGE' || att.contentType?.startsWith('image/'));
             },
             async save() {
                 try {
                     const projectId = Number(el.dataset.projectId);
-                    console.log('Project ID:', projectId, 'Element dataset:', el.dataset);
                     if (isNaN(projectId)) throw new Error("projectId ist nicht gesetzt");
 
-                    // Baue das DTO genau so, wie es Dein Kotlin erwartet:
                     const updateDto = {
                         reportNumber:          this.draft.reportNumber,
                         pageCount:             this.draft.pageCount,
@@ -117,7 +129,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         generalNotes:          this.draft.generalNotes,
 
-                        // WICHTIG: DefectPosition richtig mappen:
                         defectPositions: this.draft.defectPositions.map(pos => ({
                             id: pos.id ? Number(pos.id) : null,
                             noteId: pos.photoUrl?.noteId ? Number(pos.photoUrl.noteId) : null,
@@ -142,7 +153,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         throw new Error(`HTTP ${res.status}`);
                     }
 
-                    // Antwort in draft zurückschreiben und controlData wieder flatten:
                     const newDto = await res.json();
                     this.draft = newDto;
                     if (newDto.controlData) {

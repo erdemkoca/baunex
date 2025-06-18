@@ -18,14 +18,14 @@ class ControlReportMapper {
         pageCount             = m.pageCount,
         currentPage           = m.currentPage,
         client               = ClientDto(
-            type       = m.project.customer.customerType,
-            name       = m.project.customer.companyName.orEmpty(),
-            street     = m.project.customer.person.details.street.orEmpty(),
-            postalCode = m.project.customer.person.details.zipCode.orEmpty(),
-            city       = m.project.customer.person.details.city.orEmpty()
+            type       = m.clientType,
+            name       = m.clientName.orEmpty(),
+            street     = m.clientStreet.orEmpty(),
+            postalCode = m.clientPostalCode.orEmpty(),
+            city       = m.clientCity.orEmpty()
         ),
         contractor           = ContractorDto(
-            type       = m.contractorType,
+            type       = m.contractorType.orEmpty(),
             company    = m.contractorCompany.orEmpty(),
             street     = m.contractorStreet.orEmpty(),
             postalCode = m.contractorPostalCode.orEmpty(),
@@ -35,8 +35,8 @@ class ControlReportMapper {
             street       = m.installationStreet.orEmpty(),
             postalCode   = m.installationPostalCode.orEmpty(),
             city         = m.installationCity.orEmpty(),
-            buildingType = m.project.buildingType,
-            parcelNumber = m.parcelNumber
+            buildingType = m.buildingType.orEmpty(),
+            parcelNumber = m.parcelNumber.orEmpty()
         ),
         controlScope          = m.controlScope.orEmpty(),
         controlData          = ControlDataDto(
@@ -66,8 +66,15 @@ class ControlReportMapper {
             pageCount       = dto.pageCount
             currentPage     = dto.currentPage
 
+            // client
+            clientType     = dto.clientType
+            clientName     = dto.clientName
+            clientStreet   = dto.clientStreet
+            clientPostalCode = dto.clientPostalCode
+            clientCity     = dto.clientCity
+
             // contractor
-            contractorType = dto.contractorType?.displayName
+            contractorType = dto.contractorType
             contractorCompany    = dto.contractorCompany
             contractorStreet     = dto.contractorStreet
             contractorPostalCode = dto.contractorPostalCode
@@ -77,7 +84,8 @@ class ControlReportMapper {
             installationStreet     = dto.installationStreet
             installationPostalCode = dto.installationPostalCode
             installationCity       = dto.installationCity
-            parcelNumber           = dto.parcelNumber
+            buildingType          = dto.buildingType
+            parcelNumber          = dto.parcelNumber
 
             // control data
             controlDate    = dto.controlDate

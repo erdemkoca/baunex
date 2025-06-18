@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ClientDto(
-    val type: CustomerType?,
+    val type: String?,
     val name: String,
     val street: String,
     val postalCode: String,

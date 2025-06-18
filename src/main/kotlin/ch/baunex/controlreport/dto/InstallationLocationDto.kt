@@ -8,6 +8,6 @@ data class InstallationLocationDto(
     val street: String,
     val postalCode: String,
     val city: String,
-    val buildingType: ProjectType?,
+    val buildingType: String?,
     val parcelNumber: String?
 )

@@ -15,28 +15,28 @@ data class ControlReportUpdateDto(
     val pageCount: Int,
     val currentPage: Int,
 
-    // Auftraggeber
-    val clientType: CustomerType? = null,
+    // Client information
+    val clientType: String? = null,
     val clientName: String? = null,
     val clientStreet: String? = null,
     val clientPostalCode: String? = null,
     val clientCity: String? = null,
 
-    // Auftragnehmer
-    val contractorType: ContractorType? = null,
+    // Contractor information
+    val contractorType: String? = null,
     val contractorCompany: String? = null,
     val contractorStreet: String? = null,
     val contractorPostalCode: String? = null,
     val contractorCity: String? = null,
 
-    // Installationsort
+    // Installation location
     val installationStreet: String? = null,
     val installationPostalCode: String? = null,
     val installationCity: String? = null,
     val buildingType: String? = null,
     val parcelNumber: String? = null,
 
-    // Kontrolldaten
+    // Control data
     @Serializable(with = LocalDateSerializer::class)
     val controlDate: LocalDate? = null,
     val controlScope: String? = null,
@@ -47,7 +47,7 @@ data class ControlReportUpdateDto(
     // Freie Notizen
     val generalNotes: String? = null,
 
-    // Defekt‐Positionen: hier nur Liste mit Create‐ oder Update‐DTOs (müsste separat definiert werden)
+    // Defekt‐Positionen
     val defectPositions: List<DefectPositionUpdateDto>? = null,
 
     // Abschlussinfos
