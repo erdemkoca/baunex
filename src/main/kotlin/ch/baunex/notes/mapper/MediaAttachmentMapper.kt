@@ -4,7 +4,9 @@ import ch.baunex.notes.dto.AttachmentForUI
 import ch.baunex.notes.dto.MediaAttachmentDto
 import ch.baunex.notes.model.MediaAttachmentModel
 import ch.baunex.notes.model.MediaType
+import org.bouncycastle.asn1.cms.CMSAttributes.contentType
 import java.net.URL
+import java.net.URLConnection
 
 fun MediaAttachmentModel.toDto(): MediaAttachmentDto {
     val filename = this.url.substringAfterLast('/')
@@ -16,11 +18,18 @@ fun MediaAttachmentModel.toDto(): MediaAttachmentDto {
         filename.endsWith(".mov") -> MediaType.VIDEO
         else -> MediaType.IMAGE // Default to IMAGE if unknown
     }
+    // Guess content‐type from the filename
+    val contentType = URLConnection
+        .guessContentTypeFromName(filename)
+        ?: "application/octet-stream"
+
     return MediaAttachmentDto(
         id = this.id!!,
         url = this.url,
         type = type,
-        caption = this.caption
+        caption = this.caption,
+        contentType = contentType,
+        filename = filename
     )
 }
 

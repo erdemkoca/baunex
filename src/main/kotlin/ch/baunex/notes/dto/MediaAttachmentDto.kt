@@ -8,5 +8,7 @@ data class MediaAttachmentDto(
     val id: Long,
     val url: String,
     val type: MediaType,
-    val caption: String?
+    val caption: String?,
+    val contentType: String,
+    val filename: String
 )

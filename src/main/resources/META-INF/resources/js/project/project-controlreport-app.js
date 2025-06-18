@@ -16,7 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function createEmpty() {
-        const now = new Date().toISOString().slice(0,16);
+        const nowDate     = new Date().toISOString().slice(0,10)  // "YYYY-MM-DD"
+        const nowDateTime = new Date().toISOString().slice(0,16)  // "YYYY-MM-DDThh:mm"
         return {
             id: null,
             reportNumber: '',
@@ -25,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
             installationLocation: {
                 street:'', postalCode:'', city:'', buildingType:'', parcelNumber:''
             },
-            controlDate: now,
+            controlDate: nowDate,
             controllerId: null,
             controllerPhone: '',
             controlScope: '',
@@ -34,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
             generalNotes: '',
             defectPositions: [],
             completionConfirmation: {
-                completionDate: now,
+                completionDate: nowDateTime,
                 companyStamp: '',
                 completionSignature: ''
             }
@@ -62,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 const emp = this.employees.find(e => e.id === newId);
-                this.draft.controllerPhone = emp?.person?.details?.phone || '';
+                this.draft.controllerPhone = emp?.phone || '';
             }
         },
         methods: {
@@ -71,6 +72,12 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             formatDateTime(d) {
                 return new Date(d).toLocaleString('de-CH');
+            },
+            isImageAttachment(att) {
+                if (!att) return false;
+                if (att.type === 'IMAGE') return true;
+                if (att.contentType && att.contentType.startsWith('image/')) return true;
+                return false;
             },
             async save() {
                 try {
@@ -186,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="row g-3 mb-3">
             <div class="col-md-4">
               <label class="form-label">Datum</label>
-              <input v-model="draft.controlDate" type="date" class="form-control" />
+              <input v-model="draft.controlData.controlDate" type="date" class="form-control" />
             </div>
             <div class="col-md-4">
               <label class="form-label">Kontrolleur</label>
@@ -223,8 +230,15 @@ document.addEventListener('DOMContentLoaded', () => {
           <div v-if="draft.defectPositions.length" class="mb-4">
             <div v-for="pos in draft.defectPositions" :key="pos.id" class="border rounded p-2 mb-2">
               <strong>#{{ pos.positionNumber }}</strong>
-              <small class="text-muted">({{ formatDateTime(pos.createdAt) }})</small>
               <p class="mb-0">{{ pos.description }}</p>
+              <div v-if="pos.photoUrl" class="mb-2">
+                <template v-if="isImageAttachment(pos.photoUrl)">
+                  <img :src="pos.photoUrl.url" class="img-fluid img-thumbnail" style="max-width:200px" />
+                </template>
+                <template v-else>
+                  <a :href="pos.photoUrl.url" target="_blank">{{ pos.photoUrl.caption || 'Foto' }}</a>
+                </template>
+              </div>
               <div v-if="pos.normReferences && pos.normReferences.length">
                 <small>Norm-Referenzen:</small>
                 <ul class="mb-0">

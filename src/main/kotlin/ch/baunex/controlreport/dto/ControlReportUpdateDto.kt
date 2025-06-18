@@ -55,6 +55,7 @@ data class ControlReportUpdateDto(
 
     // Abschlussinfos
     val defectResolverNote: String? = null,
+    @Serializable(with = LocalDateTimeSerializer::class)
     val completionDate: LocalDateTime? = null,
     val completionConfirmation: CompletionConfirmationCreateDto? = null
 )

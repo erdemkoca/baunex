@@ -1,23 +1,11 @@
 package ch.baunex.project.facade
 
-import ch.baunex.notes.dto.MediaAttachmentDto
-import ch.baunex.notes.dto.AttachmentForUI
-import ch.baunex.notes.dto.NoteForUI
-import ch.baunex.notes.mapper.toAttachmentForUI
-import ch.baunex.notes.mapper.toDto
-import ch.baunex.notes.model.NoteCategory
-import ch.baunex.notes.model.NoteModel
 import ch.baunex.project.dto.*
 import ch.baunex.project.mapper.ProjectMapper
 import ch.baunex.project.service.ProjectService
-import ch.baunex.user.dto.EmployeeReferenceDTO
-import ch.baunex.user.facade.EmployeeFacade
-import ch.baunex.user.model.Role
-import ch.baunex.user.service.EmployeeService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
-import java.time.LocalDate
 
 @ApplicationScoped
 class ProjectFacade @Inject constructor(

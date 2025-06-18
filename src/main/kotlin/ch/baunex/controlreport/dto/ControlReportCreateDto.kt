@@ -2,6 +2,8 @@ package ch.baunex.controlreport.dto
 
 import ch.baunex.controlreport.model.ContractorType
 import ch.baunex.project.model.ProjectType
+import ch.baunex.serialization.LocalDateTimeSerializer
+import kotlinx.serialization.Serializable
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -36,6 +38,7 @@ data class ControlReportCreateDto(
     val defectPositions: List<DefectPositionCreateDto> = emptyList(),
 
     val defectResolverNote: String?,
+    @Serializable(with = LocalDateTimeSerializer::class)
     val completionDate: LocalDateTime?,
     val companyStamp: String?,
     val completionSignature: String?

@@ -4,17 +4,14 @@ import ch.baunex.notes.dto.NoteCreateDto
 import ch.baunex.notes.dto.NoteDto
 import ch.baunex.notes.mapper.toNoteForUI
 import ch.baunex.notes.model.NoteCategory
-import ch.baunex.notes.model.NoteModel
 import ch.baunex.notes.service.NoteService
 import ch.baunex.project.dto.ProjectNotesViewDTO
 import ch.baunex.project.service.ProjectService
 import ch.baunex.user.dto.EmployeeReferenceDTO
 import ch.baunex.user.facade.EmployeeFacade
-import ch.baunex.user.model.Role
 import ch.baunex.user.service.EmployeeService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
-import java.time.LocalDate
 
 @ApplicationScoped
 class NoteFacade(
@@ -33,7 +30,7 @@ class NoteFacade(
             ?: throw IllegalArgumentException("Projekt mit ID $id nicht gefunden")
 
         val employees = employeeFacade.listAll()
-            .map { EmployeeReferenceDTO(it.id, it.firstName, it.lastName) }
+            .map { EmployeeReferenceDTO(it.id, it.firstName, it.lastName, it.phone) }
         val categories = NoteCategory.values().map { it.name }
 
         // 1) Projekt-Notizen
