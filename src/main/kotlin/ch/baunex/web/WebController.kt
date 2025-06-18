@@ -139,6 +139,7 @@ class WebController {
             controlReportJson: String,
             customerTypesJson: String,
             contractorTypesJson: String,
+            projectTypesJson: String,
             currentDate: LocalDate,
             activeMenu: String,
             projectId: Long? = null,

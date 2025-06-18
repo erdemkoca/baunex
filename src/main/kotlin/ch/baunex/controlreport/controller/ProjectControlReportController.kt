@@ -6,6 +6,7 @@ import ch.baunex.controlreport.dto.ControlReportUpdateDto
 import ch.baunex.controlreport.facade.ControlReportFacade
 import ch.baunex.controlreport.model.ContractorType
 import ch.baunex.project.facade.ProjectFacade
+import ch.baunex.project.model.ProjectType
 import ch.baunex.serialization.SerializationUtils.json
 import ch.baunex.user.facade.EmployeeFacade
 import ch.baunex.user.model.CustomerType
@@ -38,6 +39,7 @@ class ProjectControlReportController {
         val reportDto     = reportFacade.getOrInitializeReport(projectId)
         val customerTypes   = CustomerType.values().map { EnumOption(it.name, it.displayName) }
         val contractorTypes = ContractorType.values().map { EnumOption(it.name, it.displayName) }
+        val projectTypes = ProjectType.values().map { EnumOption(it.name, it.displayName) }
 
         val employees = employeeFacade.listAll()
 
@@ -46,6 +48,7 @@ class ProjectControlReportController {
             controlReportJson      = json.encodeToString(reportDto),
             customerTypesJson        = json.encodeToString(customerTypes),
             contractorTypesJson    = json.encodeToString(contractorTypes),
+            projectTypesJson = json.encodeToString(projectTypes),
             currentDate            = LocalDate.now(),
             activeMenu             = "projects",
             projectId              = projectId,

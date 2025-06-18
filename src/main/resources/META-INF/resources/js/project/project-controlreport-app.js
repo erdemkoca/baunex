@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const clientTypes     = JSON.parse(el.dataset.clientTypes      || '[]');
     const contractorTypes = JSON.parse(el.dataset.contractorTypes  || '[]');
     const employees       = JSON.parse(el.dataset.employees        || '[]');
+    const projectTypes    = JSON.parse(el.dataset.projectTypes     || '[]');
 
     createApp({
         data() {
@@ -53,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 d.hasDefects      = d.controlData.hasDefects;
                 d.deadlineNote    = d.controlData.deadlineNote;
             }
-            return { draft: d, clientTypes, contractorTypes, employees };
+            return { draft: d, clientTypes, contractorTypes, employees, projectTypes };
         },
         watch: {
             'draft.controllerId'(newId) {
@@ -254,7 +255,16 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="col-md-4">
               <label class="form-label">Gebäudetyp</label>
-              <input v-model="draft.installationLocation.buildingType" class="form-control" />
+              <select v-model="draft.installationLocation.buildingType" class="form-select">
+                <option :value="null">– wählen –</option>
+                <option
+                  v-for="opt in projectTypes"
+                  :key="opt.code"
+                  :value="opt.code"
+                >
+                  {{ opt.label }}
+                </option>
+              </select>
             </div>
             <div class="col-md-4">
               <label class="form-label">Parzelle</label>

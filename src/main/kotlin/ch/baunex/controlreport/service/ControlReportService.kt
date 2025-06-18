@@ -42,58 +42,51 @@ class ControlReportService(
 
     @Transactional
     fun getOrInitializeModel(projectId: Long): ControlReportModel {
-        // 1) Return existing if there is one
-        controlReportRepository.findByProjectId(projectId).firstOrNull()
-            ?.let { return it }
+        controlReportRepository.findByProjectId(projectId).firstOrNull()?.let { return it }
 
-        // 2) Otherwise bootstrap a blank report
         val project = projectRepository.findById(projectId)
             ?: throw NotFoundException("Project $projectId")
         val company = companyRepository.findFirst()
             ?: throw IllegalStateException("No company configured")
+        val customer = project.customer
 
         val model = ControlReportModel().apply {
-            // link the owning project
             this.project = project
 
-            // client = the project's customer
-            this.customer = project.customer
+            // Initial Client info kopieren
+            this.clientType = project.customer.customerType.displayName
+            this.clientName = customer.person.firstName + " " + customer.person.lastName
+            this.clientStreet = customer.person.details.street
+            this.clientPostalCode = customer.person.details.zipCode
+            this.clientCity = customer.person.details.city
 
-            // contractor defaults
-            this.contractorType        = ContractorType.CONTROL_ORGAN
-            this.contractorCompany     = company.name
-            this.contractorStreet      = company.street
-            this.contractorPostalCode  = company.zipCode
-            this.contractorCity        = company.city
+            // Auftragnehmer
+            this.contractorType = ContractorType.CONTROL_ORGAN.displayName
+            this.contractorCompany = company.name
+            this.contractorStreet = company.street
+            this.contractorPostalCode = company.zipCode
+            this.contractorCity = company.city
 
-            // installation location defaults
-            this.installationStreet      = project.customer.person.details.street.orEmpty()
-            this.installationPostalCode  = project.customer.person.details.zipCode.orEmpty()
-            this.installationCity        = project.customer.person.details.city.orEmpty()
-            this.parcelNumber            = project.parcelNumber ?: ""
+            // Installationsort
+            this.installationStreet = customer.person.details.street
+            this.installationPostalCode = customer.person.details.zipCode
+            this.installationCity = customer.person.details.city
+            this.buildingType = project.buildingType.displayName  // falls vorhanden
+            this.parcelNumber = project.parcelNumber ?: ""
 
-            // control data defaults
-            this.controlDate    = LocalDate.now()
-            this.controlScope   = ""
-            this.employee       = null       // no controller yet
-            this.hasDefects     = false
-            this.deadlineNote   = null
-            this.generalNotes   = ""
-
-            // empty collections (they're already initialized)
-            // this.defectPositions = mutableListOf()
-            // this.notes           = mutableListOf()
-
-            // completion defaults
-            this.defectResolverNote  = null
-            this.completionDate      = null
-
-            // metadata timestamps
+            // Kontrolle
+            this.controlDate = LocalDate.now()
+            this.controlScope = ""
+            this.employee = null
+            this.hasDefects = false
+            this.deadlineNote = null
+            this.generalNotes = ""
             this.createdAt = LocalDateTime.now()
             this.updatedAt = LocalDateTime.now()
         }
+
         model.persist()
-        model.reportNumber = model.reportNumber?.plus(1000)
+        model.reportNumber = (model.id + 1000).toInt()
         return model
     }
 

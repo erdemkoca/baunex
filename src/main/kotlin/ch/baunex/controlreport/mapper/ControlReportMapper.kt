@@ -19,13 +19,13 @@ class ControlReportMapper {
         currentPage           = m.currentPage,
         client               = ClientDto(
             type       = m.project.customer.customerType,
-            name       = m.customer?.companyName.orEmpty(),
-            street     = m.customer?.person?.details?.street.orEmpty(),
-            postalCode = m.customer?.person?.details?.zipCode.orEmpty(),
-            city       = m.customer?.person?.details?.city.orEmpty()
+            name       = m.project.customer.companyName.orEmpty(),
+            street     = m.project.customer.person.details.street.orEmpty(),
+            postalCode = m.project.customer.person.details.zipCode.orEmpty(),
+            city       = m.project.customer.person.details.city.orEmpty()
         ),
         contractor           = ContractorDto(
-            type       = m.contractorType.name,
+            type       = m.contractorType,
             company    = m.contractorCompany.orEmpty(),
             street     = m.contractorStreet.orEmpty(),
             postalCode = m.contractorPostalCode.orEmpty(),
@@ -67,7 +67,7 @@ class ControlReportMapper {
             currentPage     = dto.currentPage
 
             // contractor
-            dto.contractorType?.let { contractorType = it }
+            contractorType = dto.contractorType?.displayName
             contractorCompany    = dto.contractorCompany
             contractorStreet     = dto.contractorStreet
             contractorPostalCode = dto.contractorPostalCode

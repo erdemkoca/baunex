@@ -27,14 +27,19 @@ class ControlReportModel : PanacheEntity() {
     @JoinColumn(name = "project_id")
     lateinit var project: ProjectModel
 
-    // Client information
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id")
-    var customer: CustomerModel? = null
+    @JoinColumn(name = "controller_id")
+    var employee: EmployeeModel? = null
+
+    // Client information (ehemals project.customer)
+    var clientType: String? = null
+    var clientName: String? = null
+    var clientStreet: String? = null
+    var clientPostalCode: String? = null
+    var clientCity: String? = null
 
     // Contractor information
-    @Enumerated(EnumType.STRING)
-    var contractorType: ContractorType = ContractorType.CONTROL_ORGAN
+    var contractorType: String? = ContractorType.CONTROL_ORGAN.displayName
     var contractorCompany: String? = null
     var contractorStreet: String? = null
     var contractorPostalCode: String? = null
@@ -45,12 +50,10 @@ class ControlReportModel : PanacheEntity() {
     var installationPostalCode: String? = null
     var installationCity: String? = null
     var parcelNumber: String? = null
+    var buildingType: String? = null
 
     // Control data
     var controlScope: String? = null
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "controller_id")
-    var employee: EmployeeModel? = null
 
     var hasDefects: Boolean = false
     var deadlineNote: String? = null
