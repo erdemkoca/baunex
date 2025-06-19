@@ -90,7 +90,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 d.deadlineNote    = d.controlData.deadlineNote;
             }
 
-            return { draft: d, clientTypes, contractorTypes, employees, projectTypes };
+            return { 
+                draft: d, 
+                clientTypes, 
+                contractorTypes, 
+                employees, 
+                projectTypes,
+                editingDefectPosition: null,
+                newNormReference: '',
+                expandedSections: {
+                    client: true,
+                    contractor: true,
+                    installation: true,
+                    control: true,
+                    defects: true,
+                    notes: true,
+                    completion: false
+                }
+            };
         },
         watch: {
             'draft.controllerId'(newId) {
@@ -114,6 +131,32 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             isImageAttachment(att) {
                 return att && (att.type === 'IMAGE' || att.contentType?.startsWith('image/'));
+            },
+            toggleSection(section) {
+                this.expandedSections[section] = !this.expandedSections[section];
+            },
+            startEditingDefect(defect) {
+                this.editingDefectPosition = { ...defect };
+            },
+            cancelEditingDefect() {
+                this.editingDefectPosition = null;
+            },
+            saveEditingDefect() {
+                const index = this.draft.defectPositions.findIndex(d => d.id === this.editingDefectPosition.id);
+                if (index !== -1) {
+                    this.draft.defectPositions[index] = { ...this.editingDefectPosition };
+                }
+                this.editingDefectPosition = null;
+            },
+            addNormReference(defect) {
+                if (this.newNormReference.trim()) {
+                    if (!defect.normReferences) defect.normReferences = [];
+                    defect.normReferences.push(this.newNormReference.trim());
+                    this.newNormReference = '';
+                }
+            },
+            removeNormReference(defect, index) {
+                defect.normReferences.splice(index, 1);
             },
             async save() {
                 try {
@@ -212,200 +255,423 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
         template: `  
-      <div class="card">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">
+            <i class="fas fa-clipboard-check me-2"></i>
+            Kontrollbericht {{ draft.reportNumber || 'Neu' }}
+          </h4>
+        </div>
         <div class="card-body">
-          <h5>Kontrollbericht {{ draft.reportNumber || 'Neu' }}</h5>
-
+          
           <!-- Kunde -->
-          <h6 class="mt-4">Kunde</h6>
-          <div class="row g-3 mb-3">
-            <div class="col-md-4">
-              <label class="form-label">Typ</label>
-                <select class="form-select" v-model="draft.client.type">
-                  <option :value="null">– wählen –</option>
-                  <option
-                    v-for="opt in clientTypes"
-                    :key="opt.code"
-                    :value="opt.code"
-                  >
-                    {{ opt.label }}
-                  </option>
-                </select>
+          <div class="section-card mb-4">
+            <div class="section-header" @click="toggleSection('client')">
+              <h5 class="mb-0">
+                <i class="fas fa-user me-2"></i>
+                Kunde
+                <i :class="expandedSections.client ? 'fas fa-chevron-down' : 'fas fa-chevron-right'" class="float-end"></i>
+              </h5>
             </div>
-            <div class="col-md-4">
-              <label class="form-label">Name</label>
-              <input v-model="draft.client.name" class="form-control" />
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Strasse</label>
-              <input v-model="draft.client.street" class="form-control" />
-            </div>
-          </div>
-          <div class="row g-3 mb-4">
-            <div class="col-md-3">
-              <label class="form-label">PLZ</label>
-              <input v-model="draft.client.postalCode" class="form-control" />
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Ort</label>
-              <input v-model="draft.client.city" class="form-control" />
-            </div>
-          </div>
-          <hr />
-
-          <!-- Auftragnehmer -->
-          <h6 class="mt-4">Auftragnehmer</h6>
-          <div class="row g-3 mb-3">
-            <div class="col-md-4">
-              <label class="form-label">Typ</label>
-              <select class="form-select" v-model="draft.contractor.type">
-                  <option :value="null">– wählen –</option>
-                  <option
-                    v-for="opt in contractorTypes"
-                    :key="opt.code"
-                    :value="opt.code"
-                  >
-                    {{ opt.label }}
-                  </option>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Firma</label>
-              <input v-model="draft.contractor.company" class="form-control" />
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Strasse</label>
-              <input v-model="draft.contractor.street" class="form-control" />
-            </div>
-          </div>
-          <div class="row g-3 mb-4">
-            <div class="col-md-2">
-              <label class="form-label">PLZ</label>
-              <input v-model="draft.contractor.postalCode" class="form-control" />
-            </div>
-            <div class="col-md-2">
-              <label class="form-label">Ort</label>
-              <input v-model="draft.contractor.city" class="form-control" />
-            </div>
-          </div>
-          <hr />
-
-          <!-- Installationsort -->
-          <h6 class="mt-4">Installationsort</h6>
-          <div class="row g-3 mb-4">
-            <div class="col-md-6">
-              <label class="form-label">Strasse</label>
-              <input v-model="draft.installationLocation.street" class="form-control" />
-            </div>
-            <div class="col-md-2">
-              <label class="form-label">PLZ</label>
-              <input v-model="draft.installationLocation.postalCode" class="form-control" />
-            </div>
-            <div class="col-md-2">
-              <label class="form-label">Ort</label>
-              <input v-model="draft.installationLocation.city" class="form-control" />
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Gebäudetyp</label>
-              <select v-model="draft.installationLocation.buildingType" class="form-select">
-                <option :value="null">– wählen –</option>
-                <option
-                  v-for="opt in projectTypes"
-                  :key="opt.code"
-                  :value="opt.code"
-                >
-                  {{ opt.label }}
-                </option>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Parzelle</label>
-              <input v-model="draft.installationLocation.parcelNumber" class="form-control" />
-            </div>
-          </div>
-          <hr />
-
-          <!-- Kontrolldaten -->
-          <h6 class="mt-4">Kontrolldaten</h6>
-          <div class="row g-3 mb-3">
-            <div class="col-md-4">
-              <label class="form-label">Datum</label>
-              <input v-model="draft.controlData.controlDate" type="date" class="form-control" />
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Kontrolleur</label>
-              <select v-model="draft.controllerId" class="form-select">
-                <option :value="null">– wählen –</option>
-                <option v-for="e in employees" :key="e.id" :value="e.id">
-                  {{ e.firstName }} {{ e.lastName }}
-                </option>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Telefon</label>
-              <input v-model="draft.controllerPhone" type="text" readonly class="form-control" />
-            </div>
-            <div class="col-md-4 form-check align-self-end">
-              <input v-model="draft.hasDefects" type="checkbox" class="form-check-input" id="hasDefects" />
-              <label class="form-check-label" for="hasDefects">Mängel vorhanden</label>
-            </div>
-          </div>
-          <div class="row g-3 mb-4">
-            <div class="col-md-12">
-              <label class="form-label">Umfang</label>
-              <textarea v-model="draft.controlScope" class="form-control"></textarea>
-            </div>
-            <div class="col-md-12">
-              <label class="form-label">Frist / Bemerkung</label>
-              <textarea v-model="draft.deadlineNote" class="form-control"></textarea>
-            </div>
-          </div>
-          <hr />
-
-          <!-- Mängelpositionen -->
-          <h6 class="mt-4">Mängelpositionen</h6>
-          <div v-if="draft.defectPositions.length" class="mb-4">
-            <div v-for="pos in draft.defectPositions" :key="pos.id" class="border rounded p-2 mb-2">
-              <strong>#{{ pos.positionNumber }}</strong>
-              <p class="mb-0">{{ pos.description }}</p>
-              <div v-if="pos.photoUrls && pos.photoUrls.length" class="mb-2">
-                <div v-for="photo in pos.photoUrls" :key="photo.id" class="d-inline-block me-2">
-                  <template v-if="isImageAttachment(photo)">
-                    <img :src="photo.url" class="img-fluid img-thumbnail" style="max-width:200px" />
-                  </template>
-                  <template v-else>
-                    <a :href="photo.url" target="_blank">{{ photo.caption || 'Foto' }}</a>
-                  </template>
+            <div v-if="expandedSections.client" class="section-content">
+              <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Typ</label>
+                    <select class="form-select" v-model="draft.client.type">
+                      <option :value="null">– wählen –</option>
+                      <option
+                        v-for="opt in clientTypes"
+                        :key="opt.code"
+                        :value="opt.code"
+                      >
+                        {{ opt.label }}
+                      </option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Name</label>
+                  <input v-model="draft.client.name" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Strasse</label>
+                  <input v-model="draft.client.street" class="form-control" />
                 </div>
               </div>
-              <div v-if="pos.normReferences && pos.normReferences.length">
-                <small>Norm-Referenzen:</small>
-                <ul class="mb-0">
-                  <li v-for="ref in pos.normReferences" :key="ref">{{ ref }}</li>
-                </ul>
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <label class="form-label fw-bold">PLZ</label>
+                  <input v-model="draft.client.postalCode" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label fw-bold">Ort</label>
+                  <input v-model="draft.client.city" class="form-control" />
+                </div>
               </div>
             </div>
           </div>
-          <div v-else class="text-muted mb-4">Keine Mängelpositionen vorhanden.</div>
-          <hr />
 
-          <!-- Allgemeine Hinweise -->
-          <h6 class="mt-4">Allgemeine Hinweise</h6>
-          <textarea v-model="draft.generalNotes" class="form-control mb-4" rows="3"></textarea>
-          <hr />
-
-          <!-- Abschlussbestätigung -->
-          <h6 class="mt-4">Abschlussbestätigung</h6>
-          <div class="row g-3 mb-4">
-            <div class="col-md-4">
-              <label class="form-label">Datum</label>
-              <input v-model="draft.completionDate" type="datetime-local" class="form-control" />
+          <!-- Auftragnehmer -->
+          <div class="section-card mb-4">
+            <div class="section-header" @click="toggleSection('contractor')">
+              <h5 class="mb-0">
+                <i class="fas fa-building me-2"></i>
+                Auftragnehmer
+                <i :class="expandedSections.contractor ? 'fas fa-chevron-down' : 'fas fa-chevron-right'" class="float-end"></i>
+              </h5>
+            </div>
+            <div v-if="expandedSections.contractor" class="section-content">
+              <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Typ</label>
+                  <select class="form-select" v-model="draft.contractor.type">
+                      <option :value="null">– wählen –</option>
+                      <option
+                        v-for="opt in contractorTypes"
+                        :key="opt.code"
+                        :value="opt.code"
+                      >
+                        {{ opt.label }}
+                      </option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Firma</label>
+                  <input v-model="draft.contractor.company" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Strasse</label>
+                  <input v-model="draft.contractor.street" class="form-control" />
+                </div>
+              </div>
+              <div class="row g-3">
+                <div class="col-md-2">
+                  <label class="form-label fw-bold">PLZ</label>
+                  <input v-model="draft.contractor.postalCode" class="form-control" />
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label fw-bold">Ort</label>
+                  <input v-model="draft.contractor.city" class="form-control" />
+                </div>
+              </div>
             </div>
           </div>
 
-          <button @click="save" class="btn btn-primary">Speichern</button>
+          <!-- Installationsort -->
+          <div class="section-card mb-4">
+            <div class="section-header" @click="toggleSection('installation')">
+              <h5 class="mb-0">
+                <i class="fas fa-map-marker-alt me-2"></i>
+                Installationsort
+                <i :class="expandedSections.installation ? 'fas fa-chevron-down' : 'fas fa-chevron-right'" class="float-end"></i>
+              </h5>
+            </div>
+            <div v-if="expandedSections.installation" class="section-content">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Strasse</label>
+                  <input v-model="draft.installationLocation.street" class="form-control" />
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label fw-bold">PLZ</label>
+                  <input v-model="draft.installationLocation.postalCode" class="form-control" />
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label fw-bold">Ort</label>
+                  <input v-model="draft.installationLocation.city" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Gebäudetyp</label>
+                  <select v-model="draft.installationLocation.buildingType" class="form-select">
+                    <option :value="null">– wählen –</option>
+                    <option
+                      v-for="opt in projectTypes"
+                      :key="opt.code"
+                      :value="opt.code"
+                    >
+                      {{ opt.label }}
+                    </option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Parzelle</label>
+                  <input v-model="draft.installationLocation.parcelNumber" class="form-control" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Kontrolldaten -->
+          <div class="section-card mb-4">
+            <div class="section-header" @click="toggleSection('control')">
+              <h5 class="mb-0">
+                <i class="fas fa-search me-2"></i>
+                Kontrolldaten
+                <i :class="expandedSections.control ? 'fas fa-chevron-down' : 'fas fa-chevron-right'" class="float-end"></i>
+              </h5>
+            </div>
+            <div v-if="expandedSections.control" class="section-content">
+              <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Datum</label>
+                  <input v-model="draft.controlData.controlDate" type="date" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Kontrolleur</label>
+                  <select v-model="draft.controllerId" class="form-select">
+                    <option :value="null">– wählen –</option>
+                    <option v-for="e in employees" :key="e.id" :value="e.id">
+                      {{ e.firstName }} {{ e.lastName }}
+                    </option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Telefon</label>
+                  <input v-model="draft.controllerPhone" type="text" readonly class="form-control bg-light" />
+                </div>
+                <div class="col-md-4 form-check align-self-end">
+                  <input v-model="draft.hasDefects" type="checkbox" class="form-check-input" id="hasDefects" />
+                  <label class="form-check-label fw-bold" for="hasDefects">
+                    <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+                    Mängel vorhanden
+                  </label>
+                </div>
+              </div>
+              <div class="row g-3">
+                <div class="col-md-12">
+                  <label class="form-label fw-bold">Umfang</label>
+                  <textarea v-model="draft.controlScope" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="col-md-12">
+                  <label class="form-label fw-bold">Frist / Bemerkung</label>
+                  <textarea v-model="draft.deadlineNote" class="form-control" rows="2"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mängelpositionen -->
+          <div class="section-card mb-4">
+            <div class="section-header" @click="toggleSection('defects')">
+              <h5 class="mb-0">
+                <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                Mängelpositionen ({{ draft.defectPositions.length }})
+                <i :class="expandedSections.defects ? 'fas fa-chevron-down' : 'fas fa-chevron-right'" class="float-end"></i>
+              </h5>
+            </div>
+            <div v-if="expandedSections.defects" class="section-content">
+              <div v-if="draft.defectPositions.length" class="mb-4">
+                <div v-for="(pos, index) in draft.defectPositions" :key="pos.id" class="defect-position-card mb-3">
+                  <div class="defect-header">
+                    <h6 class="mb-0">
+                      <span class="badge bg-warning text-dark me-2">#{{ pos.positionNumber }}</span>
+                      {{ pos.description.substring(0, 50) }}{{ pos.description.length > 50 ? '...' : '' }}
+                    </h6>
+                    <button @click="startEditingDefect(pos)" class="btn btn-sm btn-outline-primary">
+                      <i class="fas fa-edit"></i> Bearbeiten
+                    </button>
+                  </div>
+                  
+                  <!-- View Mode -->
+                  <div v-if="editingDefectPosition?.id !== pos.id" class="defect-content">
+                    <p class="text-muted mb-2">{{ pos.description }}</p>
+                    
+                    <div v-if="pos.buildingLocation" class="mb-2">
+                      <strong>Ort:</strong> {{ pos.buildingLocation }}
+                    </div>
+                    
+                    <div v-if="pos.photoUrls && pos.photoUrls.length" class="mb-3">
+                      <strong>Fotos:</strong>
+                      <div class="photo-gallery">
+                        <div v-for="photo in pos.photoUrls" :key="photo.id" class="photo-item">
+                          <template v-if="isImageAttachment(photo)">
+                            <img :src="photo.url" class="img-fluid img-thumbnail" style="max-width:150px; max-height:150px;" />
+                          </template>
+                          <template v-else>
+                            <a :href="photo.url" target="_blank" class="btn btn-sm btn-outline-secondary">
+                              <i class="fas fa-file"></i> {{ photo.caption || 'Foto' }}
+                            </a>
+                          </template>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div v-if="pos.normReferences && pos.normReferences.length" class="mb-2">
+                      <strong>Norm-Referenzen:</strong>
+                      <div class="norm-references">
+                        <span v-for="(ref, refIndex) in pos.normReferences" :key="refIndex" class="badge bg-info me-1">
+                          {{ ref }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Edit Mode -->
+                  <div v-else class="defect-edit-form">
+                    <div class="row g-3">
+                      <div class="col-md-12">
+                        <label class="form-label fw-bold">Beschreibung</label>
+                        <textarea v-model="editingDefectPosition.description" class="form-control" rows="3"></textarea>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-bold">Ort im Gebäude</label>
+                        <input v-model="editingDefectPosition.buildingLocation" class="form-control" placeholder="z.B. Küche, rechte Seite" />
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-bold">Norm-Referenzen</label>
+                        <div class="input-group">
+                          <input v-model="newNormReference" @keyup.enter="addNormReference(editingDefectPosition)" class="form-control" placeholder="z.B. SIA 118" />
+                          <button @click="addNormReference(editingDefectPosition)" class="btn btn-outline-secondary" type="button">
+                            <i class="fas fa-plus"></i>
+                          </button>
+                        </div>
+                        <div v-if="editingDefectPosition.normReferences && editingDefectPosition.normReferences.length" class="mt-2">
+                          <span v-for="(ref, refIndex) in editingDefectPosition.normReferences" :key="refIndex" class="badge bg-info me-1">
+                            {{ ref }}
+                            <i @click="removeNormReference(editingDefectPosition, refIndex)" class="fas fa-times ms-1" style="cursor: pointer;"></i>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="mt-3">
+                      <button @click="saveEditingDefect()" class="btn btn-success me-2">
+                        <i class="fas fa-save"></i> Speichern
+                      </button>
+                      <button @click="cancelEditingDefect()" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Abbrechen
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="text-muted text-center py-4">
+                <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
+                <p>Keine Mängelpositionen vorhanden.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Allgemeine Hinweise -->
+          <div class="section-card mb-4">
+            <div class="section-header" @click="toggleSection('notes')">
+              <h5 class="mb-0">
+                <i class="fas fa-sticky-note me-2"></i>
+                Allgemeine Hinweise
+                <i :class="expandedSections.notes ? 'fas fa-chevron-down' : 'fas fa-chevron-right'" class="float-end"></i>
+              </h5>
+            </div>
+            <div v-if="expandedSections.notes" class="section-content">
+              <textarea v-model="draft.generalNotes" class="form-control" rows="4" placeholder="Allgemeine Bemerkungen zur Kontrolle..."></textarea>
+            </div>
+          </div>
+
+          <!-- Abschlussbestätigung -->
+          <div class="section-card mb-4">
+            <div class="section-header" @click="toggleSection('completion')">
+              <h5 class="mb-0">
+                <i class="fas fa-flag-checkered me-2"></i>
+                Abschlussbestätigung
+                <i :class="expandedSections.completion ? 'fas fa-chevron-down' : 'fas fa-chevron-right'" class="float-end"></i>
+              </h5>
+            </div>
+            <div v-if="expandedSections.completion" class="section-content">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Abschlussdatum</label>
+                  <input v-model="draft.completionDate" type="datetime-local" class="form-control" />
+                </div>
+                <div class="col-md-12">
+                  <label class="form-label fw-bold">Mängelbeseitigung Bemerkung</label>
+                  <textarea v-model="draft.defectResolverNote" class="form-control" rows="3" placeholder="Bemerkungen zur Mängelbeseitigung..."></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Save Button -->
+          <div class="text-center">
+            <button @click="save" class="btn btn-primary btn-lg">
+              <i class="fas fa-save me-2"></i>
+              Kontrollbericht speichern
+            </button>
+          </div>
         </div>
       </div>
+
+      <style>
+        .section-card {
+          border: 1px solid #dee2e6;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+        
+        .section-header {
+          background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+          padding: 15px 20px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          border-bottom: 1px solid #dee2e6;
+        }
+        
+        .section-header:hover {
+          background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+        }
+        
+        .section-content {
+          padding: 20px;
+          background: white;
+        }
+        
+        .defect-position-card {
+          border: 1px solid #dee2e6;
+          border-radius: 8px;
+          padding: 15px;
+          background: #f8f9fa;
+        }
+        
+        .defect-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 15px;
+        }
+        
+        .defect-content {
+          background: white;
+          padding: 15px;
+          border-radius: 6px;
+          border: 1px solid #e9ecef;
+        }
+        
+        .defect-edit-form {
+          background: white;
+          padding: 15px;
+          border-radius: 6px;
+          border: 2px solid #007bff;
+        }
+        
+        .photo-gallery {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          margin-top: 10px;
+        }
+        
+        .photo-item {
+          flex: 0 0 auto;
+        }
+        
+        .norm-references {
+          margin-top: 5px;
+        }
+        
+        .form-label {
+          color: #495057;
+        }
+        
+        .card-header {
+          background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        }
+      </style>
     `
     }).mount(el);
 });
