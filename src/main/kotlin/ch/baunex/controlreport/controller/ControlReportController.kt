@@ -20,7 +20,7 @@ import java.time.LocalDate
 
 @Path("/projects/{projectId}/controlreport")
 @ApplicationScoped
-class ProjectControlReportController {
+class ControlReportController {
 
     @Inject
     lateinit var projectFacade: ProjectFacade
