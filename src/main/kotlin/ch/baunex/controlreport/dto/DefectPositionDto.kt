@@ -11,5 +11,6 @@ data class DefectPositionDto(
     val buildingLocation: String?,
     val noteId: Long?,
     val noteContent: String?,
-    val photoUrls: List<MediaAttachmentDto>
+    val photoUrls: List<MediaAttachmentDto>,
+    val normReferences: List<String> = emptyList()
 )

@@ -43,6 +43,10 @@ class DefectPositionModel : PanacheEntity() {
     @Column(name = "building_location")
     var buildingLocation: String? = null
 
+    /** Norm references as comma-separated string */
+    @Column(name = "norm_references", columnDefinition = "TEXT")
+    var normReferences: String? = null
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     lateinit var createdAt: LocalDateTime

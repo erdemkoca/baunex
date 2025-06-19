@@ -18,19 +18,32 @@ document.addEventListener('DOMContentLoaded', () => {
         return {
             id: null,
             reportNumber: '',
-            client:    { type: null, name:'', street:'', postalCode:'', city:'' },
-            contractor:{ type: null, company:'', street:'', postalCode:'', city:'' },
+            pageCount: 1,
+            currentPage: 1,
+
+            client:    { type: '', name:'', street:'', postalCode:'', city:'' },
+            contractor:{ type: '', company:'', street:'', postalCode:'', city:'' },
             installationLocation: {
                 street:'', postalCode:'', city:'', buildingType:'', parcelNumber:''
             },
-            controlDate: nowDate,
-            controllerId: null,
-            controllerPhone: '',
+
             controlScope: '',
-            hasDefects: false,
-            deadlineNote: '',
+            controlData: {
+                controlDate: nowDate,
+                controllerId: null,
+                controllerFirstName: null,
+                controllerLastName: null,
+                phoneNumber: null,
+                hasDefects: false,
+                deadlineNote: ''
+            },
+
             generalNotes: '',
-            defectPositions: []
+            defectResolverNote: '',
+            completionDate: null,
+            defectPositions: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         };
     }
 
@@ -65,9 +78,11 @@ document.addEventListener('DOMContentLoaded', () => {
     createApp({
         data() {
             const d = JSON.parse(JSON.stringify(report));
-            if (!d.controlDate) d.controlDate = new Date().toISOString().slice(0,10);
+            if (!d.controlData) d.controlData = {};
+            if (!d.controlData.controlDate) d.controlData.controlDate = new Date().toISOString().slice(0,10);
             if (!d.defectPositions) d.defectPositions = [];
 
+            // Extract control data to top level for easier access
             if (d.controlData) {
                 d.controllerId    = d.controlData.controllerId;
                 d.controllerPhone = d.controlData.phoneNumber;
@@ -81,6 +96,13 @@ document.addEventListener('DOMContentLoaded', () => {
             'draft.controllerId'(newId) {
                 const emp = this.employees.find(e => e.id === newId);
                 this.draft.controllerPhone = emp?.phone || '';
+                // Update controlData as well
+                if (this.draft.controlData) {
+                    this.draft.controlData.controllerId = newId;
+                    this.draft.controlData.controllerFirstName = emp?.firstName || null;
+                    this.draft.controlData.controllerLastName = emp?.lastName || null;
+                    this.draft.controlData.phoneNumber = emp?.phone || null;
+                }
             }
         },
         methods: {
@@ -98,47 +120,65 @@ document.addEventListener('DOMContentLoaded', () => {
                     const projectId = Number(el.dataset.projectId);
                     if (isNaN(projectId)) throw new Error("projectId ist nicht gesetzt");
 
+                    // Get selected employee data
+                    const selectedEmployee = this.draft.controllerId ? 
+                        this.employees.find(e => e.id === this.draft.controllerId) : null;
+
                     const updateDto = {
+                        id: this.draft.id,
                         reportNumber:          this.draft.reportNumber,
                         pageCount:             this.draft.pageCount,
                         currentPage:           this.draft.currentPage,
 
-                        clientType:            this.draft.client.type,
-                        clientName:            this.draft.client.name,
-                        clientStreet:          this.draft.client.street,
-                        clientPostalCode:      this.draft.client.postalCode,
-                        clientCity:            this.draft.client.city,
-
-                        contractorType:        this.draft.contractor.type,
-                        contractorCompany:     this.draft.contractor.company,
-                        contractorStreet:      this.draft.contractor.street,
-                        contractorPostalCode:  this.draft.contractor.postalCode,
-                        contractorCity:        this.draft.contractor.city,
-
-                        installationStreet:    this.draft.installationLocation.street,
-                        installationPostalCode:this.draft.installationLocation.postalCode,
-                        installationCity:      this.draft.installationLocation.city,
-                        buildingType:          this.draft.installationLocation.buildingType,
-                        parcelNumber:          this.draft.installationLocation.parcelNumber,
-
-                        controlDate:           this.draft.controlDate,
-                        controlScope:          this.draft.controlScope,
-                        controllerId:          this.draft.controllerId,
-                        hasDefects:            this.draft.hasDefects,
-                        deadlineNote:          this.draft.deadlineNote,
-
+                        client: {
+                            type:       this.draft.client.type,
+                            name:       this.draft.client.name,
+                            street:     this.draft.client.street,
+                            postalCode: this.draft.client.postalCode,
+                            city:       this.draft.client.city,
+                        },
+                        contractor: {
+                            type:       this.draft.contractor.type,
+                            company:    this.draft.contractor.company,
+                            street:     this.draft.contractor.street,
+                            postalCode: this.draft.contractor.postalCode,
+                            city:       this.draft.contractor.city,
+                        },
+                        installationLocation: {
+                            street:       this.draft.installationLocation.street,
+                            postalCode:   this.draft.installationLocation.postalCode,
+                            city:         this.draft.installationLocation.city,
+                            buildingType: this.draft.installationLocation.buildingType,
+                            parcelNumber: this.draft.installationLocation.parcelNumber,
+                        },
+                        controlScope: this.draft.controlScope,
+                        controlData: {
+                            controlDate:         this.draft.controlData.controlDate,
+                            controllerId:        this.draft.controllerId,
+                            controllerFirstName: selectedEmployee?.firstName || null,
+                            controllerLastName:  selectedEmployee?.lastName || null,
+                            phoneNumber:         selectedEmployee?.phone || null,
+                            hasDefects:          this.draft.hasDefects,
+                            deadlineNote:        this.draft.deadlineNote,
+                        },
                         generalNotes:          this.draft.generalNotes,
-
+                        defectResolverNote:    this.draft.defectResolverNote,
+                        completionDate:        this.draft.completionDate,
                         defectPositions: this.draft.defectPositions.map(pos => ({
                             id: pos.id ? Number(pos.id) : null,
-                            noteId: pos.photoUrl?.noteId ? Number(pos.photoUrl.noteId) : null,
-                            noteContent: pos.description ?? '',
+                            positionNumber: pos.positionNumber,
+                            description: pos.description ?? '',
+                            buildingLocation: pos.buildingLocation ?? '',
+                            noteId: pos.noteId ?? null,
+                            noteContent: pos.noteContent ?? '',
+                            photoUrls: pos.photoUrls || [],
                             normReferences: pos.normReferences || []
                         })),
-
-                        defectResolverNote:    this.draft.defectResolverNote,
-                        completionDate:        this.draft.completionConfirmation?.completionDate
+                        createdAt: this.draft.createdAt,
+                        updatedAt: this.draft.updatedAt
                     };
+
+                    console.log('Sending DTO:', updateDto);
 
                     const res = await fetch(
                         `/projects/${projectId}/controlreport`, {
@@ -150,11 +190,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!res.ok) {
                         const txt = await res.text();
                         console.error('Save failed —', res.status, txt);
-                        throw new Error(`HTTP ${res.status}`);
+                        throw new Error(`HTTP ${res.status}: ${txt}`);
                     }
 
                     const newDto = await res.json();
                     this.draft = newDto;
+                    
+                    // Update local control data
                     if (newDto.controlData) {
                         this.draft.controllerId    = newDto.controlData.controllerId;
                         this.draft.controllerPhone = newDto.controlData.phoneNumber;
@@ -288,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="row g-3 mb-3">
             <div class="col-md-4">
               <label class="form-label">Datum</label>
-              <input v-model="draft.controlDate" type="date" class="form-control" />
+              <input v-model="draft.controlData.controlDate" type="date" class="form-control" />
             </div>
             <div class="col-md-4">
               <label class="form-label">Kontrolleur</label>
@@ -326,13 +368,15 @@ document.addEventListener('DOMContentLoaded', () => {
             <div v-for="pos in draft.defectPositions" :key="pos.id" class="border rounded p-2 mb-2">
               <strong>#{{ pos.positionNumber }}</strong>
               <p class="mb-0">{{ pos.description }}</p>
-              <div v-if="pos.photoUrl" class="mb-2">
-                <template v-if="isImageAttachment(pos.photoUrl)">
-                  <img :src="pos.photoUrl.url" class="img-fluid img-thumbnail" style="max-width:200px" />
-                </template>
-                <template v-else>
-                  <a :href="pos.photoUrl.url" target="_blank">{{ pos.photoUrl.caption || 'Foto' }}</a>
-                </template>
+              <div v-if="pos.photoUrls && pos.photoUrls.length" class="mb-2">
+                <div v-for="photo in pos.photoUrls" :key="photo.id" class="d-inline-block me-2">
+                  <template v-if="isImageAttachment(photo)">
+                    <img :src="photo.url" class="img-fluid img-thumbnail" style="max-width:200px" />
+                  </template>
+                  <template v-else>
+                    <a :href="photo.url" target="_blank">{{ photo.caption || 'Foto' }}</a>
+                  </template>
+                </div>
               </div>
               <div v-if="pos.normReferences && pos.normReferences.length">
                 <small>Norm-Referenzen:</small>
@@ -355,6 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="row g-3 mb-4">
             <div class="col-md-4">
               <label class="form-label">Datum</label>
+              <input v-model="draft.completionDate" type="datetime-local" class="form-control" />
             </div>
           </div>
 

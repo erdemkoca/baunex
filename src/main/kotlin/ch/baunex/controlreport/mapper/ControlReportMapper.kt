@@ -39,7 +39,7 @@ class ControlReportMapper {
         ),
         controlScope = m.controlScope,
         controlData = ControlDataDto(
-            controlDate         = m.controlDate!!,
+            controlDate         = m.controlDate,
             controllerId        = m.employee?.id,
             controllerFirstName = m.employee?.person?.firstName,
             controllerLastName  = m.employee?.person?.lastName,
@@ -98,10 +98,11 @@ class ControlReportMapper {
     private fun toDefectPositionDto(p: DefectPositionModel) = DefectPositionDto(
         id              = p.id,
         positionNumber  = p.positionNumber,
-        description     = p.note.content,                      // wird beim Erstellen kopiert
-        buildingLocation = p.buildingLocation,                 // eigenes Feld im Model (falls du es dort ergänzt hast)
+        description     = p.description,
+        buildingLocation = p.buildingLocation,
         noteId          = p.note.id,
         noteContent     = p.note.content,
-        photoUrls = p.note.attachments.toDtoList()
+        photoUrls = p.note.attachments.toDtoList(),
+        normReferences = p.normReferences?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList()
     )
 }
