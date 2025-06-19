@@ -1,6 +1,5 @@
 package ch.baunex.controlreport.dto
 
-import ch.baunex.user.model.CustomerType
 import kotlinx.serialization.Serializable
 
 @Serializable

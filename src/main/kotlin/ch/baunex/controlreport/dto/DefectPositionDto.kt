@@ -5,8 +5,11 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class DefectPositionDto(
+    val id: Long? = null,
     val positionNumber: Int,
-    val photoUrl: MediaAttachmentDto?,
     val description: String,
-    val normReferences: List<String>
+    val buildingLocation: String?,
+    val noteId: Long?,
+    val noteContent: String?,
+    val photoUrls: List<MediaAttachmentDto>
 )

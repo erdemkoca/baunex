@@ -1,6 +1,5 @@
 package ch.baunex.controlreport.dto
 
-import ch.baunex.project.model.ProjectType
 import kotlinx.serialization.Serializable
 
 @Serializable

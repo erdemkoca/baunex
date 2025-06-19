@@ -1,37 +1,25 @@
 package ch.baunex.controlreport.dto
 
-import ch.baunex.serialization.LocalDateSerializer
 import ch.baunex.serialization.LocalDateTimeSerializer
 import kotlinx.serialization.Serializable
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Serializable
 data class ControlReportDto(
     val id: Long,
-    val reportNumber: String,
+    val reportNumber: String? = null,
     val pageCount: Int,
     val currentPage: Int,
-
-    // client + contractor + installation
     val client: ClientDto,
     val contractor: ContractorDto,
     val installationLocation: InstallationLocationDto,
-
-    // ** add controlDate here **
-    @Serializable(with = LocalDateSerializer::class)
-    val controlDate: LocalDate,
-
-    val controlScope: String,
-
-    // ** expand ControlDataDto if necessary **
+    val controlScope: String? = null,
     val controlData: ControlDataDto,
-
-    val generalNotes: String,
-    val defectPositions: List<DefectPositionDto>,
-    val defectResolverNote: String?,
-
-    // metadata
+    val generalNotes: String? = null,
+    val defectPositions: List<DefectPositionDto> = emptyList(),
+    val defectResolverNote: String? = null,
+    @Serializable(with = LocalDateTimeSerializer::class)
+    val completionDate: LocalDateTime? = null,
     @Serializable(with = LocalDateTimeSerializer::class)
     val createdAt: LocalDateTime,
     @Serializable(with = LocalDateTimeSerializer::class)

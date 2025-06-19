@@ -19,13 +19,11 @@ class DefectPositionService(
         // 1) find‐or‐create the ControlReportModel
         val report: ControlReportModel = note.controlReport
             ?: run {
-                // bootstrap a report for this note’s project
                 val newReport = controlReportService
                     .getOrInitializeModel(
                         note.project?.id
                             ?: throw IllegalArgumentException("Note ${note.id} has no project")
                     )
-                // link & persist the FK on NoteModel
                 note.controlReport = newReport
                 note.persist()
                 newReport
@@ -34,48 +32,42 @@ class DefectPositionService(
         // 2) determine next position number
         val nextNumber = (report.defectPositions.maxOfOrNull { it.positionNumber } ?: 0) + 1
 
-        // 3) build & save the DefectPosition, wiring both sides
+        // 3) build & save the DefectPosition
         val defect = DefectPositionModel().apply {
-            this.note           = note
-            this.controlReport  = report
-            this.positionNumber = nextNumber
-            this.createdAt      = LocalDateTime.now()
+            this.note            = note
+            this.controlReport   = report
+            this.positionNumber  = nextNumber
+            this.description     = note.content                 // initialer Text aus Note
+            this.buildingLocation = null                        // leer beim Anlegen
+            this.createdAt       = LocalDateTime.now()
         }
-        defectPositionRepo.persist(defect)
 
-        // 4) add to the in‐memory list to keep Hibernate happy
+        defectPositionRepo.persist(defect)
         report.defectPositions.add(defect)
 
         return defect
     }
 
-    /** List all defects for a given control‐report ID */
-    fun listByReport(reportId: Long): List<DefectPositionModel> =
-        defectPositionRepo.findByControlReportId(reportId)
-
-    /** Fetch a single defect by its id */
     fun getById(id: Long): DefectPositionModel =
         defectPositionRepo.findById(id)
             ?: throw IllegalArgumentException("DefectPosition $id not found")
 
-    /**
-     * Update an existing defect position; for example to add resolution info.
-     */
     @Transactional
     fun update(
         id: Long,
         description: String?,
-        photoUrl: String?,
+        buildingLocation: String?,
         normReferences: List<String>?,
         resolutionStamp: String?,
         resolutionSignature: String?
     ): DefectPositionModel {
         val defect = getById(id)
-        normReferences?.let { defect.normReferences = it.toMutableList() }
+        description?.let { defect.description = it }
+        buildingLocation?.let { defect.buildingLocation = it }
+        defect.updatedAt = LocalDateTime.now()
         return defect
     }
 
-    /** Remove a defect position entirely */
     @Transactional
     fun delete(id: Long) {
         val defect = getById(id)

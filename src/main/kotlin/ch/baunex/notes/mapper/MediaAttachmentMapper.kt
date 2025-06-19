@@ -4,8 +4,6 @@ import ch.baunex.notes.dto.AttachmentForUI
 import ch.baunex.notes.dto.MediaAttachmentDto
 import ch.baunex.notes.model.MediaAttachmentModel
 import ch.baunex.notes.model.MediaType
-import org.bouncycastle.asn1.cms.CMSAttributes.contentType
-import java.net.URL
 import java.net.URLConnection
 
 fun MediaAttachmentModel.toDto(): MediaAttachmentDto {
@@ -32,6 +30,9 @@ fun MediaAttachmentModel.toDto(): MediaAttachmentDto {
         filename = filename
     )
 }
+
+fun List<MediaAttachmentModel>.toDtoList(): List<MediaAttachmentDto> =
+    this.map { it.toDto() }
 
 fun MediaAttachmentDto.toAttachmentForUI(): AttachmentForUI {
     val filename = this.url.substringAfterLast('/')

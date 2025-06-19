@@ -9,7 +9,4 @@ class ControlReportRepository : PanacheRepository<ControlReportModel> {
 
     fun findByProjectId(projectId: Long): List<ControlReportModel> =
         find("project.id", projectId).list()
-
-    fun countByProjectId(projectId: Long): Long =
-        count("project.id", projectId)
 }

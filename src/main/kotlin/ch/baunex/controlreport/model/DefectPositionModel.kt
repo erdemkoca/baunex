@@ -22,7 +22,7 @@ class DefectPositionModel : PanacheEntity() {
     @OneToOne(
         fetch = FetchType.LAZY,
         optional = false,
-        cascade = [CascadeType.ALL],     // or REMOVE/orphanRemoval if you want
+        cascade = [CascadeType.ALL],
         orphanRemoval = true
     )
     @JoinColumn(name = "note_id", unique = true)
@@ -32,17 +32,16 @@ class DefectPositionModel : PanacheEntity() {
     @JoinColumn(name = "control_report_id")
     var controlReport: ControlReportModel? = null
 
-    /** The sequential position number within its report */
     @Column(name = "position_number", nullable = false)
     var positionNumber: Int = 0
 
-    @ElementCollection
-    @CollectionTable(
-        name = "defect_position_norm_references",
-        joinColumns = [JoinColumn(name = "defect_position_id")]
-    )
-    @Column(name = "norm_reference")
-    var normReferences: MutableList<String> = mutableListOf()
+    /** Human-written description (copied from note initially, then editable) */
+    @Column(name = "description", columnDefinition = "TEXT")
+    var description: String = ""
+
+    /** Free-text location, e.g. "right side kitchen" */
+    @Column(name = "building_location")
+    var buildingLocation: String? = null
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -52,3 +51,4 @@ class DefectPositionModel : PanacheEntity() {
     @Column(name = "updated_at")
     lateinit var updatedAt: LocalDateTime
 }
+

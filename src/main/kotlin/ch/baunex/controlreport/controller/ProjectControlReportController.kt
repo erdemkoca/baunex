@@ -2,7 +2,6 @@ package ch.baunex.controlreport.controller
 
 import ch.baunex.common.dto.EnumOption
 import ch.baunex.controlreport.dto.ControlReportDto
-import ch.baunex.controlreport.dto.ControlReportUpdateDto
 import ch.baunex.controlreport.facade.ControlReportFacade
 import ch.baunex.controlreport.model.ContractorType
 import ch.baunex.project.facade.ProjectFacade
@@ -58,18 +57,12 @@ class ProjectControlReportController {
         return Response.ok(tpl.render()).build()
     }
 
-
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    fun getReportsByProject(@PathParam("projectId") projectId: Long): List<ControlReportDto> =
-        reportFacade.listReportsByProject(projectId)
-
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     fun update(
         @PathParam("projectId") projectId: Long,
-        dto: ControlReportUpdateDto
+        dto: ControlReportDto
     ): ControlReportDto {
         println("Received PUT request for project $projectId with DTO: $dto")
         return reportFacade

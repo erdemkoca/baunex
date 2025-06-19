@@ -8,17 +8,11 @@ import jakarta.enterprise.context.ApplicationScoped
 class ControlReportFacade(
     private val controlReportService: ControlReportService
 ) {
-
     fun getOrInitializeReport(projectId: Long): ControlReportDto =
         controlReportService.getOrInitializeByProjectId(projectId)
 
-
-    fun listReportsByProject(projectId: Long): List<ControlReportDto> =
-        controlReportService.listReportsByProject(projectId)
-
-    fun updateReportByProject(projectId: Long, dto: ControlReportUpdateDto): ControlReportDto? {
+    fun updateReportByProject(projectId: Long, dto: ControlReportDto): ControlReportDto? {
         println("Updating control report for project $projectId with DTO: $dto")
         return controlReportService.updateByProjectId(projectId, dto)
     }
-
 }
