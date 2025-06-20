@@ -1,6 +1,5 @@
 package ch.baunex.timetracking.service
 
-import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.timetracking.model.TimeEntryModel
 import ch.baunex.timetracking.mapper.TimeEntryMapper
 import ch.baunex.timetracking.repository.TimeEntryRepository
@@ -8,6 +7,7 @@ import ch.baunex.user.repository.EmployeeRepository
 import ch.baunex.project.repository.ProjectRepository
 import ch.baunex.catalog.service.CatalogService
 import ch.baunex.notes.model.NoteModel
+import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.user.service.EmployeeService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
@@ -51,7 +51,6 @@ class TimeTrackingService @Inject constructor(
             // Additional Costs
             this.travelTimeMinutes = dto.travelTimeMinutes
             this.disposalCost = dto.disposalCost
-            this.hasWaitingTime = dto.hasWaitingTime
             this.waitingTimeMinutes = dto.waitingTimeMinutes
 
             // 2. Notizen verarbeiten
@@ -130,7 +129,6 @@ class TimeTrackingService @Inject constructor(
             // Additional Costs
             this.travelTimeMinutes = dto.travelTimeMinutes
             this.disposalCost = dto.disposalCost
-            this.hasWaitingTime = dto.hasWaitingTime
             this.waitingTimeMinutes = dto.waitingTimeMinutes
             
             // Update notes

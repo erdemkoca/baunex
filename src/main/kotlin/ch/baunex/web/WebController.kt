@@ -6,7 +6,7 @@ import ch.baunex.invoice.dto.InvoiceDTO
 import ch.baunex.invoice.facade.InvoiceFacade
 import ch.baunex.project.dto.ProjectListDTO
 import ch.baunex.project.facade.ProjectFacade
-import ch.baunex.timetracking.dto.TimeEntryResponseDTO
+import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.timetracking.facade.TimeTrackingFacade
 import ch.baunex.user.dto.CustomerContactDTO
 import ch.baunex.user.dto.CustomerDTO
@@ -39,7 +39,7 @@ class WebController {
         @JvmStatic
         external fun index(
             projects: List<ProjectListDTO>,
-            timeEntries: List<TimeEntryResponseDTO>,
+            timeEntries: List<TimeEntryDTO>,
             currentDate: LocalDate,
             activeMenu: String,
             totalProjects: Int,
@@ -244,51 +244,62 @@ class WebController {
     @Path("/dashboard")
     @Produces(MediaType.TEXT_HTML)
     fun dashboard(): Response {
-        val currentDate = LocalDate.now()
-        val projects = projectFacade.getAllProjects()
-        val timeEntries = timeTrackingFacade.getAllTimeEntries()
-        val invoice = invoiceFacade.getAll()
-        val company = companyFacade.getCompany() ?: throw IllegalStateException("Company information not found")
+        val currentDate        = LocalDate.now()
+        val projects           = projectFacade.getAllProjects()
+        val timeEntries        = timeTrackingFacade.getAllTimeEntries()
+        val invoice            = invoiceFacade.getAll()
+        val company            = companyFacade.getCompany() ?: error("Company info not found")
 
-        // Calculate statistics
-        val totalProjects = projects.size
-        val totalTimeEntries = timeEntries.size
-        val totalInvoice = invoice.size
-        val totalInvoicedAmount = invoice.sumOf { it.totalAmount ?: 0.0 }
-        val totalTimeHours = timeEntries.sumOf { it.hoursWorked }
-        
-        // Calculate material costs from project details
-        val totalMaterialCost = projects.sumOf { project ->
-            val projectDetail = projectFacade.getProjectWithDetails(project.id)
-            projectDetail?.catalogItems?.sumOf { item -> item.totalPrice ?: 0.0 } ?: 0.0
-        }
-        
+        val totalProjects      = projects.size
+        val totalTimeEntries   = timeEntries.size
+        val totalInvoiceDrafts = invoice.size
+
+        val totalInvoicedAmount = invoice
+            .map { it.totalAmount?.toDouble() ?: 0.0 }
+            .sum()
+
+        val totalTimeHours = timeEntries
+            .map { it.hoursWorked }
+            .sum()
+
+        val totalMaterialCost = projects
+            .map { p ->
+                projectFacade.getProjectWithDetails(p.id)
+                    ?.catalogItems
+                    ?.map { it.totalPrice ?: 0.0 }
+                    ?.sum()
+                    ?: 0.0
+            }
+            .sum()
+
         val totalServiceCost = timeEntries.sumOf { it.cost ?: 0.0 }
-        val totalCosts = totalServiceCost + totalMaterialCost
 
-        // Get recent items
-        val recentProjects = projects.take(5)
-        val recentTimeEntries = timeEntries.take(5)
+        val totalCosts = totalMaterialCost + totalServiceCost
+
+        val recentProjects      = projects.take(5)
+        val recentTimeEntries   = timeEntries.take(5)
         val recentInvoiceDrafts = invoice.take(5)
 
         val template = Templates.index(
-            projects = recentProjects,
-            timeEntries = recentTimeEntries,
-            currentDate = currentDate,
-            activeMenu = "dashboard",
-            totalProjects = totalProjects,
-            totalTimeEntries = totalTimeEntries,
-            totalInvoiceDrafts = totalInvoice,
-            totalInvoicedAmount = totalInvoicedAmount,
-            totalTimeHours = totalTimeHours,
-            totalMaterialCost = totalMaterialCost,
-            totalServiceCost = totalServiceCost,
-            totalCosts = totalCosts,
-            recentInvoiceDrafts = recentInvoiceDrafts,
-            company = company
+            projects             = recentProjects,
+            timeEntries          = recentTimeEntries,
+            currentDate          = currentDate,
+            activeMenu           = "dashboard",
+            totalProjects        = totalProjects,
+            totalTimeEntries     = totalTimeEntries,
+            totalInvoiceDrafts   = totalInvoiceDrafts,
+            totalInvoicedAmount  = totalInvoicedAmount,
+            totalTimeHours       = totalTimeHours,
+            totalMaterialCost    = totalMaterialCost,
+            totalServiceCost     = totalServiceCost,
+            totalCosts           = totalCosts,
+            recentInvoiceDrafts  = recentInvoiceDrafts,
+            company              = company
         )
+
         return Response.ok(template.render()).build()
     }
+
 
     @GET
     @Path("/document/{type}/preview")

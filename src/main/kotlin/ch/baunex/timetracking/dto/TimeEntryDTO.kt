@@ -15,20 +15,33 @@ data class TimeEntryDTO(
     val hoursWorked: Double,
     val title: String,
     val notes: List<NoteDto> = emptyList(),
+
+    // billing flags
     val hourlyRate: Double? = null,
     val billable: Boolean = false,
     val invoiced: Boolean = false,
+
+    // catalog‐line items
     val catalogItems: List<TimeEntryCatalogItemDTO> = emptyList(),
-    
-    // Surcharges
+
+    // input surcharges
     val hasNightSurcharge: Boolean = false,
     val hasWeekendSurcharge: Boolean = false,
     val hasHolidaySurcharge: Boolean = false,
-    
-    // Additional Costs
+
+    // input additional costs
     val travelTimeMinutes: Int = 0,
-    val disposalCost: Double = 0.0,
     val hasWaitingTime: Boolean = false,
     val waitingTimeMinutes: Int = 0,
-    val costBreakdown: TimeEntryCostBreakdownDTO? = null
+    val disposalCost: Double = 0.0,
+
+    // flattened cost‐breakdown fields
+    val costBreakdown: TimeEntryCostBreakdownDTO? = null,
+
+    val employeeEmail:     String = "",
+    val employeeFirstName: String = "",
+    val employeeLastName:  String = "",
+    val projectName:       String = "",
+    val cost:              Double? = null,
+    val approval:          ApprovalDTO = ApprovalDTO()
 )

@@ -52,7 +52,6 @@ class SampleTimeEntryLoader {
                 hasWeekendSurcharge= true,
                 travelTimeMinutes  = 45,
                 hasHolidaySurcharge= false,
-                hasWaitingTime     = false,
                 waitingTimeMinutes = 0,
                 disposalCost       = 0.0,
                 catalogItems       = listOf(
@@ -77,7 +76,12 @@ class SampleTimeEntryLoader {
                         unitPrice     = 120.0,
                         totalPrice    = 600.0
                     )
-                )
+                ),
+                employeeLastName = "",
+                employeeFirstName = "",
+                projectName = "",
+                employeeEmail = "",
+                cost = 0.0
             ),
 
             // 2) Complex Electrical Installation
@@ -111,7 +115,6 @@ class SampleTimeEntryLoader {
                 hasWeekendSurcharge= false,
                 hasHolidaySurcharge= false,
                 travelTimeMinutes  = 0,
-                hasWaitingTime     = false,
                 waitingTimeMinutes = 0,
                 disposalCost       = 0.0,
                 catalogItems       = listOf(
@@ -143,7 +146,12 @@ class SampleTimeEntryLoader {
                         unitPrice     = 3.50,
                         totalPrice    = 700.0
                     )
-                )
+                ),
+                employeeLastName = "",
+                employeeFirstName = "",
+                projectName = "",
+                employeeEmail = "",
+                cost = 0.0
             ),
 
             // 3) Holiday Emergency Repair
@@ -177,7 +185,6 @@ class SampleTimeEntryLoader {
                 hasWeekendSurcharge= false,
                 hasHolidaySurcharge= true,
                 travelTimeMinutes  = 60,
-                hasWaitingTime     = false,
                 waitingTimeMinutes = 0,
                 disposalCost       = 0.0,
                 catalogItems       = listOf(
@@ -195,7 +202,12 @@ class SampleTimeEntryLoader {
                         unitPrice     = 45.0,
                         totalPrice    = 450.0
                     )
-                )
+                ),
+                employeeLastName = "",
+                employeeFirstName = "",
+                projectName = "",
+                employeeEmail = "",
+                cost = 0.0
             ),
 
             // 4) Regular Maintenance with Waiting Time
@@ -229,7 +241,6 @@ class SampleTimeEntryLoader {
                 hasWeekendSurcharge= false,
                 hasHolidaySurcharge= false,
                 travelTimeMinutes  = 0,
-                hasWaitingTime     = true,
                 waitingTimeMinutes = 120,
                 disposalCost       = 0.0,
                 catalogItems       = listOf(
@@ -247,7 +258,12 @@ class SampleTimeEntryLoader {
                         unitPrice     = 150.0,
                         totalPrice    = 300.0
                     )
-                )
+                ),
+                employeeLastName = "",
+                employeeFirstName = "",
+                projectName = "",
+                employeeEmail = "",
+                cost = 0.0
             ),
 
             // 5) Complex Network Installation
@@ -281,7 +297,6 @@ class SampleTimeEntryLoader {
                 hasWeekendSurcharge= false,
                 hasHolidaySurcharge= false,
                 travelTimeMinutes  = 0,
-                hasWaitingTime     = false,
                 waitingTimeMinutes = 0,
                 disposalCost       = 0.0,
                 catalogItems       = listOf(
@@ -306,7 +321,12 @@ class SampleTimeEntryLoader {
                         unitPrice     = 15.0,
                         totalPrice    = 750.0
                     )
-                )
+                ),
+                employeeLastName = "",
+                employeeFirstName = "",
+                projectName = "",
+                employeeEmail = "",
+                cost = 0.0
             ),
 
             // 6) Weekend Emergency Service
@@ -340,7 +360,6 @@ class SampleTimeEntryLoader {
                 hasWeekendSurcharge= true,
                 hasHolidaySurcharge= false,
                 travelTimeMinutes  = 30,
-                hasWaitingTime     = false,
                 waitingTimeMinutes = 0,
                 disposalCost       = 0.0,
                 catalogItems       = listOf(
@@ -358,7 +377,12 @@ class SampleTimeEntryLoader {
                         unitPrice     = 120.0,
                         totalPrice    = 600.0
                     )
-                )
+                ),
+                employeeLastName = "",
+                employeeFirstName = "",
+                projectName = "",
+                employeeEmail = "",
+                cost = 0.0
             ),
 
             // 7) Regular Workday with Multiple Tasks
@@ -392,7 +416,6 @@ class SampleTimeEntryLoader {
                 hasWeekendSurcharge= false,
                 hasHolidaySurcharge= false,
                 travelTimeMinutes  = 0,
-                hasWaitingTime     = false,
                 waitingTimeMinutes = 0,
                 disposalCost       = 0.0,
                 catalogItems       = listOf(
@@ -410,7 +433,12 @@ class SampleTimeEntryLoader {
                         unitPrice     = 25.0,
                         totalPrice    = 125.0
                     )
-                )
+                ),
+                employeeLastName = "",
+                employeeFirstName = "",
+                projectName = "",
+                employeeEmail = "",
+                cost = 0.0
             ),
 
             // 8) Complex Security System Installation
@@ -444,7 +472,6 @@ class SampleTimeEntryLoader {
                 hasWeekendSurcharge= false,
                 hasHolidaySurcharge= false,
                 travelTimeMinutes  = 0,
-                hasWaitingTime     = false,
                 waitingTimeMinutes = 0,
                 disposalCost       = 0.0,
                 catalogItems       = listOf(
@@ -469,7 +496,12 @@ class SampleTimeEntryLoader {
                         unitPrice     = 15.0,
                         totalPrice    = 1500.0
                     )
-                )
+                ),
+                employeeLastName = "",
+                employeeFirstName = "",
+                projectName = "",
+                employeeEmail = "",
+                cost = 0.0
             )
         )
 

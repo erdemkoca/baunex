@@ -4,7 +4,7 @@ import ch.baunex.catalog.dto.ProjectCatalogItemDTO
 import ch.baunex.notes.dto.NoteDto
 import ch.baunex.project.model.ProjectStatus
 import ch.baunex.serialization.LocalDateSerializer
-import ch.baunex.timetracking.dto.TimeEntryResponseDTO
+import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.user.dto.CustomerContactDTO
 import ch.baunex.user.dto.CustomerDTO
 import kotlinx.serialization.Serializable
@@ -26,7 +26,7 @@ data class ProjectDetailDTO(
     val street: String?,
     val city: String?,
     val customer: CustomerDTO,
-    val timeEntries: List<TimeEntryResponseDTO>,
+    val timeEntries: List<TimeEntryDTO>,
     val catalogItems: List<ProjectCatalogItemDTO>,
     val contacts: List<CustomerContactDTO>,
     val notes: List<NoteDto> = emptyList()
