@@ -11,17 +11,8 @@ import jakarta.transaction.Transactional
 
 @ApplicationScoped
 class TimeEntryCatalogItemService @Inject constructor(
-    private val repository: TimeEntryCatalogItemRepository,
-    private val catalogService: CatalogService
+    private val repository: TimeEntryCatalogItemRepository
 ) {
-    fun getByTimeEntryId(timeEntryId: Long): List<TimeEntryCatalogItemModel> {
-        return repository.findByTimeEntryId(timeEntryId)
-    }
-
-    fun getByCatalogItemId(catalogItemId: Long): List<TimeEntryCatalogItemModel> {
-        return repository.findByCatalogItemId(catalogItemId)
-    }
-
     @Transactional
     fun addCatalogItemToTimeEntry(
         timeEntry: TimeEntryModel,
@@ -35,13 +26,6 @@ class TimeEntryCatalogItemService @Inject constructor(
             this.unitPrice = catalogItem.unitPrice
         }
         repository.persistAndFlush(model)
-        return model
-    }
-
-    @Transactional
-    fun updateQuantity(id: Long, quantity: Int): TimeEntryCatalogItemModel? {
-        val model = repository.findById(id) ?: return null
-        model.quantity = quantity
         return model
     }
 

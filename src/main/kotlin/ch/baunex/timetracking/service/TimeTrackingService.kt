@@ -1,7 +1,6 @@
 package ch.baunex.timetracking.service
 
 import ch.baunex.timetracking.model.TimeEntryModel
-import ch.baunex.timetracking.mapper.TimeEntryMapper
 import ch.baunex.timetracking.repository.TimeEntryRepository
 import ch.baunex.user.repository.EmployeeRepository
 import ch.baunex.project.repository.ProjectRepository
@@ -19,7 +18,6 @@ class TimeTrackingService @Inject constructor(
     private val timeEntryRepository: TimeEntryRepository,
     private val employeeRepository: EmployeeRepository,
     private val projectRepository: ProjectRepository,
-    private val timeEntryMapper: TimeEntryMapper,
     private val timeEntryCatalogItemService: TimeEntryCatalogItemService,
     private val catalogService: CatalogService,
     private val employeeService: EmployeeService
@@ -168,20 +166,6 @@ class TimeTrackingService @Inject constructor(
         }
 
         return existingEntry
-    }
-
-    fun getEntriesForEmployee(employeeId: Long): List<TimeEntryModel> =
-        timeEntryRepository.list("employee.id", employeeId)
-
-    fun getEntriesForProject(projectId: Long): List<TimeEntryModel> =
-        timeEntryRepository.list("project.id", projectId)
-
-    @Transactional
-    fun deleteEntry(id: Long): Boolean {
-        // First delete associated catalog items
-        timeEntryCatalogItemService.deleteByTimeEntryId(id)
-        // Then delete the time entry
-        return timeEntryRepository.deleteById(id)
     }
 
     @Transactional

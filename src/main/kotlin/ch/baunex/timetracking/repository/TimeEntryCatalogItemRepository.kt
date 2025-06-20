@@ -6,14 +6,6 @@ import jakarta.enterprise.context.ApplicationScoped
 
 @ApplicationScoped
 class TimeEntryCatalogItemRepository : PanacheRepository<TimeEntryCatalogItemModel> {
-    
-    fun findByTimeEntryId(timeEntryId: Long): List<TimeEntryCatalogItemModel> {
-        return find("timeEntry.id", timeEntryId).list()
-    }
-
-    fun findByCatalogItemId(catalogItemId: Long): List<TimeEntryCatalogItemModel> {
-        return find("catalogItem.id", catalogItemId).list()
-    }
 
     fun deleteByTimeEntryId(timeEntryId: Long): Long {
         return delete("timeEntry.id", timeEntryId)

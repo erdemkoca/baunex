@@ -45,12 +45,6 @@ class TimeEntryModel : PanacheEntity() {
     @Column(name = "invoiced", nullable = false)
     var invoiced: Boolean = false  // track if this entry has been invoiced
 
-    @Column(name = "catalog_item_description")
-    var catalogItemDescription: String? = null  // e.g., "Electrical Socket Replacement"
-
-    @Column(name = "catalog_item_price")
-    var catalogItemPrice: Double? = null  // price from catalog per hour or fixed
-
     // --- Surcharges ---
     @Column(name = "has_night_surcharge", nullable = false)
     var hasNightSurcharge: Boolean = false
