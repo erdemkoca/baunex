@@ -103,6 +103,9 @@
              href="/projects/{projectId}/catalog">Katalog</a>
           <a class="btn btn-outline-primary {activeSubMenu=='billing'  ? 'active' : ''}"
              href="/projects/{projectId}/billing">Abrechnung</a>
+          <a class="btn btn-outline-primary {activeSubMenu=='controlreport'  ? 'active' : ''}"
+          {!<a class="btn btn-outline-primary {#if activeSubMenu == 'controlreport'}active{/if}"!}
+             href="/projects/{projectId}/controlreport">Kontrollbericht</a>
         </div>
       {/if}
 

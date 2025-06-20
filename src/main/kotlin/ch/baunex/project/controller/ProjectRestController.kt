@@ -16,7 +16,6 @@ import org.jboss.resteasy.reactive.multipart.FileUpload
 import ch.baunex.user.dto.CustomerDTO
 import ch.baunex.user.facade.CustomerFacade
 import ch.baunex.user.facade.EmployeeFacade
-import ch.baunex.notes.mapper.toDto
 import ch.baunex.project.dto.ProjectNotesViewDTO
 import ch.baunex.web.WebController.Templates
 import jakarta.enterprise.context.ApplicationScoped
@@ -95,6 +94,7 @@ class ProjectRestController {
             customerId             = 0,
             customerName           = "",
             budget                 = 0,
+            parcelNumber           = "",
             customer               = emptyCust,
             startDate              = null,
             endDate                = null,
@@ -207,27 +207,6 @@ class ProjectRestController {
         return Response.ok(tpl.render()).build()
     }
 
-    @GET
-    @Path("/{id}/notes") //Notes
-    @Produces(MediaType.TEXT_HTML)
-    fun viewNotes(@PathParam("id") id: Long): Response {
-        val projectNotes         = projectFacade.getProjectNotesView(id)
-        val tpl = Templates.projectNotes(
-            projectNotesJson           = json.encodeToString(projectNotes),
-            activeMenu        = "projects",
-            activeSubMenu    = "notes",
-            projectId        = projectNotes.projectId
-        )
-        return Response.ok(tpl.render()).build()
-    }
-
-    @GET
-    @Path("/{id}/notes/json")
-    @Produces(MediaType.APPLICATION_JSON)
-    fun getNotesJson(@PathParam("id") id: Long): ProjectNotesViewDTO {
-        return projectFacade.getProjectNotesView(id)
-    }
-
     /*** JSON ***/
 
     @POST
@@ -257,56 +236,5 @@ class ProjectRestController {
     fun deleteJson(@PathParam("id") id: Long): Response {
         projectFacade.deleteProject(id)
         return Response.ok().build()
-    }
-
-    @POST
-    @Path("/{id}/notes")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    fun addNoteJson(
-        @PathParam("id") projectId: Long,
-        note: NoteCreateDto
-    ): Response {
-        projectFacade.addNoteToProject(
-            projectId,
-            note.title,
-            note.category,
-            note.content,
-            note.tags
-        )
-        val detail = projectFacade.getProjectWithDetails(projectId)
-            ?: throw NotFoundException()
-        val notesList = detail.notes
-        val generic = object : GenericEntity<List<NoteDto>>(notesList) {}
-        return Response.ok(generic).build()
-    }
-
-
-    @POST
-    @Path("/{projectId}/notes/{noteId}/attachment")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Produces(MediaType.APPLICATION_JSON)
-    fun uploadNoteAttachment(
-        @PathParam("noteId") noteId: Long,
-        @RestForm("file") fileStream: InputStream,
-        @RestForm("file") fileDetails: FileUpload?
-    ): Response {
-        if (fileDetails == null) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                .entity(mapOf("error" to "No file uploaded"))
-                .build()
-        }
-        return try {
-            val dto = noteAttachmentFacade.uploadAttachment(
-                noteId,
-                fileStream,
-                fileDetails.fileName()
-            )
-            Response.ok(dto).build()
-        } catch (e: Exception) {
-            Response.serverError()
-                .entity(mapOf("error" to e.message))
-                .build()
-        }
     }
 }

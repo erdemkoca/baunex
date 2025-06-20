@@ -1,4 +1,4 @@
-import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('project-notes-app');
@@ -7,160 +7,229 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Parse the project data with error handling
     let view;
     try {
         view = JSON.parse(el.dataset.project || '{}');
-        console.log('Parsed view data:', view);
-    } catch (error) {
-        console.error('Error parsing project data:', error);
+    } catch {
         view = {};
     }
 
     createApp({
         data() {
             return {
-                projectId: view.projectId || null,
-                projectName: view.projectName || '',
-                categories: view.categories || [],
-                employees: view.employees || [],
-                notes: view.notes || [],
-                newNote: {
-                    title: '',
-                    category: null,
-                    content: '',
-                    tags: '',
-                    createdById: null,
-                    pendingFile: null,
-                    previewUrl: null
-                }
+                projectId:     view.projectId || null,
+                categories:    view.categories || [],
+                employees:     view.employees || [],
+                notes:         (view.notes || [])
+                    .sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)),
+                newNote:       { title:'', category:null, content:'', tags:'', createdById:null, pendingFile:null, previewUrl:null },
+                // ** editing state **
+                editingNoteId: null,
+                editCopy:      null  // will hold a shallow clone of the note being edited
             };
         },
         methods: {
             formatDate(d) {
                 return new Date(d).toLocaleDateString('de-CH');
             },
-            onFilePickedForNew(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-                this.newNote.pendingFile = file;
-                // URL für Vorschau erzeugen
-                this.newNote.previewUrl = URL.createObjectURL(file);
+
+            isImageAttachment(att) {
+                if (!att) return false;
+                if (att.type==='IMAGE') return true;
+                if (att.contentType?.startsWith('image/')) return true;
+                return false;
             },
-            async removeAttachment(noteIndex, attIndex) {
-                const att = this.notes[noteIndex].attachments[attIndex];
+
+            // --- NEW: start editing a note ---
+            startEdit(note) {
+                this.editingNoteId = note.id;
+                // shallow clone fields
+                this.editCopy = {
+                    ...note,
+                    tags: note.tags.join(', ')
+                };
+            },
+
+            // --- NEW: cancel editing ---
+            cancelEdit() {
+                this.editingNoteId = null;
+                this.editCopy = null;
+            },
+
+            // --- NEW: save the edited note ---
+            async saveEdit() {
+                const dto = {
+                    projectId:   this.projectId,
+                    title:       this.editCopy.title,
+                    category:    this.editCopy.category,
+                    content:     this.editCopy.content,
+                    tags:        this.editCopy.tags.split(',').map(t=>t.trim()).filter(Boolean),
+                    createdById: this.editCopy.createdById
+                };
                 const res = await fetch(
-                    `/projects/${this.projectId}/notes/attachment/${att.id}`,
-                    { method: 'DELETE' }
+                    `/projects/${this.projectId}/notes/${this.editingNoteId}`, {
+                        method:  'PUT',
+                        headers: { 'Content-Type':'application/json' },
+                        body:    JSON.stringify(dto)
+                    }
                 );
-                if (res.ok) {
-                    this.notes[noteIndex].attachments.splice(attIndex, 1);
-                } else {
-                    alert('Fehler beim Löschen des Anhangs');
+                if (!res.ok) {
+                    const txt = await res.text();
+                    return alert('Fehler beim Aktualisieren: ' + txt);
                 }
+                const updated = await res.json();
+                // replace in notes[]
+                const idx = this.notes.findIndex(n=>n.id===this.editingNoteId);
+                if (idx!==-1) {
+                    this.notes.splice(idx,1,{
+                        ...updated,
+                        tags: updated.tags,
+                        attachments: this.notes[idx].attachments // preserve existing attachments
+                    });
+                }
+                this.cancelEdit();
             },
+
+            // --- existing handlers for create, delete, upload ---
+            onFilePickedForNew(e) {
+                const f = e.target.files[0];
+                if (!f) return;
+                this.newNote.pendingFile = f;
+                this.newNote.previewUrl  = URL.createObjectURL(f);
+            },
+
+            async removeAttachment(noteIndex, attIndex) {
+                const note = this.notes[noteIndex];
+                const att  = note.attachments[attIndex];
+                const res = await fetch(
+                    `/projects/${this.projectId}/notes/${note.id}/attachments/${att.id}`,
+                    { method:'DELETE' }
+                );
+                if (res.ok) note.attachments.splice(attIndex,1);
+                else alert('Fehler beim Löschen des Anhangs');
+            },
+
             async saveNote() {
-                if (!this.newNote.category) {
-                    alert('Bitte eine Kategorie auswählen');
-                    return;
-                }
+                if (!this.newNote.category)   return alert('Kategorie fehlt');
+                if (!this.newNote.createdById) return alert('Ersteller fehlt');
+
+                // create
                 const payload = {
+                    projectId:   this.projectId,
                     title:       this.newNote.title,
                     category:    this.newNote.category,
                     content:     this.newNote.content,
                     tags:        this.newNote.tags.split(',').map(t=>t.trim()).filter(Boolean),
                     createdById: this.newNote.createdById
                 };
-                const fullRes = await fetch(`/projects/${this.projectId}/notes/json`);
-                if (!fullRes.ok) {
-                    console.error('Konnte Notizen nicht neu laden', await fullRes.text());
-                    return;
+                const cr = await fetch(
+                    `/projects/${this.projectId}/notes`, {
+                        method:'POST',
+                        headers:{ 'Content-Type':'application/json' },
+                        body: JSON.stringify(payload)
+                    }
+                );
+                if (!cr.ok) {
+                    const t = await cr.text();
+                    return alert('Fehler beim Speichern: '+t);
                 }
-                const fullView = await fullRes.json();
-                this.notes = fullView.notes.map(n => ({
-                    ...n,
-                    tags:        n.tags || [],
-                    attachments: n.attachments || [],
-                    pendingFile: null,
-                    previewUrl:  null
-                }));
-                const lastNote = this.notes[this.notes.length - 1];
-                if (this.newNote.pendingFile && lastNote) {
+                const newDto = await cr.json();
+                // prepend
+                this.notes.unshift({
+                    ...newDto,
+                    tags: newDto.tags,
+                    attachments: []
+                });
+
+                // upload attachment if any
+                if (this.newNote.pendingFile) {
                     const form = new FormData();
                     form.append('file', this.newNote.pendingFile);
-                    const up = await fetch(
-                        `/projects/${this.projectId}/notes/${lastNote.id}/attachment`,
-                        { method: 'POST', body: form }
+                    const upr = await fetch(
+                        `/projects/${this.projectId}/notes/${newDto.id}/attachments`,
+                        { method:'POST', body: form }
                     );
-                    if (up.ok) {
-                        const attDto = await up.json();
-                        lastNote.attachments = [attDto];
+                    if (upr.ok) {
+                        const att = await upr.json();
+                        const idx = this.notes.findIndex(n=>n.id===newDto.id);
+                        if (idx!==-1) this.notes[idx].attachments.push(att);
                     }
                 }
-                // Formular & Preview zurücksetzen
-                Object.assign(this.newNote, {
-                    title:       '',
-                    category:    null,
-                    content:     '',
-                    tags:        '',
-                    createdById: null,
-                    pendingFile: null,
-                    previewUrl:  null
+
+                // reset
+                Object.assign(this.newNote,{
+                    title:'',category:null,content:'',tags:'',createdById:null,
+                    pendingFile:null,previewUrl:null
                 });
             }
         },
         template: `
       <div>
         <div class="mb-4">
-          <a :href="'/projects/' + projectId" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i>Zurück zur Projektübersicht
+          <a :href="'/projects/'+projectId" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Zurück
           </a>
         </div>
 
-        <!-- Alle Notizen -->
-        <div v-for="(note, i) in notes" :key="note.id" class="card mb-4 shadow-sm">
-          <div class="card-header bg-primary text-white">
+        <!-- note cards -->
+        <div v-for="(note,i) in notes" :key="note.id" class="card mb-4 shadow-sm">
+          <div class="card-header d-flex justify-content-between align-items-center"
+               :class="editingNoteId===note.id ? 'bg-warning':'bg-primary text-white'">
             <h5 class="mb-0">
-              <i class="bi bi-journal-text me-2"></i>{{ note.title || '–' }}
+              <i class="bi bi-journal-text me-2"></i>
+              <span v-if="editingNoteId!==note.id">{{ note.title || '–' }}</span>
+              <input v-else v-model="editCopy.title" class="form-control" />
             </h5>
-          </div>
-          <div class="card-header">
-            <span v-if="note.source==='timeEntry'">
-              🕒 {{ formatDate(note.entryDate) }} – {{ note.entryTitle }}
-            </span>
-            <span v-else>📁 Projekt-Notiz</span>
-            {{ note.title }}
-          </div>
-          <div class="card-body">
-            <p>{{ note.content }}</p>
-            <div v-if="note.tags?.length" class="mb-2">
-              <small class="text-muted">Tags:</small>
-              <span v-for="tag in note.tags" :key="tag" class="badge bg-info me-1">{{ tag }}</span>
+            <div>
+              <button v-if="editingNoteId!==note.id" @click="startEdit(note)"
+                      class="btn btn-sm btn-light">Edit</button>
+              <button v-else @click="saveEdit" class="btn btn-sm btn-success me-1">Save</button>
+              <button v-if="editingNoteId===note.id" @click="cancelEdit"
+                      class="btn btn-sm btn-secondary">Cancel</button>
             </div>
-            <div v-if="note.attachments?.length" class="mb-2">
+          </div>
+
+          <div class="card-body">
+            <div class="mb-2">
+              <label class="form-label">Kategorie:</label>
+              <span v-if="editingNoteId!==note.id">{{ note.category }}</span>
+              <select v-else v-model="editCopy.category" class="form-select form-select-sm">
+                <option v-for="c in categories" :key="c" :value="c">{{c}}</option>
+              </select>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Inhalt:</label>
+              <p v-if="editingNoteId!==note.id">{{ note.content }}</p>
+              <textarea v-else v-model="editCopy.content" class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Tags:</label>
+              <div v-if="editingNoteId!==note.id">
+                <span v-for="t in note.tags" :key="t" class="badge bg-info me-1">{{t}}</span>
+              </div>
+              <input v-else v-model="editCopy.tags" class="form-control form-control-sm" />
+            </div>
+
+            <div class="mb-2">
+              <small>Erstellt von:</small> {{ note.createdByName }}
+            </div>
+
+            <!-- attachments display unchanged -->
+            <div v-if="note.attachments.length" class="mb-2">
               <small class="text-muted">Anhänge:</small>
-                <div v-for="(att, ai) in note.attachments" :key="att.id" class="d-flex align-items-center mb-1">
-                  <!-- bevorzugt: Content-Type, den der Server in att.contentType mitliefert -->
-                  <template v-if="att.contentType && att.contentType.startsWith('image/')">
-                    <img
-                      :src="att.url"
-                      class="img-fluid img-thumbnail"
-                      style="max-width: 200px;"
-                      alt="Anhangsbild"
-                    />
-                  </template>
-                  <template v-else-if="/\\.(jpe?g|png|gif)$/i.test(att.filename)">
-                    <img
-                      :src="att.url"
-                      class="img-fluid img-thumbnail"
-                      style="max-width: 200px;"
-                      alt="Anhangsbild"
-                    />
-                  </template>
-                  <template v-else>
-                    <a :href="att.url" target="_blank">{{ att.caption || 'Datei' }}</a>
-                  </template>
-                </div>
+              <div v-for="(att,ai) in note.attachments" :key="att.id"
+                   class="d-flex align-items-center mb-1">
+                <template v-if="isImageAttachment(att)">
+                  <img :src="att.url" class="img-fluid img-thumbnail" style="max-width:200px"/>
+                </template>
+                <template v-else>
+                  <a :href="att.url" target="_blank">{{att.caption||'Datei'}}</a>
+                </template>
+                <button @click="removeAttachment(i,ai)"
+                        class="btn btn-sm btn-outline-danger ms-2">✕</button>
+              </div>
             </div>
           </div>
         </div>
@@ -198,18 +267,12 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div class="mb-2">
             <label class="form-label">Anhang (optional)</label>
-            <input type="file" @change="onFilePickedForNew($event)" class="form-control" />
+            <input type="file" @change="onFilePickedForNew" class="form-control" />
           </div>
-          <!-- Bild-Vorschau für neue Notiz -->
-            <div v-if="newNote.previewUrl" class="mb-3">
-               <label class="form-label">Vorschau</label>
-               <img
-                     :src="newNote.previewUrl"
-                     class="img-fluid img-thumbnail"
-                     style="max-width: 200px;"
-                     alt="Vorschau des Anhangs"
-                   />
-             </div>
+          <div v-if="newNote.previewUrl" class="mb-3">
+            <label class="form-label">Vorschau</label>
+            <img :src="newNote.previewUrl" class="img-fluid img-thumbnail" style="max-width:200px;" />
+          </div>
           <button @click="saveNote" class="btn btn-primary">Notiz speichern</button>
         </div>
       </div>

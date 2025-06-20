@@ -28,6 +28,14 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>2.20.35</version>    <!-- pick the latest 2.x here -->
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -230,6 +238,12 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-undertow</artifactId>
             <version>${quarkus.platform.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <!-- no <version> needed, BOM covers it -->
         </dependency>
 
     </dependencies>

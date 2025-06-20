@@ -1,136 +1,112 @@
-// ch/baunex/controlreport/mapper/ControlReportMapper.kt
 package ch.baunex.controlreport.mapper
 
 import ch.baunex.controlreport.dto.*
-import ch.baunex.controlreport.model.*
-import ch.baunex.user.model.CustomerModel
+import ch.baunex.controlreport.model.ControlReportModel
+import ch.baunex.controlreport.model.DefectPositionModel
+import ch.baunex.notes.mapper.toDto
+import ch.baunex.notes.mapper.toDtoList
+import ch.baunex.project.model.ProjectType
+import ch.baunex.user.model.CustomerType
 import jakarta.enterprise.context.ApplicationScoped
 import java.time.LocalDateTime
 
 @ApplicationScoped
 class ControlReportMapper {
 
-    /** Entity → Read-DTO */
     fun toDto(m: ControlReportModel): ControlReportDto = ControlReportDto(
-        id                    = m.id,
-        reportNumber          = m.reportNumber.orEmpty(),
-        pageCount             = m.pageCount,
-        currentPage           = m.currentPage,
-        client                = ClientDto(
-            type       = m.clientType,
-            name       = m.customer?.companyName.orEmpty(),
-            street     = m.customer?.person?.details?.street.orEmpty(),
-            postalCode = m.customer?.person?.details?.zipCode.orEmpty(),
-            city       = m.customer?.person?.details?.city.orEmpty()
+        id              = m.id,
+        reportNumber    = "CR-${m.id + 1000}",
+        pageCount       = m.pageCount,
+        currentPage     = m.currentPage,
+        client = ClientDto(
+            type       = m.project.customer.customerType,
+            firstName       = m.project.customer.person.firstName,
+            lastName = m.project.customer.person.lastName,
+            street     = m.project.customer.person.details.street,
+            postalCode = m.project.customer.person.details.zipCode,
+            city       = m.project.customer.person.details.city
         ),
-        contractor            = ContractorDto(
-            type       = m.contractorType?.name.orEmpty(),
+        contractor = ContractorDto(
+            type       = m.contractorType,
             company    = m.contractorCompany.orEmpty(),
             street     = m.contractorStreet.orEmpty(),
-            houseNumber= m.contractorHouseNumber.orEmpty(),
             postalCode = m.contractorPostalCode.orEmpty(),
             city       = m.contractorCity.orEmpty()
         ),
-        installationLocation  = InstallationLocationDto(
-            street     = m.installationStreet.orEmpty(),
-            houseNumber= m.installationHouseNumber.orEmpty(),
-            postalCode = m.installationPostalCode.orEmpty(),
-            city       = m.installationCity.orEmpty(),
-            buildingType = m.buildingType,
-            parcelNumber = m.parcelNumber
+        installationLocation = InstallationLocationDto(
+            street       = m.project.street,
+            postalCode   = m.project.zipCode,
+            city         = m.project.city,
+            buildingType = m.project.buildingType,
+            parcelNumber = m.project.parcelNumber
         ),
-        controlScope          = m.controlScope.orEmpty(),
-        controlData           = ControlDataDto(
-            controlDate    = m.controlDate ?: LocalDateTime.now(),
-            controllerName = m.controllerName.orEmpty(),
-            phoneNumber    = m.controllerPhone.orEmpty(),
-            hasDefects     = m.hasDefects,
-            deadlineNote   = m.deadlineNote
+        controlScope = m.controlScope,
+        controlData = ControlDataDto(
+            controlDate         = m.controlDate,
+            controllerId        = m.employee?.id,
+            controllerFirstName = m.employee?.person?.firstName,
+            controllerLastName  = m.employee?.person?.lastName,
+            phoneNumber         = m.employee?.person?.details?.phone,
+            hasDefects          = m.hasDefects,
+            deadlineNote        = m.deadlineNote
         ),
-        generalNotes          = m.generalNotes.orEmpty(),
-        defectPositions       = m.defectPositions.map { toDefectPositionDto(it) },
-        defectResolverNote    = m.defectResolverNote,
-        completionConfirmation= m.completionDate?.let {
-            CompletionConfirmationDto(
-                resolvedAt   = it,
-                companyStamp = m.companyStamp.orEmpty(),
-                signature    = m.completionSignature.orEmpty()
-            )
-        },
-        createdAt             = m.createdAt,
-        updatedAt             = m.updatedAt
+        generalNotes        = m.generalNotes,
+        defectPositions     = m.defectPositions.map { toDefectPositionDto(it) },
+        defectResolverNote  = m.defectResolverNote,
+        completionDate      = m.completionDate,
+        createdAt           = m.createdAt,
+        updatedAt           = m.updatedAt
     )
 
-    /** Create-DTO → neues Entity */
-    fun toModel(dto: ControlReportCreateDto): ControlReportModel {
-        val m = ControlReportModel().apply {
-            reportNumber       = dto.reportNumber
-            controlDate        = dto.controlDate
-            pageCount          = dto.pageCount
-            currentPage        = dto.currentPage
-            customer           = CustomerModel().apply { id = dto.customerId }
-            contractorType     = dto.contractorType
-            contractorCompany  = dto.contractorCompany
-            contractorStreet   = dto.contractorStreet
-            contractorHouseNumber = dto.contractorHouseNumber
-            contractorPostalCode  = dto.contractorPostalCode
-            contractorCity        = dto.contractorCity
-            installationStreet     = dto.installationStreet
-            installationHouseNumber = dto.installationHouseNumber
-            installationPostalCode  = dto.installationPostalCode
-            installationCity        = dto.installationCity
-            buildingType       = dto.buildingType
-            parcelNumber       = dto.parcelNumber
-            controlScope       = dto.controlScope
-            controllerName     = dto.controllerName
-            controllerPhone    = dto.controllerPhone
-            hasDefects         = dto.hasDefects
-            deadlineNote       = dto.deadlineNote
-            generalNotes       = dto.generalNotes
-        }
-        dto.defectPositions.forEach { cp ->
-            m.defectPositions.add(
-                DefectPositionModel().apply {
-                    positionNumber = cp.positionNumber
-                    photoUrl       = cp.photoUrl
-                    description    = cp.description
-                    normReferences += cp.normReferences
-                    controlReport  = m
-                }
-            )
-        }
-        return m
+    fun applyUpdate(m: ControlReportModel, dto: ControlReportDto): ControlReportModel = m.apply {
+        updatedAt       = LocalDateTime.now()
+
+        reportNumber    = dto.reportNumber?.removePrefix("CR-")?.toInt()
+        pageCount       = dto.pageCount
+        currentPage     = dto.currentPage
+
+        // client
+        m.project.customer.customerType      = dto.client.type
+        m.project.customer.person.firstName      = dto.client.firstName
+        m.project.customer.person.lastName = dto.client.lastName
+        m.project.customer.person.details.street    = dto.client.street
+        m.project.customer.person.details.zipCode = dto.client.postalCode
+        m.project.customer.person.details.city      = dto.client.city
+
+        // contractor
+        contractorType      = dto.contractor.type
+        contractorCompany   = dto.contractor.company
+        contractorStreet    = dto.contractor.street
+        contractorPostalCode= dto.contractor.postalCode
+        contractorCity      = dto.contractor.city
+
+        // installation
+        m.project.street     = dto.installationLocation.street
+        m.project.zipCode = dto.installationLocation.postalCode
+        m.project.city       = dto.installationLocation.city
+        m.project.buildingType           = dto.installationLocation.buildingType
+        m.project.parcelNumber           = dto.installationLocation.parcelNumber
+
+        // control
+        controlScope   = dto.controlScope
+        controlDate    = dto.controlData.controlDate
+        hasDefects     = dto.controlData.hasDefects
+        deadlineNote   = dto.controlData.deadlineNote
+
+        // misc
+        generalNotes        = dto.generalNotes
+        defectResolverNote  = dto.defectResolverNote
+        completionDate      = dto.completionDate
     }
 
-    /** Update-DTO → bestehendes Entity aktualisieren */
-    fun applyUpdate(m: ControlReportModel, dto: ControlReportUpdateDto): ControlReportModel {
-        return m.apply {
-            reportNumber    = dto.reportNumber
-            controlDate     = dto.controlDate
-            pageCount       = dto.pageCount
-            currentPage     = dto.currentPage
-            controlScope    = dto.controlScope
-            controllerName  = dto.controllerName
-            controllerPhone = dto.controllerPhone
-            hasDefects      = dto.hasDefects
-            deadlineNote    = dto.deadlineNote
-            generalNotes    = dto.generalNotes
-            updatedAt       = LocalDateTime.now()
-        }
-    }
-
-    /** DefectPosition → DefectPositionDto */
     private fun toDefectPositionDto(p: DefectPositionModel) = DefectPositionDto(
-        positionNumber = p.positionNumber,
-        photoUrl       = p.photoUrl.orEmpty(),
-        description    = p.description.orEmpty(),
-        normReferences = p.normReferences.toList(),
-        resolutionConfirmation = p.resolutionSignature?.let {
-            ResolutionConfirmationDto(
-                resolvedAt = p.resolvedAt ?: LocalDateTime.now(),
-                stamp      = p.resolutionStamp.orEmpty(),
-                signature  = p.resolutionSignature.orEmpty()
-            )
-        }
+        id              = p.id,
+        positionNumber  = p.positionNumber,
+        description     = p.description,
+        buildingLocation = p.buildingLocation,
+        noteId          = p.note.id,
+        noteContent     = p.note.content,
+        photoUrls = p.note.attachments.toDtoList(),
+        normReferences = p.normReferences?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList()
     )
 }

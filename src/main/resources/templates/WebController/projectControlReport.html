@@ -1,0 +1,15 @@
+{#include layout}
+  {#title}Kontrollbericht – Projekt {project.name}{/title}
+  {#header}Kontrollbericht{/header}
+  {#content}
+    <div id="project-controlreport-app"
+         data-project-id='{projectId}'
+         data-control-report='{controlReportJson}'
+         data-client-types='{customerTypesJson}'
+         data-project-types='{projectTypesJson}'
+         data-contractor-types='{contractorTypesJson}'
+         data-employees='{employeesJson}'>
+    </div>
+    <script type="module" src="/js/project/project-controlreport-app.js"></script>
+  {/content}
+{/include}

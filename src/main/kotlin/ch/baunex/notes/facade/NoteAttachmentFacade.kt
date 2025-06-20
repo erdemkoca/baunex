@@ -30,7 +30,7 @@ class NoteAttachmentFacade {
         originalFilename: String
     ): MediaAttachmentDto {
         val note = noteRepository.findById(noteId)
-            ?: throw IllegalArgumentException("Note \$noteId nicht gefunden")
+            ?: throw IllegalArgumentException("Note $noteId not found")
         return noteAttachmentService.uploadForNote(
             note,
             fileStream,

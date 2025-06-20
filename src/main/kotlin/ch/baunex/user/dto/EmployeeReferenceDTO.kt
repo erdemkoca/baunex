@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 data class EmployeeReferenceDTO(
     val id: Long,
     val firstName: String,
-    val lastName: String
+    val lastName: String,
+    val phone: String?
 )

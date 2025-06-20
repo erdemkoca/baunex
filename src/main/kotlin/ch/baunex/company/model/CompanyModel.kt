@@ -21,7 +21,7 @@ class CompanyModel : PanacheEntity() {
     lateinit var zipCode: String
 
     @Column(nullable = false)
-    lateinit var country: String
+    var country: String = "Schweiz"
 
     @Column
     var phone: String? = null

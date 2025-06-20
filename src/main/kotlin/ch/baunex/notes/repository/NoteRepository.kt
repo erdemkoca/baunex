@@ -6,6 +6,7 @@ import jakarta.enterprise.context.ApplicationScoped
 
 @ApplicationScoped
 class NoteRepository : PanacheRepository<NoteModel> {
+
     fun findByProjectId(projectId: Long): List<NoteModel> =
         list("project.id", projectId)
 
