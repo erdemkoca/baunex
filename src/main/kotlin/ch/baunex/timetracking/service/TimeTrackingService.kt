@@ -38,20 +38,38 @@ class TimeTrackingService @Inject constructor(
             this.project     = project
             this.date        = dto.date
             this.hoursWorked = dto.hoursWorked
-            this.hourlyRate  = employee.hourlyRate
+            this.hourlyRate  = dto.hourlyRate ?: employee.hourlyRate
             this.billable    = dto.billable
             this.invoiced    = dto.invoiced
             this.title       = dto.title
 
+            // Surcharges
+            this.hasNightSurcharge = dto.hasNightSurcharge
+            this.hasWeekendSurcharge = dto.hasWeekendSurcharge
+            this.hasHolidaySurcharge = dto.hasHolidaySurcharge
+            
+            // Additional Costs
+            this.travelTimeMinutes = dto.travelTimeMinutes
+            this.disposalCost = dto.disposalCost
+            this.hasWaitingTime = dto.hasWaitingTime
+            this.waitingTimeMinutes = dto.waitingTimeMinutes
+
             // 2. Notizen verarbeiten
             val parent = this
             this.notes = dto.notes.map { noteDto ->
+                val noteCreator = if (noteDto.createdById != null) {
+                    employeeRepository.findById(noteDto.createdById)
+                        ?: throw IllegalArgumentException("Note creator not found with id: ${noteDto.createdById}")
+                } else {
+                    employee
+                }
+                
                 NoteModel().apply {
                     this.project   = parent.project   // ← ganz wichtig!
                     this.timeEntry = parent
-                    this.createdBy = employee
-                    this.createdAt = LocalDate.now()
-                    this.updatedAt = LocalDate.now()
+                    this.createdBy = noteCreator
+                    this.createdAt = noteDto.createdAt ?: LocalDate.now()
+                    this.updatedAt = noteDto.updatedAt ?: LocalDate.now()
 
                     this.title    = noteDto.title
                     this.content  = noteDto.content
@@ -100,22 +118,7 @@ class TimeTrackingService @Inject constructor(
             this.date = dto.date
             this.hoursWorked = dto.hoursWorked
             this.title    = dto.title
-            existingEntry.notes.clear()
-            val newNotes = dto.notes.map { noteDto ->
-                NoteModel().apply {
-                    this.content = noteDto.content
-                    this.title = noteDto.title
-                    this.category = noteDto.category
-                    this.tags = noteDto.tags
-                    this.timeEntry = existingEntry
-                    createdBy  = employee
-                    createdAt  = LocalDate.now()
-                    updatedAt  = LocalDate.now()
-                }
-            }
-            existingEntry.notes.addAll(newNotes)
-
-            this.hourlyRate = employee.hourlyRate
+            this.hourlyRate = dto.hourlyRate ?: employee.hourlyRate
             this.billable = dto.billable
             this.invoiced = dto.invoiced
             
@@ -129,6 +132,30 @@ class TimeTrackingService @Inject constructor(
             this.disposalCost = dto.disposalCost
             this.hasWaitingTime = dto.hasWaitingTime
             this.waitingTimeMinutes = dto.waitingTimeMinutes
+            
+            // Update notes
+            existingEntry.notes.clear()
+            val newNotes = dto.notes.map { noteDto ->
+                val noteCreator = if (noteDto.createdById != null) {
+                    employeeRepository.findById(noteDto.createdById)
+                        ?: throw IllegalArgumentException("Note creator not found with id: ${noteDto.createdById}")
+                } else {
+                    employee
+                }
+                
+                NoteModel().apply {
+                    this.project   = existingEntry.project   // ← Set project reference
+                    this.content = noteDto.content
+                    this.title = noteDto.title
+                    this.category = noteDto.category
+                    this.tags = noteDto.tags
+                    this.timeEntry = existingEntry
+                    this.createdBy = noteCreator
+                    this.createdAt = noteDto.createdAt ?: LocalDate.now()
+                    this.updatedAt = noteDto.updatedAt ?: LocalDate.now()
+                }
+            }
+            existingEntry.notes.addAll(newNotes)
         }
 
         // Handle catalog items

@@ -18,7 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 categories,
                 catalogItems,
                 currentDate,
-                notes: entry.notes || [],
+                notes: (entry.notes || []).map(note => ({
+                    ...note,
+                    createdById: note.createdById || entry.employeeId,
+                    tags: Array.isArray(note.tags) ? note.tags : (note.tags ? note.tags.split(',').map(t => t.trim()) : []),
+                    attachments: note.attachments || []
+                })),
                 selectedCatalogItem: null,
                 itemQuantity: 1,
                 saving: false
@@ -33,13 +38,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     content: '',
                     tags: [],
                     attachments: [],
-                    pendingFile: null
+                    pendingFile: null,
+                    createdById: this.entry.employeeId,
+                    createdAt: null,
+                    updatedAt: null,
+                    projectId: this.entry.projectId,
+                    timeEntryId: this.entry.id || null,
+                    documentId: null
                 });
             },
             removeNote(i) {
                 this.notes.splice(i, 1);
             },
-            // <-- this will now actually be called
             onFilePicked(noteIndex, event) {
                 this.notes[noteIndex].pendingFile = event.target.files[0];
             },
@@ -62,49 +72,98 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.selectedCatalogItem = null;
                 this.itemQuantity = 1;
             },
-            removeCatalogItem(i) { this.entry.catalogItems.splice(i, 1); },
-
+            removeCatalogItem(i) {
+                this.entry.catalogItems.splice(i, 1);
+            },
+            formatNote(note) {
+                // Ensure createdById is always a valid number
+                let createdById = this.entry.employeeId; // Default fallback
+                if (note.createdById && note.createdById !== 0 && note.createdById !== null && note.createdById !== undefined) {
+                    createdById = note.createdById;
+                }
+                
+                return {
+                    id: note.id,
+                    projectId: note.projectId || this.entry.projectId,
+                    timeEntryId: note.timeEntryId || this.entry.id || null,
+                    documentId: note.documentId || null,
+                    title: note.title,
+                    content: note.content,
+                    category: note.category,
+                    tags: Array.isArray(note.tags) ? note.tags : (note.tags ? note.tags.split(',').map(t => t.trim()) : []),
+                    attachments: note.attachments || [],
+                    createdById: createdById,
+                    createdAt: note.createdAt || null,
+                    updatedAt: note.updatedAt || null
+                };
+            },
             async saveEntry() {
+                if (!this.entry.employeeId) {
+                    alert("Bitte Mitarbeiter auswählen");
+                    this.saving = false;
+                    return;
+                }
+                
+                console.log("Employee ID:", this.entry.employeeId, typeof this.entry.employeeId);
+                console.log("Project ID:", this.entry.projectId, typeof this.entry.projectId);
+                
+                // Ensure every note has createdById
+                for (const note of this.notes) {
+                    if (!note.createdById || note.createdById === 0 || note.createdById === null || note.createdById === undefined) {
+                        note.createdById = this.entry.employeeId;
+                    }
+                }
+
+                // Debug: Log each note to ensure createdById is set
+                console.log("Notes before formatting:", this.notes);
+
                 this.saving = true;
                 try {
-                    // 1) Persist entry + notes (no attachments yet)
+                    const payload = {
+                        id: this.entry.id,
+                        employeeId: this.entry.employeeId,
+                        projectId: this.entry.projectId,
+                        date: this.entry.date,
+                        hoursWorked: this.entry.hoursWorked,
+                        title: this.entry.title,
+                        notes: this.notes.map(n => this.formatNote(n)),  // hier ist createdById enthalten
+                        hourlyRate: this.entry.hourlyRate,
+                        billable:   this.entry.billable,
+                        invoiced:   this.entry.invoiced,
+                        catalogItems: this.entry.catalogItems,
+                        hasNightSurcharge:   this.entry.hasNightSurcharge,
+                        hasWeekendSurcharge: this.entry.hasWeekendSurcharge,
+                        hasHolidaySurcharge: this.entry.hasHolidaySurcharge,
+                        travelTimeMinutes:   this.entry.travelTimeMinutes,
+                        disposalCost:        this.entry.disposalCost,
+                        hasWaitingTime:      this.entry.hasWaitingTime,
+                        waitingTimeMinutes:  this.entry.waitingTimeMinutes
+                    };
+
+
+                    // Debug: Log the formatted notes
+                    console.log("Formatted notes:", payload.notes);
+                    console.log("Sending payload:", payload);
+
+                    // Additional debug: Check each note for createdById
+                    payload.notes.forEach((note, index) => {
+                        console.log(`Note ${index} createdById:`, note.createdById, typeof note.createdById);
+                        if (!note.createdById) {
+                            console.error(`Note ${index} is missing createdById!`);
+                        }
+                    });
+
                     const saveRes = await fetch('/timetracking/api/save', {
                         method: 'POST',
-                        headers: { 'Content-Type':'application/json' },
-                        body: JSON.stringify({
-                            id: this.entry.id,
-                            employeeId: this.entry.employeeId,
-                            projectId: this.entry.projectId,
-                            date: this.entry.date,
-                            hoursWorked: this.entry.hoursWorked,
-                            title: this.entry.title,
-                            notes: this.notes.map(n => ({
-                                id: n.id,
-                                title: n.title,
-                                category: n.category,
-                                content: n.content,
-                                tags: n.tags,
-                                attachments: []      // attachments handled next
-                            })),
-                            hourlyRate: this.entry.hourlyRate,
-                            billable: this.entry.billable,
-                            invoiced: this.entry.invoiced,
-                            catalogItems: this.entry.catalogItems,
-                            hasNightSurcharge: this.entry.hasNightSurcharge,
-                            hasWeekendSurcharge: this.entry.hasWeekendSurcharge,
-                            hasHolidaySurcharge: this.entry.hasHolidaySurcharge,
-                            travelTimeMinutes: this.entry.travelTimeMinutes,
-                            disposalCost: this.entry.disposalCost,
-                            hasWaitingTime: this.entry.hasWaitingTime,
-                            waitingTimeMinutes: this.entry.waitingTimeMinutes
-                        })
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
                     });
+
                     if (!saveRes.ok) {
                         throw new Error(await saveRes.text());
                     }
                     const saved = await saveRes.json();
 
-                    // 2) Now upload each note’s pending file, if any, using real note IDs
                     for (let i = 0; i < this.notes.length; i++) {
                         const note = this.notes[i];
                         if (note.pendingFile) {
@@ -206,7 +265,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <!-- Tags -->
                                 <div class="mb-2">
                                     <label class="form-label">Tags (Komma-getrennt)</label>
-                                    <input v-model="note.tags" type="text" class="form-control" placeholder="z. B. dringlich, Prüfung">
+                                    <input 
+                                        :value="Array.isArray(note.tags) ? note.tags.join(', ') : note.tags" 
+                                        @input="note.tags = $event.target.value.split(',').map(t => t.trim()).filter(t => t.length > 0)"
+                                        type="text" 
+                                        class="form-control" 
+                                        placeholder="z. B. dringlich, Prüfung"
+                                    />
                                 </div>
 
                                 <!-- Anhänge -->
@@ -289,8 +354,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         <!-- Nicht verrechenbar & Fakturiert -->
                         <div class="mb-3 form-check">
-                            <input v-model="entry.notBillable" type="checkbox" class="form-check-input" id="notBillable">
-                            <label class="form-check-label" for="notBillable">Nicht verrechenbar</label>
+                            <input v-model="entry.billable" type="checkbox" class="form-check-input" id="billable">
+                            <label class="form-check-label" for="billable">Verrechenbar</label>
                         </div>
                         <div class="mb-3 form-check">
                             <input v-model="entry.invoiced" type="checkbox" class="form-check-input" id="invoiced">

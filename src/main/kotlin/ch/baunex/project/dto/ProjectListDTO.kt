@@ -1,7 +1,7 @@
 package ch.baunex.project.dto
 
 import ch.baunex.project.model.ProjectStatus
-import kotlinx.serialization.Contextual
+import ch.baunex.serialization.LocalDateSerializer
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
 
@@ -15,6 +15,6 @@ data class ProjectListDTO(
     val status: String,
     val budget: Int? = null,
     val parcelNumber: String? = "",
-    @Contextual val startDate: LocalDate? = null,
-    @Contextual val endDate: LocalDate? = null
+    @Serializable(with = LocalDateSerializer::class) val startDate: LocalDate? = null,
+    @Serializable(with = LocalDateSerializer::class) val endDate: LocalDate? = null
 )

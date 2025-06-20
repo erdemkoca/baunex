@@ -86,10 +86,9 @@ class TimeEntryMapper @Inject constructor(
                             category = noteModel.category,
                             tags = noteModel.tags,
                             attachments = noteModel.attachments.map { it.toDto() },
-                            createdById = entry.employee.id!!,
-                            createdAt = null,
-                            updatedAt = null
-
+                            createdById = noteModel.createdBy.id!!,
+                            createdAt = noteModel.createdAt,
+                            updatedAt = noteModel.updatedAt
                         )
                     },
                     hourlyRate = entry.hourlyRate,
@@ -153,12 +152,12 @@ class TimeEntryMapper @Inject constructor(
                     tags         = noteDto.tags
                     timeEntry    = timeEntryEntity
                     createdBy    = employee     // the EmployeeModel passed into toTimeEntryModel
-                    createdAt    = LocalDate.now()
-                    updatedAt    = LocalDate.now()
+                    createdAt    = noteDto.createdAt ?: LocalDate.now()
+                    updatedAt    = noteDto.updatedAt ?: LocalDate.now()
                 }
             }.toMutableList()
 
-            this.hourlyRate = employee.hourlyRate
+            this.hourlyRate = dto.hourlyRate ?: employee.hourlyRate
             this.billable = dto.billable
             this.invoiced = dto.invoiced
 

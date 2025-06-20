@@ -1,11 +1,9 @@
 package ch.baunex.timetracking.controller
 
 import ch.baunex.catalog.facade.CatalogFacade
-import ch.baunex.notes.dto.NoteDto
 import ch.baunex.notes.facade.NoteAttachmentFacade
 import ch.baunex.notes.model.NoteCategory
 import ch.baunex.project.facade.ProjectFacade
-import ch.baunex.timetracking.dto.TimeEntryCatalogItemDTO
 import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.timetracking.facade.TimeTrackingFacade
@@ -18,7 +16,6 @@ import jakarta.inject.Inject
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
-import jakarta.ws.rs.core.UriBuilder
 import kotlinx.serialization.encodeToString
 import org.jboss.logging.Logger
 import org.jboss.resteasy.reactive.RestForm

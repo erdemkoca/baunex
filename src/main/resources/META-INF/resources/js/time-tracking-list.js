@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         methods: {
             navigateToEdit(id) {
-                window.location.href = `/timetracking/${id}/edit`;
+                window.location.href = `/timetracking/${id}`;
             },
             async deleteEntry(id) {
                 if (confirm('Möchten Sie diesen Eintrag wirklich löschen?')) {
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         template: `
         <div class="container-fluid">
             <div class="mb-3 d-flex justify-content-between align-items-center">
-                <a href="/timetracking/new" class="btn btn-primary">
+                <a href="/timetracking/0" class="btn btn-primary">
                     <i class="bi bi-plus-circle me-2"></i>Zeit erfassen
                 </a>
             </div>
