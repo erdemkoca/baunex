@@ -2,8 +2,6 @@ package ch.baunex.notes.service
 
 import ch.baunex.controlreport.service.DefectPositionService
 import ch.baunex.documentGenerator.repository.DocumentRepository
-import ch.baunex.notes.dto.MediaAttachmentDto
-import ch.baunex.notes.dto.NoteCreateDto
 import ch.baunex.notes.dto.NoteDto
 import ch.baunex.notes.mapper.toDto
 import ch.baunex.notes.model.NoteCategory
@@ -48,7 +46,7 @@ class NoteService(
      * Create a new note.  If category == MÄNGEL, also create a DefectPosition.
      */
     @Transactional
-    fun createNote(createDto: NoteCreateDto, creatorUserId: Long): NoteDto {
+    fun createNote(createDto: NoteDto, creatorUserId: Long): NoteDto {
         // 1) NoteModel-Instanz anlegen und erforderliche Fremd­schlüssel auflösen
         val note = NoteModel().apply {
             // a) Projekt–Verknüpfung (Pflichtfeld für Projekt-Notizen)
@@ -96,7 +94,7 @@ class NoteService(
 
 
     @Transactional
-    fun updateNote(noteId: Long, updateDto: NoteCreateDto, updaterUserId: Long): NoteDto {
+    fun updateNote(noteId: Long, updateDto: NoteDto, updaterUserId: Long): NoteDto {
         val existing = noteRepo.findById(noteId)
             ?: throw IllegalArgumentException("Note $noteId not found")
 

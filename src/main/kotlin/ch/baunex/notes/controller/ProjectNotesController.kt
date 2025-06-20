@@ -1,7 +1,6 @@
 package ch.baunex.notes.controller
 
 import ch.baunex.notes.dto.MediaAttachmentDto
-import ch.baunex.notes.dto.NoteCreateDto
 import ch.baunex.notes.dto.NoteDto
 import ch.baunex.notes.facade.NoteAttachmentFacade
 import ch.baunex.notes.facade.NoteFacade
@@ -56,7 +55,7 @@ class ProjectNotesController {
     @Produces(MediaType.APPLICATION_JSON)
     fun addNoteJson(
         @PathParam("projectId") projectId: Long,
-        createDto: NoteCreateDto
+        createDto: NoteDto
     ): NoteDto {
         // now return just the newly created note
         return noteFacade.addNoteToProject(createDto, createDto.createdById)
@@ -69,7 +68,7 @@ class ProjectNotesController {
     fun updateNoteJson(
         @PathParam("projectId") projectId: Long,
         @PathParam("noteId")    noteId:    Long,
-        updateDto: NoteCreateDto
+        updateDto: NoteDto
     ): NoteDto {
         // delegate to facade
         return noteFacade.updateNoteOfProject(noteId, updateDto, updateDto.createdById)

@@ -1,6 +1,5 @@
 package ch.baunex.notes.facade
 
-import ch.baunex.notes.dto.NoteCreateDto
 import ch.baunex.notes.dto.NoteDto
 import ch.baunex.notes.mapper.toNoteForUI
 import ch.baunex.notes.model.NoteCategory
@@ -17,13 +16,8 @@ import jakarta.transaction.Transactional
 class NoteFacade(
     private val noteService: NoteService,
     private val projectService: ProjectService,
-    private val employeeFacade: EmployeeFacade,
-    private val employeeService: EmployeeService
+    private val employeeFacade: EmployeeFacade
 ) {
-
-    fun getNote(noteId: Long): NoteDto =
-        noteService.getNoteById(noteId)
-
     @Transactional
     fun getProjectNotesView(id: Long): ProjectNotesViewDTO {
         val project = projectService.getProjectWithEntries(id)
@@ -63,14 +57,14 @@ class NoteFacade(
     }
 
     @Transactional
-    fun addNoteToProject(createDto: NoteCreateDto, userId: Long): NoteDto {
+    fun addNoteToProject(createDto: NoteDto, userId: Long): NoteDto {
         return noteService.createNote(createDto, userId)
     }
 
     @Transactional
     fun updateNoteOfProject(
         noteId: Long,
-        updateDto: NoteCreateDto,
+        updateDto: NoteDto,
         userId: Long
     ): NoteDto {
         // this will throw if the note isn't found or the user isn't allowed

@@ -114,7 +114,6 @@ class InvoiceMapper @Inject constructor(
                     timeEntryId = noteModel.timeEntry?.id,
                     documentId = noteModel.document?.id,
                     createdById = noteModel.createdBy.id!!,
-                    createdByName = "${noteModel.createdBy.person.firstName} ${noteModel.createdBy.person.lastName}",
                     createdAt = noteModel.createdAt,
                     updatedAt = noteModel.updatedAt,
                     title = noteModel.title,

@@ -1,6 +1,5 @@
 package ch.baunex.timetracking.mapper
 
-import ch.baunex.notes.dto.NoteCreateDto
 import ch.baunex.notes.dto.NoteDto
 import ch.baunex.notes.mapper.toDto
 import ch.baunex.notes.model.NoteModel
@@ -12,7 +11,6 @@ import ch.baunex.timetracking.dto.TimeEntryCatalogItemDTO
 import ch.baunex.timetracking.model.TimeEntryModel
 import ch.baunex.timetracking.service.TimeEntryCostService
 import ch.baunex.user.model.EmployeeModel
-import ch.baunex.user.service.EmployeeService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import java.time.LocalDate
@@ -78,7 +76,7 @@ class TimeEntryMapper @Inject constructor(
                     hoursWorked = entry.hoursWorked,
                     title = entry.title,
                     notes = entry.notes.map { noteModel ->
-                        NoteCreateDto(
+                        NoteDto(
                             id = noteModel.id!!,
                             projectId = noteModel.project?.id,
                             timeEntryId = noteModel.timeEntry?.id,
@@ -87,8 +85,11 @@ class TimeEntryMapper @Inject constructor(
                             content = noteModel.content,
                             category = noteModel.category,
                             tags = noteModel.tags,
-                            attachments = noteModel.attachments.map { it.id!! },
-                            createdById = entry.employee.id!!
+                            attachments = noteModel.attachments.map { it.toDto() },
+                            createdById = entry.employee.id!!,
+                            createdAt = null,
+                            updatedAt = null
+
                         )
                     },
                     hourlyRate = entry.hourlyRate,
@@ -121,7 +122,6 @@ class TimeEntryMapper @Inject constructor(
                     timeEntryId = noteModel.timeEntry?.id,
                     documentId = noteModel.document?.id,
                     createdById = noteModel.createdBy.id!!,
-                    createdByName = "${noteModel.createdBy.person.firstName} ${noteModel.createdBy.person.lastName}",
                     createdAt = noteModel.createdAt,
                     updatedAt = noteModel.updatedAt,
                     title = noteModel.title,
@@ -145,12 +145,12 @@ class TimeEntryMapper @Inject constructor(
             // Marke Dir eine Referenz auf das TimeEntryModel
             val timeEntryEntity = this
 
-            this.notes = dto.notes.map { noteCreateDto ->
+            this.notes = dto.notes.map { noteDto ->
                 NoteModel().apply {
-                    content      = noteCreateDto.content
-                    title        = noteCreateDto.title
-                    category     = noteCreateDto.category
-                    tags         = noteCreateDto.tags
+                    content      = noteDto.content
+                    title        = noteDto.title
+                    category     = noteDto.category
+                    tags         = noteDto.tags
                     timeEntry    = timeEntryEntity
                     createdBy    = employee     // the EmployeeModel passed into toTimeEntryModel
                     createdAt    = LocalDate.now()

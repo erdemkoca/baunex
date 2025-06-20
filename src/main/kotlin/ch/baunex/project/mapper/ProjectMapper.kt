@@ -60,7 +60,6 @@ class ProjectMapper @Inject constructor(
                 timeEntryId = note.timeEntry?.id,
                 documentId = note.document?.id,
                 createdById = note.createdBy.id!!,
-                createdByName = "${note.createdBy.person.firstName} ${note.createdBy.person.lastName}",
                 createdAt = note.createdAt,
                 updatedAt = note.updatedAt,
                 title = note.title,

@@ -12,7 +12,6 @@ fun NoteModel.toDto(): NoteDto {
         timeEntryId = this.timeEntry?.id,
         documentId = this.document?.id,
         createdById = this.createdBy.id!!,
-        createdByName = "${this.createdBy.person.firstName} ${this.createdBy.person.lastName}",
         createdAt = this.createdAt,
         updatedAt = this.updatedAt,
         title = this.title,

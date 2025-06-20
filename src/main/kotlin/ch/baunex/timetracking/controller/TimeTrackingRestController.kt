@@ -1,7 +1,7 @@
 package ch.baunex.timetracking.controller
 
 import ch.baunex.catalog.facade.CatalogFacade
-import ch.baunex.notes.dto.NoteCreateDto
+import ch.baunex.notes.dto.NoteDto
 import ch.baunex.notes.facade.NoteAttachmentFacade
 import ch.baunex.notes.model.NoteCategory
 import ch.baunex.project.facade.ProjectFacade
@@ -9,7 +9,6 @@ import ch.baunex.timetracking.dto.TimeEntryCatalogItemDTO
 import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.timetracking.dto.TimeEntryResponseDTO
 import ch.baunex.timetracking.facade.TimeTrackingFacade
-import ch.baunex.timetracking.service.TimeEntryCostService
 import ch.baunex.user.facade.EmployeeFacade
 import ch.baunex.user.model.Role
 import ch.baunex.web.WebController.Templates
@@ -46,9 +45,6 @@ class TimeTrackingRestController {
     lateinit var catalogFacade: CatalogFacade
 
     @Inject
-    lateinit var timeEntryCostService: TimeEntryCostService
-
-    @Inject
     lateinit var noteAttachmentFacade: NoteAttachmentFacade
 
     private val logger = Logger.getLogger(TimeTrackingRestController::class.java)
@@ -73,37 +69,18 @@ class TimeTrackingRestController {
     }
 
     @GET
-    @Path("/new")
+    @Path("/{id}")
     @Produces(MediaType.TEXT_HTML)
-    fun newEntryForm(): Response {
-        val employees = employeeFacade.listAll()
-        val projects = projectFacade.getAllProjects()
-        val catalogItems = catalogFacade.getAllItems()
-        val categories = NoteCategory.values().toList()
-        val template = Templates.timeTrackingForm(
-            entryJson = "",
-            employeesJson = json.encodeToString(employees),
-            projectsJson = json.encodeToString(projects),
-            currentDate = getCurrentDate(),
-            activeMenu = "timetracking",
-            catalogItemsJson = json.encodeToString(catalogItems),
-            categoriesJson = json.encodeToString(categories)
-        )
-        return Response.ok(template.render()).build()
-    }
+    fun form(@PathParam("id") id: Long): Response {
+        val entry = if (id == 0L) null else timeTrackingFacade.getTimeEntryById(id)
 
-    @GET
-    @Path("/{id}/edit")
-    @Produces(MediaType.TEXT_HTML)
-    fun editForm(@PathParam("id") id: Long): Response {
-        val entry = timeTrackingFacade.getTimeEntryById(id)
-            ?: return Response.status(Response.Status.NOT_FOUND).build()
         val employees = employeeFacade.listAll()
         val projects = projectFacade.getAllProjects()
         val catalogItems = catalogFacade.getAllItems()
         val categories = NoteCategory.values().toList()
+
         val template = Templates.timeTrackingForm(
-            entryJson = json.encodeToString(entry),
+            entryJson = if (entry != null) json.encodeToString(entry) else "",
             employeesJson = json.encodeToString(employees),
             projectsJson = json.encodeToString(projects),
             currentDate = getCurrentDate(),
@@ -111,116 +88,136 @@ class TimeTrackingRestController {
             catalogItemsJson = json.encodeToString(catalogItems),
             categoriesJson = json.encodeToString(categories)
         )
+
         return Response.ok(template.render()).build()
     }
 
     @POST
     @Path("/save")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    fun saveHtmlEntry(
-        @FormParam("id") id: Long?,
-        @FormParam("employeeId") employeeId: Long,
-        @FormParam("projectId") projectId: Long,
-        @FormParam("date") date: LocalDate,
-        @FormParam("hoursWorked") hoursWorked: Double,
-        @FormParam("title") title: String,
-        @FormParam("hourlyRate") hourlyRate: Double?,
-        @FormParam("notBillable") notBillable: String?,
-        @FormParam("invoiced") invoiced: String?,
-        @FormParam("catalogItemIds") catalogItemIds: List<String>?,
-        @FormParam("catalogItemQuantities") catalogItemQuantities: List<String>?,
-        @FormParam("catalogItemNames") catalogItemNames: List<String>?,
-        @FormParam("catalogItemPrices") catalogItemPrices: List<String>?,
-        @FormParam("hasNightSurcharge") hasNightSurcharge: String?,
-        @FormParam("hasWeekendSurcharge") hasWeekendSurcharge: String?,
-        @FormParam("hasHolidaySurcharge") hasHolidaySurcharge: String?,
-        @FormParam("travelTimeMinutes") travelTimeMinutes: Int = 0,
-        @FormParam("disposalCost") disposalCost: Double = 0.0,
-        @FormParam("hasWaitingTime") hasWaitingTime: String?,
-        @FormParam("waitingTimeMinutes") waitingTimeMinutes: Int = 0,
-        @FormParam("noteTitle") noteTitle: String?,
-        @FormParam("noteContent") noteContent: String?,
-        @FormParam("noteCategory") noteCategory: String?
-    ): Response {
-        // map form to DTO (same logic as before)
-        val catalogItems = (catalogItemIds ?: emptyList()).zip(
-            catalogItemQuantities.orEmpty().zip(
-                catalogItemNames.orEmpty().zip(catalogItemPrices.orEmpty())
-            )
-        ).map { (id, rest) ->
-            val (quantity, namePrice) = rest
-            val (name, price) = namePrice
-            TimeEntryCatalogItemDTO(
-                catalogItemId = id.toLongOrNull(),
-                quantity = quantity.toIntOrNull() ?: 1,
-                itemName = name,
-                unitPrice = price.toDoubleOrNull() ?: 0.0,
-                totalPrice = (quantity.toIntOrNull() ?: 1) * (price.toDoubleOrNull() ?: 0.0)
-            )
-        }
-
-        val singleNote: NoteCreateDto? = if (!noteContent.isNullOrBlank()) {
-            NoteCreateDto(
-                id            = 0L,               // 0L fuer neu (wird in Service ueberschrieben)
-                projectId     = projectId,        // oder null, je nachdem
-                timeEntryId   = null,             // im Create‐Fall wird erst TimeEntry gespeichert
-                documentId    = null,
-                title         = noteTitle,
-                content       = noteContent,
-                category      = NoteCategory.valueOf(noteCategory ?: "INFO"),
-                tags          = emptyList(),
-                attachments   = emptyList(),
-                createdById = employeeId
-            )
+    @Consumes(MediaType.APPLICATION_JSON)
+    fun saveEntry(dto: TimeEntryDTO): Response {
+        val maybeSaved = if (dto.id == null || dto.id == 0L) {
+            timeTrackingFacade.logTime(dto)
         } else {
-            null
+            timeTrackingFacade.updateTimeEntry(dto.id, dto)
         }
-        TimeEntryDTO(
-            employeeId = employeeId,
-            projectId = projectId,
-            date = date,
-            hoursWorked = hoursWorked,
-            title = title,
-            notes = if (singleNote != null) listOf(singleNote) else emptyList(),
-            hourlyRate = hourlyRate,
-            billable = notBillable != "true",
-            invoiced = invoiced == "true",
-            catalogItems = catalogItems,
-            hasNightSurcharge = hasNightSurcharge == "true",
-            hasWeekendSurcharge = hasWeekendSurcharge == "true",
-            hasHolidaySurcharge = hasHolidaySurcharge == "true",
-            travelTimeMinutes = travelTimeMinutes,
-            disposalCost = disposalCost,
-            hasWaitingTime = hasWaitingTime == "true",
-            waitingTimeMinutes = waitingTimeMinutes,
-        ) // placeholder
 
+        if (maybeSaved == null) {
+            throw WebApplicationException("Failed to save time entry", 500)
+        }
 
-        // assemble TimeEntryDTO and call facade
-        val dto = TimeEntryDTO(
-            employeeId = employeeId,
-            projectId = projectId,
-            date = date,
-            hoursWorked = hoursWorked,
-            title = title,
-            notes = emptyList(),
-            hourlyRate = hourlyRate,
-            billable = notBillable != "true",
-            invoiced = invoiced == "true",
-            catalogItems = catalogItems,
-            hasNightSurcharge = hasNightSurcharge == "true",
-            hasWeekendSurcharge = hasWeekendSurcharge == "true",
-            hasHolidaySurcharge = hasHolidaySurcharge == "true",
-            travelTimeMinutes = travelTimeMinutes,
-            disposalCost = disposalCost,
-            hasWaitingTime = hasWaitingTime == "true",
-            waitingTimeMinutes = waitingTimeMinutes
-        )
-        if (id == null) timeTrackingFacade.logTime(dto)
-        else timeTrackingFacade.updateTimeEntry(id, dto)
-
-        return Response.seeOther(UriBuilder.fromPath("/timetracking").build()).build()
+        return Response.ok(maybeSaved).build()
     }
+
+//    @POST
+//    @Path("/save")
+//    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+//    fun saveHtmlEntry(
+//        @FormParam("id") id: Long?,
+//        @FormParam("employeeId") employeeId: Long,
+//        @FormParam("projectId") projectId: Long,
+//        @FormParam("date") date: LocalDate,
+//        @FormParam("hoursWorked") hoursWorked: Double,
+//        @FormParam("title") title: String,
+//        @FormParam("hourlyRate") hourlyRate: Double?,
+//        @FormParam("notBillable") notBillable: String?,
+//        @FormParam("invoiced") invoiced: String?,
+//        @FormParam("catalogItemIds") catalogItemIds: List<String>?,
+//        @FormParam("catalogItemQuantities") catalogItemQuantities: List<String>?,
+//        @FormParam("catalogItemNames") catalogItemNames: List<String>?,
+//        @FormParam("catalogItemPrices") catalogItemPrices: List<String>?,
+//        @FormParam("hasNightSurcharge") hasNightSurcharge: String?,
+//        @FormParam("hasWeekendSurcharge") hasWeekendSurcharge: String?,
+//        @FormParam("hasHolidaySurcharge") hasHolidaySurcharge: String?,
+//        @FormParam("travelTimeMinutes") travelTimeMinutes: Int = 0,
+//        @FormParam("disposalCost") disposalCost: Double = 0.0,
+//        @FormParam("hasWaitingTime") hasWaitingTime: String?,
+//        @FormParam("waitingTimeMinutes") waitingTimeMinutes: Int = 0,
+//        @FormParam("noteTitle") noteTitle: String?,
+//        @FormParam("noteContent") noteContent: String?,
+//        @FormParam("noteCategory") noteCategory: String?
+//    ): Response {
+//        // map form to DTO (same logic as before)
+//        val catalogItems = (catalogItemIds ?: emptyList()).zip(
+//            catalogItemQuantities.orEmpty().zip(
+//                catalogItemNames.orEmpty().zip(catalogItemPrices.orEmpty())
+//            )
+//        ).map { (id, rest) ->
+//            val (quantity, namePrice) = rest
+//            val (name, price) = namePrice
+//            TimeEntryCatalogItemDTO(
+//                catalogItemId = id.toLongOrNull(),
+//                quantity = quantity.toIntOrNull() ?: 1,
+//                itemName = name,
+//                unitPrice = price.toDoubleOrNull() ?: 0.0,
+//                totalPrice = (quantity.toIntOrNull() ?: 1) * (price.toDoubleOrNull() ?: 0.0)
+//            )
+//        }
+//
+//        val singleNote: NoteDto? = if (!noteContent.isNullOrBlank()) {
+//            NoteDto(
+//                id            = 0L,               // 0L fuer neu (wird in Service ueberschrieben)
+//                projectId     = projectId,        // oder null, je nachdem
+//                timeEntryId   = null,             // im Create‐Fall wird erst TimeEntry gespeichert
+//                documentId    = null,
+//                title         = noteTitle,
+//                content       = noteContent,
+//                category      = NoteCategory.valueOf(noteCategory ?: "INFO"),
+//                tags          = emptyList(),
+//                attachments   = emptyList(),
+//                createdById = employeeId,
+//                createdAt = null,
+//                updatedAt = null
+//            )
+//        } else {
+//            null
+//        }
+//        TimeEntryDTO(
+//            employeeId = employeeId,
+//            projectId = projectId,
+//            date = date,
+//            hoursWorked = hoursWorked,
+//            title = title,
+//            notes = if (singleNote != null) listOf(singleNote) else emptyList(),
+//            hourlyRate = hourlyRate,
+//            billable = notBillable != "true",
+//            invoiced = invoiced == "true",
+//            catalogItems = catalogItems,
+//            hasNightSurcharge = hasNightSurcharge == "true",
+//            hasWeekendSurcharge = hasWeekendSurcharge == "true",
+//            hasHolidaySurcharge = hasHolidaySurcharge == "true",
+//            travelTimeMinutes = travelTimeMinutes,
+//            disposalCost = disposalCost,
+//            hasWaitingTime = hasWaitingTime == "true",
+//            waitingTimeMinutes = waitingTimeMinutes,
+//        ) // placeholder
+//
+//
+//        // assemble TimeEntryDTO and call facade
+//        val dto = TimeEntryDTO(
+//            employeeId = employeeId,
+//            projectId = projectId,
+//            date = date,
+//            hoursWorked = hoursWorked,
+//            title = title,
+//            notes = emptyList(),
+//            hourlyRate = hourlyRate,
+//            billable = notBillable != "true",
+//            invoiced = invoiced == "true",
+//            catalogItems = catalogItems,
+//            hasNightSurcharge = hasNightSurcharge == "true",
+//            hasWeekendSurcharge = hasWeekendSurcharge == "true",
+//            hasHolidaySurcharge = hasHolidaySurcharge == "true",
+//            travelTimeMinutes = travelTimeMinutes,
+//            disposalCost = disposalCost,
+//            hasWaitingTime = hasWaitingTime == "true",
+//            waitingTimeMinutes = waitingTimeMinutes
+//        )
+//        if (id == null) timeTrackingFacade.logTime(dto)
+//        else timeTrackingFacade.updateTimeEntry(id, dto)
+//
+//        return Response.seeOther(UriBuilder.fromPath("/timetracking").build()).build()
+//    }
 
     @GET
     @Path("/{id}/delete")
@@ -272,8 +269,8 @@ class TimeTrackingRestController {
                 // Find the matching saved note by index
                 saved.notes.getOrNull(idx)?.let { savedNote ->
                     noteAttachmentFacade.linkAttachments(
-                        noteId = savedNote.id,
-                        attachmentIds = requestNote.attachments
+                        noteId = savedNote.id!!,
+                        attachmentIds = requestNote.attachments.map { it.id }
                     )
                 }
             }

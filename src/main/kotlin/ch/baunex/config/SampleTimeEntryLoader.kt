@@ -1,6 +1,5 @@
 package ch.baunex.config
 
-import ch.baunex.notes.dto.NoteCreateDto
 import ch.baunex.notes.dto.NoteDto
 import ch.baunex.notes.model.NoteCategory
 import ch.baunex.timetracking.dto.TimeEntryCatalogItemDTO
@@ -30,17 +29,20 @@ class SampleTimeEntryLoader {
                 hoursWorked        = 12.0,
                 title              = "Notfall-Einsatz Serverraum",  // hier übernehmen wir den Note-Titel
                 notes              = listOf(
-                    NoteCreateDto(
-                        id            = 0L,
-                        projectId     = 1L,
-                        timeEntryId   = null,
-                        documentId    = null,
-                        title         = "Notfall-Einsatz Serverraum",
-                        content       = "Stromausfall führte zu Ausfall der Klimaanlage. Wir mussten sofort Ersatzgenerator einsetzen.",
-                        category      = NoteCategory.NOTFALL,
-                        tags          = listOf("Emergency", "Serverraum"),
-                        attachments   = emptyList(),
-                        createdById = 1
+                    NoteDto(
+                            id = 0,
+                            projectId = 1L,
+                            timeEntryId = null,
+                            documentId = null,
+                            title = "Notfall-Einsatz Serverraum",
+                            content = "Stromausfall führte zu Ausfall der Klimaanlage. Wir mussten sofort Ersatzgenerator einsetzen.",
+                            category = NoteCategory.NOTFALL,
+                            tags = listOf("Emergency", "Serverraum"),
+                            attachments = emptyList(),
+                            createdById = 1,
+                            
+                            createdAt = null,
+                            updatedAt = null
                     )
                 ),
                 hourlyRate         = 75.0,
@@ -86,18 +88,21 @@ class SampleTimeEntryLoader {
                 hoursWorked        = 8.0,
                 title              = "Verteilerschrank Montage",
                 notes              = listOf(
-                    NoteCreateDto(
-                        id            = 0L,
-                        projectId     = 2L,
-                        timeEntryId   = null,
-                        documentId    = null,
-                        title         = "Verteilerschrank Montage",
-                        content       = "Hauptverteiler installiert, Verkabelung geprüft. Kleinere Anpassungen am Sicherungskasten notwendig.",
-                        category      = NoteCategory.INFO,
-                        tags          = listOf("Verteiler", "Installation"),
-                        attachments   = emptyList(),
-                        createdById = 2
-                    )
+                    NoteDto(
+                            id = 0,
+                            projectId = 2L,
+                            timeEntryId = null,
+                            documentId = null,
+                            title = "Verteilerschrank Montage",
+                            content = "Hauptverteiler installiert, Verkabelung geprüft. Kleinere Anpassungen am Sicherungskasten notwendig.",
+                            category = NoteCategory.INFO,
+                            tags = listOf("Verteiler", "Installation"),
+                            attachments = emptyList(),
+                            createdById = 2,
+                            
+                            createdAt = null,
+                            updatedAt = null
+                )
                 ),
                 hourlyRate         = 65.0,
                 billable           = true,
@@ -149,17 +154,20 @@ class SampleTimeEntryLoader {
                 hoursWorked        = 6.0,
                 title              = "Fehlerbehebung Feiertag",
                 notes              = listOf(
-                    NoteCreateDto(
-                        id            = 0L,
-                        projectId     = 1L,
-                        timeEntryId   = null,
-                        documentId    = null,
-                        title         = "Fehlerbehebung Feiertag",
-                        content       = "Sicherung defekt, musste ausgetauscht werden. Kunde nicht vor Ort, Ersatzteil vorgehalten.",
-                        category      = NoteCategory.FEHLER,
-                        tags          = listOf("Feiertag", "Sicherung"),
-                        attachments   = emptyList(),
-                        createdById = 3
+                    NoteDto(
+                            id = 0,
+                            projectId = 1L,
+                            timeEntryId = null,
+                            documentId = null,
+                            title = "Fehlerbehebung Feiertag",
+                            content = "Sicherung defekt, musste ausgetauscht werden. Kunde nicht vor Ort, Ersatzteil vorgehalten.",
+                            category = NoteCategory.FEHLER,
+                            tags = listOf("Feiertag", "Sicherung"),
+                            attachments = emptyList(),
+                            createdById = 3,
+                            
+                            createdAt = null,
+                            updatedAt = null
                     )
                 ),
                 hourlyRate         = 70.0,
@@ -198,17 +206,20 @@ class SampleTimeEntryLoader {
                 hoursWorked        = 8.0,
                 title              = "Warten auf Materialien",
                 notes              = listOf(
-                    NoteCreateDto(
-                        id            = 0L,
-                        projectId     = 2L,
-                        timeEntryId   = null,
-                        documentId    = null,
-                        title         = "Warten auf Materialien",
-                        content       = "Lieferung der Klimaanlagenfilter verzögert sich um 2 Tage, Kunde informiert.",
-                        category      = NoteCategory.MATERIALBEDARF,
-                        tags          = listOf("Warten", "Filter"),
-                        attachments   = emptyList(),
-                        createdById = 1
+                    NoteDto(
+                        id = 0,
+                        projectId = 1L,
+                        timeEntryId = null,
+                        documentId = null,
+                        title = "Warten auf Materialien",
+                        content = "Lieferung der Klimaanlagenfilter verzögert sich um 2 Tage, Kunde informiert.",
+                        category = NoteCategory.MATERIALBEDARF,
+                        tags = listOf("Warten", "Filter"),
+                        attachments = emptyList(),
+                        createdById = 1,
+                        
+                        createdAt = null,
+                        updatedAt = null
                     )
                 ),
                 hourlyRate         = 65.0,
@@ -247,17 +258,20 @@ class SampleTimeEntryLoader {
                 hoursWorked        = 10.0,
                 title              = "Netzwerkverkabelung",
                 notes              = listOf(
-                    NoteCreateDto(
-                        id            = 0L,
-                        projectId     = 1L,
-                        timeEntryId   = null,
-                        documentId    = null,
-                        title         = "Netzwerkverkabelung",
-                        content       = "Cat7-Kabel verlegt, Ports getestet. Switch konfiguriert.",
-                        category      = NoteCategory.INFO,
-                        tags          = listOf("Netzwerk", "Switch"),
-                        attachments   = emptyList(),
-                        createdById = 2
+                    NoteDto(
+                        id = 0,
+                        projectId = 1L,
+                        timeEntryId = null,
+                        documentId = null,
+                        title = "Netzwerkverkabelung",
+                        content = "Cat7-Kabel verlegt, Ports getestet. Switch konfiguriert.",
+                        category = NoteCategory.INFO,
+                        tags = listOf("Netzwerk", "Switch"),
+                        attachments = emptyList(),
+                        createdById = 2,
+                        
+                        createdAt = null,
+                        updatedAt = null
                     )
                 ),
                 hourlyRate         = 70.0,
@@ -303,17 +317,20 @@ class SampleTimeEntryLoader {
                 hoursWorked        = 8.0,
                 title              = "Dringender Kundeneinsatz",
                 notes              = listOf(
-                    NoteCreateDto(
-                        id            = 0L,
-                        projectId     = 2L,
-                        timeEntryId   = null,
-                        documentId    = null,
-                        title         = "Dringender Kundeneinsatz",
-                        content       = "Alarmanlage defekt, Ersatzteil zufällig auf Lager, sofort eingebaut.",
-                        category      = NoteCategory.NOTFALL,
+                    NoteDto(
+                        id = 0,
+                        projectId = 1L,
+                        timeEntryId = null,
+                        documentId = null,
+                        title = "Dringender Kundeneinsatz",
+                        content = "Alarmanlage defekt, Ersatzteil zufällig auf Lager, sofort eingebaut.",
+                        category = NoteCategory.NOTFALL,
                         tags          = listOf("Weekend", "Alarmanlage"),
-                        attachments   = emptyList(),
-                        createdById = 3
+                        attachments = emptyList(),
+                        createdById = 3,
+                        
+                        createdAt = null,
+                        updatedAt = null
                     )
                 ),
                 hourlyRate         = 75.0,
@@ -352,17 +369,20 @@ class SampleTimeEntryLoader {
                 hoursWorked        = 8.0,
                 title              = "Allgemeiner Check-up",
                 notes              = listOf(
-                    NoteCreateDto(
-                        id            = 0L,
-                        projectId     = 1L,
-                        timeEntryId   = null,
-                        documentId    = null,
-                        title         = "Allgemeiner Check-up",
-                        content       = "Überprüfung der Steckdosen und Leitungen im gesamten Erdgeschoss.",
-                        category      = NoteCategory.INFO,
+                    NoteDto(
+                        id = 0,
+                        projectId = 1L,
+                        timeEntryId = null,
+                        documentId = null,
+                        title = "Allgemeiner Check-up",
+                        content = "Überprüfung der Steckdosen und Leitungen im gesamten Erdgeschoss.",
+                        category = NoteCategory.INFO,
                         tags          = listOf("Routine", "Check"),
-                        attachments   = emptyList(),
-                        createdById = 1
+                        attachments = emptyList(),
+                        createdById = 1,
+                        
+                        createdAt = null,
+                        updatedAt = null
                     )
                 ),
                 hourlyRate         = 65.0,
@@ -401,17 +421,20 @@ class SampleTimeEntryLoader {
                 hoursWorked        = 9.0,
                 title              = "Zutrittskontrolle konfiguriert",
                 notes              = listOf(
-                    NoteCreateDto(
-                        id            = 0L,
-                        projectId     = 2L,
-                        timeEntryId   = null,
-                        documentId    = null,
+                    NoteDto(
+                        id = 0,
+                        projectId = 1L,
+                        timeEntryId = null,
+                        documentId = null,
                         title         = "Zutrittskontrolle konfiguriert",
                         content       = "Alle Lesegeräte eingerichtet, Karten funktionieren.",
-                        category      = NoteCategory.INFO,
+                        category = NoteCategory.INFO,
                         tags          = listOf("Sicherheit", "Konfiguration"),
-                        attachments   = emptyList(),
-                        createdById = 2
+                        attachments = emptyList(),
+                        createdById = 2,
+                        
+                        createdAt = null,
+                        updatedAt = null
                     )
                 ),
                 hourlyRate         = 70.0,

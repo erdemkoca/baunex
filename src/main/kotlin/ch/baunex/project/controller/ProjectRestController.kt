@@ -3,8 +3,6 @@ package ch.baunex.project.controller
 import ch.baunex.billing.dto.BillingDTO
 import ch.baunex.billing.facade.BillingFacade
 import ch.baunex.catalog.facade.CatalogFacade
-import ch.baunex.notes.dto.NoteCreateDto
-import ch.baunex.notes.dto.NoteDto
 import ch.baunex.notes.facade.NoteAttachmentFacade
 import ch.baunex.notes.model.NoteCategory
 import ch.baunex.project.dto.ProjectCreateDTO
@@ -12,20 +10,15 @@ import ch.baunex.project.dto.ProjectDetailDTO
 import ch.baunex.project.facade.ProjectFacade
 import kotlinx.serialization.encodeToString
 import ch.baunex.serialization.SerializationUtils.json
-import org.jboss.resteasy.reactive.multipart.FileUpload
 import ch.baunex.user.dto.CustomerDTO
 import ch.baunex.user.facade.CustomerFacade
 import ch.baunex.user.facade.EmployeeFacade
-import ch.baunex.project.dto.ProjectNotesViewDTO
 import ch.baunex.web.WebController.Templates
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
-import jakarta.ws.rs.core.GenericEntity
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
-import org.jboss.resteasy.reactive.RestForm
-import java.io.InputStream
 import java.time.LocalDate
 import java.time.LocalDateTime
 

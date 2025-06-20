@@ -45,7 +45,7 @@ class TimeTrackingService @Inject constructor(
 
             // 2. Notizen verarbeiten
             val parent = this
-            this.notes = dto.notes.map { noteCreateDto ->
+            this.notes = dto.notes.map { noteDto ->
                 NoteModel().apply {
                     this.project   = parent.project   // ← ganz wichtig!
                     this.timeEntry = parent
@@ -53,10 +53,10 @@ class TimeTrackingService @Inject constructor(
                     this.createdAt = LocalDate.now()
                     this.updatedAt = LocalDate.now()
 
-                    this.title    = noteCreateDto.title
-                    this.content  = noteCreateDto.content
-                    this.category = noteCreateDto.category
-                    this.tags     = noteCreateDto.tags
+                    this.title    = noteDto.title
+                    this.content  = noteDto.content
+                    this.category = noteDto.category
+                    this.tags     = noteDto.tags
                 }
             }.toMutableList()
         }
@@ -101,12 +101,12 @@ class TimeTrackingService @Inject constructor(
             this.hoursWorked = dto.hoursWorked
             this.title    = dto.title
             existingEntry.notes.clear()
-            val newNotes = dto.notes.map { noteCreateDto ->
+            val newNotes = dto.notes.map { noteDto ->
                 NoteModel().apply {
-                    this.content = noteCreateDto.content
-                    this.title = noteCreateDto.title
-                    this.category = noteCreateDto.category
-                    this.tags = noteCreateDto.tags
+                    this.content = noteDto.content
+                    this.title = noteDto.title
+                    this.category = noteDto.category
+                    this.tags = noteDto.tags
                     this.timeEntry = existingEntry
                     createdBy  = employee
                     createdAt  = LocalDate.now()
