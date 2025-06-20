@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (note.createdById && note.createdById !== 0 && note.createdById !== null && note.createdById !== undefined) {
                     createdById = note.createdById;
                 }
-                
+
                 return {
                     id: note.id,
                     projectId: note.projectId || this.entry.projectId,
@@ -103,10 +103,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.saving = false;
                     return;
                 }
-                
+
                 console.log("Employee ID:", this.entry.employeeId, typeof this.entry.employeeId);
                 console.log("Project ID:", this.entry.projectId, typeof this.entry.projectId);
-                
+
                 // Ensure every note has createdById
                 for (const note of this.notes) {
                     if (!note.createdById || note.createdById === 0 || note.createdById === null || note.createdById === undefined) {
@@ -136,7 +136,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         hasHolidaySurcharge: this.entry.hasHolidaySurcharge,
                         travelTimeMinutes:   this.entry.travelTimeMinutes,
                         disposalCost:        this.entry.disposalCost,
-                        hasWaitingTime:      this.entry.hasWaitingTime,
                         waitingTimeMinutes:  this.entry.waitingTimeMinutes
                     };
 
@@ -153,8 +152,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
 
-                    const saveRes = await fetch('/timetracking/api/save', {
-                        method: 'POST',
+                    const method = 'POST';
+                    const url    = '/timetracking/api';
+                    const saveRes = await fetch(url, {
+                        method,
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
@@ -339,12 +340,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                             </div>
                             <div class="row g-3 mt-2">
-                                <div class="col-md-6">
-                                    <div class="form-check">
-                                        <input v-model="entry.hasWaitingTime" type="checkbox" class="form-check-input" id="hasWaitingTime">
-                                        <label class="form-check-label" for="hasWaitingTime">Wartezeit</label>
-                                    </div>
-                                </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Wartezeit (Minuten)</label>
                                     <input v-model.number="entry.waitingTimeMinutes" type="number" min="0" class="form-control">

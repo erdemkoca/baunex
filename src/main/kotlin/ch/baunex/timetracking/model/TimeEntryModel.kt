@@ -62,9 +62,6 @@ class TimeEntryModel : PanacheEntity() {
     @Column(name = "disposal_cost")
     var disposalCost: Double = 0.0
 
-    @Column(name = "has_waiting_time", nullable = false)
-    var hasWaitingTime: Boolean = false
-
     @Column(name = "waiting_time_minutes")
     var waitingTimeMinutes: Int = 0
 

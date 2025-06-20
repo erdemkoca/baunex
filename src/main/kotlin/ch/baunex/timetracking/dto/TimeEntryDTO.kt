@@ -31,7 +31,6 @@ data class TimeEntryDTO(
 
     // input additional costs
     val travelTimeMinutes: Int = 0,
-    val hasWaitingTime: Boolean = false,
     val waitingTimeMinutes: Int = 0,
     val disposalCost: Double = 0.0,
 
