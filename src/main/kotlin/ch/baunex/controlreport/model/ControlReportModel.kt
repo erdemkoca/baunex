@@ -1,11 +1,11 @@
 package ch.baunex.controlreport.model
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity
 import ch.baunex.notes.model.NoteModel
 import ch.baunex.project.model.ProjectModel
 import ch.baunex.serialization.LocalDateSerializer
 import ch.baunex.user.model.CustomerModel
 import ch.baunex.user.model.EmployeeModel
+import io.quarkus.hibernate.orm.panache.PanacheEntity
 import jakarta.persistence.*
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
@@ -23,38 +23,42 @@ class ControlReportModel : PanacheEntity() {
     var pageCount: Int = 1
     var currentPage: Int = 1
 
+    // Verknüpfte Entitäten
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_id")
+    @JoinColumn(name = "project_id", nullable = false)
     lateinit var project: ProjectModel
+
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "customer_id", nullable = false)
+//    lateinit var customer: CustomerModel
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "controller_id")
     var employee: EmployeeModel? = null
 
-    // Client information (ehemals project.customer)
-    var clientType: String? = null
-    var clientName: String? = null
-    var clientStreet: String? = null
-    var clientPostalCode: String? = null
-    var clientCity: String? = null
+    // Client information (wird von Customer kopiert)
+//    var clientType: String? = null
+//    var clientName: String? = null
+//    var clientStreet: String? = null
+//    var clientPostalCode: String? = null
+//    var clientCity: String? = null
 
-    // Contractor information
-    var contractorType: String? = ContractorType.CONTROL_ORGAN.displayName
+    // Auftragnehmer (z.B. Kontrollorgan)
+    var contractorType: ContractorType? = ContractorType.CONTROL_ORGAN
     var contractorCompany: String? = null
     var contractorStreet: String? = null
     var contractorPostalCode: String? = null
     var contractorCity: String? = null
 
-    // Installation location
-    var installationStreet: String? = null
-    var installationPostalCode: String? = null
-    var installationCity: String? = null
-    var parcelNumber: String? = null
-    var buildingType: String? = null
+    // Installationsort (wird von Project kopiert)
+//    var installationStreet: String? = null
+//    var installationPostalCode: String? = null
+//    var installationCity: String? = null
+//    var parcelNumber: String? = null
+//    var buildingType: String? = null
 
-    // Control data
+    // Kontrollinformationen
     var controlScope: String? = null
-
     var hasDefects: Boolean = false
     var deadlineNote: String? = null
     var generalNotes: String? = null
@@ -65,11 +69,23 @@ class ControlReportModel : PanacheEntity() {
     @OneToMany(mappedBy = "controlReport", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var notes: MutableList<NoteModel> = mutableListOf()
 
-    // Completion information
+    // Abschlussinformationen
     var defectResolverNote: String? = null
     var completionDate: LocalDateTime? = null
 
-    // Metadata
+    // Metadaten
     var createdAt: LocalDateTime = LocalDateTime.now()
     var updatedAt: LocalDateTime = LocalDateTime.now()
+
+    @PrePersist
+    fun onCreate() {
+        val now = LocalDateTime.now()
+        createdAt = now
+        updatedAt = now
+    }
+
+    @PreUpdate
+    fun onUpdate() {
+        updatedAt = LocalDateTime.now()
+    }
 }

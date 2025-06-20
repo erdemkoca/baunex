@@ -10,5 +10,10 @@ enum class CustomerType(val displayName: String) {
     MAINTENANCE_PROVIDER("Wartungs- oder Servicefirma"),
     TENANT("Endkunde oder Mieter"),
     INSPECTION_BODY("Externe Prüf- oder Kontrollstelle"),
-    UNDEFINED("-")
+    UNDEFINED("-");
+
+    companion object {
+        fun fromDisplayNameOrDefault(name: String?): CustomerType =
+            values().firstOrNull { it.displayName == name } ?: UNDEFINED
+    }
 }

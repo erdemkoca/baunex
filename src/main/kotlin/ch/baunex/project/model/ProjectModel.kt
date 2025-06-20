@@ -40,6 +40,7 @@ class ProjectModel : PanacheEntity() {
 
     var street: String? = null
     var city: String? = null
+    var zipCode: String? = null
 
     // --- RELATIONS ---
 

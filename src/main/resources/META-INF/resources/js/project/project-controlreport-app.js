@@ -175,7 +175,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         client: {
                             type:       this.draft.client.type,
-                            name:       this.draft.client.name,
+                            firstName:       this.draft.client.firstName,
+                            lastName:       this.draft.client.lastName,
                             street:     this.draft.client.street,
                             postalCode: this.draft.client.postalCode,
                             city:       this.draft.client.city,
@@ -288,9 +289,13 @@ document.addEventListener('DOMContentLoaded', () => {
                       </option>
                     </select>
                 </div>
-                <div class="col-md-4">
-                  <label class="form-label fw-bold">Name</label>
-                  <input v-model="draft.client.name" class="form-control" />
+                <div class="col-md-2">
+                  <label class="form-label fw-bold">Vorname</label>
+                  <input v-model="draft.client.firstName" class="form-control" />
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label fw-bold">Nachname</label>
+                  <input v-model="draft.client.lastName" class="form-control" />
                 </div>
                 <div class="col-md-4">
                   <label class="form-label fw-bold">Strasse</label>

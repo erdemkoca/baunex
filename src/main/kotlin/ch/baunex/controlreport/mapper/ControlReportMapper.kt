@@ -5,6 +5,8 @@ import ch.baunex.controlreport.model.ControlReportModel
 import ch.baunex.controlreport.model.DefectPositionModel
 import ch.baunex.notes.mapper.toDto
 import ch.baunex.notes.mapper.toDtoList
+import ch.baunex.project.model.ProjectType
+import ch.baunex.user.model.CustomerType
 import jakarta.enterprise.context.ApplicationScoped
 import java.time.LocalDateTime
 
@@ -17,11 +19,12 @@ class ControlReportMapper {
         pageCount       = m.pageCount,
         currentPage     = m.currentPage,
         client = ClientDto(
-            type       = m.clientType,
-            name       = m.clientName.orEmpty(),
-            street     = m.clientStreet.orEmpty(),
-            postalCode = m.clientPostalCode.orEmpty(),
-            city       = m.clientCity.orEmpty()
+            type       = m.project.customer.customerType,
+            firstName       = m.project.customer.person.firstName,
+            lastName = m.project.customer.person.lastName,
+            street     = m.project.customer.person.details.street,
+            postalCode = m.project.customer.person.details.zipCode,
+            city       = m.project.customer.person.details.city
         ),
         contractor = ContractorDto(
             type       = m.contractorType,
@@ -31,11 +34,11 @@ class ControlReportMapper {
             city       = m.contractorCity.orEmpty()
         ),
         installationLocation = InstallationLocationDto(
-            street       = m.installationStreet.orEmpty(),
-            postalCode   = m.installationPostalCode.orEmpty(),
-            city         = m.installationCity.orEmpty(),
-            buildingType = m.buildingType,
-            parcelNumber = m.parcelNumber
+            street       = m.project.street,
+            postalCode   = m.project.zipCode,
+            city         = m.project.city,
+            buildingType = m.project.buildingType,
+            parcelNumber = m.project.parcelNumber
         ),
         controlScope = m.controlScope,
         controlData = ControlDataDto(
@@ -63,11 +66,12 @@ class ControlReportMapper {
         currentPage     = dto.currentPage
 
         // client
-        clientType      = dto.client.type
-        clientName      = dto.client.name
-        clientStreet    = dto.client.street
-        clientPostalCode = dto.client.postalCode
-        clientCity      = dto.client.city
+        m.project.customer.customerType      = dto.client.type
+        m.project.customer.person.firstName      = dto.client.firstName
+        m.project.customer.person.lastName = dto.client.lastName
+        m.project.customer.person.details.street    = dto.client.street
+        m.project.customer.person.details.zipCode = dto.client.postalCode
+        m.project.customer.person.details.city      = dto.client.city
 
         // contractor
         contractorType      = dto.contractor.type
@@ -77,11 +81,11 @@ class ControlReportMapper {
         contractorCity      = dto.contractor.city
 
         // installation
-        installationStreet     = dto.installationLocation.street
-        installationPostalCode = dto.installationLocation.postalCode
-        installationCity       = dto.installationLocation.city
-        buildingType           = dto.installationLocation.buildingType
-        parcelNumber           = dto.installationLocation.parcelNumber
+        m.project.street     = dto.installationLocation.street
+        m.project.zipCode = dto.installationLocation.postalCode
+        m.project.city       = dto.installationLocation.city
+        m.project.buildingType           = dto.installationLocation.buildingType
+        m.project.parcelNumber           = dto.installationLocation.parcelNumber
 
         // control
         controlScope   = dto.controlScope

@@ -46,26 +46,12 @@ class ControlReportService(
         val model = ControlReportModel().apply {
             this.project = project
 
-            // Initial Client info kopieren
-            this.clientType = project.customer.customerType.displayName
-            this.clientName = customer.person.firstName + " " + customer.person.lastName
-            this.clientStreet = customer.person.details.street
-            this.clientPostalCode = customer.person.details.zipCode
-            this.clientCity = customer.person.details.city
-
             // Auftragnehmer
-            this.contractorType = ContractorType.CONTROL_ORGAN.displayName
+            this.contractorType = ContractorType.CONTROL_ORGAN
             this.contractorCompany = company.name
             this.contractorStreet = company.street
             this.contractorPostalCode = company.zipCode
             this.contractorCity = company.city
-
-            // Installationsort
-            this.installationStreet = customer.person.details.street
-            this.installationPostalCode = customer.person.details.zipCode
-            this.installationCity = customer.person.details.city
-            this.buildingType = project.buildingType.displayName  // falls vorhanden
-            this.parcelNumber = project.parcelNumber ?: ""
 
             // Kontrolle
             this.controlDate = LocalDate.now()

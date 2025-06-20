@@ -89,7 +89,8 @@ class ControlReportServiceTest {
         val dto: ControlReportDto = controlReportService.getOrInitializeByProjectId(savedProject.id!!)
 
         assertNotNull(dto)
-        assertEquals("Max Muster", dto.client.name)
+        assertEquals("Max", dto.client.firstName)
+        assertEquals("Muster", dto.client.lastName)
         assertEquals("Testfirma AG", dto.contractor.company)
         assertEquals("Zürich", dto.contractor.city)
         assertEquals(LocalDate.now(), dto.controlData.controlDate)
