@@ -31,14 +31,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.location.href = `/timetracking/${id}`;
             },
             async deleteEntry(id) {
-                if (confirm('Möchten Sie diesen Eintrag wirklich löschen?')) {
-                    const res = await fetch(`/timetracking/${id}/delete`, { method: 'POST' });
-                    if (res.ok) window.location.reload();
-                    else alert('Fehler beim Löschen des Eintrags');
-                }
+                if (!confirm('Eintrag wirklich löschen?')) return;
+                const res = await fetch(`/timetracking/api/${id}`, { method: 'DELETE' });
+                if (res.ok) window.location.reload();
+                else alert('Fehler beim Löschen des Eintrags');
             },
             async approveEntry(id) {
-                const res = await fetch(`/timetracking/${id}/approve`, { method: 'POST' });
+                const res = await fetch(`/timetracking/api/${id}/approve`, { method: 'POST' });
                 if (res.ok) window.location.reload();
                 else alert('Fehler beim Genehmigen des Eintrags');
             },

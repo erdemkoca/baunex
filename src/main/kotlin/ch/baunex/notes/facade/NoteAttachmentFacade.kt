@@ -39,15 +39,6 @@ class NoteAttachmentFacade {
     }
 
     @Transactional
-    fun linkAttachments(noteId: Long, attachmentIds: List<Long>) {
-        val note = noteRepository.findById(noteId)
-            ?: throw IllegalArgumentException("Note $noteId nicht gefunden")
-        attachmentIds.forEach { attachmentId ->
-            noteAttachmentService.linkAttachmentToNote(note, attachmentId)
-        }
-    }
-
-    @Transactional
     fun deleteAttachment(attachmentId: Long): Boolean =
         noteAttachmentService.deleteAttachment(attachmentId)
 }

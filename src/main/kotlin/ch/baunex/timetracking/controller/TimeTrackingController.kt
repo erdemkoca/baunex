@@ -19,170 +19,75 @@ import kotlinx.serialization.encodeToString
 import org.jboss.logging.Logger
 import org.jboss.resteasy.reactive.RestForm
 import java.io.InputStream
-import java.net.URI
 import java.time.LocalDate
 import ch.baunex.serialization.SerializationUtils.json
-
 
 @Path("/timetracking")
 @ApplicationScoped
 class TimeTrackingController {
 
-    @Inject
-    lateinit var timeTrackingFacade: TimeTrackingFacade
+    @Inject lateinit var timeTrackingFacade: TimeTrackingFacade
+    @Inject lateinit var employeeFacade: EmployeeFacade
+    @Inject lateinit var projectFacade: ProjectFacade
+    @Inject lateinit var catalogFacade: CatalogFacade
+    @Inject lateinit var noteAttachmentFacade: NoteAttachmentFacade
 
-    @Inject
-    lateinit var employeeFacade: EmployeeFacade
+    private val log = Logger.getLogger(TimeTrackingController::class.java)
+    private fun today() = LocalDate.now().toString()
 
-    @Inject
-    lateinit var projectFacade: ProjectFacade
-
-    @Inject
-    lateinit var catalogFacade: CatalogFacade
-
-    @Inject
-    lateinit var noteAttachmentFacade: NoteAttachmentFacade
-
-    private val logger = Logger.getLogger(TimeTrackingController::class.java)
-
-    private fun getCurrentDate(): String = LocalDate.now().toString()
+    //─── HTML ────────────────────────────────────────────────────────────────────
 
     @GET
     @Produces(MediaType.TEXT_HTML)
-    fun viewList(): Response {
-        val entries = timeTrackingFacade.getAllTimeEntries()
-        val employees = employeeFacade.listAll()
-        val projects = projectFacade.getAllProjects()
-        val template = Templates.timeTracking(
-            activeMenu = "timetracking",
+    fun listView(): Response {
+        val entries   = timeTrackingFacade.getAllTimeEntries()
+        val emps      = employeeFacade.listAll()
+        val projs     = projectFacade.getAllProjects()
+        val page = Templates.timeTracking(
+            activeMenu      = "timetracking",
             timeEntriesJson = json.encodeToString(entries),
-            currentDate = getCurrentDate(),
-            employeesJson = json.encodeToString(employees),
-            projectsJson = json.encodeToString(projects),
-            entryJson = ""
+            currentDate     = today(),
+            employeesJson   = json.encodeToString(emps),
+            projectsJson    = json.encodeToString(projs),
+            entryJson       = ""
         )
-        return Response.ok(template.render()).build()
+        return Response.ok(page.render()).build()
     }
 
     @GET
-    @Path("/{id}")
-    @Produces(MediaType.TEXT_HTML)
-    fun form(@PathParam("id") id: Long): Response {
-        val entry = if (id == 0L) null else timeTrackingFacade.getTimeEntryById(id)
-
-        val employees = employeeFacade.listAll()
-        val projects = projectFacade.getAllProjects()
-        val catalogItems = catalogFacade.getAllItems()
-        val categories = NoteCategory.values().toList()
-
-        val template = Templates.timeTrackingForm(
-            entryJson = if (entry != null) json.encodeToString(entry) else "",
-            employeesJson = json.encodeToString(employees),
-            projectsJson = json.encodeToString(projects),
-            currentDate = getCurrentDate(),
-            activeMenu = "timetracking",
-            catalogItemsJson = json.encodeToString(catalogItems),
-            categoriesJson = json.encodeToString(categories)
+    @Path("/{id}") @Produces(MediaType.TEXT_HTML)
+    fun formView(@PathParam ("id") id: Long): Response {
+        val entry       = if (id == 0L) null else timeTrackingFacade.getTimeEntryById(id)
+        val emps        = employeeFacade.listAll()
+        val projs       = projectFacade.getAllProjects()
+        val cats        = catalogFacade.getAllItems()
+        val categories  = NoteCategory.values().toList()
+        val page = Templates.timeTrackingForm(
+            entryJson        = entry?.let { json.encodeToString(it) } ?: "",
+            employeesJson    = json.encodeToString(emps),
+            projectsJson     = json.encodeToString(projs),
+            catalogItemsJson = json.encodeToString(cats),
+            categoriesJson   = json.encodeToString(categories),
+            currentDate      = today(),
+            activeMenu       = "timetracking"
         )
-
-        return Response.ok(template.render()).build()
+        return Response.ok(page.render()).build()
     }
 
+    //─── JSON API ────────────────────────────────────────────────────────────────
     @POST
-    @Path("/save")
-    @Consumes(MediaType.APPLICATION_JSON)
-    fun saveEntry(dto: TimeEntryDTO): Response {
-        val maybeSaved = if (dto.id == null || dto.id == 0L) {
-            timeTrackingFacade.logTime(dto)
-        } else {
-            timeTrackingFacade.updateTimeEntry(dto.id, dto)
-        }
-
-        if (maybeSaved == null) {
-            throw WebApplicationException("Failed to save time entry", 500)
-        }
-
-        return Response.ok(maybeSaved).build()
-    }
-
-    @GET
-    @Path("/{id}/delete")
-    fun deleteHtmlEntry(@PathParam("id") id: Long): Response {
-        timeTrackingFacade.deleteTimeEntry(id)
-        return Response.seeOther(URI.create("/timetracking")).build()
-    }
-
-    @POST
-    @Path("/{id}/approve")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    fun approveHtmlEntry(@PathParam("id") id: Long): Response {
-        val approverId = employeeFacade.findByRole(Role.ADMIN).id
-        timeTrackingFacade.approveEntry(id, approverId)
-        return Response.ok().build()
-    }
-
-    // REST Endpoints remain unchanged
-
-    @GET
-    @Path("/api/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    fun getJson(@PathParam("id") id: Long): Response {
-        val entry = timeTrackingFacade.getTimeEntryById(id)
-        return if (entry != null) Response.ok(entry).build() else Response.status(Response.Status.NOT_FOUND).build()
-    }
-
-    @GET
-    @Path("/api/list")
-    @Produces(MediaType.APPLICATION_JSON)
-    fun getAllJson(): List<TimeEntryDTO> = timeTrackingFacade.getAllTimeEntries()
-
-    @POST
-    @Path("/api/save")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    fun saveJson(dto: TimeEntryDTO): TimeEntryDTO {
-        val saved: TimeEntryDTO = if (dto.id == null || dto.id == 0L) {
-            timeTrackingFacade.logTime(dto)
-        } else {
-            timeTrackingFacade.updateTimeEntry(dto.id, dto)
-        } ?: throw WebApplicationException("Failed to save entry", 500)
-
-        // Attachment-Linking jetzt über saved.timeEntry.notes
-        dto.notes.forEachIndexed { idx, noteDto ->
-            if (noteDto.attachments.isNotEmpty()) {
-                saved.notes.getOrNull(idx)?.let { savedNote ->
-                    noteAttachmentFacade.linkAttachments(
-                        noteId         = savedNote.id!!,
-                        attachmentIds  = noteDto.attachments.map { it.id }
-                    )
-                }
-            }
-        }
-
-        return saved
-    }
-
-    @POST
-    @Path("/api/{id}/delete")
-    @Produces(MediaType.APPLICATION_JSON)
-    fun deleteJson(@PathParam("id") id: Long): Response = try {
-        timeTrackingFacade.deleteTimeEntry(id)
-        Response.ok().build()
-    } catch (e: Exception) {
-        logger.error("Error deleting time entry", e)
-        Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.message).build()
-    }
+    @Path("/api") @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
+    fun createApi(dto: TimeEntryDTO): TimeEntryDTO =
+        timeTrackingFacade.logTime(dto)
 
     @POST
     @Path("/api/{id}/approve")
-    @Produces(MediaType.APPLICATION_JSON)
-    fun approveJson(@PathParam("id") id: Long): Response = try {
-        val approverId = employeeFacade.findByRole(Role.ADMIN).id
-        val success = timeTrackingFacade.approveEntry(id, approverId)
-        if (success) Response.ok().build() else Response.status(Response.Status.NOT_FOUND).build()
-    } catch (e: Exception) {
-        logger.error("Error approving time entry", e)
-        Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.message).build()
+    fun approveApi(@PathParam ("id") id: Long): Response {
+        val adminId = employeeFacade.findByRole(Role.ADMIN).id
+        return if (timeTrackingFacade.approveEntry(id, adminId))
+            Response.noContent().build()
+        else
+            Response.status(Response.Status.NOT_FOUND).build()
     }
 
     @POST
@@ -191,56 +96,24 @@ class TimeTrackingController {
     @Produces(MediaType.APPLICATION_JSON)
     fun uploadAttachment(
         @FormParam("noteId") noteId: Long,
-        @RestForm("file") fileStream: InputStream,
-        @RestForm("file") fileDetails: FileUpload?
+        @RestForm("file") stream: InputStream,
+        @RestForm("file") upload: FileUpload?
     ): Response {
-        if (fileDetails == null) {
+        if (upload == null) {
             return Response.status(Response.Status.BAD_REQUEST)
-                .entity(mapOf("error" to "No file uploaded"))
-                .build()
+                .entity(mapOf("error" to "Missing file")).build()
         }
-
         return try {
             val dto = noteAttachmentFacade.uploadAttachment(
-                noteId,
-                fileStream,
-                fileDetails.fileName()
+                noteId, stream, upload.fileName()
             )
             Response.ok(dto).build()
         } catch (e: IllegalArgumentException) {
             Response.status(Response.Status.NOT_FOUND).build()
         } catch (e: Exception) {
+            log.error("upload error", e)
             Response.serverError()
-                .entity(mapOf("error" to e.message))
-                .build()
+                .entity(mapOf("error" to e.message)).build()
         }
     }
-
-    @DELETE
-    @Path("/api/note-attachment/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    fun deleteAttachment(@PathParam("id") id: Long): Response {
-        noteAttachmentFacade.deleteAttachment(id)
-        return Response.ok().build()
-    }
-
-    @GET
-    @Path("/api/employees")
-    @Produces(MediaType.APPLICATION_JSON)
-    fun getEmployees() = employeeFacade.listAll()
-
-    @GET
-    @Path("/api/projects")
-    @Produces(MediaType.APPLICATION_JSON)
-    fun getProjects() = projectFacade.getAllProjects()
-
-    @GET
-    @Path("/api/catalog-items")
-    @Produces(MediaType.APPLICATION_JSON)
-    fun getCatalogItems() = catalogFacade.getAllItems()
-
-    @GET
-    @Path("/api/note-categories")
-    @Produces(MediaType.APPLICATION_JSON)
-    fun getNoteCategories() = NoteCategory.values().toList()
 }
