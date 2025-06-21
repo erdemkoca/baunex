@@ -27,9 +27,6 @@ class EmployeeModel : PanacheEntityBase() {
     @Column(nullable = false)
     lateinit var passwordHash: String
 
-    @Column(nullable = true)
-    var refreshToken: String? = null
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     lateinit var role: Role
@@ -42,6 +39,9 @@ class EmployeeModel : PanacheEntityBase() {
 
     @Column(nullable = false)
     var hourlyRate: Double = 150.0
+
+    @Column(nullable = false)
+    var plannedWeeklyHours: Double = 42.5
 
     @Contextual
     @Column(nullable = false, updatable = false)

@@ -21,6 +21,10 @@ import org.jboss.resteasy.reactive.RestForm
 import java.io.InputStream
 import java.time.LocalDate
 import ch.baunex.serialization.SerializationUtils.json
+import ch.baunex.timetracking.dto.HolidayApprovalDTO
+import ch.baunex.timetracking.dto.HolidayDTO
+import ch.baunex.timetracking.facade.HolidayFacade
+import ch.baunex.web.WebController
 
 @Path("/timetracking")
 @ApplicationScoped
@@ -31,6 +35,7 @@ class TimeTrackingController {
     @Inject lateinit var projectFacade: ProjectFacade
     @Inject lateinit var catalogFacade: CatalogFacade
     @Inject lateinit var noteAttachmentFacade: NoteAttachmentFacade
+    @Inject lateinit var holidayFacade: HolidayFacade
 
     private val log = Logger.getLogger(TimeTrackingController::class.java)
     private fun today() = LocalDate.now().toString()
@@ -43,9 +48,11 @@ class TimeTrackingController {
         val entries   = timeTrackingFacade.getAllTimeEntries()
         val emps      = employeeFacade.listAll()
         val projs     = projectFacade.getAllProjects()
+        val holidays  = holidayFacade.getAllHolidays()
         val page = Templates.timeTracking(
             activeMenu      = "timetracking",
             timeEntriesJson = json.encodeToString(entries),
+            holidaysJson     = json.encodeToString(holidays),
             currentDate     = today(),
             employeesJson   = json.encodeToString(emps),
             projectsJson    = json.encodeToString(projs),
@@ -116,4 +123,39 @@ class TimeTrackingController {
                 .entity(mapOf("error" to e.message)).build()
         }
     }
+
+
+    //─── Holiday JSON API ────────────────────────────────────────────────────────────────
+
+    @GET
+    @Path("/api/holidays")
+    @Produces(MediaType.APPLICATION_JSON)
+    fun getAllHolidays(): List<HolidayDTO> =
+        holidayFacade.getAllHolidays()
+
+    @GET
+    @Path("/api/holidays/employee/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    fun getHolidaysForEmployee(@PathParam("id") employeeId: Long): List<HolidayDTO> =
+        holidayFacade.getHolidaysForEmployee(employeeId)
+
+    @POST
+    @Path("/api/holidays")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    fun requestHoliday(dto: HolidayDTO): HolidayDTO =
+        holidayFacade.requestHoliday(dto)
+
+    @POST
+    @Path("/api/holidays/{id}/approve")
+    @Consumes(MediaType.APPLICATION_JSON)
+    fun approveHoliday(
+        @PathParam("id") holidayId: Long,
+        dto: HolidayApprovalDTO
+    ): Response {
+        val updated = holidayFacade.approveHoliday(dto)
+        return if (updated != null) Response.ok(updated).build()
+        else Response.status(Response.Status.NOT_FOUND).build()
+    }
+
 }

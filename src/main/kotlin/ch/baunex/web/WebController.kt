@@ -158,6 +158,7 @@ class WebController {
         external fun timeTracking(
             activeMenu: String,
             timeEntriesJson: String,
+            holidaysJson: String,
             currentDate: String,
             employeesJson: String,
             projectsJson: String,
