@@ -24,7 +24,9 @@ import ch.baunex.serialization.SerializationUtils.json
 import ch.baunex.timetracking.dto.HolidayApprovalDTO
 import ch.baunex.timetracking.dto.HolidayDTO
 import ch.baunex.timetracking.facade.HolidayFacade
-import ch.baunex.web.WebController
+import ch.baunex.timetracking.service.WorkSummaryService
+import ch.baunex.timetracking.dto.EmployeeDailyWorkDTO
+import ch.baunex.timetracking.dto.WeeklyWorkSummaryDTO
 
 @Path("/timetracking")
 @ApplicationScoped
@@ -36,6 +38,7 @@ class TimeTrackingController {
     @Inject lateinit var catalogFacade: CatalogFacade
     @Inject lateinit var noteAttachmentFacade: NoteAttachmentFacade
     @Inject lateinit var holidayFacade: HolidayFacade
+    @Inject lateinit var workSummaryService: WorkSummaryService
 
     private val log = Logger.getLogger(TimeTrackingController::class.java)
     private fun today() = LocalDate.now().toString()
@@ -156,6 +159,54 @@ class TimeTrackingController {
         val updated = holidayFacade.approveHoliday(dto)
         return if (updated != null) Response.ok(updated).build()
         else Response.status(Response.Status.NOT_FOUND).build()
+    }
+
+    //─── Work Summary JSON API ────────────────────────────────────────────────────────────────
+
+    @GET
+    @Path("/api/summary/daily")
+    @Produces(MediaType.APPLICATION_JSON)
+    fun getDailyWorkSummary(
+        @QueryParam("employeeId") employeeId: Long?,
+        @QueryParam("from") from: String,
+        @QueryParam("to") to: String
+    ): List<EmployeeDailyWorkDTO> {
+        val fromDate = LocalDate.parse(from)
+        val toDate = LocalDate.parse(to)
+        
+        return if (employeeId != null) {
+            workSummaryService.getDailyWorkSummary(employeeId, fromDate, toDate)
+        } else {
+            workSummaryService.getAllEmployeesDailyWorkSummary(fromDate, toDate)
+        }
+    }
+
+    @GET
+    @Path("/api/summary/weekly")
+    @Produces(MediaType.APPLICATION_JSON)
+    fun getWeeklyWorkSummary(
+        @QueryParam("employeeId") employeeId: Long?,
+        @QueryParam("year") year: Int,
+        @QueryParam("week") week: Int
+    ): List<WeeklyWorkSummaryDTO> {
+        return if (employeeId != null) {
+            val summary = workSummaryService.getWeeklyWorkSummary(employeeId, year, week)
+            if (summary != null) listOf(summary) else emptyList()
+        } else {
+            workSummaryService.getAllEmployeesWeeklyWorkSummary(year, week)
+        }
+    }
+
+    @GET
+    @Path("/api/summary/expected-hours")
+    @Produces(MediaType.APPLICATION_JSON)
+    fun getExpectedHours(
+        @QueryParam("employeeId") employeeId: Long,
+        @QueryParam("date") date: String
+    ): Map<String, Double> {
+        val localDate = LocalDate.parse(date)
+        val expectedHours = workSummaryService.calculateExpectedHours(employeeId, localDate)
+        return mapOf("expectedHours" to expectedHours)
     }
 
 }
