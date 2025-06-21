@@ -13,7 +13,8 @@ data class HolidayDTO(
     val startDate: LocalDate,
     @Serializable(with = LocalDateSerializer::class)
     val endDate: LocalDate,
-    val type: String, // "PAID_VACATION", "SICK_LEAVE", etc.
+    val type: String,
     val reason: String? = null,
-    val status: String = "PENDING"  // optional default for response
+    val status: String = "PENDING",
+    val approval: ApprovalDTO = ApprovalDTO()
 )

@@ -3,11 +3,16 @@ import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
 document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('time-tracking-list-app');
     const timeEntries = JSON.parse(el.dataset.timeEntries || '[]');
+    const holidays = JSON.parse(el.dataset.holidays || '[]');
+    const employees = JSON.parse(el.dataset.employees || '[]');
 
     createApp({
         data() {
             return {
                 timeEntries,
+                holidays,
+                employees,
+                selectedEmployeeId: employees[0]?.id || null,
                 selectedStatus: 'ALL',
                 statuses: {
                     ALL: { label: 'Alle', color: 'secondary', icon: 'bi-list-ul' },
@@ -18,12 +23,13 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         computed: {
             filteredEntries() {
-                if (this.selectedStatus === 'ALL') return this.timeEntries;
-                return this.timeEntries.filter(entry =>
-                    this.selectedStatus === 'APPROVED'
-                        ? entry.approval.approved
-                        : !entry.approval.approved
-                );
+                let filtered = this.timeEntries.filter(e => e.employeeId === this.selectedEmployeeId);
+                if (this.selectedStatus === 'APPROVED') return filtered.filter(e => e.approval.approved);
+                if (this.selectedStatus === 'PENDING') return filtered.filter(e => !e.approval.approved);
+                return filtered;
+            },
+            filteredHolidays() {
+                return this.holidays.filter(h => h.employeeId === this.selectedEmployeeId);
             }
         },
         methods: {
@@ -51,6 +57,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 <a href="/timetracking/0" class="btn btn-primary">
                     <i class="bi bi-plus-circle me-2"></i>Zeit erfassen
                 </a>
+
+                <select v-model="selectedEmployeeId" class="form-select w-auto">
+                    <option v-for="emp in employees" :value="emp.id" :key="emp.id">
+                        {{ emp.firstName }} {{ emp.lastName }}
+                    </option>
+                </select>
             </div>
 
             <!-- Status Filter -->
@@ -65,6 +77,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         {{ status.label }}
                     </button>
                 </div>
+            </div>
+            
+            <!-- Holiday Info -->
+            <div v-if="filteredHolidays.length > 0" class="alert alert-info">
+                <strong>Abwesenheiten:</strong>
+                <ul class="mb-0">
+                    <li v-for="holiday in filteredHolidays" :key="holiday.id">
+                        {{ formatDate(holiday.startDate) }} bis {{ formatDate(holiday.endDate) }} – {{ holiday.type }}
+                        <span v-if="holiday.reason">({{ holiday.reason }})</span>
+                    </li>
+                </ul>
             </div>
 
             <div class="card">
@@ -239,6 +262,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
         </div>
-    `
+        `
     }).mount(el);
 });

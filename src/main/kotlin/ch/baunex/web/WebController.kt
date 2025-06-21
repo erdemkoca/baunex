@@ -162,7 +162,7 @@ class WebController {
             currentDate: String,
             employeesJson: String,
             projectsJson: String,
-            entryJson: String //TODO maybe just timeEntriesJson is needed, the rest can be deleted
+            entryJson: String
         ): TemplateInstance
 
         @JvmStatic

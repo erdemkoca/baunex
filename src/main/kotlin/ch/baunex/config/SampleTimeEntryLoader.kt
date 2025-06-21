@@ -2,9 +2,13 @@ package ch.baunex.config
 
 import ch.baunex.notes.dto.NoteDto
 import ch.baunex.notes.model.NoteCategory
+import ch.baunex.timetracking.dto.ApprovalDTO
+import ch.baunex.timetracking.dto.HolidayDTO
 import ch.baunex.timetracking.dto.TimeEntryCatalogItemDTO
 import ch.baunex.timetracking.dto.TimeEntryDTO
+import ch.baunex.timetracking.facade.HolidayFacade
 import ch.baunex.timetracking.facade.TimeTrackingFacade
+import ch.baunex.timetracking.model.HolidayType
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -15,6 +19,9 @@ class SampleTimeEntryLoader {
 
     @Inject
     lateinit var timeTrackingFacade: TimeTrackingFacade
+
+    @Inject
+    lateinit var holidayFacade: HolidayFacade
 
     @Transactional
     fun load() {
@@ -507,5 +514,36 @@ class SampleTimeEntryLoader {
 
         // Alle Sample-Einträge speichern
         sampleEntries.forEach { timeTrackingFacade.logTime(it) }
+
+        val holidays = listOf(
+            HolidayDTO(
+                id = null,
+                employeeId = 1,
+                startDate = today.minusDays(14),
+                endDate = today.minusDays(10),
+                type = HolidayType.PAID_VACATION.name,
+                reason = "Ferien in Italien",
+                approval = ApprovalDTO(
+                    approved = true,
+                    approverId = 1,
+                    approverName = "Admin"
+                )
+            ),
+            HolidayDTO(
+                id = null,
+                employeeId = 2,
+                startDate = today.minusDays(3),
+                endDate = today.minusDays(2),
+                type = HolidayType.UNPAID_LEAVE.name,
+                reason = "Umzug",
+                approval = ApprovalDTO(
+                    approved = false,
+                    approverId = null,
+                    approverName = null
+                )
+            )
+        )
+
+        holidays.forEach { holidayFacade.requestHoliday(it) }
     }
 }
