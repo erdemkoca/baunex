@@ -5,8 +5,17 @@ import ch.baunex.documentGenerator.pdf.core.HtmlToPdfConverter
 import com.vladsch.flexmark.parser.Parser
 import com.vladsch.flexmark.html.HtmlRenderer
 import com.vladsch.flexmark.util.data.MutableDataSet
+import net.codecrete.qrbill.canvas.PDFCanvas
 import java.time.format.DateTimeFormatter
 import org.jboss.logging.Logger
+import net.codecrete.qrbill.generator.Address
+import net.codecrete.qrbill.generator.Bill
+import net.codecrete.qrbill.generator.BillFormat
+import net.codecrete.qrbill.generator.GraphicsFormat
+import net.codecrete.qrbill.generator.Language
+import net.codecrete.qrbill.generator.OutputSize
+import net.codecrete.qrbill.generator.QRBill
+import java.math.BigDecimal
 
 object InvoiceHtmlBuilder {
     private val logger = Logger.getLogger(InvoiceHtmlBuilder::class.java)
@@ -23,7 +32,48 @@ object InvoiceHtmlBuilder {
     fun render(doc: InvoiceDocumentModel): ByteArray {
         val html = buildHtml(doc)
         logger.debug("Invoice HTML length=${html.length}")
-        return HtmlToPdfConverter.convert(html)
+        val pdf = HtmlToPdfConverter.convert(html)
+        return generateQR(pdf, doc)
+    }
+
+    fun generateQR(pdf: ByteArray, doc: InvoiceDocumentModel): ByteArray {
+
+        val creditor = Address().apply {
+            name = doc.companyName
+            street = doc.companyAddress
+            postalCode = doc.companyZip
+            town = doc.companyCity
+            countryCode = "CH"
+        }
+
+        // 2) Debtor (customer)
+        val debtor = Address().apply {
+            name = doc.customerName
+            street = doc.customerAddress
+            postalCode = doc.customerZip?: "4053"
+            town = doc.customerCity?: "Basel"
+            countryCode = "CH"
+        }
+        val format = BillFormat().apply {
+            graphicsFormat = GraphicsFormat.SVG
+            outputSize = OutputSize.QR_BILL_ONLY
+            language = Language.DE
+        }
+
+        // 3) Fill Bill
+        val bill = Bill().apply {
+            this.creditor = creditor
+            this.debtor = debtor
+            this.amount = BigDecimal.valueOf(doc.totalBrutto)
+            this.currency = "CHF"
+            this.account = "CH9300762011623852957"
+            this.unstructuredMessage = "Rechnung: ${doc.invoiceNumber}"
+            this.format = format
+        }
+
+        val canvas = PDFCanvas(pdf, PDFCanvas.NEW_PAGE_AT_END)
+        QRBill.draw(bill,canvas)
+        return canvas.toByteArray()
     }
 
     private fun buildHtml(doc: InvoiceDocumentModel): String {
