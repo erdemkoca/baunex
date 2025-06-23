@@ -2,42 +2,106 @@ package ch.baunex.documentGenerator.pdf.invoice
 
 import ch.baunex.documentGenerator.model.InvoiceDocumentModel
 import ch.baunex.documentGenerator.pdf.core.HtmlToPdfConverter
-import com.vladsch.flexmark.parser.Parser
 import com.vladsch.flexmark.html.HtmlRenderer
+import com.vladsch.flexmark.parser.Parser
 import com.vladsch.flexmark.util.data.MutableDataSet
+import java.math.BigDecimal
 import java.time.format.DateTimeFormatter
+import java.util.Base64
+import net.codecrete.qrbill.generator.Address
+import net.codecrete.qrbill.generator.Bill
+import net.codecrete.qrbill.generator.BillFormat
+import net.codecrete.qrbill.generator.GraphicsFormat
+import net.codecrete.qrbill.generator.Language
+import net.codecrete.qrbill.generator.OutputSize
+import net.codecrete.qrbill.generator.QRBill
 import org.jboss.logging.Logger
 
 object InvoiceHtmlBuilder {
-    private val logger = Logger.getLogger(InvoiceHtmlBuilder::class.java)
+  private val logger = Logger.getLogger(InvoiceHtmlBuilder::class.java)
 
-    private val flexmarkOptions = MutableDataSet().apply {
-        set(HtmlRenderer.SOFT_BREAK, "<br/>")
-        set(HtmlRenderer.ESCAPE_HTML, false)
-        set(HtmlRenderer.HARD_BREAK, "<br/>")
-    }
-    private val parser   = Parser.builder(flexmarkOptions).build()
-    private val renderer = HtmlRenderer.builder(flexmarkOptions).build()
-    private val dateFmt  = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+  private val flexmarkOptions =
+          MutableDataSet().apply {
+            set(HtmlRenderer.SOFT_BREAK, "<br/>")
+            set(HtmlRenderer.ESCAPE_HTML, false)
+            set(HtmlRenderer.HARD_BREAK, "<br/>")
+          }
+  private val parser = Parser.builder(flexmarkOptions).build()
+  private val renderer = HtmlRenderer.builder(flexmarkOptions).build()
+  private val dateFmt = DateTimeFormatter.ofPattern("dd.MM.yyyy")
 
-    fun render(doc: InvoiceDocumentModel): ByteArray {
-        val html = buildHtml(doc)
-        logger.debug("Invoice HTML length=${html.length}")
-        return HtmlToPdfConverter.convert(html)
-    }
+  fun render(doc: InvoiceDocumentModel): ByteArray {
+    val html = buildHtml(doc)
+    logger.debug("Invoice HTML length=${html.length}")
+    val pdf = HtmlToPdfConverter.convert(html)
+    return pdf
+  }
 
-    private fun buildHtml(doc: InvoiceDocumentModel): String {
-        logger.info("Building HTML for invoice ${doc.id}")
+  fun generateQR(doc: InvoiceDocumentModel): ByteArray {
 
-        val headerHtml = doc.headerMarkdown?.let { renderer.render(parser.parse(it)) } ?: ""
-        val footerHtml = doc.footerMarkdown?.let { renderer.render(parser.parse(it)) } ?: ""
+    val creditor =
+            Address().apply {
+              name = doc.companyName
+              street = doc.companyAddress
+              postalCode = doc.companyZip
+              town = doc.companyCity
+              countryCode = "CH"
+            }
 
-        val logoPath = doc.companyLogo
-            ?.let { if (it.startsWith("/")) it else "/$it" }
-            ?.trimStart('/') ?: ""
+    // 2) Debtor (customer)
+    val debtor =
+            Address().apply {
+              name = doc.customerName
+              street = doc.customerAddress
+              postalCode = doc.customerZip ?: "4053"
+              town = doc.customerCity ?: "Basel"
+              countryCode = "CH"
+            }
+    val format =
+            BillFormat().apply {
+              graphicsFormat = GraphicsFormat.PNG
+              outputSize = OutputSize.QR_BILL_ONLY
+              language = Language.DE
+            }
 
-        // Sender und Empfänger
-        val sender = """
+    // 3) Fill Bill
+    val bill =
+            Bill().apply {
+              this.creditor = creditor
+              this.debtor = debtor
+              this.amount = BigDecimal.valueOf(doc.totalBrutto)
+              this.currency = "CHF"
+              this.account = "CH9300762011623852957"
+              this.unstructuredMessage = "Rechnung: ${doc.invoiceNumber}"
+              this.format = format
+            }
+
+    return QRBill.generate(bill)
+  }
+
+  private fun buildHtml(doc: InvoiceDocumentModel): String {
+    logger.info("Building HTML for invoice ${doc.id}")
+
+    val headerHtml = doc.headerMarkdown?.let { renderer.render(parser.parse(it)) } ?: ""
+    val footerHtml = doc.footerMarkdown?.let { renderer.render(parser.parse(it)) } ?: ""
+
+    val logoPath =
+            doc.companyLogo?.let { if (it.startsWith("/")) it else "/$it" }?.trimStart('/') ?: ""
+
+    // Generate QR code and convert to base64
+    val qrCodeBase64 =
+            try {
+              val qrBytes = generateQR(doc)
+              val base64 = Base64.getEncoder().encodeToString(qrBytes)
+              "data:image/svg;base64,$base64"
+            } catch (e: Exception) {
+              logger.warn("Failed to generate QR code: ${e.message}")
+              ""
+            }
+
+    // Sender und Empfänger
+    val sender =
+            """
           <div class="sender">
             <p>${doc.companyName.orEmpty()}</p>
             <p>${doc.companyAddress.orEmpty()}</p>
@@ -47,7 +111,8 @@ object InvoiceHtmlBuilder {
           </div>
         """.trimIndent()
 
-        val recipient = """
+    val recipient =
+            """
           <div class="recipient">
             <p><strong>Rechnung an:</strong></p>
             <p>${doc.customerName}</p>
@@ -56,9 +121,10 @@ object InvoiceHtmlBuilder {
           </div>
         """.trimIndent()
 
-        // Titel und Metadata
-        val title = "<h2>Rechnung ${doc.invoiceNumber.orEmpty()}</h2>"
-        val metadata = """
+    // Titel und Metadata
+    val title = "<h2>Rechnung ${doc.invoiceNumber.orEmpty()}</h2>"
+    val metadata =
+            """
           <div class="metadata">
             <p>${doc.companyCity.orEmpty()}, ${doc.invoiceDate?.format(dateFmt).orEmpty()}</p>
             <p>Kunden-Nr.: ${doc.customerId.orEmpty()}</p>
@@ -68,10 +134,11 @@ object InvoiceHtmlBuilder {
           </div>
         """.trimIndent()
 
-        fun buildTable(type: String, title: String): String {
-            val items = doc.entries.filter { it.type == type }
-            if (items.isEmpty()) return ""
-            val rows = items.joinToString("") { e ->
+    fun buildTable(type: String, title: String): String {
+      val items = doc.entries.filter { it.type == type }
+      if (items.isEmpty()) return ""
+      val rows =
+              items.joinToString("") { e ->
                 val total = e.total ?: 0.0
                 """
                 <tr>
@@ -81,9 +148,9 @@ object InvoiceHtmlBuilder {
                   <td class="text-right">${"%.2f".format(total)} CHF</td>
                 </tr>
                 """
-            }
-            val sum = items.sumOf { it.total ?: 0.0 }
-            return """
+              }
+      val sum = items.sumOf { it.total ?: 0.0 }
+      return """
               <h4>$title</h4>
               <table class="items">
                 <thead>
@@ -105,16 +172,17 @@ object InvoiceHtmlBuilder {
                 </tfoot>
               </table>
             """.trimIndent()
-        }
+    }
 
-        val serviceTable  = buildTable("VA", "Leistungen")
-        val materialTable = buildTable("IC", "Material")
+    val serviceTable = buildTable("VA", "Leistungen")
+    val materialTable = buildTable("IC", "Material")
 
-        // Summen-Tabelle (Brutto, MwSt, Netto-Total)
-        val net   = doc.totalNetto
-        val vat   = doc.vatAmount
-        val gross = doc.totalBrutto
-        val totalsTable = """
+    // Summen-Tabelle (Brutto, MwSt, Netto-Total)
+    val net = doc.totalNetto
+    val vat = doc.vatAmount
+    val gross = doc.totalBrutto
+    val totalsTable =
+            """
           <table class="totals">
             <tr><td>Brutto:</td><td class="text-right">${"%.2f".format(gross)} CHF</td></tr>
             <tr><td>MwSt (${doc.vatRate ?: 0.0}%):</td><td class="text-right">${"%.2f".format(vat)} CHF</td></tr>
@@ -122,17 +190,50 @@ object InvoiceHtmlBuilder {
           </table>
         """.trimIndent()
 
-        // AGB und Zahlungsinfo
-        val termsHtml = doc.terms?.let { renderer.render(parser.parse(it)) } ?: ""
-        val payHtml   = doc.footer?.let { renderer.render(parser.parse(it)) } ?: ""
-        val agbSection = if (termsHtml.isNotBlank()) """
-          <div class="notes"><h4>AGB</h4>$termsHtml</div>
-        """ else ""
-        val paySection = if (payHtml.isNotBlank()) """
-          <div class="notes"><h4>Zahlungsinformationen</h4>$payHtml</div>
-        """ else ""
+    // AGB und Zahlungsinfo
+    val termsHtml = doc.terms?.let { renderer.render(parser.parse(it)) } ?: ""
+    val payHtml = doc.footer?.let { renderer.render(parser.parse(it)) } ?: ""
+    val agbSection =
+            if (termsHtml.isNotBlank())
+                    """
+          <div class="footer-block">
+            <h4>AGB</h4>
+            $termsHtml
+          </div>
+        """
+            else ""
+    val paySection =
+            if (payHtml.isNotBlank())
+                    """
+          <div class="footer-block">
+            <h4>Zahlungsinformationen</h4>
+            $payHtml
+          </div>
+        """
+            else ""
 
-        return """
+    val qrCodeHtml =
+            if (qrCodeBase64.isNotEmpty())
+                    """
+        <div class="qr-container">
+          <img class="qr-code-slip" src="$qrCodeBase64" alt="QR-Rechnung" />
+        </div>
+        """
+            else ""
+
+    val secondPageHtml =
+            if (agbSection.isNotBlank() || paySection.isNotBlank() || qrCodeHtml.isNotBlank())
+                    """
+        <div class="second-page">
+            $agbSection
+            <hr class="footer-separator" />
+            $paySection
+            $qrCodeHtml
+        </div>
+    """
+            else ""
+
+    return """
           <!DOCTYPE html>
           <html xmlns="http://www.w3.org/1999/xhtml">
           <head>
@@ -206,6 +307,29 @@ object InvoiceHtmlBuilder {
 
               .notes { clear: both; margin-top: 10px; font-size: 10pt; }
               .notes h4 { margin-bottom: 4px; }
+
+              .second-page {
+                page-break-before: always;
+              }
+              .footer-block h4 {
+                  font-weight: bold;
+                  font-size: 14pt;
+                  margin-top: 20px;
+                  margin-bottom: 10px;
+              }
+              hr.footer-separator {
+                  border: none;
+                  height: 2px;
+                  background-color: #333;
+                  margin: 20px 0;
+              }
+              .qr-container {
+                  margin-top: 20px;
+              }
+              .qr-code-slip {
+                  width: 100%;
+                  height: auto;
+              }
             </style>
           </head>
           <body>
@@ -222,10 +346,9 @@ object InvoiceHtmlBuilder {
             $serviceTable
             $materialTable
             $totalsTable
-            $agbSection
-            $paySection
+            $secondPageHtml
           </body>
           </html>
         """.trimIndent()
-    }
+  }
 }
