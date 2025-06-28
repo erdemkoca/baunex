@@ -41,12 +41,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const weekStart = this.getWeekStartDate(this.currentYear, this.currentWeek);
                 const days = [];
                 
+                console.log('=== CALENDAR DEBUG ===');
+                console.log('Week start:', weekStart);
+                console.log('Daily summaries from backend:', this.dailySummaries);
+                
                 // Add all 7 days of the week
                 for (let i = 0; i < 7; i++) {
                     const date = new Date(weekStart);
                     date.setDate(weekStart.getDate() + i);
-                    const dateStr = date.toISOString().split('T')[0];
+                    const dateStr = this.toLocalDateString(date);
                     const summary = this.dailySummaries.find(s => s.date === dateStr);
+                    
+                    console.log(`Day ${i}: ${dateStr} - Found summary:`, summary);
+                    
                     days.push({
                         date: date,
                         dateStr: dateStr,
@@ -55,6 +62,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         summary: summary
                     });
                 }
+                
+                console.log('Final calendar days:', days);
+                console.log('=== END CALENDAR DEBUG ===');
                 
                 return days;
             },
@@ -94,11 +104,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 return 25;
             },
             getWeekStartDate(year, week) {
-                const firstDayOfYear = new Date(year, 0, 1);
-                const days = (week - 1) * 7;
-                const weekStart = new Date(firstDayOfYear);
-                weekStart.setDate(firstDayOfYear.getDate() + days - firstDayOfYear.getDay() + 1);
-                return weekStart;
+                // ISO-8601: Woche 1 ist die mit dem ersten Donnerstag des Jahres
+                const simple = new Date(year, 0, 1 + (week - 1) * 7);
+                const dow = simple.getDay();
+                const ISOweekStart = new Date(simple);
+                if (dow <= 4)
+                    ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+                else
+                    ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+                return ISOweekStart;
             },
             getDayName(dayIndex) {
                 const days = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
@@ -113,13 +127,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     const weekEnd = new Date(weekStart);
                     weekEnd.setDate(weekStart.getDate() + 6);
                     
-                    const from = weekStart.toISOString().split('T')[0];
-                    const to = weekEnd.toISOString().split('T')[0];
+                    const from = this.toLocalDateString(weekStart);
+                    const to = this.toLocalDateString(weekEnd);
+                    
+                    console.log('=== LOAD DAILY SUMMARIES DEBUG ===');
+                    console.log('Week start:', weekStart);
+                    console.log('Week end:', weekEnd);
+                    console.log('From:', from);
+                    console.log('To:', to);
                     
                     const res = await fetch(`/timetracking/api/summary/daily?employeeId=${this.selectedEmployeeId}&from=${from}&to=${to}`);
                     if (res.ok) {
                         this.dailySummaries = await res.json();
+                        console.log('Backend response:', this.dailySummaries);
                     }
+                    console.log('=== END LOAD DAILY SUMMARIES DEBUG ===');
                 } catch (error) {
                     console.error('Error loading daily summaries:', error);
                 } finally {
@@ -208,6 +230,12 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             onEmployeeChange() {
                 this.onWeekChange();
+            },
+            toLocalDateString(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
             }
         },
         watch: {
