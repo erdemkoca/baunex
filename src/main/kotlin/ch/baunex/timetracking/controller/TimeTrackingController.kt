@@ -56,6 +56,7 @@ class TimeTrackingController {
             activeMenu      = "timetracking",
             timeEntriesJson = json.encodeToString(entries),
             holidaysJson     = json.encodeToString(holidays),
+            //TODO give weeklyhours instead of giving all timeentries. not to handle this in frontend. use TimeTrackingAnalysisService
             currentDate     = today(),
             employeesJson   = json.encodeToString(emps),
             projectsJson    = json.encodeToString(projs),

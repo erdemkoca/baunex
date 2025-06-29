@@ -24,6 +24,7 @@ class TimeEntryMapper @Inject constructor(
             employeeId          = entry.employee.id!!,
             projectId           = entry.project.id!!,
             date                = entry.date,
+            startTime = entry.startTime,
             hoursWorked         = entry.hoursWorked,
             title               = entry.title,
             notes               = entry.notes.map { nm ->

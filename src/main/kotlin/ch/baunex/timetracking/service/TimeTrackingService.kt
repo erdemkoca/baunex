@@ -35,7 +35,9 @@ class TimeTrackingService @Inject constructor(
             this.employee    = employee
             this.project     = project
             this.date        = dto.date
+            this.startTime = dto.startTime
             this.hoursWorked = dto.hoursWorked
+            this.endTime = startTime.plusHours(hoursWorked.toLong())
             this.hourlyRate  = dto.hourlyRate ?: employee.hourlyRate
             this.billable    = dto.billable
             this.invoiced    = dto.invoiced
@@ -113,7 +115,9 @@ class TimeTrackingService @Inject constructor(
             this.employee = employee
             this.project = project
             this.date = dto.date
+            this.startTime = dto.startTime
             this.hoursWorked = dto.hoursWorked
+            this.endTime = startTime.plusHours(hoursWorked.toLong())
             this.title    = dto.title
             this.hourlyRate = dto.hourlyRate ?: employee.hourlyRate
             this.billable = dto.billable

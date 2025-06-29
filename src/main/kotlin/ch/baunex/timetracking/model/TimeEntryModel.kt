@@ -7,6 +7,8 @@ import ch.baunex.user.model.EmployeeModel
 import io.quarkus.hibernate.orm.panache.PanacheEntity
 import jakarta.persistence.*
 import java.time.LocalDate
+import java.time.LocalTime
+
 //TODO Change from String to LocalDate
 
 @Entity
@@ -26,6 +28,12 @@ class TimeEntryModel : PanacheEntity() {
 
     @Column(nullable = false)
     lateinit var date: LocalDate
+
+    @Column(nullable = false)
+    lateinit var startTime: LocalTime
+
+    @Column(nullable = false)
+    lateinit var endTime: LocalTime
 
     @Column(name = "hours_worked", nullable = false)
     var hoursWorked: Double = 0.0

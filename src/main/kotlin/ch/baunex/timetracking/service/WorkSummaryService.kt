@@ -33,10 +33,11 @@ class WorkSummaryService @Inject constructor(
         if (date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY) {
             return 0.0
         }
-        
+            //TODO add if its a holiday, subtract the hours from holiday
+
         // For now, use 8 hours per day as default
         // TODO: Could be enhanced with employee-specific contracts or public holiday detection
-        return 8.0
+        return employee.plannedDailyHours
     }
 
     /**
