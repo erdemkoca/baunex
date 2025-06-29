@@ -34,7 +34,7 @@ class SampleTimeEntryLoader {
                 employeeId         = 1,
                 projectId          = 1,
                 date               = today.minusDays(7),
-                startTime = LocalTime.of(8, 0),
+                startTime = LocalTime.of(8, 0), endTime = LocalTime.of(10, 0),
                 hoursWorked        = 4.0,
                 title              = "Notfall-Einsatz Serverraum",  // hier übernehmen wir den Note-Titel
                 notes              = listOf(
@@ -98,7 +98,7 @@ class SampleTimeEntryLoader {
                 employeeId         = 2,
                 projectId          = 2,
                 date               = today.minusDays(6),
-                startTime = LocalTime.of(8, 0),
+                startTime = LocalTime.of(8, 0), endTime = LocalTime.of(10, 0),
                 hoursWorked        = 8.0,
                 title              = "Verteilerschrank Montage",
                 notes              = listOf(
@@ -169,7 +169,7 @@ class SampleTimeEntryLoader {
                 employeeId         = 3,
                 projectId          = 1,
                 date               = today.minusDays(5),
-                startTime = LocalTime.of(8, 0),
+                startTime = LocalTime.of(8, 0), endTime = LocalTime.of(10, 0),
                 hoursWorked        = 6.0,
                 title              = "Fehlerbehebung Feiertag",
                 notes              = listOf(
@@ -226,7 +226,7 @@ class SampleTimeEntryLoader {
                 employeeId         = 1,
                 projectId          = 2,
                 date               = today.minusDays(4),
-                startTime = LocalTime.of(8, 0),
+                startTime = LocalTime.of(8, 0), endTime = LocalTime.of(10, 0),
                 hoursWorked        = 6.0,
                 title              = "Warten auf Materialien",
                 notes              = listOf(
@@ -283,7 +283,7 @@ class SampleTimeEntryLoader {
                 employeeId         = 2,
                 projectId          = 1,
                 date               = today.minusDays(3),
-                startTime = LocalTime.of(8, 0),
+                startTime = LocalTime.of(8, 0), endTime = LocalTime.of(10, 0),
                 hoursWorked        = 10.0,
                 title              = "Netzwerkverkabelung",
                 notes              = listOf(
@@ -347,7 +347,7 @@ class SampleTimeEntryLoader {
                 employeeId         = 3,
                 projectId          = 2,
                 date               = today.minusDays(2),
-                startTime = LocalTime.of(8, 0),
+                startTime = LocalTime.of(8, 0), endTime = LocalTime.of(10, 0),
                 hoursWorked        = 8.0,
                 title              = "Dringender Kundeneinsatz",
                 notes              = listOf(
@@ -404,7 +404,7 @@ class SampleTimeEntryLoader {
                 employeeId         = 1,
                 projectId          = 1,
                 date               = today.minusDays(1),
-                startTime = LocalTime.of(8, 0),
+                startTime = LocalTime.of(8, 0), endTime = LocalTime.of(10, 0),
                 hoursWorked        = 8.0,
                 title              = "Allgemeiner Check-up",
                 notes              = listOf(
@@ -462,7 +462,7 @@ class SampleTimeEntryLoader {
                 projectId          = 2,
                 date               = today,
                 hoursWorked        = 7.0,
-                startTime = LocalTime.of(8, 0),
+                startTime = LocalTime.of(8, 0), endTime = LocalTime.of(10, 0),
                 title              = "Zutrittskontrolle konfiguriert",
                 notes              = listOf(
                     NoteDto(

@@ -1,5 +1,7 @@
 import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
 
+// Remove global stickyBarStyle and icon helper, move into Vue app
+
 document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('time-tracking-form-app');
     const entry = JSON.parse(el.dataset.entry || '{}');
@@ -12,7 +14,13 @@ document.addEventListener('DOMContentLoaded', () => {
     createApp({
         data() {
             return {
-                entry,
+                entry: {
+                    ...entry,
+                    startTime: entry.startTime || '',
+                    endTime: entry.endTime || '',
+                    breaks: entry.breaks || [],
+                    catalogItems: entry.catalogItems || [],
+                },
                 employees,
                 projects,
                 categories,
@@ -26,10 +34,61 @@ document.addEventListener('DOMContentLoaded', () => {
                 })),
                 selectedCatalogItem: null,
                 itemQuantity: 1,
-                saving: false
+                saving: false,
+                activeTab: 0,
+                breakStart: '',
+                breakEnd: '',
+                showBreaks: true,
+                showMaterials: true,
+                showNotes: true,
+                stickyBarStyle: {
+                    position: 'sticky',
+                    bottom: '0',
+                    background: '#fff',
+                    zIndex: 100,
+                    borderTop: '1px solid #dee2e6',
+                    padding: '1rem 0'
+                }
             };
         },
+        computed: {
+            totalBreakMinutes() {
+                return this.entry.breaks.reduce((sum, br) => {
+                    if (br.start && br.end) {
+                        const [sh, sm] = br.start.split(':').map(Number);
+                        const [eh, em] = br.end.split(':').map(Number);
+                        let mins = (eh * 60 + em) - (sh * 60 + sm);
+                        if (mins < 0) mins = 0;
+                        return sum + mins;
+                    }
+                    return sum;
+                }, 0);
+            },
+            autoHoursWorked() {
+                if (!this.entry.startTime || !this.entry.endTime) return '';
+                const [sh, sm] = this.entry.startTime.split(':').map(Number);
+                const [eh, em] = this.entry.endTime.split(':').map(Number);
+                let mins = (eh * 60 + em) - (sh * 60 + sm) - this.totalBreakMinutes;
+                if (mins < 0) mins = 0;
+                return (mins / 60).toFixed(2);
+            }
+        },
         methods: {
+            // Tab navigation
+            setTab(i) { this.activeTab = i; },
+            // Icon helper for template
+            icon(name) {
+                return `<i class='bi bi-${name}'></i>`;
+            },
+            // Breaks
+            addBreak() {
+                if (!this.breakStart || !this.breakEnd) return;
+                this.entry.breaks.push({ start: this.breakStart, end: this.breakEnd });
+                this.breakStart = '';
+                this.breakEnd = '';
+            },
+            removeBreak(i) { this.entry.breaks.splice(i, 1); },
+            // Notes
             addNote() {
                 this.notes.push({
                     id: null,
@@ -47,15 +106,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     documentId: null
                 });
             },
-            removeNote(i) {
-                this.notes.splice(i, 1);
-            },
+            removeNote(i) { this.notes.splice(i, 1); },
             onFilePicked(noteIndex, event) {
                 this.notes[noteIndex].pendingFile = event.target.files[0];
             },
             removeAttachment(i, ai) {
                 this.notes[i].attachments.splice(ai, 1);
             },
+            // Materials
             addCatalogItem() {
                 if (!this.selectedCatalogItem) {
                     return alert('Bitte zuerst einen Artikel auswählen');
@@ -75,13 +133,12 @@ document.addEventListener('DOMContentLoaded', () => {
             removeCatalogItem(i) {
                 this.entry.catalogItems.splice(i, 1);
             },
+            // Notes formatting
             formatNote(note) {
-                // Ensure createdById is always a valid number
-                let createdById = this.entry.employeeId; // Default fallback
+                let createdById = this.entry.employeeId;
                 if (note.createdById && note.createdById !== 0 && note.createdById !== null && note.createdById !== undefined) {
                     createdById = note.createdById;
                 }
-
                 return {
                     id: note.id,
                     projectId: note.projectId || this.entry.projectId,
@@ -97,26 +154,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     updatedAt: note.updatedAt || null
                 };
             },
+            // Save
             async saveEntry() {
                 if (!this.entry.employeeId) {
                     alert("Bitte Mitarbeiter auswählen");
                     this.saving = false;
                     return;
                 }
-
-                console.log("Employee ID:", this.entry.employeeId, typeof this.entry.employeeId);
-                console.log("Project ID:", this.entry.projectId, typeof this.entry.projectId);
-
                 // Ensure every note has createdById
                 for (const note of this.notes) {
                     if (!note.createdById || note.createdById === 0 || note.createdById === null || note.createdById === undefined) {
                         note.createdById = this.entry.employeeId;
                     }
                 }
-
-                // Debug: Log each note to ensure createdById is set
-                console.log("Notes before formatting:", this.notes);
-
+                // Use auto-calculated hours if start/end set
+                if (this.entry.startTime && this.entry.endTime) {
+                    this.entry.hoursWorked = Number(this.autoHoursWorked);
+                }
                 this.saving = true;
                 try {
                     const payload = {
@@ -124,9 +178,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         employeeId: this.entry.employeeId,
                         projectId: this.entry.projectId,
                         date: this.entry.date,
+                        startTime: this.entry.startTime,
+                        endTime: this.entry.endTime,
+                        breaks: this.entry.breaks,
                         hoursWorked: this.entry.hoursWorked,
                         title: this.entry.title,
-                        notes: this.notes.map(n => this.formatNote(n)),  // hier ist createdById enthalten
+                        notes: this.notes.map(n => this.formatNote(n)),
                         hourlyRate: this.entry.hourlyRate,
                         billable:   this.entry.billable,
                         invoiced:   this.entry.invoiced,
@@ -138,20 +195,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         disposalCost:        this.entry.disposalCost,
                         waitingTimeMinutes:  this.entry.waitingTimeMinutes
                     };
-
-
-                    // Debug: Log the formatted notes
-                    console.log("Formatted notes:", payload.notes);
-                    console.log("Sending payload:", payload);
-
-                    // Additional debug: Check each note for createdById
-                    payload.notes.forEach((note, index) => {
-                        console.log(`Note ${index} createdById:`, note.createdById, typeof note.createdById);
-                        if (!note.createdById) {
-                            console.error(`Note ${index} is missing createdById!`);
-                        }
-                    });
-
                     const method = 'POST';
                     const url    = '/timetracking/api';
                     const saveRes = await fetch(url, {
@@ -159,12 +202,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
-
                     if (!saveRes.ok) {
                         throw new Error(await saveRes.text());
                     }
                     const saved = await saveRes.json();
-
                     for (let i = 0; i < this.notes.length; i++) {
                         const note = this.notes[i];
                         if (note.pendingFile) {
@@ -181,7 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         }
                     }
-
                     window.location.href = '/timetracking';
                 } catch (e) {
                     console.error(e);
@@ -192,176 +232,168 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         template: `
         <div class="container-fluid">
-            <div class="card">
-                <div class="card-header">
-                    {{ entry.id ? 'Eintrag bearbeiten' : 'Neuer Eintrag' }}
+            <div class="card mt-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{{ entry.id ? 'Eintrag bearbeiten' : 'Neuer Zeiteintrag' }}</h5>
                 </div>
                 <div class="card-body">
-                    <form @submit.prevent="saveEntry">
-                        <!-- Titel -->
-                        <div class="mb-3">
-                            <label class="form-label">Titel (optional)</label>
-                            <input v-model="entry.title" type="text" class="form-control" placeholder="Kurze Beschreibung">
+                    <!-- Tab Navigation -->
+                    <ul class="nav nav-tabs mb-4" role="tablist">
+                        <li class="nav-item" v-for="(tab, i) in ['Allgemein', 'Arbeitszeit', 'Material', 'Notizen', 'Übersicht']" :key="i">
+                            <button class="nav-link" :class="{active: activeTab === i}" @click="setTab(i)">
+                                <span v-if="i===0" v-html="icon('person-badge')"></span>
+                                <span v-else-if="i===1" v-html="icon('clock')"></span>
+                                <span v-else-if="i===2" v-html="icon('box-seam')"></span>
+                                <span v-else-if="i===3" v-html="icon('sticky')"></span>
+                                <span v-else v-html="icon('check2-circle')"></span>
+                                {{ tab }}
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Allgemein -->
+                    <div v-show="activeTab === 0">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Mitarbeiter <span class="text-danger">*</span></label>
+                                <select v-model="entry.employeeId" class="form-select" required>
+                                    <option value="">-- auswählen --</option>
+                                    <option v-for="emp in employees" :key="emp.id" :value="emp.id">
+                                        {{ emp.firstName }} {{ emp.lastName }}
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Projekt <span class="text-danger">*</span></label>
+                                <select v-model="entry.projectId" class="form-select" required>
+                                    <option value="">-- auswählen --</option>
+                                    <option v-for="proj in projects" :key="proj.id" :value="proj.id">
+                                        {{ proj.name }}
+                                    </option>
+                                </select>
+                            </div>
                         </div>
-
-                        <!-- Mitarbeiter -->
-                        <div class="mb-3">
-                            <label class="form-label">Mitarbeiter</label>
-                            <select v-model="entry.employeeId" class="form-select" required>
-                                <option v-for="emp in employees" :key="emp.id" :value="emp.id">
-                                    {{ emp.firstName }} {{ emp.lastName }}
-                                </option>
-                            </select>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Datum <span class="text-danger">*</span></label>
+                                <input v-model="entry.date" type="date" class="form-control" required>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label">Titel (optional)</label>
+                                <input v-model="entry.title" type="text" class="form-control" placeholder="Kurze Beschreibung">
+                            </div>
                         </div>
+                    </div>
 
-                        <!-- Projekt -->
-                        <div class="mb-3">
-                            <label class="form-label">Projekt</label>
-                            <select v-model="entry.projectId" class="form-select" required>
-                                <option v-for="proj in projects" :key="proj.id" :value="proj.id">
-                                    {{ proj.name }}
-                                </option>
-                            </select>
-                        </div>
-
-                        <!-- Datum -->
-                        <div class="mb-3">
-                            <label class="form-label">Datum</label>
-                            <input v-model="entry.date" type="date" class="form-control" required>
-                        </div>
-
-                        <!-- Gearbeitete Stunden -->
-                        <div class="mb-3">
-                            <label class="form-label">Gearbeitete Stunden</label>
-                            <input v-model.number="entry.hoursWorked" type="number" step="0.1" min="0" class="form-control" required>
-                        </div>
-
-                        <!-- Notizen -->
-                        <fieldset class="border rounded p-3 mb-3">
-                            <legend class="float-none w-auto px-2">Notizen</legend>
-                            <div v-for="(note, index) in notes" :key="index" class="note-block mb-3 border rounded p-2">
-                                <!-- Titel -->
-                                <div class="mb-2">
-                                    <label class="form-label">Titel</label>
-                                    <input v-model="note.title" type="text" class="form-control" placeholder="Optional">
-                                </div>
-
-                                <!-- Kategorie -->
-                                <div class="mb-2">
-                                    <label class="form-label">Kategorie</label>
-                                    <select v-model="note.category" class="form-select" required>
-                                        <option value="">-- auswählen --</option>
-                                        <option v-for="cat in categories" :key="cat" :value="cat">
-                                            {{ cat }}
-                                        </option>
-                                    </select>
-                                </div>
-
-                                <!-- Inhalt -->
-                                <div class="mb-2">
-                                    <label class="form-label">Inhalt</label>
-                                    <textarea v-model="note.content" class="form-control" rows="2" required></textarea>
-                                </div>
-
-                                <!-- Tags -->
-                                <div class="mb-2">
-                                    <label class="form-label">Tags (Komma-getrennt)</label>
-                                    <input 
-                                        :value="Array.isArray(note.tags) ? note.tags.join(', ') : note.tags" 
-                                        @input="note.tags = $event.target.value.split(',').map(t => t.trim()).filter(t => t.length > 0)"
-                                        type="text" 
-                                        class="form-control" 
-                                        placeholder="z. B. dringlich, Prüfung"
-                                    />
-                                </div>
-
-                                <!-- Anhänge -->
-                                <div class="mb-2">
-                                    <label class="form-label">Anhänge</label>
-                                    <div v-if="note.attachments.length > 0" class="mb-2">
-                                        <div v-for="(att, attIndex) in note.attachments" :key="att.id" class="d-flex align-items-center mb-1">
-                                            <a :href="att.url" target="_blank" class="me-2">{{ att.caption }}</a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" @click="removeAttachment(index, attIndex)">
-                                                <i class="bi bi-x"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <input 
-                                      type="file" 
-                                      @change="onFilePicked(index, $event)" 
-                                      class="form-control" 
-                                    />
-                                </div>
-
-                                <button type="button" class="btn btn-danger btn-sm mt-2" @click="removeNote(index)">
-                                    Entfernen
+                    <!-- Arbeitszeit -->
+                    <div v-show="activeTab === 1">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Startzeit <span class="text-danger">*</span></label>
+                                <input v-model="entry.startTime" type="time" class="form-control" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Endzeit <span class="text-danger">*</span></label>
+                                <input v-model="entry.endTime" type="time" class="form-control" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Pausen</label>
+                                <button class="btn btn-outline-secondary btn-sm ms-2" @click="showBreaks = !showBreaks">
+                                    {{ showBreaks ? 'Verbergen' : 'Anzeigen' }}
                                 </button>
                             </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Gearbeitete Stunden</label>
+                                <input :value="autoHoursWorked" type="text" class="form-control bg-light" readonly>
+                            </div>
+                        </div>
+                        <div v-show="showBreaks" class="mb-3">
+                            <div class="card card-body bg-light mb-2">
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-auto">
+                                        <label class="form-label">Pause von</label>
+                                        <input v-model="breakStart" type="time" class="form-control">
+                                    </div>
+                                    <div class="col-auto">
+                                        <label class="form-label">bis</label>
+                                        <input v-model="breakEnd" type="time" class="form-control">
+                                    </div>
+                                    <div class="col-auto">
+                                        <button class="btn btn-success" @click="addBreak" v-html="icon('plus-circle') + ' Hinzufügen'"></button>
+                                    </div>
+                                </div>
+                                <div v-if="entry.breaks.length > 0" class="mt-2">
+                                    <ul class="list-group">
+                                        <li v-for="(br, i) in entry.breaks" :key="i" class="list-group-item d-flex justify-content-between align-items-center">
+                                            {{ br.start }} - {{ br.end }}
+                                            <button class="btn btn-danger btn-sm" @click="removeBreak(i)" v-html="icon('trash')"></button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Stundensatz (CHF)</label>
+                                <input v-model.number="entry.hourlyRate" type="number" step="0.01" class="form-control">
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label">Zuschläge</label>
+                                <div class="form-check form-check-inline">
+                                    <input v-model="entry.hasNightSurcharge" type="checkbox" class="form-check-input" id="hasNightSurcharge">
+                                    <label class="form-check-label" for="hasNightSurcharge">Nachtzuschlag</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input v-model="entry.hasWeekendSurcharge" type="checkbox" class="form-check-input" id="hasWeekendSurcharge">
+                                    <label class="form-check-label" for="hasWeekendSurcharge">Wochenendzuschlag</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input v-model="entry.hasHolidaySurcharge" type="checkbox" class="form-check-input" id="hasHolidaySurcharge">
+                                    <label class="form-check-label" for="hasHolidaySurcharge">Feiertagszuschlag</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Reisezeit (Minuten)</label>
+                                <input v-model.number="entry.travelTimeMinutes" type="number" min="0" class="form-control">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Entsorgungskosten (CHF)</label>
+                                <input v-model.number="entry.disposalCost" type="number" step="0.01" min="0" class="form-control">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Wartezeit (Minuten)</label>
+                                <input v-model.number="entry.waitingTimeMinutes" type="number" min="0" class="form-control">
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input v-model="entry.billable" type="checkbox" class="form-check-input" id="billable">
+                                    <label class="form-check-label" for="billable">Verrechenbar</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input v-model="entry.invoiced" type="checkbox" class="form-check-input" id="invoiced">
+                                    <label class="form-check-label" for="invoiced">Fakturiert</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                            <button type="button" class="btn btn-outline-primary btn-sm" @click="addNote">
-                                <i class="bi bi-plus-circle me-1"></i>Notiz hinzufügen
+                    <!-- Material -->
+                    <div v-show="activeTab === 2">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">Katalogartikel</h6>
+                            <button class="btn btn-outline-secondary btn-sm" @click="showMaterials = !showMaterials">
+                                {{ showMaterials ? 'Verbergen' : 'Anzeigen' }}
                             </button>
-                        </fieldset>
-
-                        <!-- Stundensatz -->
-                        <div class="mb-3">
-                            <label class="form-label">Stundensatz (CHF)</label>
-                            <input v-model.number="entry.hourlyRate" type="number" step="0.01" class="form-control">
                         </div>
-
-                        <!-- Zuschläge -->
-                        <div class="mb-3">
-                            <label class="form-label">Zuschläge</label>
-                            <div class="form-check">
-                                <input v-model="entry.hasNightSurcharge" type="checkbox" class="form-check-input" id="hasNightSurcharge">
-                                <label class="form-check-label" for="hasNightSurcharge">Nachtzuschlag</label>
-                            </div>
-                            <div class="form-check">
-                                <input v-model="entry.hasWeekendSurcharge" type="checkbox" class="form-check-input" id="hasWeekendSurcharge">
-                                <label class="form-check-label" for="hasWeekendSurcharge">Wochenendzuschlag</label>
-                            </div>
-                            <div class="form-check">
-                                <input v-model="entry.hasHolidaySurcharge" type="checkbox" class="form-check-input" id="hasHolidaySurcharge">
-                                <label class="form-check-label" for="hasHolidaySurcharge">Feiertagszuschlag</label>
-                            </div>
-                        </div>
-
-                        <!-- Zusätzliche Kosten -->
-                        <div class="mb-3">
-                            <label class="form-label">Zusätzliche Kosten</label>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Reisezeit (Minuten)</label>
-                                    <input v-model.number="entry.travelTimeMinutes" type="number" min="0" class="form-control">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Entsorgungskosten (CHF)</label>
-                                    <input v-model.number="entry.disposalCost" type="number" step="0.01" min="0" class="form-control">
-                                </div>
-                            </div>
-                            <div class="row g-3 mt-2">
-                                <div class="col-md-6">
-                                    <label class="form-label">Wartezeit (Minuten)</label>
-                                    <input v-model.number="entry.waitingTimeMinutes" type="number" min="0" class="form-control">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Nicht verrechenbar & Fakturiert -->
-                        <div class="mb-3 form-check">
-                            <input v-model="entry.billable" type="checkbox" class="form-check-input" id="billable">
-                            <label class="form-check-label" for="billable">Verrechenbar</label>
-                        </div>
-                        <div class="mb-3 form-check">
-                            <input v-model="entry.invoiced" type="checkbox" class="form-check-input" id="invoiced">
-                            <label class="form-check-label" for="invoiced">Fakturiert</label>
-                        </div>
-
-                        <!-- Katalogartikel -->
-                        <div class="mb-3">
-                            <label class="form-label">Katalogartikel</label>
-                            <table class="table" id="catalogItemsTable">
-                                <thead>
+                        <div v-show="showMaterials">
+                            <table class="table table-bordered table-sm" id="catalogItemsTable">
+                                <thead class="table-light">
                                     <tr>
                                         <th>Name</th>
                                         <th>Menge</th>
@@ -377,7 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                         <td>{{ item.unitPrice }} CHF</td>
                                         <td>{{ item.totalPrice }} CHF</td>
                                         <td>
-                                            <button type="button" class="btn btn-danger btn-sm" @click="removeCatalogItem(index)">x</button>
+                                            <button type="button" class="btn btn-danger btn-sm" @click="removeCatalogItem(index)" v-html="icon('trash')"></button>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -395,24 +427,106 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <input v-model.number="itemQuantity" type="number" class="form-control" min="1" value="1">
                                 </div>
                                 <div class="col-auto">
-                                    <button type="button" class="btn btn-primary" @click="addCatalogItem">
-                                        <i class="bi bi-plus-circle me-1"></i>Hinzufügen
-                                    </button>
+                                    <button type="button" class="btn btn-primary" @click="addCatalogItem" v-html="icon('plus-circle') + ' Hinzufügen'"></button>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Speichern/Abbrechen -->
-                        <div class="mt-3">
-                            <button type="submit" class="btn btn-primary" :disabled="saving">
+                    <!-- Notizen -->
+                    <div v-show="activeTab === 3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">Notizen</h6>
+                            <button class="btn btn-outline-secondary btn-sm" @click="showNotes = !showNotes">
+                                {{ showNotes ? 'Verbergen' : 'Anzeigen' }}
+                            </button>
+                        </div>
+                        <div v-show="showNotes">
+                            <div v-for="(note, index) in notes" :key="index" class="note-block mb-3 border rounded p-2 bg-light">
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Titel</label>
+                                        <input v-model="note.title" type="text" class="form-control" placeholder="Optional">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Kategorie</label>
+                                        <select v-model="note.category" class="form-select" required>
+                                            <option value="">-- auswählen --</option>
+                                            <option v-for="cat in categories" :key="cat" :value="cat">
+                                                {{ cat }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Tags (Komma-getrennt)</label>
+                                        <input 
+                                            :value="Array.isArray(note.tags) ? note.tags.join(', ') : note.tags" 
+                                            @input="note.tags = $event.target.value.split(',').map(t => t.trim()).filter(t => t.length > 0)"
+                                            type="text" 
+                                            class="form-control" 
+                                            placeholder="z. B. dringlich, Prüfung"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="row g-2 mt-2">
+                                    <div class="col-md-10">
+                                        <label class="form-label">Inhalt</label>
+                                        <textarea v-model="note.content" class="form-control" rows="2" required></textarea>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Anhänge</label>
+                                        <input type="file" @change="onFilePicked(index, $event)" class="form-control" />
+                                        <div v-if="note.attachments.length > 0" class="mt-1">
+                                            <div v-for="(att, attIndex) in note.attachments" :key="att.id" class="d-flex align-items-center mb-1">
+                                                <a :href="att.url" target="_blank" class="me-2">{{ att.caption }}</a>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" @click="removeAttachment(index, attIndex)" v-html="icon('x')"></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-end">
+                                    <button type="button" class="btn btn-danger btn-sm" @click="removeNote(index)" v-html="icon('trash') + ' Entfernen'"></button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" @click="addNote" v-html="icon('plus-circle') + ' Notiz hinzufügen'"></button>
+                        </div>
+                    </div>
+
+                    <!-- Übersicht -->
+                    <div v-show="activeTab === 4">
+                        <div class="card card-body bg-light mb-3">
+                            <h6>Zusammenfassung</h6>
+                            <ul class="list-group">
+                                <li class="list-group-item"><b>Mitarbeiter:</b> {{ employees.find(e => e.id == entry.employeeId)?.firstName }} {{ employees.find(e => e.id == entry.employeeId)?.lastName }}</li>
+                                <li class="list-group-item"><b>Projekt:</b> {{ projects.find(p => p.id == entry.projectId)?.name }}</li>
+                                <li class="list-group-item"><b>Datum:</b> {{ entry.date }}</li>
+                                <li class="list-group-item"><b>Startzeit:</b> {{ entry.startTime }} <b>Endzeit:</b> {{ entry.endTime }}</li>
+                                <li class="list-group-item"><b>Gearbeitete Stunden:</b> {{ autoHoursWorked }}</li>
+                                <li class="list-group-item"><b>Pausen:</b> {{ entry.breaks.map(b => b.start + '-' + b.end).join(', ') }}</li>
+                                <li class="list-group-item"><b>Materialien:</b> {{ entry.catalogItems.length }}</li>
+                                <li class="list-group-item"><b>Notizen:</b> {{ notes.length }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- Sticky Save Bar -->
+                <div :style="stickyBarStyle">
+                    <div class="container d-flex justify-content-between align-items-center">
+                        <div>
+                            <button v-for="(tab, i) in ['Allgemein', 'Arbeitszeit', 'Material', 'Notizen', 'Übersicht']" :key="i" class="btn btn-link" :class="{'fw-bold text-primary': activeTab === i}" @click="setTab(i)">
+                                {{ tab }}
+                            </button>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-outline-secondary me-2" @click="window.location.href='/timetracking'">Abbrechen</button>
+                            <button type="button" class="btn btn-primary" :disabled="saving" @click="saveEntry">
                                 {{ saving ? 'Speichern...' : 'Speichern' }}
                             </button>
-                            <a href="/timetracking" class="btn btn-outline-secondary">Abbrechen</a>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
-    `
+        `
     }).mount(el);
 });

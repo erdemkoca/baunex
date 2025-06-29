@@ -16,6 +16,8 @@ data class TimeEntryDTO(
     val date: LocalDate,
     @Serializable(with = LocalTimeSerializer::class)
     val startTime: LocalTime,
+    @Serializable(with = LocalTimeSerializer::class)
+    val endTime: LocalTime,
     val hoursWorked: Double,
     val title: String,
     val notes: List<NoteDto> = emptyList(),
