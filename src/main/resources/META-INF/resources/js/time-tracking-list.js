@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 dailySummaries: [],
                 weeklySummaries: [],
                 loading: false,
+                projectColors: {}, // Cache for project colors
                 statuses: {
                     ALL: { label: 'Alle', color: 'secondary', icon: 'bi-list-ul' },
                     PENDING: { label: 'Ausstehend', color: 'warning', icon: 'bi-clock' },
@@ -236,6 +237,77 @@ document.addEventListener('DOMContentLoaded', () => {
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 const day = String(date.getDate()).padStart(2, '0');
                 return `${year}-${month}-${day}`;
+            },
+            getTimeBlockStyle(start, end) {
+                // Grid is 06:00 (0%) to 20:00 (100%)
+                if (!start || !end) return {};
+                const [sh, sm] = start.split(":").map(Number);
+                const [eh, em] = end.split(":").map(Number);
+                const startMins = (sh * 60 + sm) - 360; // 360 = 6*60
+                const endMins = (eh * 60 + em) - 360;
+                const totalMins = 14 * 60; // 14 hours
+                const top = Math.max(0, (startMins / totalMins) * 100);
+                const height = Math.max(8, ((endMins - startMins) / totalMins) * 100);
+                return {
+                    position: 'absolute',
+                    left: '6px',
+                    right: '6px',
+                    top: top + '%',
+                    height: height + '%',
+                    background: '#0d6efd22',
+                    border: '1px solid #0d6efd',
+                    borderRadius: '4px',
+                    color: '#222',
+                    padding: '2px 4px',
+                    cursor: 'pointer',
+                    overflow: 'hidden',
+                    zIndex: 2
+                };
+            },
+            getProjectColor(projectName) {
+                if (!projectName) return '#6c757d';
+                
+                if (!this.projectColors[projectName]) {
+                    // Generate a consistent color based on project name
+                    const colors = [
+                        '#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1',
+                        '#fd7e14', '#20c997', '#e83e8c', '#6c757d', '#0dcaf0',
+                        '#6610f2', '#d63384', '#198754', '#fd7e14', '#20c997'
+                    ];
+                    const hash = projectName.split('').reduce((a, b) => {
+                        a = ((a << 5) - a) + b.charCodeAt(0);
+                        return a & a;
+                    }, 0);
+                    const index = Math.abs(hash) % colors.length;
+                    this.projectColors[projectName] = colors[index];
+                }
+                
+                return this.projectColors[projectName];
+            },
+            getTimeBlockStyleWithProject(start, end, projectName) {
+                const baseStyle = this.getTimeBlockStyle(start, end);
+                const projectColor = this.getProjectColor(projectName);
+                
+                return {
+                    ...baseStyle,
+                    background: projectColor + '22',
+                    border: '1px solid ' + projectColor,
+                    color: '#222'
+                };
+            },
+            getDaySummaryClass(day) {
+                if (!day || !day.summary) return '';
+                
+                const summary = day.summary;
+                
+                if (summary.isWeekend) return 'calendar-weekend';
+                if (summary.holidayType) return 'calendar-holiday';
+                if (summary.workedHours === 0 && summary.expectedHours > 0) return 'calendar-missing';
+                if (summary.delta > 0) return 'calendar-overtime';
+                if (summary.delta < 0) return 'calendar-undertime';
+                if (summary.delta === 0) return 'calendar-perfect';
+                
+                return '';
             }
         },
         watch: {
@@ -305,35 +377,71 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
                     <div class="card-body">
-                        <div class="calendar-grid">
-                            <div class="calendar-header">
-                                <div class="calendar-cell">Mo</div>
-                                <div class="calendar-cell">Di</div>
-                                <div class="calendar-cell">Mi</div>
-                                <div class="calendar-cell">Do</div>
-                                <div class="calendar-cell">Fr</div>
-                                <div class="calendar-cell">Sa</div>
-                                <div class="calendar-cell">So</div>
+                        <!-- Vertical Time Grid -->
+                        <div class="calendar-vertical-grid" style="display:flex; flex-direction:column; overflow-x:auto;">
+                            <!-- Header Row: Empty cell + day names -->
+                            <div style="display:flex;">
+                                <div style="width:48px;"></div>
+                                <div v-for="(day, i) in calendarDays" :key="'header'+i" style="flex:1; min-width:110px; text-align:center; font-weight:bold; border-bottom:1px solid #dee2e6; padding-bottom:4px;">
+                                    {{ day.dayName }}<br>{{ day.day }}
+                                </div>
                             </div>
-                            <div class="calendar-body">
-                                <div v-for="(day, index) in calendarDays" :key="index" 
-                                     :class="['calendar-cell', getDayClass(day)]"
-                                     :title="getDayTooltip(day)">
-                                    <div class="calendar-day">
-                                        <div class="calendar-date">{{ day.day }}</div>
-                                        <div class="calendar-day-name">{{ day.dayName }}</div>
-                                        <div v-if="day.summary" class="calendar-hours">
-                                            <div class="worked-hours">{{ day.summary.workedHours }}h</div>
-                                            <div v-if="day.summary.expectedHours > 0" class="expected-hours">/{{ day.summary.expectedHours }}h</div>
+                            <div style="display:flex; height:420px;">
+                                <!-- Time labels -->
+                                <div style="width:48px; display:flex; flex-direction:column; align-items:flex-end; position:relative;">
+                                    <div v-for="h in 15" :key="'label'+h" style="height:28px; font-size:11px; color:#888; position:relative;">
+                                        <span style="position:absolute; right:2px; top:-7px;">{{ (h+5).toString().padStart(2,'0') }}:00</span>
+                                    </div>
+                                </div>
+                                <!-- Day columns -->
+                                <div v-for="(day, dayIdx) in calendarDays" :key="'col'+dayIdx" style="flex:1; min-width:110px; border-left:1px solid #eee; position:relative; background:#f8f9fa;">
+                                    <!-- Hour lines -->
+                                    <div v-for="h in 15" :key="'line'+h" style="position:absolute; left:0; right:0; top:calc((100%/14)*(h-1)); height:0; border-top:1px solid #eee;"></div>
+                                    <!-- Time entry blocks -->
+                                    <div v-for="entry in (day.summary?.timeEntries || [])" :key="entry.id"
+                                         :style="getTimeBlockStyleWithProject(entry.startTime, entry.endTime, entry.projectName)"
+                                         class="calendar-time-block"
+                                         @click="navigateToEdit(entry.id)"
+                                    >
+                                        <div style="font-size:10px; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color: #333;">
+                                            {{ entry.projectName || 'Unbekanntes Projekt' }}
                                         </div>
-                                        <div v-if="day.summary && day.summary.holidayType" class="calendar-holiday-indicator">
-                                            <i class="bi bi-umbrella"></i>
+                                        <div style="font-size:9px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color: #666;">
+                                            {{ entry.title || 'Arbeit' }}
+                                        </div>
+                                        <div style="font-size:9px; font-weight:bold; color: #333;">
+                                            {{ entry.hoursWorked }}h
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                            <!-- Daily Summary Row -->
+                            <div style="display:flex; height:60px; border-top:2px solid #dee2e6;">
+                                <div style="width:48px;"></div>
+                                <div v-for="(day, dayIdx) in calendarDays" :key="'summary'+dayIdx" 
+                                     :class="['calendar-day-summary', getDaySummaryClass(day)]"
+                                     style="flex:1; min-width:110px; border-left:1px solid #eee; padding:8px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                                    <div v-if="day.summary" style="text-align:center;">
+                                        <div style="font-size:14px; font-weight:bold; color: #333;">
+                                            {{ day.summary.workedHours.toFixed(1) }}h
+                                        </div>
+                                        <div style="font-size:10px; color: #666;">
+                                            von {{ day.summary.expectedHours.toFixed(1) }}h
+                                        </div>
+                                        <div v-if="day.summary.delta !== 0" 
+                                             :style="{ fontSize: '9px', color: day.summary.delta > 0 ? '#198754' : '#dc3545' }">
+                                            {{ day.summary.delta > 0 ? '+' : '' }}{{ day.summary.delta.toFixed(1) }}h
+                                        </div>
+                                        <div v-if="day.summary.holidayType" style="font-size:9px; color: #0dcaf0;">
+                                            {{ day.summary.holidayType }}
+                                        </div>
+                                    </div>
+                                    <div v-else style="text-align:center; color: #999; font-size:12px;">
+                                        Keine Daten
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        
                         <!-- Legend -->
                         <div class="mt-3">
                             <h6>Legende:</h6>

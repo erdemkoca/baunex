@@ -403,9 +403,9 @@ class SampleTimeEntryLoader {
             TimeEntryDTO(
                 employeeId         = 1,
                 projectId          = 1,
-                date               = today.minusDays(1),
-                startTime = LocalTime.of(8, 0), endTime = LocalTime.of(10, 0),
-                hoursWorked        = 8.0,
+                date               = today.minusDays(4),
+                startTime = LocalTime.of(16, 0), endTime = LocalTime.of(18, 0),
+                hoursWorked        = 2.0,
                 title              = "Allgemeiner Check-up",
                 notes              = listOf(
                     NoteDto(
