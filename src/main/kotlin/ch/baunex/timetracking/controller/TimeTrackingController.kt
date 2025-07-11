@@ -91,6 +91,11 @@ class TimeTrackingController {
     fun createApi(dto: TimeEntryDTO): TimeEntryDTO =
         timeTrackingFacade.logTime(dto)
 
+    @PUT
+    @Path("/api/{id}") @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
+    fun updateApi(@PathParam("id") id: Long, dto: TimeEntryDTO): TimeEntryDTO? =
+        timeTrackingFacade.updateTimeEntry(id, dto)
+
     @POST
     @Path("/api/{id}/approve")
     fun approveApi(@PathParam ("id") id: Long): Response {

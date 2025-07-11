@@ -295,6 +295,72 @@ document.addEventListener('DOMContentLoaded', () => {
                     color: '#222'
                 };
             },
+            calculateTimeBlockLayout(timeEntries) {
+                if (!timeEntries || timeEntries.length === 0) return [];
+                
+                // Sort entries by start time
+                const sortedEntries = [...timeEntries].sort((a, b) => {
+                    const aStart = this.timeToMinutes(a.startTime);
+                    const bStart = this.timeToMinutes(b.startTime);
+                    return aStart - bStart;
+                });
+                
+                const layout = [];
+                const lanes = []; // Track occupied lanes
+                
+                for (const entry of sortedEntries) {
+                    const startMins = this.timeToMinutes(entry.startTime);
+                    const endMins = this.timeToMinutes(entry.endTime);
+                    
+                    // Find the first available lane
+                    let laneIndex = 0;
+                    while (laneIndex < lanes.length) {
+                        const laneEnd = lanes[laneIndex];
+                        if (startMins >= laneEnd) {
+                            break;
+                        }
+                        laneIndex++;
+                    }
+                    
+                    // Update the lane
+                    if (laneIndex < lanes.length) {
+                        lanes[laneIndex] = endMins;
+                    } else {
+                        lanes.push(endMins);
+                    }
+                    
+                    layout.push({
+                        entry: entry,
+                        laneIndex: laneIndex,
+                        totalLanes: Math.max(lanes.length, 1)
+                    });
+                }
+                
+                return layout;
+            },
+            timeToMinutes(timeStr) {
+                if (!timeStr) return 0;
+                const [hours, minutes] = timeStr.split(':').map(Number);
+                return hours * 60 + minutes;
+            },
+            getTimeBlockStyleWithLayout(start, end, projectName, laneIndex, totalLanes) {
+                const baseStyle = this.getTimeBlockStyle(start, end);
+                const projectColor = this.getProjectColor(projectName);
+                
+                // Calculate width and position based on lane
+                const laneWidth = 100 / totalLanes;
+                const left = (laneIndex * laneWidth) + 2; // 2% margin
+                const right = ((totalLanes - laneIndex - 1) * laneWidth) + 2; // 2% margin
+                
+                return {
+                    ...baseStyle,
+                    left: left + '%',
+                    right: right + '%',
+                    background: projectColor + '22',
+                    border: '1px solid ' + projectColor,
+                    color: '#222'
+                };
+            },
             getDaySummaryClass(day) {
                 if (!day || !day.summary) return '';
                 
@@ -398,19 +464,19 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <!-- Hour lines -->
                                     <div v-for="h in 15" :key="'line'+h" style="position:absolute; left:0; right:0; top:calc((100%/14)*(h-1)); height:0; border-top:1px solid #eee;"></div>
                                     <!-- Time entry blocks -->
-                                    <div v-for="entry in (day.summary?.timeEntries || [])" :key="entry.id"
-                                         :style="getTimeBlockStyleWithProject(entry.startTime, entry.endTime, entry.projectName)"
+                                    <div v-for="layoutItem in calculateTimeBlockLayout(day.summary?.timeEntries || [])" :key="layoutItem.entry.id"
+                                         :style="getTimeBlockStyleWithLayout(layoutItem.entry.startTime, layoutItem.entry.endTime, layoutItem.entry.projectName, layoutItem.laneIndex, layoutItem.totalLanes)"
                                          class="calendar-time-block"
-                                         @click="navigateToEdit(entry.id)"
+                                         @click="navigateToEdit(layoutItem.entry.id)"
                                     >
                                         <div style="font-size:10px; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color: #333;">
-                                            {{ entry.projectName || 'Unbekanntes Projekt' }}
+                                            {{ layoutItem.entry.projectName || 'Unbekanntes Projekt' }}
                                         </div>
                                         <div style="font-size:9px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color: #666;">
-                                            {{ entry.title || 'Arbeit' }}
+                                            {{ layoutItem.entry.title || 'Arbeit' }}
                                         </div>
                                         <div style="font-size:9px; font-weight:bold; color: #333;">
-                                            {{ entry.hoursWorked }}h
+                                            {{ layoutItem.entry.hoursWorked }}h
                                         </div>
                                     </div>
                                 </div>

@@ -226,7 +226,7 @@ class SampleTimeEntryLoader {
                 employeeId         = 1,
                 projectId          = 2,
                 date               = today.minusDays(4),
-                startTime = LocalTime.of(8, 0), endTime = LocalTime.of(10, 0),
+                startTime = LocalTime.of(8, 0), endTime = LocalTime.of(16, 0),
                 hoursWorked        = 6.0,
                 title              = "Warten auf Materialien",
                 notes              = listOf(

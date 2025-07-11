@@ -24,7 +24,26 @@ class TimeTrackingFacade @Inject constructor(
     }
 
     fun getTimeEntryById(id: Long): TimeEntryDTO? {
-        return timeTrackingService.getTimeEntryById(id)?.let { timeEntryMapper.toTimeEntryResponseDTO(it) }
+        return timeTrackingService.getTimeEntryWithBreaks(id)
+    }
+
+    @Transactional
+    fun updateTimeEntry(id: Long, dto: TimeEntryDTO): TimeEntryDTO? {
+        println("DEBUG: Facade updateTimeEntry called with ID: $id")
+        val model = timeTrackingService.updateTimeEntry(id, dto)
+        println("DEBUG: Service returned model: ${model?.id}")
+        println("DEBUG: Model employee: ${model?.employee?.id}")
+        println("DEBUG: Model project: ${model?.project?.id}")
+        
+        return model?.let { 
+            try {
+                timeEntryMapper.toTimeEntryResponseDTO(it)
+            } catch (e: Exception) {
+                println("DEBUG: Error in mapper: ${e.message}")
+                e.printStackTrace()
+                throw e
+            }
+        }
     }
 
     fun approveEntry(entryId: Long, approverId: Long): Boolean {

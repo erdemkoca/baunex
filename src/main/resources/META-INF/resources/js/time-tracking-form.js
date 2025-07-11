@@ -18,7 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     ...entry,
                     startTime: entry.startTime || '',
                     endTime: entry.endTime || '',
-                    breaks: entry.breaks || [],
+                    breaks: (entry.breaks || []).map(breakItem => ({
+                        start: breakItem.start.substring(0, 5), // Convert "HH:MM:SS" to "HH:MM"
+                        end: breakItem.end.substring(0, 5)
+                    })),
                     catalogItems: entry.catalogItems || [],
                 },
                 employees,
@@ -173,6 +176,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 this.saving = true;
                 try {
+                    // Convert break times to LocalTime format
+                    const formattedBreaks = this.entry.breaks.map(breakItem => ({
+                        start: breakItem.start + ":00", // Add seconds to make it LocalTime format
+                        end: breakItem.end + ":00"
+                    }));
+
+                    console.log("DEBUG: Breaks being sent:", formattedBreaks);
+                    console.log("DEBUG: Entry breaks:", this.entry.breaks);
+
                     const payload = {
                         id: this.entry.id,
                         employeeId: this.entry.employeeId,
@@ -180,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         date: this.entry.date,
                         startTime: this.entry.startTime,
                         endTime: this.entry.endTime,
-                        breaks: this.entry.breaks,
+                        breaks: formattedBreaks,
                         hoursWorked: this.entry.hoursWorked,
                         title: this.entry.title,
                         notes: this.notes.map(n => this.formatNote(n)),
@@ -195,8 +207,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         disposalCost:        this.entry.disposalCost,
                         waitingTimeMinutes:  this.entry.waitingTimeMinutes
                     };
-                    const method = 'POST';
-                    const url    = '/timetracking/api';
+                    
+                    console.log("DEBUG: Full payload:", payload);
+
+                    // Determine if this is a create or update operation
+                    const isUpdate = this.entry.id && this.entry.id !== 0;
+                    const method = isUpdate ? 'PUT' : 'POST';
+                    const url = isUpdate ? `/timetracking/api/${this.entry.id}` : '/timetracking/api';
+                    
+                    console.log(`DEBUG: Using ${method} for ${isUpdate ? 'update' : 'create'} operation`);
+                    console.log(`DEBUG: URL: ${url}`);
+
                     const saveRes = await fetch(url, {
                         method,
                         headers: { 'Content-Type': 'application/json' },

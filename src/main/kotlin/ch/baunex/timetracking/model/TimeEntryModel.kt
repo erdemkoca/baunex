@@ -73,6 +73,10 @@ class TimeEntryModel : PanacheEntity() {
     @Column(name = "waiting_time_minutes")
     var waitingTimeMinutes: Int = 0
 
+    // --- Breaks ---
+    @Column(name = "breaks", columnDefinition = "TEXT")
+    var breaks: String = "[]"  // JSON string of breaks
+
     @ManyToOne
     @JoinColumn(name = "invoice_id")
     var invoice: InvoiceModel? = null

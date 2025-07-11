@@ -40,6 +40,9 @@ data class TimeEntryDTO(
     val waitingTimeMinutes: Int = 0,
     val disposalCost: Double = 0.0,
 
+    // breaks (frontend-only, not stored in database)
+    val breaks: List<BreakDTO> = emptyList(),
+
     // flattened cost‐breakdown fields
     val costBreakdown: TimeEntryCostBreakdownDTO? = null,
 
