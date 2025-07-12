@@ -21,7 +21,7 @@ class HolidayService @Inject constructor(
         val employee = employeeRepository.findById(employeeId)
             ?: throw IllegalArgumentException("Employee not found with id: $employeeId")
         model.employee = employee
-        model.status = ApprovalStatus.PENDING
+        model.approvalStatus = ApprovalStatus.PENDING
         holidayRepository.persist(model)
         return model
     }
@@ -35,9 +35,14 @@ class HolidayService @Inject constructor(
     }
 
     @Transactional
-    fun approveHoliday(holidayId: Long, approverId: Long, approved: Boolean): HolidayModel? {
+    fun approveHoliday(holidayId: Long, approverId: Long, approvalStatus: String): HolidayModel? {
         val holiday = holidayRepository.findById(holidayId) ?: return null
-        holiday.status = if (approved) ApprovalStatus.APPROVED else ApprovalStatus.REJECTED
+        val approver = employeeRepository.findById(approverId) ?: return null
+        
+        holiday.approvalStatus = ApprovalStatus.valueOf(approvalStatus)
+        holiday.approvedBy = approver
+        holiday.approvedAt = LocalDate.now()
+        
         return holiday
     }
 }

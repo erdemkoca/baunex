@@ -5,9 +5,9 @@ import ch.baunex.timetracking.repository.TimeEntryRepository
 import ch.baunex.user.repository.EmployeeRepository
 import ch.baunex.project.repository.ProjectRepository
 import ch.baunex.catalog.service.CatalogService
-import ch.baunex.notes.model.NoteModel
 import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.timetracking.mapper.TimeEntryMapper
+import ch.baunex.timetracking.model.ApprovalStatus
 import ch.baunex.user.service.EmployeeService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
@@ -218,9 +218,28 @@ class TimeTrackingService @Inject constructor(
         val entry = getTimeEntryById(entryId) ?: return false
         val approver = employeeService.findEmployeeById(approverId) ?: return false
 
-        entry.approved = true
+        entry.approvalStatus = ApprovalStatus.APPROVED
         entry.approvedBy = approver
         entry.approvedAt = LocalDate.now()
+        return true
+    }
+
+    @Transactional
+    fun approveWeeklyEntries(employeeId: Long, fromDate: LocalDate, toDate: LocalDate, approverId: Long): Boolean {
+        val approver = employeeService.findEmployeeById(approverId) ?: return false
+        
+        // Find all time entries for the employee in the date range
+        val entries = timeEntryRepository.list("employee.id = ?1 and date between ?2 and ?3", employeeId, fromDate, toDate)
+        
+        if (entries.isEmpty()) return false
+        
+        // Approve all entries
+        entries.forEach { entry ->
+            entry.approvalStatus = ApprovalStatus.APPROVED
+            entry.approvedBy = approver
+            entry.approvedAt = LocalDate.now()
+        }
+        
         return true
     }
 

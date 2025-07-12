@@ -30,11 +30,11 @@ class HolidayFacade @Inject constructor(
     }
 
     @Transactional
-    fun approveHoliday(dto: HolidayApprovalDTO): HolidayDTO? {
+    fun approveHoliday(holidayId: Long, dto: HolidayApprovalDTO): HolidayDTO? {
         val updated = holidayService.approveHoliday(
-            holidayId = dto.holidayId,
+            holidayId = holidayId,
             approverId = dto.approval.approverId ?: throw IllegalArgumentException("Approver ID is required"),
-            approved = dto.approval.approved
+            approvalStatus = dto.approval.status
         ) ?: return null
 
         return holidayMapper.toDTO(updated)

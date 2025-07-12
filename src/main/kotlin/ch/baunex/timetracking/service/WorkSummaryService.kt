@@ -37,7 +37,7 @@ class WorkSummaryService @Inject constructor(
 
         // For now, use 8 hours per day as default
         // TODO: Could be enhanced with employee-specific contracts or public holiday detection
-        return employee.plannedDailyHours
+        return employee.plannedWeeklyHours / 5
     }
 
     /**
@@ -79,7 +79,8 @@ class WorkSummaryService @Inject constructor(
                     expectedHours = expectedHours,
                     delta = delta,
                     holidayType = holiday?.type?.name,
-                    holidayApproved = holiday?.status == ApprovalStatus.APPROVED,
+                    holidayId = holiday?.id,
+                    holidayApproved = holiday?.approvalStatus == ApprovalStatus.APPROVED,
                     holidayReason = holiday?.reason,
                     timeEntries = timeEntriesByDate[currentDate]?.map { timeEntryMapper.toTimeEntryResponseDTO(it) } ?: emptyList(),
                     isWeekend = isWeekend,
@@ -91,6 +92,57 @@ class WorkSummaryService @Inject constructor(
         }
         
         return result
+    }
+
+    /**
+     * Calculate remaining vacation days for an employee in a given year
+     */
+    fun calculateRemainingVacationDays(employeeId: Long, year: Int): Int {
+        val employee = employeeRepository.findById(employeeId) ?: return 0
+        
+        // Get all approved vacation days for the year
+        val yearStart = LocalDate.of(year, 1, 1)
+        val yearEnd = LocalDate.of(year, 12, 31)
+        
+        val vacationDays = holidayRepository.findByEmployeeAndDateRange(employeeId, yearStart, yearEnd)
+            .filter { it.type.name == "PAID_VACATION" && it.approvalStatus == ApprovalStatus.APPROVED }
+            .sumOf { holiday ->
+                // Calculate the number of working days in the holiday period
+                var workingDays = 0
+                var currentDate = holiday.startDate
+                while (!currentDate.isAfter(holiday.endDate)) {
+                    if (currentDate.dayOfWeek != DayOfWeek.SATURDAY && currentDate.dayOfWeek != DayOfWeek.SUNDAY) {
+                        workingDays++
+                    }
+                    currentDate = currentDate.plusDays(1)
+                }
+                workingDays
+            }
+        
+        return employee.vacationDays - vacationDays
+    }
+
+    /**
+     * Calculate used vacation days for an employee in a given year
+     */
+    fun calculateUsedVacationDays(employeeId: Long, year: Int): Int {
+        val yearStart = LocalDate.of(year, 1, 1)
+        val yearEnd = LocalDate.of(year, 12, 31)
+        
+        return holidayRepository.findByEmployeeAndDateRange(employeeId, yearStart, yearEnd)
+            .filter { it.type.name == "PAID_VACATION" && it.approvalStatus == ApprovalStatus.APPROVED }
+            .sumOf { holiday ->
+                // Calculate the number of working days in the holiday period
+                var workingDays = 0
+                var currentDate = holiday.startDate
+                while (!currentDate.isAfter(holiday.endDate)) {
+                    if (currentDate.dayOfWeek != DayOfWeek.SATURDAY && currentDate.dayOfWeek != DayOfWeek.SUNDAY) {
+                        workingDays++
+                    }
+                    currentDate = currentDate.plusDays(1)
+                }
+                workingDays
+            }
     }
 
     /**
@@ -116,6 +168,12 @@ class WorkSummaryService @Inject constructor(
         val holidayDays = dailySummaries.count { it.holidayType != null && it.holidayApproved == true }
         val pendingHolidayRequests = dailySummaries.count { it.holidayType != null && it.holidayApproved == false }
         
+        // Calculate vacation statistics
+        val currentYear = weekStart.year
+        val totalVacationDays = employee.vacationDays
+        val usedVacationDays = calculateUsedVacationDays(employeeId, currentYear)
+        val remainingVacationDays = totalVacationDays - usedVacationDays
+        
         return WeeklyWorkSummaryDTO(
             employeeId = employeeId,
             employeeName = employeeName,
@@ -127,6 +185,9 @@ class WorkSummaryService @Inject constructor(
             undertime = undertime,
             holidayDays = holidayDays,
             pendingHolidayRequests = pendingHolidayRequests,
+            totalVacationDays = totalVacationDays,
+            usedVacationDays = usedVacationDays,
+            remainingVacationDays = remainingVacationDays,
             dailySummaries = dailySummaries
         )
     }

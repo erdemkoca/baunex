@@ -82,7 +82,7 @@ class TimeEntryModel : PanacheEntity() {
     var invoice: InvoiceModel? = null
 
     @Column(name = "approved", nullable = false)
-    var approved: Boolean = false
+    var approvalStatus: ApprovalStatus = ApprovalStatus.PENDING
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approved_by")

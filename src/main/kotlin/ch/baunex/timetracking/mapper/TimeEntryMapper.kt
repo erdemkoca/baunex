@@ -119,12 +119,14 @@ class TimeEntryMapper @Inject constructor(
             projectName         = entry.project.name,
             cost                = breakdown.grandTotal,
             approval            = ApprovalDTO(
-                approved     = entry.approvedBy != null,
+                approved     = entry.approvalStatus == ch.baunex.timetracking.model.ApprovalStatus.APPROVED,
                 approverId   = entry.approvedBy?.id,
                 approverName = entry.approvedBy
                     ?.person
                     ?.let { "${it.firstName} ${it.lastName}" }
-                    .orEmpty()
+                    .orEmpty(),
+                approvedAt   = entry.approvedAt,
+                status       = entry.approvalStatus.name
             )
         )
     }

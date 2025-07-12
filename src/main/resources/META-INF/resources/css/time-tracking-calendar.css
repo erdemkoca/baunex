@@ -139,6 +139,209 @@
     font-style: italic;
 }
 
+/* Approval Status Indicators */
+.approval-indicator {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    z-index: 5;
+}
+
+.approval-indicator.approved {
+    background-color: #198754;
+    color: white;
+}
+
+.approval-indicator.pending {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.approval-indicator i {
+    font-size: 8px;
+}
+
+/* Approval Button */
+.approval-button {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background-color: #198754;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    cursor: pointer;
+    z-index: 6;
+    transition: all 0.2s ease;
+}
+
+.approval-button:hover {
+    background-color: #146c43;
+    transform: scale(1.1);
+}
+
+.approval-button i {
+    font-size: 8px;
+}
+
+/* Week Picker Styles */
+.week-picker-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+}
+
+.week-picker-nav {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.week-picker-scroll {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    flex: 1;
+    padding: 0 10px;
+}
+
+.week-picker-item {
+    flex-shrink: 0;
+    width: 80px;
+    height: 60px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: #f8f9fa;
+    position: relative;
+}
+
+.week-picker-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.week-picker-item.active {
+    border-color: #0d6efd;
+    background-color: #e7f1ff;
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+    transform: scale(1.05);
+}
+
+.week-picker-item.past-week {
+    border-color: #6c757d;
+    background-color: #f8f9fa;
+}
+
+.week-picker-item.current-week {
+    border-color: #198754;
+    background-color: #d1e7dd;
+}
+
+.week-picker-item.future-week {
+    border-color: #6c757d;
+    background-color: #f8f9fa;
+    opacity: 0.6;
+}
+
+/* Approval status colors */
+.week-picker-item.pending {
+    border-color: #ffc107;
+    background-color: #fff3cd;
+}
+
+.week-picker-item.approved {
+    border-color: #198754;
+    background-color: #d1e7dd;
+}
+
+.week-picker-item.rejected {
+    border-color: #dc3545;
+    background-color: #f8d7da;
+}
+
+.week-number {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    line-height: 1;
+}
+
+.week-range {
+    font-size: 10px;
+    color: #666;
+    text-align: center;
+    line-height: 1;
+    margin-top: 2px;
+}
+
+/* Approval status indicators for week picker */
+.week-picker-item.approved {
+    border-color: #198754;
+    background-color: #d1e7dd;
+}
+
+.week-picker-item.pending {
+    border-color: #ffc107;
+    background-color: #fff3cd;
+}
+
+.week-picker-item.future-approved {
+    border-color: #0dcaf0;
+    background-color: #cff4fc;
+}
+
+.week-picker-item.empty {
+    border-color: #dee2e6;
+    background-color: #f8f9fa;
+    opacity: 0.6;
+}
+
+.week-picker-item.rejected {
+    border-color: #dc3545;
+    background-color: #f8d7da;
+}
+
+/* Vacation Approval Section */
+.vacation-approval-card {
+    border-left: 4px solid #0dcaf0;
+}
+
+.vacation-approval-card.pending {
+    border-left-color: #ffc107;
+}
+
+.vacation-approval-card.approved {
+    border-left-color: #198754;
+}
+
+.vacation-approval-card.rejected {
+    border-left-color: #dc3545;
+}
+
 /* Daily Summary Boxes */
 .calendar-day-summary {
     transition: all 0.2s ease;

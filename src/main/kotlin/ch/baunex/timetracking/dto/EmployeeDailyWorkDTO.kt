@@ -14,6 +14,7 @@ data class EmployeeDailyWorkDTO(
     val expectedHours: Double,
     val delta: Double,
     val holidayType: String? = null,
+    val holidayId: Long? = null,
     val holidayApproved: Boolean? = null,
     val holidayReason: String? = null,
     val timeEntries: List<TimeEntryDTO> = emptyList(),

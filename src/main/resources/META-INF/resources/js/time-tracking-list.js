@@ -1,12 +1,24 @@
 import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded fired');
+    
     const el = document.getElementById('time-tracking-list-app');
+    if (!el) {
+        console.error('Element #time-tracking-list-app not found!');
+        return;
+    }
+    
+    //console.log('Found element:', el);
+    console.log('Element dataset:', el.dataset);
+    
     const timeEntries = JSON.parse(el.dataset.timeEntries || '[]');
     const holidays = JSON.parse(el.dataset.holidays || '[]');
     const employees = JSON.parse(el.dataset.employees || '[]');
+    
+    console.log('Parsed data:', { timeEntries, holidays, employees });
 
-    createApp({
+    const app = createApp({
         data() {
             return {
                 timeEntries,
@@ -25,10 +37,31 @@ document.addEventListener('DOMContentLoaded', () => {
                     ALL: { label: 'Alle', color: 'secondary', icon: 'bi-list-ul' },
                     PENDING: { label: 'Ausstehend', color: 'warning', icon: 'bi-clock' },
                     APPROVED: { label: 'Genehmigt', color: 'success', icon: 'bi-check-circle' }
-                }
+                },
+                pendingVacationRequests: [],
+                testValue: 'Hello Vue!',
+                weekPickerStart: 25, // Start week for week picker (matching currentWeek)
+                weekPickerVisibleCount: 12, // Number of weeks to show at once
+                successMessage: '',
+                showSuccessMessageTimeout: null,
+                weekPickerData: [], // Week picker data
             };
         },
         computed: {
+            selectedEmployee() {
+                return this.employees.find(emp => emp.id === this.selectedEmployeeId);
+            },
+            employeeStartDate() {
+                if (!this.selectedEmployee?.startDate) return null;
+                return new Date(this.selectedEmployee.startDate);
+            },
+            currentWeekStartDate() {
+                return this.getWeekStartDate(this.currentYear, this.currentWeek);
+            },
+            isCurrentWeekValid() {
+                if (!this.employeeStartDate) return true;
+                return this.currentWeekStartDate >= this.employeeStartDate;
+            },
             filteredEntries() {
                 let filtered = this.timeEntries.filter(e => e.employeeId === this.selectedEmployeeId);
                 if (this.selectedStatus === 'APPROVED') return filtered.filter(e => e.approval.approved);
@@ -171,6 +204,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     this.currentWeek--;
                 }
+                
+                // Check if we're going before the employee's start date
+                if (this.employeeStartDate && this.currentWeekStartDate < this.employeeStartDate) {
+                    // Reset to the week of the employee's start date
+                    const startWeek = this.getWeekOfYear(this.employeeStartDate);
+                    const startYear = this.employeeStartDate.getFullYear();
+                    this.currentWeek = startWeek;
+                    this.currentYear = startYear;
+                }
+                
                 this.onWeekChange();
             },
             nextWeek() {
@@ -231,6 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             onEmployeeChange() {
                 this.onWeekChange();
+                this.loadWeekPickerData();
             },
             toLocalDateString(date) {
                 const year = date.getFullYear();
@@ -400,6 +444,147 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 return `${mins}m`;
             },
+            // Approval statistics
+            totalEntries() {
+                console.log('DEBUG: totalEntries computed called, timeEntries length:', this.timeEntries.length);
+                console.log('DEBUG: timeEntries:', this.timeEntries);
+                return this.timeEntries.length; // Use actual data
+            },
+            approvedEntries() {
+                console.log('DEBUG: approvedEntries computed called');
+                const approved = this.timeEntries.filter(e => e.approval?.approved);
+                console.log('DEBUG: approved entries:', approved);
+                return approved.length;
+            },
+            pendingEntries() {
+                console.log('DEBUG: pendingEntries computed called');
+                const pending = this.timeEntries.filter(e => !e.approval?.approved);
+                console.log('DEBUG: pending entries:', pending);
+                return pending.length;
+            },
+            // Test computed property
+            testComputed() {
+                console.log('DEBUG: testComputed called');
+                return 'Vue is working!';
+            },
+            // Simple test computed
+            simpleTest() {
+                console.log('DEBUG: simpleTest computed called');
+                return this.testValue + ' - Computed!';
+            },
+            // Week picker computed properties
+            visibleWeeks() {
+                console.log('DEBUG: visibleWeeks computed called');
+                console.log('DEBUG: weekPickerStart:', this.weekPickerStart);
+                console.log('DEBUG: weekPickerVisibleCount:', this.weekPickerVisibleCount);
+                console.log('DEBUG: currentYear:', this.currentYear);
+                console.log('DEBUG: currentWeek:', this.currentWeek);
+                
+                // Force reactivity by accessing the properties
+                const start = this.weekPickerStart;
+                const count = this.weekPickerVisibleCount;
+                const year = this.currentYear;
+                
+                const weeks = [];
+                for (let i = 0; i < count; i++) {
+                    const weekNumber = start + i;
+                    console.log('DEBUG: Processing week number:', weekNumber);
+                    const weekStart = this.getWeekStartDate(this.currentYear, weekNumber);
+                    console.log('DEBUG: Week start date:', weekStart);
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekStart.getDate() + 6);
+                    console.log('DEBUG: Week end date:', weekEnd);
+                    
+                    if (!weekStart || isNaN(weekStart.getTime())) {
+                        console.error('DEBUG: Invalid week start date for week:', weekNumber);
+                        continue;
+                    }
+                    
+                    const week = {
+                        weekNumber: weekNumber,
+                        year: this.currentYear,
+                        weekStart: weekStart,
+                        weekEnd: weekEnd,
+                        shortRange: `${weekStart.getDate()}.${weekStart.getMonth() + 1} – ${weekEnd.getDate()}.${weekEnd.getMonth() + 1}`,
+                        fullRange: `${weekStart.toLocaleDateString('de-CH')} – ${weekEnd.toLocaleDateString('de-CH')}`
+                    };
+                    
+                    weeks.push(week);
+                    console.log('DEBUG: Added week:', week);
+                }
+                
+                console.log('DEBUG: Final weeks array:', weeks);
+                return weeks;
+            },
+            async approveWeeklyEntries() {
+                if (!confirm('Möchten Sie alle Zeiterfassungen dieser Woche genehmigen?')) {
+                    return;
+                }
+                
+                try {
+                    console.log('Approving weekly entries for employee:', this.selectedEmployeeId);
+                    const weekStart = this.getWeekStartDate(this.currentYear, this.currentWeek);
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekStart.getDate() + 6);
+                    
+                    const from = this.toLocalDateString(weekStart);
+                    const to = this.toLocalDateString(weekEnd);
+                    
+                    const response = await fetch(`/timetracking/api/weekly/approve`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            employeeId: this.selectedEmployeeId,
+                            from: from,
+                            to: to
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        // Update data in place instead of reloading
+                        await this.loadDailySummaries();
+                        await this.loadWeekPickerData();
+                        // Show success message
+                        this.showSuccessMessage('Woche erfolgreich genehmigt!');
+                    } else {
+                        const errorText = await response.text();
+                        console.error('Weekly approval failed:', errorText);
+                        alert('Fehler beim Genehmigen der Woche: ' + errorText);
+                    }
+                } catch (error) {
+                    console.error('Error approving weekly entries:', error);
+                    alert('Fehler beim Genehmigen der Woche');
+                }
+            },
+            async approveTimeEntry(entryId) {
+                try {
+                    console.log('Approving time entry:', entryId);
+                    const response = await fetch(`/timetracking/api/${entryId}/approve`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        console.log('Time entry approved successfully');
+                        // Update data in place instead of reloading
+                        await this.loadDailySummaries();
+                        await this.loadWeekPickerData();
+                        // Show success message
+                        this.showSuccessMessage('Zeiteintrag erfolgreich genehmigt!');
+                    } else {
+                        const errorText = await response.text();
+                        console.error('Approval failed:', errorText);
+                        alert('Fehler beim Genehmigen des Eintrags: ' + errorText);
+                    }
+                } catch (error) {
+                    console.error('Error approving time entry:', error);
+                    alert('Fehler beim Genehmigen des Eintrags');
+                }
+            },
             getDaySummaryClass(day) {
                 if (!day || !day.summary) return '';
                 
@@ -413,6 +598,335 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (summary.delta === 0) return 'calendar-perfect';
                 
                 return '';
+            },
+            async loadPendingVacationRequests() {
+                this.loading = true;
+                try {
+                    // Use the existing holidays endpoint instead of the non-existent approval endpoint
+                    const res = await fetch(`/timetracking/api/holidays/employee/${this.selectedEmployeeId}`);
+                    if (res.ok) {
+                        const allHolidays = await res.json();
+                        // Filter for pending holidays
+                        this.pendingVacationRequests = allHolidays.filter(holiday => 
+                            holiday.status === 'PENDING' || !holiday.status
+                        );
+                    } else {
+                        console.error('Error loading holidays:', res.status, res.statusText);
+                        this.pendingVacationRequests = [];
+                    }
+                } catch (error) {
+                    console.error('Error loading pending vacation requests:', error);
+                    this.pendingVacationRequests = [];
+                } finally {
+                    this.loading = false;
+                }
+            },
+            async approveVacation(requestId) {
+                if (!confirm('Möchten Sie diesen Urlaubsantrag genehmigen?')) {
+                    return;
+                }
+                try {
+                    const response = await fetch(`/timetracking/api/holidays/${requestId}/approve`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            approval: {
+                                status: 'APPROVED',
+                                approverId: this.selectedEmployeeId,
+                                approvedAt: new Date().toISOString().split('T')[0]
+                            }
+                        })
+                    });
+                    if (response.ok) {
+                        this.showSuccessMessage('Urlaubsantrag erfolgreich genehmigt!');
+                        this.loadPendingVacationRequests(); // Reload data
+                    } else {
+                        const errorText = await response.text();
+                        alert('Fehler beim Genehmigen des Urlaubsantrags: ' + errorText);
+                    }
+                } catch (error) {
+                    console.error('Error approving vacation:', error);
+                    alert('Fehler beim Genehmigen des Urlaubsantrags');
+                }
+            },
+            async rejectVacation(requestId) {
+                if (!confirm('Möchten Sie diesen Urlaubsantrag ablehnen?')) {
+                    return;
+                }
+                try {
+                    const response = await fetch(`/timetracking/api/holidays/${requestId}/approve`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            approval: {
+                                status: 'REJECTED',
+                                approverId: this.selectedEmployeeId,
+                                approvedAt: new Date().toISOString().split('T')[0]
+                            }
+                        })
+                    });
+                    if (response.ok) {
+                        this.showSuccessMessage('Urlaubsantrag erfolgreich abgelehnt!');
+                        this.loadPendingVacationRequests(); // Reload data
+                    } else {
+                        const errorText = await response.text();
+                        alert('Fehler beim Ablehnen des Urlaubsantrags: ' + errorText);
+                    }
+                } catch (error) {
+                    console.error('Error rejecting vacation:', error);
+                    alert('Fehler beim Ablehnen des Urlaubsantrags');
+                }
+            },
+            async approveHoliday(holidayId) {
+                if (!confirm('Möchten Sie diesen Urlaubsantrag genehmigen?')) {
+                    return;
+                }
+                try {
+                    console.log('Approving holiday:', holidayId);
+                    const response = await fetch(`/timetracking/api/holidays/${holidayId}/approve`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            approval: {
+                                status: 'APPROVED',
+                                approverId: this.selectedEmployeeId,
+                                approvedAt: new Date().toISOString().split('T')[0]
+                            }
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        console.log('Holiday approved successfully');
+                        // Update data in place instead of reloading
+                        await this.loadDailySummaries();
+                        await this.loadWeekPickerData();
+                        // Show success message
+                        this.showSuccessMessage('Urlaubsantrag erfolgreich genehmigt!');
+                    } else {
+                        const errorText = await response.text();
+                        console.error('Holiday approval failed:', errorText);
+                        alert('Fehler beim Genehmigen des Urlaubsantrags: ' + errorText);
+                    }
+                } catch (error) {
+                    console.error('Error approving holiday:', error);
+                    alert('Fehler beim Genehmigen des Urlaubsantrags');
+                }
+            },
+            // Week picker methods
+            async loadWeekPickerData() {
+                this.weekPickerData = await this.getVisibleWeeks();
+            },
+            async getVisibleWeeks() {
+                console.log('DEBUG: getVisibleWeeks method called');
+                const weeks = [];
+                
+                for (let i = 0; i < this.weekPickerVisibleCount; i++) {
+                    const weekNumber = this.weekPickerStart + i;
+                    const weekStart = this.getWeekStartDate(this.currentYear, weekNumber);
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekStart.getDate() + 6);
+                    
+                    // Determine approval status
+                    const today = new Date();
+                    const isPast = weekEnd < today;
+                    const isFuture = weekStart > today;
+                    
+                    let approvalStatus = 'empty';
+                    
+                    if (isFuture) {
+                        approvalStatus = 'future';
+                    } else {
+                        // For past and current weeks, check actual approval status
+                        try {
+                            const weekStartStr = this.toLocalDateString(weekStart);
+                            const weekEndStr = this.toLocalDateString(weekEnd);
+                            
+                            // Fetch time entries and vacation requests for this week
+                            const [timeEntriesResponse, holidaysResponse] = await Promise.all([
+                                fetch(`/timetracking/api/summary/daily?employeeId=${this.selectedEmployeeId}&from=${weekStartStr}&to=${weekEndStr}`),
+                                fetch(`/timetracking/api/holidays/employee/${this.selectedEmployeeId}`)
+                            ]);
+                            
+                            if (timeEntriesResponse.ok && holidaysResponse.ok) {
+                                const dailySummaries = await timeEntriesResponse.json();
+                                const holidays = await holidaysResponse.json();
+                                
+                                // Filter holidays for this week
+                                const weekHolidays = holidays.filter(holiday => {
+                                    const holidayStart = new Date(holiday.startDate);
+                                    const holidayEnd = new Date(holiday.endDate);
+                                    return holidayStart <= weekEnd && holidayEnd >= weekStart;
+                                });
+                                
+                                                                // Check if there are any entries or holidays
+                                const hasTimeEntries = dailySummaries.some(day => day.timeEntries && day.timeEntries.length > 0);
+                                const hasHolidays = weekHolidays.length > 0;
+                                
+                                // Check approval status for time entries
+                                let timeEntriesApproved = true;
+                                if (hasTimeEntries) {
+                                    timeEntriesApproved = dailySummaries.every(day => 
+                                        !day.timeEntries || day.timeEntries.length === 0 || 
+                                        day.timeEntries.every(entry => entry.approval?.approved === true)
+                                    );
+                                }
+                                
+                                // Check approval status for holidays
+                                let holidaysApproved = true;
+                                if (hasHolidays) {
+                                    holidaysApproved = weekHolidays.every(holiday => 
+                                        holiday.status === 'APPROVED' || holiday.approval?.approved === true
+                                    );
+                                }
+                                
+                                // Determine overall approval status
+                                if (hasTimeEntries || hasHolidays) {
+                                    if (timeEntriesApproved && holidaysApproved) {
+                                        approvalStatus = 'approved';
+                                    } else {
+                                        approvalStatus = 'pending';
+                                    }
+                                } else {
+                                    approvalStatus = 'empty';
+                                }
+                                
+                                // Debug logging for all weeks with content
+                                if (hasTimeEntries || hasHolidays) {
+                                    console.log(`Week ${weekNumber} approval check:`, {
+                                        hasTimeEntries,
+                                        hasHolidays,
+                                        timeEntriesApproved,
+                                        holidaysApproved,
+                                        finalStatus: approvalStatus,
+                                        timeEntriesCount: dailySummaries.reduce((sum, day) => sum + (day.timeEntries?.length || 0), 0),
+                                        holidaysCount: weekHolidays.length,
+                                        timeEntriesDetails: dailySummaries.map(day => ({
+                                            date: day.date,
+                                            entries: day.timeEntries?.map(entry => ({
+                                                id: entry.id,
+                                                approved: entry.approval?.approved,
+                                                status: entry.approval?.status
+                                            })) || []
+                                        })),
+                                        holidaysDetails: weekHolidays.map(h => ({
+                                            id: h.id,
+                                            status: h.status,
+                                            approvalStatus: h.approval?.approved,
+                                            approvalStatusStr: h.approval?.status
+                                        }))
+                                    });
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Error fetching approval status for week:', weekNumber, error);
+                            approvalStatus = 'pending'; // Default to pending on error
+                        }
+                    }
+                    
+                    weeks.push({
+                        weekNumber: weekNumber,
+                        year: this.currentYear,
+                        weekStart: weekStart,
+                        weekEnd: weekEnd,
+                        shortRange: `${weekStart.getDate()}.${weekStart.getMonth() + 1} – ${weekEnd.getDate()}.${weekEnd.getMonth() + 1}`,
+                        fullRange: `${weekStart.toLocaleDateString('de-CH')} – ${weekEnd.toLocaleDateString('de-CH')}`,
+                        approvalStatus: approvalStatus
+                    });
+                }
+                
+                return weeks;
+            },
+            selectWeek(week) {
+                this.currentWeek = week.weekNumber;
+                this.currentYear = week.year;
+                this.onWeekChange();
+            },
+            scrollWeekPicker(direction) {
+                this.weekPickerStart += direction * this.weekPickerVisibleCount;
+                // Ensure we don't go below week 1 or above week 52
+                this.weekPickerStart = Math.max(1, Math.min(52 - this.weekPickerVisibleCount + 1, this.weekPickerStart));
+                this.loadWeekPickerData();
+            },
+            getWeekPickerItemClass(week) {
+                const isCurrentWeek = week.weekNumber === this.currentWeek && week.year === this.currentYear;
+                
+                let classes = ['week-picker-item'];
+                
+                // Mark current selected week
+                if (isCurrentWeek) {
+                    classes.push('active');
+                }
+                
+                // Color coding based on approval status
+                if (week.approvalStatus === 'future') {
+                    classes.push('future-week');
+                } else if (week.approvalStatus === 'approved') {
+                    classes.push('approved');
+                } else if (week.approvalStatus === 'pending') {
+                    classes.push('pending');
+                } else if (week.approvalStatus === 'rejected') {
+                    classes.push('rejected');
+                } else {
+                    classes.push('empty');
+                }
+                
+                return classes.join(' ');
+            },
+            showSuccessMessage(message) {
+                this.successMessage = message;
+                // Clear any existing timeout
+                if (this.showSuccessMessageTimeout) {
+                    clearTimeout(this.showSuccessMessageTimeout);
+                }
+                // Auto-hide after 3 seconds
+                this.showSuccessMessageTimeout = setTimeout(() => {
+                    this.successMessage = '';
+                }, 3000);
+            },
+            async loadWeekApprovalStatus(week) {
+                // This would be implemented to fetch actual approval status from backend
+                // For now, return a mock status
+                const weekStart = this.toLocalDateString(week.weekStart);
+                const weekEnd = this.toLocalDateString(week.weekEnd);
+                
+                try {
+                    const response = await fetch(`/timetracking/api/summary/daily?employeeId=${this.selectedEmployeeId}&from=${weekStart}&to=${weekEnd}`);
+                    if (response.ok) {
+                        const dailySummaries = await response.json();
+                        const hasEntries = dailySummaries.some(day => day.timeEntries && day.timeEntries.length > 0);
+                        const hasPending = dailySummaries.some(day => 
+                            day.timeEntries && day.timeEntries.some(entry => !entry.approval?.approved)
+                        );
+                        const hasApproved = dailySummaries.some(day => 
+                            day.timeEntries && day.timeEntries.some(entry => entry.approval?.approved)
+                        );
+                        
+                        if (hasPending) return 'pending';
+                        if (hasApproved && !hasPending) return 'approved';
+                        if (hasEntries) return 'pending'; // Default to pending if has entries but no approval info
+                        return 'empty';
+                    }
+                } catch (error) {
+                    console.error('Error loading week approval status:', error);
+                }
+                
+                return 'empty';
+            },
+            getWeekOfYear(date) {
+                const d = new Date(date.getTime());
+                d.setHours(0, 0, 0, 0);
+                // Thursday in current week decides the year
+                d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+                // January 4 is always in week 1
+                const week1 = new Date(d.getFullYear(), 0, 4);
+                // Adjust to Thursday in week 1 and count number of weeks from date to week1
+                return 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
             }
         },
         watch: {
@@ -421,13 +935,25 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             viewMode() {
                 this.onEmployeeChange();
+                if (this.viewMode === 'vacation') {
+                    this.loadPendingVacationRequests();
+                }
             }
         },
         mounted() {
             this.loadDailySummaries();
+            // Initialize week picker to show current week
+            this.weekPickerStart = Math.max(1, this.currentWeek - Math.floor(this.weekPickerVisibleCount / 2));
+            this.loadWeekPickerData();
         },
         template: `
         <div class="container-fluid">
+            <!-- Success Message -->
+            <div v-if="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle me-2"></i>{{ successMessage }}
+                <button type="button" class="btn-close" @click="successMessage = ''"></button>
+            </div>
+            
             <div class="mb-3 d-flex justify-content-between align-items-center">
                 <a href="/timetracking/0" class="btn btn-primary">
                     <i class="bi bi-plus-circle me-2"></i>Zeit erfassen
@@ -456,8 +982,21 @@ document.addEventListener('DOMContentLoaded', () => {
                                 @click="viewMode = 'summary'">
                             <i class="bi bi-graph-up me-1"></i>Zusammenfassung
                         </button>
+                        <button type="button" 
+                                :class="['btn', 'btn-outline-primary', { active: viewMode === 'vacation' }]"
+                                @click="viewMode = 'vacation'">
+                            <i class="bi bi-calendar-check me-1"></i>Urlaubsanträge
+                        </button>
                     </div>
                 </div>
+            </div>
+
+            <!-- Employee Start Date Info -->
+            <div v-if="employeeStartDate && viewMode === 'calendar'" class="alert alert-info mb-3">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>{{ selectedEmployee?.firstName }} {{ selectedEmployee?.lastName }}</strong> 
+                arbeitet seit {{ new Date(employeeStartDate).toLocaleDateString('de-CH') }}. 
+                Nur Wochen ab diesem Datum werden angezeigt.
             </div>
 
             <!-- Loading Indicator -->
@@ -481,6 +1020,40 @@ document.addEventListener('DOMContentLoaded', () => {
                             </button>
                         </div>
                     </div>
+                    
+                    <!-- Week Picker -->
+                    <div class="card-body border-bottom">
+                        <div class="week-picker-container">
+                            <button @click="scrollWeekPicker(-1)" class="btn btn-outline-secondary btn-sm week-picker-nav">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                            
+                            <div class="week-picker-scroll" ref="weekPickerScroll">
+                                <div v-for="week in weekPickerData" 
+                                     :key="week.weekNumber" 
+                                     :class="['week-picker-item', getWeekPickerItemClass(week)]"
+                                     @click="selectWeek(week)">
+                                    <div class="week-number">{{ week.weekNumber }}</div>
+                                    <div class="week-range">{{ week.shortRange }}</div>
+                                </div>
+                            </div>
+                            
+                            <button @click="scrollWeekPicker(1)" class="btn btn-outline-secondary btn-sm week-picker-nav">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Week Picker Legend -->
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <span class="me-3"><span class="badge bg-secondary">⚪</span> Zukunft</span>
+                                <span class="me-3"><span class="badge bg-success">🟢</span> Genehmigt</span>
+                                <span class="me-3"><span class="badge bg-warning">🟡</span> Ausstehend</span>
+                                <span class="me-3"><span class="badge bg-danger">🔴</span> Abgelehnt</span>
+                            </small>
+                        </div>
+                    </div>
+                    
                     <div class="card-body">
                         <!-- Vertical Time Grid -->
                         <div class="calendar-vertical-grid" style="display:flex; flex-direction:column; overflow-x:auto;">
@@ -508,6 +1081,18 @@ document.addEventListener('DOMContentLoaded', () => {
                                          class="calendar-time-block"
                                          @click="navigateToEdit(layoutItem.entry.id)"
                                     >
+                                        <!-- Approval Status Indicator -->
+                                        <div :class="['approval-indicator', layoutItem.entry.approval?.approved ? 'approved' : 'pending']"
+                                             :title="layoutItem.entry.approval?.approved ? 'Genehmigt' : 'Ausstehend'">
+                                            <i :class="['bi', layoutItem.entry.approval?.approved ? 'bi-check-circle-fill' : 'bi-clock']"></i>
+                                        </div>
+                                        <!-- Approval Button -->
+                                        <div v-if="!layoutItem.entry.approval?.approved" 
+                                             class="approval-button"
+                                             @click.stop="approveTimeEntry(layoutItem.entry.id)"
+                                             :title="'Genehmigen: ' + layoutItem.entry.title">
+                                            <i class="bi bi-check-circle"></i>
+                                        </div>
                                         <!-- Break overlays -->
                                         <div v-for="(breakItem, breakIndex) in calculateBreakPositions(layoutItem.entry)" 
                                              :key="'break-' + breakIndex"
@@ -552,6 +1137,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                         </div>
                                         <div v-if="day.summary.holidayType" style="font-size:9px; color: #0dcaf0;">
                                             {{ day.summary.holidayType }}
+                                            <!-- Holiday approval button -->
+                                            <button v-if="!day.summary.holidayApproved" 
+                                                    @click.stop="approveHoliday(day.summary.holidayId)"
+                                                    class="btn btn-success btn-sm ms-1"
+                                                    style="font-size: 8px; padding: 1px 4px;">
+                                                <i class="bi bi-check-circle"></i>
+                                            </button>
                                         </div>
                                     </div>
                                     <div v-else style="text-align:center; color: #999; font-size:12px;">
@@ -656,12 +1248,65 @@ document.addEventListener('DOMContentLoaded', () => {
                                             </div>
                                         </div>
                                         <div class="mt-3">
-                                            <div class="d-flex justify-content-between">
+                                            <div class="d-flex justify-content-between mb-1">
                                                 <span>Urlaubstage: {{ summary.holidayDays }}</span>
                                                 <span v-if="summary.pendingHolidayRequests > 0" class="text-warning">
                                                     {{ summary.pendingHolidayRequests }} ausstehend
                                                 </span>
                                             </div>
+                                            <div class="d-flex justify-content-between small text-muted">
+                                                <span>Verbraucht: {{ summary.usedVacationDays }}/{{ summary.totalVacationDays }}</span>
+                                                <span :class="summary.remainingVacationDays < 5 ? 'text-warning' : 'text-success'">
+                                                    {{ summary.remainingVacationDays }} verbleibend
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vacation Approval View -->
+            <div v-if="viewMode === 'vacation' && !loading">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Urlaubsanträge</h5>
+                        <button @click="loadPendingVacationRequests" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Aktualisieren
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div v-if="pendingVacationRequests.length === 0" class="text-muted">
+                            Keine ausstehenden Urlaubsanträge.
+                        </div>
+                        <div v-else class="row">
+                            <div v-for="request in pendingVacationRequests" :key="request.id" class="col-md-6 col-lg-4 mb-3">
+                                <div :class="['card', 'vacation-approval-card', (request.status || 'pending').toLowerCase()]">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">{{ request.employeeName }}</h6>
+                                        <small class="text-muted">{{ request.type }}</small>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-2">
+                                            <strong>Zeitraum:</strong><br>
+                                            {{ formatDate(request.startDate) }} - {{ formatDate(request.endDate) }}
+                                        </div>
+                                        <div class="mb-2">
+                                            <strong>Arbeitstage:</strong> {{ request.workingDays }} Tage
+                                        </div>
+                                        <div v-if="request.reason" class="mb-2">
+                                            <strong>Grund:</strong> {{ request.reason }}
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <button @click="approveVacation(request.id)" class="btn btn-success btn-sm">
+                                                <i class="bi bi-check-circle me-1"></i>Genehmigen
+                                            </button>
+                                            <button @click="rejectVacation(request.id)" class="btn btn-danger btn-sm">
+                                                <i class="bi bi-x-circle me-1"></i>Ablehnen
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -858,6 +1503,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                                     class="btn btn-outline-primary btn-sm">
                                                 <i class="bi bi-pencil me-1"></i>Bearbeiten
                                             </button>
+                                            <button v-if="!entry.approval?.approved"
+                                                    @click="approveTimeEntry(entry.id)"
+                                                    class="btn btn-success btn-sm">
+                                                <i class="bi bi-check-circle me-1"></i>Genehmigen
+                                            </button>
                                             <button @click="deleteEntry(entry.id)"
                                                     class="btn btn-outline-danger btn-sm">
                                                 <i class="bi bi-trash me-1"></i>Löschen
@@ -872,5 +1522,14 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         </div>
         `
-    }).mount(el);
+    });
+    
+    console.log('Vue app created, attempting to mount...');
+    
+    try {
+        app.mount(el);
+        console.log('Vue app mounted successfully');
+    } catch (error) {
+        console.error('Error mounting Vue app:', error);
+    }
 });

@@ -1,5 +1,7 @@
 package ch.baunex.user.dto
 
+import java.time.LocalDate
+
 data class EmployeeCreateDTO(
     val firstName: String,
     val lastName: String,
@@ -13,5 +15,7 @@ data class EmployeeCreateDTO(
     val role: String,
     val ahvNumber: String,
     val bankIban: String?,
-    val hourlyRate: Double = 150.0
+    val hourlyRate: Double = 150.0,
+    val vacationDays: Int = 25,
+    val startDate: LocalDate = LocalDate.now()
 )

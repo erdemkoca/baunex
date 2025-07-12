@@ -41,10 +41,14 @@ class EmployeeModel : PanacheEntityBase() {
     var hourlyRate: Double = 150.0
 
     @Column(nullable = false)
-    var plannedWeeklyHours: Double = 42.0
+    var plannedWeeklyHours: Double = 40.0
 
     @Column(nullable = false)
-    var plannedDailyHours: Double = 8.0
+    var vacationDays: Int = 25
+
+    @Contextual
+    @Column(nullable = false)
+    var startDate: LocalDate = LocalDate.now()
 
     @Contextual
     @Column(nullable = false, updatable = false)

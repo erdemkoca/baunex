@@ -6,6 +6,7 @@ import ch.baunex.user.facade.EmployeeFacade
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
+import java.time.LocalDate
 
 @ApplicationScoped
 class SampleEmployeeLoader {
@@ -29,7 +30,8 @@ class SampleEmployeeLoader {
                 role = "ADMIN",
                 ahvNumber = "756.1234.5678.97",
                 bankIban = "CH9300762011623852957",
-                hourlyRate = 200.0
+                hourlyRate = 200.0,
+                startDate = LocalDate.now().minusDays(30)
             ),
             EmployeeCreateDTO(
                 firstName = "Max",
@@ -44,7 +46,8 @@ class SampleEmployeeLoader {
                 role = "PROJECT_MANAGER",
                 ahvNumber = "756.2345.6789.01",
                 bankIban = "CH5604835012345678009",
-                hourlyRate = 180.0
+                hourlyRate = 180.0,
+                startDate = LocalDate.now().minusDays(30)
             ),
             EmployeeCreateDTO(
                 firstName = "Hans",
@@ -59,7 +62,8 @@ class SampleEmployeeLoader {
                 role = "ELECTRICIAN",
                 ahvNumber = "756.3456.7890.12",
                 bankIban = "CH4401234123412341234",
-                hourlyRate = 160.0
+                hourlyRate = 160.0,
+                startDate = LocalDate.now().minusDays(30)
             ),
             EmployeeCreateDTO(
                 firstName = "Leni",
@@ -74,7 +78,8 @@ class SampleEmployeeLoader {
                 role = "EMPLOYEE",
                 ahvNumber = "756.4567.8901.23",
                 bankIban = "CH5800791123000889012",
-                hourlyRate = 150.0
+                hourlyRate = 150.0,
+                startDate = LocalDate.now().minusDays(30)
             )
         )
 

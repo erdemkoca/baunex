@@ -23,6 +23,7 @@ import java.time.LocalDate
 import ch.baunex.serialization.SerializationUtils.json
 import ch.baunex.timetracking.dto.HolidayApprovalDTO
 import ch.baunex.timetracking.dto.HolidayDTO
+import ch.baunex.timetracking.dto.WeeklyApprovalRequest
 import ch.baunex.timetracking.facade.HolidayFacade
 import ch.baunex.timetracking.service.WorkSummaryService
 import ch.baunex.timetracking.dto.EmployeeDailyWorkDTO
@@ -107,6 +108,17 @@ class TimeTrackingController {
     }
 
     @POST
+    @Path("/api/weekly/approve")
+    @Consumes(MediaType.APPLICATION_JSON)
+    fun approveWeeklyApi(request: WeeklyApprovalRequest): Response {
+        val adminId = employeeFacade.findByRole(Role.ADMIN).id
+        return if (timeTrackingFacade.approveWeeklyEntries(request.employeeId, request.from, request.to, adminId))
+            Response.noContent().build()
+        else
+            Response.status(Response.Status.NOT_FOUND).build()
+    }
+
+    @POST
     @Path("/api/upload/note-attachment")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
@@ -162,7 +174,7 @@ class TimeTrackingController {
         @PathParam("id") holidayId: Long,
         dto: HolidayApprovalDTO
     ): Response {
-        val updated = holidayFacade.approveHoliday(dto)
+        val updated = holidayFacade.approveHoliday(holidayId, dto)
         return if (updated != null) Response.ok(updated).build()
         else Response.status(Response.Status.NOT_FOUND).build()
     }

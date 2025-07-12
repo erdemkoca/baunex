@@ -548,7 +548,7 @@ class SampleTimeEntryLoader {
                 approval = ApprovalDTO(
                     approved = false,
                     approverId = null,
-                    approverName = null
+                    approverName = ""
                 )
             )
         )

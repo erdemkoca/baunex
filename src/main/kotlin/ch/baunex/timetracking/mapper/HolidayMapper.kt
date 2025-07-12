@@ -15,7 +15,7 @@ class HolidayMapper {
             startDate = dto.startDate
             endDate = dto.endDate
             type = HolidayType.valueOf(dto.type)
-            status = ApprovalStatus.valueOf(dto.status)
+            approvalStatus = ApprovalStatus.valueOf(dto.status)
             reason = dto.reason
         }
     }
@@ -28,8 +28,15 @@ class HolidayMapper {
             startDate = model.startDate,
             endDate = model.endDate,
             type = model.type.name,
-            status = model.status.name,
-            reason = model.reason
+            status = model.approvalStatus.name,
+            reason = model.reason,
+            approval = ch.baunex.timetracking.dto.ApprovalDTO(
+                approved = model.approvalStatus == ApprovalStatus.APPROVED,
+                approverId = model.approvedBy?.id,
+                approverName = model.approvedBy?.let { "${it.person.firstName} ${it.person.lastName}" } ?: "",
+                approvedAt = model.approvedAt,
+                status = model.approvalStatus.name
+            )
         )
     }
 }

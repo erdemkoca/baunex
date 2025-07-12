@@ -50,4 +50,10 @@ class TimeTrackingFacade @Inject constructor(
         timeTrackingService.approveEntry(entryId, approverId)
         return true
     }
+
+    fun approveWeeklyEntries(employeeId: Long, from: String, to: String, approverId: Long): Boolean {
+        val fromDate = java.time.LocalDate.parse(from)
+        val toDate = java.time.LocalDate.parse(to)
+        return timeTrackingService.approveWeeklyEntries(employeeId, fromDate, toDate, approverId)
+    }
 }

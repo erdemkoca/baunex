@@ -16,13 +16,15 @@ fun EmployeeModel.toEmployeeDTO(): EmployeeDTO = EmployeeDTO(
     ahvNumber = this.ahvNumber,
     bankIban = this.bankIban,
     hourlyRate = this.hourlyRate,
+    vacationDays = this.vacationDays,
     street     = this.person.details.street,
     city       = this.person.details.city,
     zipCode    = this.person.details.zipCode,
     country    = this.person.details.country,
     phone      = this.person.details.phone,
     createdAt = this.createdAt,
-    updatedAt = this.updatedAt
+    updatedAt = this.updatedAt,
+    startDate = this.startDate,
 )
 
 fun EmployeeCreateDTO.toEmployeeModel(): EmployeeModel {
@@ -46,6 +48,7 @@ fun EmployeeCreateDTO.toEmployeeModel(): EmployeeModel {
         ahvNumber    = this@toEmployeeModel.ahvNumber
         bankIban     = this@toEmployeeModel.bankIban
         hourlyRate   = this@toEmployeeModel.hourlyRate
+        vacationDays = this@toEmployeeModel.vacationDays
     }
 }
 
@@ -66,6 +69,7 @@ fun EmployeeCreateDTO.applyTo(employee: EmployeeModel): EmployeeModel {
         ahvNumber  = this@applyTo.ahvNumber
         bankIban   = this@applyTo.bankIban
         hourlyRate = this@applyTo.hourlyRate
+        vacationDays = this@applyTo.vacationDays
     }
     return employee
 }

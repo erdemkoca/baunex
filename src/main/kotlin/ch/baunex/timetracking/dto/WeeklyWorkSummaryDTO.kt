@@ -18,5 +18,8 @@ data class WeeklyWorkSummaryDTO(
     val undertime: Double,
     val holidayDays: Int,
     val pendingHolidayRequests: Int,
+    val totalVacationDays: Int,  // Total vacation days allocated per year
+    val usedVacationDays: Int,   // Vacation days used this year
+    val remainingVacationDays: Int, // Remaining vacation days
     val dailySummaries: List<EmployeeDailyWorkDTO> = emptyList()
 ) 

@@ -17,11 +17,13 @@ data class EmployeeDTO(
     val ahvNumber: String,
     val bankIban: String?,
     val hourlyRate: Double,
+    val vacationDays: Int,
     val street: String?,
     val city: String?,
     val zipCode: String?,
     val country: String?,
     val phone: String?,
+    @Serializable(with = LocalDateSerializer::class) val startDate: LocalDate,
     @Serializable(with = LocalDateTimeSerializer::class) val createdAt: LocalDateTime,
     @Serializable(with = LocalDateTimeSerializer::class) val updatedAt: LocalDateTime
 )

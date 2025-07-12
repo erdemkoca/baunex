@@ -24,8 +24,15 @@ class HolidayModel : PanacheEntity() {
     var type: HolidayType = HolidayType.PAID_VACATION
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    var status: ApprovalStatus = ApprovalStatus.PENDING
+    @Column(name = "approval_status", nullable = false)
+    var approvalStatus: ApprovalStatus = ApprovalStatus.PENDING
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approved_by")
+    var approvedBy: EmployeeModel? = null
+
+    @Column(name = "approved_at")
+    var approvedAt: LocalDate? = null
 
     @Column(length = 255)
     var reason: String? = null
