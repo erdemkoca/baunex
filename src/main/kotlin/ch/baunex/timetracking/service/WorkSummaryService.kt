@@ -78,7 +78,7 @@ class WorkSummaryService @Inject constructor(
                     workedHours = workedHours,
                     expectedHours = expectedHours,
                     delta = delta,
-                    holidayType = holiday?.type?.name,
+                    holidayType = holiday?.type?.displayName,
                     holidayId = holiday?.id,
                     holidayApproved = holiday?.approvalStatus == ApprovalStatus.APPROVED,
                     holidayReason = holiday?.reason,

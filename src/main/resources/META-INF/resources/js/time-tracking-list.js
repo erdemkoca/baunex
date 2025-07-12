@@ -133,6 +133,10 @@ document.addEventListener('DOMContentLoaded', () => {
             formatDate(date) {
                 return new Date(date).toLocaleDateString('de-CH');
             },
+            getHolidayTypeDisplayName(holidayType) {
+                // Backend now sends display names directly, so just return the holidayType
+                return holidayType || 'Nicht definiert';
+            },
             getCurrentWeek() {
                 // For testing, default to week 25 of 2025 where we have sample data
                 return 25;
@@ -239,10 +243,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (summary.isWeekend) return 'calendar-weekend';
                 if (summary.holidayType) return 'calendar-holiday';
-                if (summary.workedHours === 0 && summary.expectedHours > 0) return 'calendar-missing';
-                if (summary.delta > 0) return 'calendar-overtime';
-                if (summary.delta < 0) return 'calendar-undertime';
-                if (summary.delta === 0) return 'calendar-perfect';
+                
+                // For approved holidays, treat like weekends (0 expected hours)
+                const effectiveExpectedHours = (summary.holidayType && summary.holidayApproved) ? 0 : summary.expectedHours;
+                const effectiveDelta = summary.workedHours - effectiveExpectedHours;
+                
+                if (summary.workedHours === 0 && effectiveExpectedHours > 0) return 'calendar-missing';
+                if (effectiveDelta > 0) return 'calendar-overtime';
+                if (effectiveDelta < 0) return 'calendar-undertime';
+                if (effectiveDelta === 0) return 'calendar-perfect';
                 
                 return '';
             },
@@ -252,15 +261,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 const summary = day.summary;
                 let tooltip = `${this.formatDate(day.date)} (${day.dayName})\n`;
                 tooltip += `Gearbeitet: ${summary.workedHours}h\n`;
-                tooltip += `Erwartet: ${summary.expectedHours}h\n`;
                 
-                if (summary.delta !== 0) {
-                    tooltip += `Differenz: ${summary.delta > 0 ? '+' : ''}${summary.delta.toFixed(1)}h\n`;
+                // For approved holidays, show 0 expected hours
+                const effectiveExpectedHours = (summary.holidayType && summary.holidayApproved) ? 0 : summary.expectedHours;
+                tooltip += `Erwartet: ${effectiveExpectedHours}h\n`;
+                
+                const effectiveDelta = summary.workedHours - effectiveExpectedHours;
+                if (effectiveDelta !== 0) {
+                    tooltip += `Differenz: ${effectiveDelta > 0 ? '+' : ''}${effectiveDelta.toFixed(1)}h\n`;
                 }
                 
                 if (summary.holidayType) {
-                    tooltip += `Urlaub: ${summary.holidayType}\n`;
+                    tooltip += `Urlaub: ${this.getHolidayTypeDisplayName(summary.holidayType)}\n`;
                     if (summary.holidayReason) tooltip += `Grund: ${summary.holidayReason}\n`;
+                    if (summary.holidayApproved) tooltip += `Status: Genehmigt\n`;
                 }
                 
                 if (summary.timeEntries.length > 0) {
@@ -592,10 +606,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (summary.isWeekend) return 'calendar-weekend';
                 if (summary.holidayType) return 'calendar-holiday';
-                if (summary.workedHours === 0 && summary.expectedHours > 0) return 'calendar-missing';
-                if (summary.delta > 0) return 'calendar-overtime';
-                if (summary.delta < 0) return 'calendar-undertime';
-                if (summary.delta === 0) return 'calendar-perfect';
+                
+                // For approved holidays, treat like weekends (0 expected hours)
+                const effectiveExpectedHours = (summary.holidayType && summary.holidayApproved) ? 0 : summary.expectedHours;
+                const effectiveDelta = summary.workedHours - effectiveExpectedHours;
+                
+                if (summary.workedHours === 0 && effectiveExpectedHours > 0) return 'calendar-missing';
+                if (effectiveDelta > 0) return 'calendar-overtime';
+                if (effectiveDelta < 0) return 'calendar-undertime';
+                if (effectiveDelta === 0) return 'calendar-perfect';
                 
                 return '';
             },
@@ -1129,14 +1148,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                             {{ day.summary.workedHours.toFixed(1) }}h
                                         </div>
                                         <div style="font-size:10px; color: #666;">
-                                            von {{ day.summary.expectedHours.toFixed(1) }}h
+                                            von {{ ((day.summary.holidayType && day.summary.holidayApproved) ? 0 : day.summary.expectedHours).toFixed(1) }}h
                                         </div>
-                                        <div v-if="day.summary.delta !== 0" 
-                                             :style="{ fontSize: '9px', color: day.summary.delta > 0 ? '#198754' : '#dc3545' }">
-                                            {{ day.summary.delta > 0 ? '+' : '' }}{{ day.summary.delta.toFixed(1) }}h
+                                        <div v-if="(day.summary.workedHours - ((day.summary.holidayType && day.summary.holidayApproved) ? 0 : day.summary.expectedHours)) !== 0" 
+                                             :style="{ fontSize: '9px', color: (day.summary.workedHours - ((day.summary.holidayType && day.summary.holidayApproved) ? 0 : day.summary.expectedHours)) > 0 ? '#198754' : '#dc3545' }">
+                                            {{ (day.summary.workedHours - ((day.summary.holidayType && day.summary.holidayApproved) ? 0 : day.summary.expectedHours)) > 0 ? '+' : '' }}{{ (day.summary.workedHours - ((day.summary.holidayType && day.summary.holidayApproved) ? 0 : day.summary.expectedHours)).toFixed(1) }}h
                                         </div>
                                         <div v-if="day.summary.holidayType" style="font-size:9px; color: #0dcaf0;">
-                                            {{ day.summary.holidayType }}
+                                            {{ getHolidayTypeDisplayName(day.summary.holidayType) }}
                                             <!-- Holiday approval button -->
                                             <button v-if="!day.summary.holidayApproved" 
                                                     @click.stop="approveHoliday(day.summary.holidayId)"
