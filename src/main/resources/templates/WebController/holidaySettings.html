@@ -1,0 +1,144 @@
+{#include layout}
+  {#title}Feiertage verwalten – Baunex{/title}
+  {#header}Feiertage verwalten{/header}
+  {#content}
+    <style>
+        .holiday-table th {
+            background-color: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .holiday-type-badge {
+            font-size: 0.75rem;
+        }
+        .editable-holiday {
+            background-color: #ffffff;
+        }
+        .editable-holiday:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
+    
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1><i class="bi bi-calendar-event"></i> Feiertage verwalten</h1>
+                    <a href="/timetracking/list" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Zurück zur Zeiterfassung
+                    </a>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h5 class="mb-0">Feiertage für Jahr <span id="currentYearDisplay">2024</span></h5>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-outline-primary" id="prevYearBtn">
+                                        <i class="bi bi-chevron-left"></i> <span id="prevYearText"></span>
+                                    </button>
+                                    <button type="button" class="btn btn-primary" id="currentYearBtn">{currentDate.year}</button>
+                                    <button type="button" class="btn btn-outline-primary" id="nextYearBtn">
+                                        <span id="nextYearText"></span> <i class="bi bi-chevron-right"></i>
+                                    </button>
+                                </div>
+                                <button type="button" class="btn btn-success ms-2" onclick="generateHolidays()">
+                                    <i class="bi bi-plus-circle"></i> Feiertage generieren
+                                </button>
+                                <button type="button" class="btn btn-primary ms-2" onclick="addHoliday()">
+                                    <i class="bi bi-plus"></i> Feiertag hinzufügen
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="loadingSpinner" class="text-center d-none">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Laden...</span>
+                            </div>
+                        </div>
+                        <div id="holidayTable" class="table-responsive">
+                            <table class="table table-hover holiday-table">
+                                <thead>
+                                    <tr>
+                                        <th>Datum</th>
+                                        <th>Name</th>
+                                        <th>Typ</th>
+                                        <th>Kanton</th>
+                                        <th>Arbeitsfrei</th>
+                                        <th>Status</th>
+                                        <th>Aktionen</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="holidayTableBody">
+                                    <!-- Holidays will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Holiday Modal -->
+    <div class="modal fade" id="holidayModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Feiertag hinzufügen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="holidayForm">
+                        <input type="hidden" id="holidayId">
+                        <div class="mb-3">
+                            <label for="holidayDate" class="form-label">Datum *</label>
+                            <input type="date" class="form-control" id="holidayDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="holidayName" class="form-label">Name *</label>
+                            <input type="text" class="form-control" id="holidayName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="holidayType" class="form-label">Typ *</label>
+                            <select class="form-select" id="holidayType" required>
+                                <option value="Öffentlicher Feiertag">Öffentlicher Feiertag</option>
+                                <option value="Kantonaler Feiertag">Kantonaler Feiertag</option>
+                                <option value="Betriebsfeiertag">Betriebsfeiertag</option>
+                                <option value="Benutzerdefinierter Feiertag">Benutzerdefinierter Feiertag</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="holidayCanton" class="form-label">Kanton</label>
+                            <input type="text" class="form-control" id="holidayCanton" placeholder="z.B. ZH, BE, AG">
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isWorkFree" checked>
+                                <label class="form-check-label" for="isWorkFree">
+                                    Arbeitsfrei
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="holidayDescription" class="form-label">Beschreibung</label>
+                            <textarea class="form-control" id="holidayDescription" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="button" class="btn btn-primary" onclick="saveHoliday()">Speichern</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/holiday-settings.js"></script>
+  {/content}
+{/include} 

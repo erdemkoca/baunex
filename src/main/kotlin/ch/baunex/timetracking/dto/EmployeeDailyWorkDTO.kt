@@ -19,5 +19,6 @@ data class EmployeeDailyWorkDTO(
     val holidayReason: String? = null,
     val timeEntries: List<TimeEntryDTO> = emptyList(),
     val isWeekend: Boolean = false,
-    val isPublicHoliday: Boolean = false
+    val isPublicHoliday: Boolean = false,
+    val publicHolidayName: String? = null
 ) 

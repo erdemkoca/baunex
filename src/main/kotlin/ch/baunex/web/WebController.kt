@@ -211,7 +211,15 @@ class WebController {
         external fun companySettings(
             companyJson: String,
             activeMenu: String,
-            currentDate: LocalDate
+            currentDate: LocalDate,
+            activeSubMenu: String = "company"
+        ): TemplateInstance
+
+        @JvmStatic
+        external fun holidaySettings(
+            activeMenu: String,
+            currentDate: LocalDate,
+            activeSubMenu: String = "holidays"
         ): TemplateInstance
 
         @JvmStatic

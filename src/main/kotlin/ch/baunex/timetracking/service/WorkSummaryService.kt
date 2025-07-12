@@ -19,12 +19,13 @@ class WorkSummaryService @Inject constructor(
     private val timeEntryRepository: TimeEntryRepository,
     private val holidayRepository: HolidayRepository,
     private val employeeRepository: EmployeeRepository,
-    private val timeEntryMapper: TimeEntryMapper
+    private val timeEntryMapper: TimeEntryMapper,
+    private val holidayDefinitionService: ch.baunex.timetracking.service.HolidayDefinitionService
 ) {
 
     /**
      * Calculate expected working hours for a specific date
-     * Default: 8 hours per working day (Monday-Friday)
+     * Default: 8 hours per working day (Monday-Friday), excluding holidays
      */
     fun calculateExpectedHours(employeeId: Long, date: LocalDate): Double {
         val employee = employeeRepository.findById(employeeId) ?: return 0.0
@@ -33,10 +34,14 @@ class WorkSummaryService @Inject constructor(
         if (date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY) {
             return 0.0
         }
-            //TODO add if its a holiday, subtract the hours from holiday
+        
+        // Check if it's a public holiday
+        if (holidayDefinitionService.isHoliday(date)) {
+            return 0.0
+        }
 
         // For now, use 8 hours per day as default
-        // TODO: Could be enhanced with employee-specific contracts or public holiday detection
+        // TODO: Could be enhanced with employee-specific contracts
         return employee.plannedWeeklyHours / 5
     }
 
@@ -69,6 +74,13 @@ class WorkSummaryService @Inject constructor(
             }
             
             val isWeekend = currentDate.dayOfWeek == DayOfWeek.SATURDAY || currentDate.dayOfWeek == DayOfWeek.SUNDAY
+            val isPublicHoliday = holidayDefinitionService.isHoliday(currentDate)
+            
+            // Get public holiday name if it's a public holiday
+            val publicHolidayName = if (isPublicHoliday) {
+                val holidayDefinitions = holidayDefinitionService.getHolidaysForDateRange(currentDate, currentDate)
+                holidayDefinitions.firstOrNull()?.name
+            } else null
             
             result.add(
                 EmployeeDailyWorkDTO(
@@ -84,7 +96,8 @@ class WorkSummaryService @Inject constructor(
                     holidayReason = holiday?.reason,
                     timeEntries = timeEntriesByDate[currentDate]?.map { timeEntryMapper.toTimeEntryResponseDTO(it) } ?: emptyList(),
                     isWeekend = isWeekend,
-                    isPublicHoliday = false // TODO: Implement public holiday detection
+                    isPublicHoliday = isPublicHoliday,
+                    publicHolidayName = publicHolidayName
                 )
             )
             
@@ -107,16 +120,8 @@ class WorkSummaryService @Inject constructor(
         val vacationDays = holidayRepository.findByEmployeeAndDateRange(employeeId, yearStart, yearEnd)
             .filter { it.type.name == "PAID_VACATION" && it.approvalStatus == ApprovalStatus.APPROVED }
             .sumOf { holiday ->
-                // Calculate the number of working days in the holiday period
-                var workingDays = 0
-                var currentDate = holiday.startDate
-                while (!currentDate.isAfter(holiday.endDate)) {
-                    if (currentDate.dayOfWeek != DayOfWeek.SATURDAY && currentDate.dayOfWeek != DayOfWeek.SUNDAY) {
-                        workingDays++
-                    }
-                    currentDate = currentDate.plusDays(1)
-                }
-                workingDays
+                // Calculate the number of working days in the holiday period (excluding weekends and public holidays)
+                holidayDefinitionService.calculateWorkingDays(holiday.startDate, holiday.endDate)
             }
         
         return employee.vacationDays - vacationDays
@@ -132,16 +137,8 @@ class WorkSummaryService @Inject constructor(
         return holidayRepository.findByEmployeeAndDateRange(employeeId, yearStart, yearEnd)
             .filter { it.type.name == "PAID_VACATION" && it.approvalStatus == ApprovalStatus.APPROVED }
             .sumOf { holiday ->
-                // Calculate the number of working days in the holiday period
-                var workingDays = 0
-                var currentDate = holiday.startDate
-                while (!currentDate.isAfter(holiday.endDate)) {
-                    if (currentDate.dayOfWeek != DayOfWeek.SATURDAY && currentDate.dayOfWeek != DayOfWeek.SUNDAY) {
-                        workingDays++
-                    }
-                    currentDate = currentDate.plusDays(1)
-                }
-                workingDays
+                // Calculate the number of working days in the holiday period (excluding weekends and public holidays)
+                holidayDefinitionService.calculateWorkingDays(holiday.startDate, holiday.endDate)
             }
     }
 

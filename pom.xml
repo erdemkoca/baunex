@@ -188,6 +188,11 @@
             <artifactId>quarkus-security</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-scheduler</artifactId>
+        </dependency>
+
         <!-- CommonMark for Markdown processing -->
         <dependency>
             <groupId>org.commonmark</groupId>

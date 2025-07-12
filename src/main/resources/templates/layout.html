@@ -86,6 +86,20 @@
             <a class="nav-link {#if activeMenu == 'settings'}active{/if}" href="/settings/company">
               <i class="bi bi-gear me-2"></i>Einstellungen
             </a>
+            {#if activeMenu == 'settings'}
+            <ul class="nav flex-column ms-3">
+              <li class="nav-item">
+                <a class="nav-link {#if activeSubMenu == 'company'}active{/if}" href="/settings/company">
+                  <i class="bi bi-building me-2"></i>Unternehmen
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link {#if activeSubMenu == 'holidays'}active{/if}" href="/settings/holidays">
+                  <i class="bi bi-calendar-event me-2"></i>Feiertage
+                </a>
+              </li>
+            </ul>
+            {/if}
           </li>
         </ul>
       </div>

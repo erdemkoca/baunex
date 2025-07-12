@@ -27,7 +27,8 @@ class WebCompanyController {
         val tpl = WebController.Templates.companySettings(
             companyJson = companyJson,
             activeMenu    = "settings",
-            currentDate   = LocalDate.now()
+            currentDate   = LocalDate.now(),
+            activeSubMenu = "company"
         )
         return Response.ok(tpl.render()).build()
     }
