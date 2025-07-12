@@ -361,6 +361,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     color: '#222'
                 };
             },
+            calculateBreakPositions(entry) {
+                if (!entry.breaks || entry.breaks.length === 0) return [];
+                
+                const totalDuration = this.timeToMinutes(entry.endTime) - this.timeToMinutes(entry.startTime);
+                const breakPositions = [];
+                
+                for (const breakItem of entry.breaks) {
+                    const breakStart = this.timeToMinutes(breakItem.start);
+                    const breakEnd = this.timeToMinutes(breakItem.end);
+                    const entryStart = this.timeToMinutes(entry.startTime);
+                    
+                    // Calculate relative position within the time block
+                    const relativeStart = breakStart - entryStart;
+                    const breakDuration = breakEnd - breakStart;
+                    
+                    if (relativeStart >= 0 && breakDuration > 0) {
+                        const topPercent = (relativeStart / totalDuration) * 100;
+                        const heightPercent = (breakDuration / totalDuration) * 100;
+                        
+                        breakPositions.push({
+                            top: topPercent + '%',
+                            height: heightPercent + '%',
+                            duration: breakDuration,
+                            start: breakItem.start,
+                            end: breakItem.end
+                        });
+                    }
+                }
+                
+                return breakPositions;
+            },
+            formatBreakDuration(minutes) {
+                const hours = Math.floor(minutes / 60);
+                const mins = minutes % 60;
+                if (hours > 0) {
+                    return `${hours}h${mins > 0 ? mins + 'm' : ''}`;
+                }
+                return `${mins}m`;
+            },
             getDaySummaryClass(day) {
                 if (!day || !day.summary) return '';
                 
@@ -469,6 +508,16 @@ document.addEventListener('DOMContentLoaded', () => {
                                          class="calendar-time-block"
                                          @click="navigateToEdit(layoutItem.entry.id)"
                                     >
+                                        <!-- Break overlays -->
+                                        <div v-for="(breakItem, breakIndex) in calculateBreakPositions(layoutItem.entry)" 
+                                             :key="'break-' + breakIndex"
+                                             class="calendar-time-block-break"
+                                             :style="{ top: breakItem.top, height: breakItem.height }"
+                                             :title="'Pause: ' + breakItem.start + ' - ' + breakItem.end + ' (' + formatBreakDuration(breakItem.duration) + ')'"
+                                        >
+                                            <span class="calendar-time-block-break-label">{{ formatBreakDuration(breakItem.duration) }}</span>
+                                        </div>
+                                        
                                         <div style="font-size:10px; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color: #333;">
                                             {{ layoutItem.entry.projectName || 'Unbekanntes Projekt' }}
                                         </div>
@@ -477,6 +526,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                         </div>
                                         <div style="font-size:9px; font-weight:bold; color: #333;">
                                             {{ layoutItem.entry.hoursWorked }}h
+                                        </div>
+                                        <div v-if="layoutItem.entry.breaks && layoutItem.entry.breaks.length > 0" class="calendar-break-indicator">
+                                            {{ layoutItem.entry.breaks.length }} Pause{{ layoutItem.entry.breaks.length > 1 ? 'n' : '' }}
                                         </div>
                                     </div>
                                 </div>
@@ -535,6 +587,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div class="d-flex align-items-center">
                                     <div class="calendar-legend-item calendar-weekend"></div>
                                     <span class="ms-1">Wochenende</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <div style="width:20px; height:20px; border-radius:0.25rem; border:1px dashed #666; background-color:rgba(255,255,255,0.7); position:relative;">
+                                        <span style="position:absolute; left:2px; top:50%; transform:translateY(-50%); font-size:8px; color:#666;">☕</span>
+                                    </div>
+                                    <span class="ms-1">Pausen</span>
                                 </div>
                             </div>
                         </div>
