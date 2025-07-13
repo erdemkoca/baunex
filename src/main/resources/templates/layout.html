@@ -66,6 +66,30 @@
             <a class="nav-link {#if activeMenu == 'timetracking'}active{/if}" href="/timetracking">
               <i class="bi bi-clock me-2"></i>Zeiterfassung
             </a>
+            {#if activeMenu == 'timetracking'}
+            <ul class="nav flex-column ms-3">
+              <li class="nav-item">
+                <a class="nav-link {#if activeSubMenu == 'overview'}active{/if}" href="/timetracking/overview">
+                  <i class="bi bi-speedometer2 me-2"></i>Übersicht
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link {#if activeSubMenu == 'calendar'}active{/if}" href="/timetracking/calendar">
+                  <i class="bi bi-calendar3 me-2"></i>Kalender & Zusammenfassung
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link {#if activeSubMenu == 'reports'}active{/if}" href="/timetracking/reports">
+                  <i class="bi bi-file-earmark-text me-2"></i>Rapporte & Visierungen
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link {#if activeSubMenu == 'absences'}active{/if}" href="/timetracking/absences">
+                  <i class="bi bi-calendar-event me-2"></i>Urlaub & Abwesenheiten
+                </a>
+              </li>
+            </ul>
+            {/if}
           </li>
           {!<li class="nav-item">!}
             {!<a class="nav-link {#if activeMenu == 'catalog'}active{/if}" href="/catalog">!}

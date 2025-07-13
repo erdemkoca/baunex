@@ -1,0 +1,271 @@
+{#include layout}
+  {#title}Zeiterfassung Kalender – Baunex{/title}
+  {#header}Kalender & Zusammenfassung{/header}
+  {#content}
+    <style>
+      .calendar-time-block {
+        position: relative;
+        border-radius: 4px;
+        padding: 2px 4px;
+        cursor: pointer;
+        overflow: hidden;
+        z-index: 2;
+        font-size: 9px;
+        line-height: 1.2;
+      }
+      
+      .approval-indicator {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8px;
+      }
+      
+      .approval-indicator.approved {
+        background-color: #198754;
+        color: white;
+      }
+      
+      .approval-indicator.pending {
+        background-color: #ffc107;
+        color: #000;
+      }
+      
+      .approval-button {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+        background-color: #198754;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8px;
+        cursor: pointer;
+        opacity: 0.8;
+      }
+      
+      .approval-button:hover {
+        opacity: 1;
+      }
+      
+      .calendar-time-block-break {
+        position: absolute;
+        left: 0;
+        right: 0;
+        background-color: rgba(255, 255, 255, 0.7);
+        border: 1px dashed #666;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8px;
+        color: #666;
+      }
+      
+      .calendar-break-indicator {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 1px 3px;
+        border-radius: 2px;
+        font-size: 7px;
+      }
+      
+      .calendar-day-summary {
+        text-align: center;
+        border-left: 1px solid #eee;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      
+      .calendar-perfect {
+        background-color: #d1e7dd;
+        border: 2px solid #198754;
+      }
+      
+      .calendar-overtime {
+        background-color: #fff3cd;
+        border: 2px solid #ffc107;
+      }
+      
+      .calendar-undertime {
+        background-color: #f8d7da;
+        border: 2px solid #dc3545;
+      }
+      
+      .calendar-missing {
+        background-color: #e2e3e5;
+        border: 2px solid #6c757d;
+      }
+      
+      .calendar-holiday {
+        background-color: #cff4fc;
+        border: 2px solid #0dcaf0;
+      }
+      
+      .calendar-weekend {
+        background-color: #f8f9fa;
+        border: 2px solid #dee2e6;
+      }
+      
+      .calendar-legend-item {
+        width: 20px;
+        height: 20px;
+        border-radius: 0.25rem;
+        border: 2px solid;
+      }
+      
+      .calendar-legend-item.calendar-perfect {
+        background-color: #d1e7dd;
+        border-color: #198754;
+      }
+      
+      .calendar-legend-item.calendar-overtime {
+        background-color: #fff3cd;
+        border-color: #ffc107;
+      }
+      
+      .calendar-legend-item.calendar-undertime {
+        background-color: #f8d7da;
+        border-color: #dc3545;
+      }
+      
+      .calendar-legend-item.calendar-missing {
+        background-color: #e2e3e5;
+        border-color: #6c757d;
+      }
+      
+      .calendar-legend-item.calendar-holiday {
+        background-color: #cff4fc;
+        border-color: #0dcaf0;
+      }
+      
+      .calendar-legend-item.calendar-weekend {
+        background-color: #f8f9fa;
+        border-color: #dee2e6;
+      }
+      
+      /* Week Picker Styles */
+      .week-picker-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      
+      .week-picker-scroll {
+        display: flex;
+        gap: 5px;
+        overflow-x: auto;
+        flex: 1;
+        padding: 5px 0;
+      }
+      
+      .week-picker-item {
+        min-width: 80px;
+        padding: 8px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        text-align: center;
+        cursor: pointer;
+        background-color: #fff;
+        transition: all 0.2s;
+      }
+      
+      .week-picker-item:hover {
+        background-color: #f8f9fa;
+        border-color: #0d6efd;
+      }
+      
+      .week-picker-item.active {
+        background-color: #0d6efd;
+        color: white;
+        border-color: #0d6efd;
+      }
+      
+      .week-picker-item.future-week {
+        background-color: #f8f9fa;
+        border-color: #6c757d;
+        color: #6c757d;
+      }
+      
+      .week-picker-item.approved {
+        background-color: #d1e7dd;
+        border-color: #198754;
+        color: #198754;
+      }
+      
+      .week-picker-item.pending {
+        background-color: #fff3cd;
+        border-color: #ffc107;
+        color: #856404;
+      }
+      
+      .week-picker-item.rejected {
+        background-color: #f8d7da;
+        border-color: #dc3545;
+        color: #721c24;
+      }
+      
+      .week-picker-item.empty {
+        background-color: #f8f9fa;
+        border-color: #dee2e6;
+        color: #6c757d;
+      }
+      
+      .week-number {
+        font-weight: bold;
+        font-size: 14px;
+      }
+      
+      .week-range {
+        font-size: 10px;
+        margin-top: 2px;
+      }
+      
+      .week-picker-nav {
+        flex-shrink: 0;
+      }
+      
+      /* Summary Styles */
+      .summary-stat {
+        text-align: center;
+      }
+      
+      .summary-value {
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+      }
+      
+      .summary-label {
+        font-size: 12px;
+        color: #666;
+        margin-top: 2px;
+      }
+    </style>
+    
+    <div id="time-tracking-calendar-app"
+         data-time-entries='{timeEntriesJson.raw}'
+         data-holidays='{holidaysJson.raw}'
+         data-employees='{employeesJson.raw}'
+         data-projects='{projectsJson.raw}'>
+    </div>
+    <script type="module" src="/js/time-tracking-calendar.js"></script>
+  {/content}
+{/include} 

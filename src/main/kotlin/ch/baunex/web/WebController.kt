@@ -173,7 +173,8 @@ class WebController {
             projectsJson: String,
             categoriesJson: String,
             catalogItemsJson: String,
-            currentDate: String
+            currentDate: String,
+            activeSubMenu: String
         ): TemplateInstance
 
         @JvmStatic

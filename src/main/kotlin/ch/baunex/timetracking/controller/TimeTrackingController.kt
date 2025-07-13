@@ -28,6 +28,7 @@ import ch.baunex.timetracking.facade.HolidayFacade
 import ch.baunex.timetracking.service.WorkSummaryService
 import ch.baunex.timetracking.dto.EmployeeDailyWorkDTO
 import ch.baunex.timetracking.dto.WeeklyWorkSummaryDTO
+import java.net.URI
 
 @Path("/timetracking")
 @ApplicationScoped
@@ -49,21 +50,8 @@ class TimeTrackingController {
     @GET
     @Produces(MediaType.TEXT_HTML)
     fun listView(): Response {
-        val entries   = timeTrackingFacade.getAllTimeEntries()
-        val emps      = employeeFacade.listAll()
-        val projs     = projectFacade.getAllProjects()
-        val holidays  = holidayFacade.getAllHolidays()
-        val page = Templates.timeTracking(
-            activeMenu      = "timetracking",
-            timeEntriesJson = json.encodeToString(entries),
-            holidaysJson     = json.encodeToString(holidays),
-            //TODO give weeklyhours instead of giving all timeentries. not to handle this in frontend. use TimeTrackingAnalysisService
-            currentDate     = today(),
-            employeesJson   = json.encodeToString(emps),
-            projectsJson    = json.encodeToString(projs),
-            entryJson       = ""
-        )
-        return Response.ok(page.render()).build()
+        // Redirect to the new overview page
+        return Response.seeOther(URI("/timetracking/overview")).build()
     }
 
     @GET
@@ -81,7 +69,8 @@ class TimeTrackingController {
             catalogItemsJson = json.encodeToString(cats),
             categoriesJson   = json.encodeToString(categories),
             currentDate      = today(),
-            activeMenu       = "timetracking"
+            activeMenu       = "timetracking",
+            activeSubMenu    = "form"
         )
         return Response.ok(page.render()).build()
     }
