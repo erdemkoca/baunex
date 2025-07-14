@@ -76,6 +76,17 @@ class TimeTrackingController {
     }
 
     //─── JSON API ────────────────────────────────────────────────────────────────
+    @GET
+    @Path("/api/{id}") @Produces(MediaType.APPLICATION_JSON)
+    fun getApi(@PathParam("id") id: Long): Response {
+        val entry = timeTrackingFacade.getTimeEntryById(id)
+        return if (entry != null) {
+            Response.ok(entry).build()
+        } else {
+            Response.status(Response.Status.NOT_FOUND).build()
+        }
+    }
+
     @POST
     @Path("/api") @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
     fun createApi(dto: TimeEntryDTO): TimeEntryDTO =

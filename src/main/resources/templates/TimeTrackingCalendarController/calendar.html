@@ -1,6 +1,6 @@
 {#include layout}
   {#title}Zeiterfassung Kalender – Baunex{/title}
-  {#header}Kalender & Zusammenfassung{/header}
+  {#header}Stundentafel{/header}
   {#content}
     <style>
       .calendar-time-block {
@@ -91,36 +91,37 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
+        background: transparent !important;
       }
       
       .calendar-perfect {
-        background-color: #d1e7dd;
         border: 2px solid #198754;
+        background: transparent !important;
       }
       
       .calendar-overtime {
-        background-color: #fff3cd;
         border: 2px solid #ffc107;
+        background: transparent !important;
       }
       
       .calendar-undertime {
-        background-color: #f8d7da;
         border: 2px solid #dc3545;
+        background: transparent !important;
       }
       
       .calendar-missing {
-        background-color: #e2e3e5;
         border: 2px solid #6c757d;
+        background: transparent !important;
       }
       
       .calendar-holiday {
-        background-color: #cff4fc;
         border: 2px solid #0dcaf0;
+        background: transparent !important;
       }
       
       .calendar-weekend {
-        background-color: #f8f9fa;
         border: 2px solid #dee2e6;
+        background: transparent !important;
       }
       
       .calendar-legend-item {
@@ -257,6 +258,214 @@
         font-size: 12px;
         color: #666;
         margin-top: 2px;
+      }
+      
+      /* New Navigation Styles */
+      .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding: 0.5rem;
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+      }
+      
+      .calendar-navigation {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      
+      .week-display {
+        background-color: #f1f1f1;
+        color: #333;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: bold;
+        font-size: 12px;
+        min-width: 40px;
+        text-align: center;
+        margin-right: 0.5rem;
+      }
+      
+      .calendar-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      
+      .week-arrows {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin-left: 0.5rem;
+      }
+      
+      .calendar-title {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #333;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        margin-left: 1rem;
+      }
+      
+      .calendar-month-year {
+        font-size: 1.25rem;
+        color: #666;
+        font-weight: 500;
+      }
+      
+      /* Month-Year Title Styles */
+      .month-year {
+        font-size: 1.25rem;
+        color: #666;
+        font-weight: 500;
+      }
+      
+      .month-year .month {
+        font-weight: 700;
+        color: #333;
+      }
+      
+      .month-year .week-info {
+        font-weight: 400;
+        color: #999;
+      }
+      
+      .calendar-week {
+        font-size: 1rem;
+        color: #333;
+        font-weight: 600;
+      }
+      
+      /* Week Picker Popup Styles */
+      .week-picker-popup {
+        position: absolute;
+        top: calc(100% + 5px);
+        left: 0;
+        z-index: 1000;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        padding: 15px;
+        min-width: 400px;
+        max-width: 500px;
+      }
+      
+      .week-display {
+        background-color: #f1f1f1;
+        color: #333;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: bold;
+        font-size: 12px;
+        min-width: 40px;
+        text-align: center;
+        margin-right: 0.5rem;
+        transition: all 0.2s;
+        position: relative;
+      }
+      
+      .week-display:hover {
+        background-color: #e9ecef;
+        border-color: #adb5bd;
+      }
+      
+      .calendar-navigation {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        position: relative;
+      }
+      
+      /* Week Picker Container Styles */
+      .week-picker-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      
+      .week-picker-scroll {
+        display: flex;
+        gap: 5px;
+        overflow-x: auto;
+        flex: 1;
+        padding: 5px 0;
+        max-height: 150px;
+        overflow-y: auto;
+      }
+      
+      .week-picker-item {
+        min-width: 80px;
+        padding: 8px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        text-align: center;
+        cursor: pointer;
+        background-color: #fff;
+        transition: all 0.2s;
+      }
+      
+      .week-picker-item:hover {
+        background-color: #f8f9fa;
+        border-color: #0d6efd;
+      }
+      
+      .week-picker-item.active {
+        background-color: #0d6efd;
+        color: white;
+        border-color: #0d6efd;
+      }
+      
+      .week-picker-item.future-week {
+        background-color: #f8f9fa;
+        border-color: #6c757d;
+        color: #6c757d;
+      }
+      
+      .week-picker-item.approved {
+        background-color: #d1e7dd;
+        border-color: #198754;
+        color: #198754;
+      }
+      
+      .week-picker-item.pending {
+        background-color: #fff3cd;
+        border-color: #ffc107;
+        color: #856404;
+      }
+      
+      .week-picker-item.rejected {
+        background-color: #f8d7da;
+        border-color: #dc3545;
+        color: #721c24;
+      }
+      
+      .week-picker-item.empty {
+        background-color: #f8f9fa;
+        border-color: #dee2e6;
+        color: #6c757d;
+      }
+      
+      .week-number {
+        font-weight: bold;
+        font-size: 14px;
+      }
+      
+      .week-range {
+        font-size: 10px;
+        margin-top: 2px;
+      }
+      
+      .week-picker-nav {
+        flex-shrink: 0;
       }
     </style>
     

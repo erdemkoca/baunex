@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const timeEntries = JSON.parse(el.dataset.timeEntries || '[]');
     const holidays = JSON.parse(el.dataset.holidays || '[]');
     const employees = JSON.parse(el.dataset.employees || '[]');
-    
+
     console.log('Parsed data:', { timeEntries, holidays, employees });
 
     const app = createApp({
@@ -327,24 +327,67 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             },
             getProjectColor(projectName) {
-                if (!projectName) return '#6c757d';
+                if (!projectName) return '#8DA0CB'; // Pastell-Blau als Standard
                 
                 if (!this.projectColors[projectName]) {
-                    // Generate a consistent color based on project name
+                    // Harmonische Pastelltöne
                     const colors = [
-                        '#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1',
-                        '#fd7e14', '#20c997', '#e83e8c', '#6c757d', '#0dcaf0',
-                        '#6610f2', '#d63384', '#198754', '#fd7e14', '#20c997'
+                        '#66C2A5', // Mint-Grün
+                        '#FC8D62', // Korallen-Orange
+                        '#8DA0CB', // Pastell-Blau
+                        '#E78AC3', // Zart-Rosa
+                        '#A6D854', // Hell-Gelb-Grün
+                        '#FFD92F'  // Creme-Gelb
                     ];
+                    
+                    // Hash-basierte Farbzuweisung für Konsistenz
                     const hash = projectName.split('').reduce((a, b) => {
                         a = ((a << 5) - a) + b.charCodeAt(0);
                         return a & a;
                     }, 0);
                     const index = Math.abs(hash) % colors.length;
-                    this.projectColors[projectName] = colors[index];
+                    
+                    // Wenn mehr als 6 Projekte, verwende eine Variation der Grundfarben
+                    if (Object.keys(this.projectColors).length >= 6) {
+                        // Verwende eine hellere oder dunklere Variation der Grundfarbe
+                        const baseColor = colors[index];
+                        const variation = Math.floor(Object.keys(this.projectColors).length / 6) % 3;
+                        
+                        if (variation === 1) {
+                            // Hellere Variation (20% heller)
+                            this.projectColors[projectName] = this.lightenColor(baseColor, 0.2);
+                        } else if (variation === 2) {
+                            // Dunklere Variation (20% dunkler)
+                            this.projectColors[projectName] = this.darkenColor(baseColor, 0.2);
+                        } else {
+                            this.projectColors[projectName] = baseColor;
+                        }
+                    } else {
+                        this.projectColors[projectName] = colors[index];
+                    }
                 }
                 
                 return this.projectColors[projectName];
+            },
+            lightenColor(color, amount) {
+                const num = parseInt(color.replace("#", ""), 16);
+                const amt = Math.round(2.55 * amount * 100);
+                const R = (num >> 16) + amt;
+                const G = (num >> 8 & 0x00FF) + amt;
+                const B = (num & 0x0000FF) + amt;
+                return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                    (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                    (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+            },
+            darkenColor(color, amount) {
+                const num = parseInt(color.replace("#", ""), 16);
+                const amt = Math.round(2.55 * amount * 100);
+                const R = (num >> 16) - amt;
+                const G = (num >> 8 & 0x00FF) - amt;
+                const B = (num & 0x0000FF) - amt;
+                return "#" + (0x1000000 + (R > 255 ? 255 : R < 0 ? 0 : R) * 0x10000 +
+                    (G > 255 ? 255 : G < 0 ? 0 : G) * 0x100 +
+                    (B > 255 ? 255 : B < 0 ? 0 : B)).toString(16).slice(1);
             },
             getTimeBlockStyleWithProject(start, end, projectName) {
                 const baseStyle = this.getTimeBlockStyle(start, end);
@@ -1085,15 +1128,15 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div style="width:48px;"></div>
                                 <div v-for="(day, i) in calendarDays" :key="'header'+i" style="flex:1; min-width:110px; text-align:center; font-weight:bold; border-bottom:1px solid #dee2e6; padding-bottom:4px;">
                                     {{ day.dayName }}<br>{{ day.day }}
-                                </div>
                             </div>
+                                        </div>
                             <div style="display:flex; height:420px;">
                                 <!-- Time labels -->
                                 <div style="width:48px; display:flex; flex-direction:column; align-items:flex-end; position:relative;">
                                     <div v-for="h in 15" :key="'label'+h" style="height:28px; font-size:11px; color:#888; position:relative;">
                                         <span style="position:absolute; right:2px; top:-7px;">{{ (h+5).toString().padStart(2,'0') }}:00</span>
+                                        </div>
                                     </div>
-                                </div>
                                 <!-- Day columns -->
                                 <div v-for="(day, dayIdx) in calendarDays" :key="'col'+dayIdx" style="flex:1; min-width:110px; border-left:1px solid #eee; position:relative; background:#f8f9fa;">
                                     <!-- Hour lines -->
@@ -1108,14 +1151,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                         <div :class="['approval-indicator', layoutItem.entry.approval?.approved ? 'approved' : 'pending']"
                                              :title="layoutItem.entry.approval?.approved ? 'Genehmigt' : 'Ausstehend'">
                                             <i :class="['bi', layoutItem.entry.approval?.approved ? 'bi-check-circle-fill' : 'bi-clock']"></i>
-                                        </div>
+                                </div>
                                         <!-- Approval Button -->
                                         <div v-if="!layoutItem.entry.approval?.approved" 
                                              class="approval-button"
                                              @click.stop="approveTimeEntry(layoutItem.entry.id)"
                                              :title="'Genehmigen: ' + layoutItem.entry.title">
                                             <i class="bi bi-check-circle"></i>
-                                        </div>
+                            </div>
                                         <!-- Break overlays -->
                                         <div v-for="(breakItem, breakIndex) in calculateBreakPositions(layoutItem.entry)" 
                                              :key="'break-' + breakIndex"
@@ -1124,8 +1167,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                              :title="'Pause: ' + breakItem.start + ' - ' + breakItem.end + ' (' + formatBreakDuration(breakItem.duration) + ')'"
                                         >
                                             <span class="calendar-time-block-break-label">{{ formatBreakDuration(breakItem.duration) }}</span>
-                                        </div>
-                                        
+                        </div>
+                        
                                         <div style="font-size:10px; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color: #333;">
                                             {{ layoutItem.entry.projectName || 'Unbekanntes Projekt' }}
                                         </div>

@@ -1,29 +1,117 @@
-import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js';
 
 // Remove global stickyBarStyle and icon helper, move into Vue app
 
-document.addEventListener('DOMContentLoaded', () => {
+// Execute immediately when script is loaded
+function initializeForm() {
+    console.log('initializeForm called');
     const el = document.getElementById('time-tracking-form-app');
+    if (!el) {
+        console.log('time-tracking-form-app element not found, retrying in 100ms...');
+        // Limit retries to prevent infinite loop
+        if (!window.formInitRetryCount) {
+            window.formInitRetryCount = 0;
+        }
+        window.formInitRetryCount++;
+        
+        if (window.formInitRetryCount > 20) { // Max 2 seconds of retries
+            console.error('Failed to initialize form after 20 retries - form container may not be ready');
+            return;
+        }
+        
+        setTimeout(initializeForm, 100);
+        return;
+    }
+    
+    console.log('Time tracking form element found:', el);
+    console.log('Element dataset:', el.dataset);
+    
+    // Check if the element has been properly initialized by Vue
+    if (!el.dataset.entry && !el.dataset.employees) {
+        console.log('Form element found but not yet initialized by Vue, retrying...');
+        setTimeout(initializeForm, 100);
+        return;
+    }
+    
+    // Get data from the element or use defaults for modal context
     const entry = JSON.parse(el.dataset.entry || '{}');
     const employees = JSON.parse(el.dataset.employees || '[]');
     const projects = JSON.parse(el.dataset.projects || '[]');
     const categories = JSON.parse(el.dataset.categories || '[]');
     const catalogItems = JSON.parse(el.dataset.catalogItems || '[]');
-    const currentDate = el.dataset.currentDate;
+    const currentDate = el.dataset.currentDate || new Date().toISOString().split('T')[0];
 
-    createApp({
+    console.log('Parsed data:', { entry, employees, projects, categories, catalogItems, currentDate });
+    
+    // Check if we have valid entry data (not just empty object)
+    const hasValidEntry = entry && entry.id && Object.keys(entry).length > 1;
+    console.log('Has valid entry data:', hasValidEntry, entry);
+    
+    // If we have valid entry data, log it for debugging
+    if (hasValidEntry) {
+        console.log('Valid entry data found:', entry);
+        console.log('Entry ID:', entry.id);
+        console.log('Employee ID:', entry.employeeId);
+        console.log('Project ID:', entry.projectId);
+        console.log('Date:', entry.date);
+        console.log('Start Time:', entry.startTime);
+        console.log('End Time:', entry.endTime);
+    }
+    
+    // If we have valid entry data, log it for debugging
+    if (hasValidEntry) {
+        console.log('Valid entry data found:', entry);
+        console.log('Entry ID:', entry.id);
+        console.log('Employee ID:', entry.employeeId);
+        console.log('Project ID:', entry.projectId);
+        console.log('Date:', entry.date);
+        console.log('Start Time:', entry.startTime);
+        console.log('End Time:', entry.endTime);
+    }
+
+    const app = createApp({
         data() {
+            const entryData = {
+                id: null,
+                employeeId: null,
+                projectId: null,
+                date: currentDate,
+                startTime: '',
+                endTime: '',
+                title: '',
+                hoursWorked: 0,
+                hourlyRate: 0,
+                billable: true,
+                invoiced: false,
+                hasNightSurcharge: false,
+                hasWeekendSurcharge: false,
+                hasHolidaySurcharge: false,
+                travelTimeMinutes: 0,
+                disposalCost: 0,
+                waitingTimeMinutes: 0,
+                breaks: [],
+                catalogItems: [],
+                ...entry,
+                // Ensure time fields are properly formatted
+                startTime: entry.startTime ? entry.startTime.substring(0, 5) : '', // Convert "HH:MM:SS" to "HH:MM"
+                endTime: entry.endTime ? entry.endTime.substring(0, 5) : '', // Convert "HH:MM:SS" to "HH:MM"
+                breaks: (entry.breaks || []).map(breakItem => ({
+                    start: breakItem.start ? breakItem.start.substring(0, 5) : '', // Convert "HH:MM:SS" to "HH:MM"
+                    end: breakItem.end ? breakItem.end.substring(0, 5) : ''
+                })),
+                catalogItems: entry.catalogItems || [],
+            };
+            
+            console.log('Vue app entry data initialized:', entryData);
+            console.log('Entry ID in Vue app:', entryData.id);
+            console.log('Employee ID in Vue app:', entryData.employeeId);
+            console.log('Project ID in Vue app:', entryData.projectId);
+            console.log('Date in Vue app:', entryData.date);
+            console.log('Start Time in Vue app:', entryData.startTime);
+            console.log('End Time in Vue app:', entryData.endTime);
+            
             return {
-                entry: {
-                    ...entry,
-                    startTime: entry.startTime || '',
-                    endTime: entry.endTime || '',
-                    breaks: (entry.breaks || []).map(breakItem => ({
-                        start: breakItem.start.substring(0, 5), // Convert "HH:MM:SS" to "HH:MM"
-                        end: breakItem.end.substring(0, 5)
-                    })),
-                    catalogItems: entry.catalogItems || [],
-                },
+                entry: entryData,
                 employees,
                 projects,
                 categories,
@@ -75,6 +163,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (mins < 0) mins = 0;
                 return (mins / 60).toFixed(2);
             }
+        },
+        mounted() {
+            console.log('Time tracking form Vue app mounted');
+            console.log('Entry data in mounted:', this.entry);
+            console.log('Entry ID in mounted:', this.entry.id);
+            console.log('Employee ID in mounted:', this.entry.employeeId);
+            console.log('Project ID in mounted:', this.entry.projectId);
+            console.log('Date in mounted:', this.entry.date);
+            console.log('Start Time in mounted:', this.entry.startTime);
+            console.log('End Time in mounted:', this.entry.endTime);
         },
         methods: {
             // Tab navigation
@@ -207,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         disposalCost:        this.entry.disposalCost,
                         waitingTimeMinutes:  this.entry.waitingTimeMinutes
                     };
-                    
+
                     console.log("DEBUG: Full payload:", payload);
 
                     // Determine if this is a create or update operation
@@ -243,7 +341,21 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         }
                     }
+
+                    // Close modal or update parent if in a modal
+                    if (el.dataset.modal) {
+                        // Trigger event to close modal and refresh calendar
+                        const event = new CustomEvent('entry-saved', { 
+                            detail: { 
+                                saved, 
+                                action: 'close-modal',
+                                refresh: true 
+                            } 
+                        });
+                        document.dispatchEvent(event);
+                    } else {
                     window.location.href = '/timetracking';
+                    }
                 } catch (e) {
                     console.error(e);
                     alert('Fehler beim Speichern: ' + e.message);
@@ -277,22 +389,22 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Mitarbeiter <span class="text-danger">*</span></label>
-                                <select v-model="entry.employeeId" class="form-select" required>
+                            <select v-model="entry.employeeId" class="form-select" required>
                                     <option value="">-- auswählen --</option>
-                                    <option v-for="emp in employees" :key="emp.id" :value="emp.id">
-                                        {{ emp.firstName }} {{ emp.lastName }}
-                                    </option>
-                                </select>
-                            </div>
+                                <option v-for="emp in employees" :key="emp.id" :value="emp.id">
+                                    {{ emp.firstName }} {{ emp.lastName }}
+                                </option>
+                            </select>
+                        </div>
                             <div class="col-md-6">
                                 <label class="form-label">Projekt <span class="text-danger">*</span></label>
-                                <select v-model="entry.projectId" class="form-select" required>
+                            <select v-model="entry.projectId" class="form-select" required>
                                     <option value="">-- auswählen --</option>
-                                    <option v-for="proj in projects" :key="proj.id" :value="proj.id">
-                                        {{ proj.name }}
-                                    </option>
-                                </select>
-                            </div>
+                                <option v-for="proj in projects" :key="proj.id" :value="proj.id">
+                                    {{ proj.name }}
+                                </option>
+                            </select>
+                        </div>
                         </div>
                         <div class="row g-3 mb-3">
                             <div class="col-md-4">
@@ -304,7 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <input v-model="entry.title" type="text" class="form-control" placeholder="Kurze Beschreibung">
                             </div>
                         </div>
-                    </div>
+                                </div>
 
                     <!-- Arbeitszeit -->
                     <div v-show="activeTab === 1">
@@ -312,17 +424,17 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="col-md-3">
                                 <label class="form-label">Startzeit <span class="text-danger">*</span></label>
                                 <input v-model="entry.startTime" type="time" class="form-control" required>
-                            </div>
+                                </div>
                             <div class="col-md-3">
                                 <label class="form-label">Endzeit <span class="text-danger">*</span></label>
                                 <input v-model="entry.endTime" type="time" class="form-control" required>
-                            </div>
+                                </div>
                             <div class="col-md-3">
                                 <label class="form-label">Pausen</label>
                                 <button class="btn btn-outline-secondary btn-sm ms-2" @click="showBreaks = !showBreaks">
                                     {{ showBreaks ? 'Verbergen' : 'Anzeigen' }}
-                                </button>
-                            </div>
+                                            </button>
+                                        </div>
                             <div class="col-md-3">
                                 <label class="form-label">Gearbeitete Stunden</label>
                                 <input :value="autoHoursWorked" type="text" class="form-control bg-light" readonly>
@@ -355,33 +467,33 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="row g-3 mb-3">
                             <div class="col-md-4">
-                                <label class="form-label">Stundensatz (CHF)</label>
-                                <input v-model.number="entry.hourlyRate" type="number" step="0.01" class="form-control">
-                            </div>
+                            <label class="form-label">Stundensatz (CHF)</label>
+                            <input v-model.number="entry.hourlyRate" type="number" step="0.01" class="form-control">
+                        </div>
                             <div class="col-md-8">
-                                <label class="form-label">Zuschläge</label>
+                            <label class="form-label">Zuschläge</label>
                                 <div class="form-check form-check-inline">
-                                    <input v-model="entry.hasNightSurcharge" type="checkbox" class="form-check-input" id="hasNightSurcharge">
-                                    <label class="form-check-label" for="hasNightSurcharge">Nachtzuschlag</label>
-                                </div>
+                                <input v-model="entry.hasNightSurcharge" type="checkbox" class="form-check-input" id="hasNightSurcharge">
+                                <label class="form-check-label" for="hasNightSurcharge">Nachtzuschlag</label>
+                            </div>
                                 <div class="form-check form-check-inline">
-                                    <input v-model="entry.hasWeekendSurcharge" type="checkbox" class="form-check-input" id="hasWeekendSurcharge">
-                                    <label class="form-check-label" for="hasWeekendSurcharge">Wochenendzuschlag</label>
-                                </div>
+                                <input v-model="entry.hasWeekendSurcharge" type="checkbox" class="form-check-input" id="hasWeekendSurcharge">
+                                <label class="form-check-label" for="hasWeekendSurcharge">Wochenendzuschlag</label>
+                            </div>
                                 <div class="form-check form-check-inline">
-                                    <input v-model="entry.hasHolidaySurcharge" type="checkbox" class="form-check-input" id="hasHolidaySurcharge">
-                                    <label class="form-check-label" for="hasHolidaySurcharge">Feiertagszuschlag</label>
+                                <input v-model="entry.hasHolidaySurcharge" type="checkbox" class="form-check-input" id="hasHolidaySurcharge">
+                                <label class="form-check-label" for="hasHolidaySurcharge">Feiertagszuschlag</label>
                                 </div>
                             </div>
                         </div>
                         <div class="row g-3 mb-3">
                             <div class="col-md-4">
-                                <label class="form-label">Reisezeit (Minuten)</label>
-                                <input v-model.number="entry.travelTimeMinutes" type="number" min="0" class="form-control">
-                            </div>
+                                    <label class="form-label">Reisezeit (Minuten)</label>
+                                    <input v-model.number="entry.travelTimeMinutes" type="number" min="0" class="form-control">
+                                </div>
                             <div class="col-md-4">
-                                <label class="form-label">Entsorgungskosten (CHF)</label>
-                                <input v-model.number="entry.disposalCost" type="number" step="0.01" min="0" class="form-control">
+                                    <label class="form-label">Entsorgungskosten (CHF)</label>
+                                    <input v-model.number="entry.disposalCost" type="number" step="0.01" min="0" class="form-control">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Wartezeit (Minuten)</label>
@@ -395,14 +507,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <label class="form-check-label" for="billable">Verrechenbar</label>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                                <div class="col-md-6">
                                 <div class="form-check">
                                     <input v-model="entry.invoiced" type="checkbox" class="form-check-input" id="invoiced">
                                     <label class="form-check-label" for="invoiced">Fakturiert</label>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                        </div>
 
                     <!-- Material -->
                     <div v-show="activeTab === 2">
@@ -510,8 +622,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                             </div>
                             <button type="button" class="btn btn-outline-primary btn-sm" @click="addNote" v-html="icon('plus-circle') + ' Notiz hinzufügen'"></button>
+                            </div>
                         </div>
-                    </div>
 
                     <!-- Übersicht -->
                     <div v-show="activeTab === 4">
@@ -548,6 +660,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
         </div>
-        `
-    }).mount(el);
-});
+    `
+    });
+    
+    // Store the app globally so it can be unmounted
+    try {
+        window.timeTrackingFormApp = app.mount(el);
+        console.log('Time tracking form Vue app mounted successfully');
+        // Reset retry counter on successful initialization
+        window.formInitRetryCount = 0;
+    } catch (error) {
+        console.error('Failed to mount time tracking form Vue app:', error);
+    }
+}
+
+// Make the function globally available
+window.initializeTimeTrackingForm = initializeForm;
+
+// Call the function to initialize the form
+initializeForm();

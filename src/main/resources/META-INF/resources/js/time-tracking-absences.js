@@ -545,8 +545,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const employeeColors = [
-                    '#974E4B', '#2D4262', '#363237', '#F4CCA3', '#3F4751',
-                    '#A499A3', '#73605B', '#C4573B', '#D09683'
+                    '#66C2A5', // Mint-Grün
+                    '#FC8D62', // Korallen-Orange
+                    '#8DA0CB', // Pastell-Blau
+                    '#E78AC3', // Zart-Rosa
+                    '#A6D854', // Hell-Gelb-Grün
+                    '#FFD92F'  // Creme-Gelb
                 ];
 
                 // Generate all weeks of the year using ISO week calculation
@@ -635,14 +639,53 @@ document.addEventListener('DOMContentLoaded', () => {
                 return weeks;
             },
             getEmployeeColor(employeeId) {
+                // Harmonische Pastelltöne für Mitarbeiter
                 const colors = [
-                    // '#363237', '#2D4262', '#73605B', '#D09683',
-                    // '#F4CCA3', '#C4573B', '#974E4B', '#3F4751', '#A499A3'
-
-                    '#974E4B', '#2D4262', '#363237', '#F4CCA3', '#3F4751',
-                    '#A499A3', '#73605B', '#C4573B', '#D09683'
+                    '#66C2A5', // Mint-Grün
+                    '#FC8D62', // Korallen-Orange
+                    '#8DA0CB', // Pastell-Blau
+                    '#E78AC3', // Zart-Rosa
+                    '#A6D854', // Hell-Gelb-Grün
+                    '#FFD92F'  // Creme-Gelb
                 ];
-                return colors[employeeId % colors.length];
+                
+                // Wenn mehr als 6 Mitarbeiter, verwende Variationen
+                if (employeeId >= 6) {
+                    const baseColor = colors[employeeId % 6];
+                    const variation = Math.floor(employeeId / 6) % 3;
+                    
+                    if (variation === 1) {
+                        // Hellere Variation (20% heller)
+                        return this.lightenColor(baseColor, 0.2);
+                    } else if (variation === 2) {
+                        // Dunklere Variation (20% dunkler)
+                        return this.darkenColor(baseColor, 0.2);
+                    } else {
+                        return baseColor;
+                    }
+                } else {
+                    return colors[employeeId % colors.length];
+                }
+            },
+            lightenColor(color, amount) {
+                const num = parseInt(color.replace("#", ""), 16);
+                const amt = Math.round(2.55 * amount * 100);
+                const R = (num >> 16) + amt;
+                const G = (num >> 8 & 0x00FF) + amt;
+                const B = (num & 0x0000FF) + amt;
+                return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                    (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                    (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+            },
+            darkenColor(color, amount) {
+                const num = parseInt(color.replace("#", ""), 16);
+                const amt = Math.round(2.55 * amount * 100);
+                const R = (num >> 16) - amt;
+                const G = (num >> 8 & 0x00FF) - amt;
+                const B = (num & 0x0000FF) - amt;
+                return "#" + (0x1000000 + (R > 255 ? 255 : R < 0 ? 0 : R) * 0x10000 +
+                    (G > 255 ? 255 : G < 0 ? 0 : G) * 0x100 +
+                    (B > 255 ? 255 : B < 0 ? 0 : B)).toString(16).slice(1);
             },
             getHolidayBarStyle(holiday) {
                 // Use employee color for the background

@@ -1,4 +1,4 @@
-import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('time-tracking-calendar-app');
@@ -14,23 +14,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const app = createApp({
         data() {
+            // Load saved values from localStorage
+            const savedWeek = localStorage.getItem('calendar-current-week');
+            const savedYear = localStorage.getItem('calendar-current-year');
+            const savedEmployeeId = localStorage.getItem('calendar-selected-employee');
+            
             return {
                 timeEntries,
                 holidays,
                 employees,
                 projects,
-                selectedEmployeeId: employees[0]?.id || null,
-                currentWeek: this.getCurrentWeek(),
-                currentYear: 2025, // Default to 2025 where we have sample data
+                selectedEmployeeId: savedEmployeeId ? parseInt(savedEmployeeId) : (employees[0]?.id || null),
+                currentWeek: savedWeek ? parseInt(savedWeek) : this.getCurrentWeek(),
+                currentYear: savedYear ? parseInt(savedYear) : 2025, // Default to 2025 where we have sample data
                 dailySummaries: [],
                 weeklySummaries: [],
                 loading: false,
                 projectColors: {}, // Cache for project colors
                 successMessage: '',
                 showSuccessMessageTimeout: null,
-                weekPickerStart: 25, // Start week for week picker (matching currentWeek)
-                weekPickerVisibleCount: 12, // Number of weeks to show at once
-                weekPickerData: [] // Week picker data
+
+                showWeekPicker: false, // New state for popup visibility
+                timeRangeStart: 8, // Start hour (08:00)
+                timeRangeEnd: 17, // End hour (17:00)
+                showFormModal: false, // New state for form modal
+                formLoaded: false, // Track if form is loaded
+                currentEntryData: null // Store current entry data for modal
             };
         },
         computed: {
@@ -47,6 +56,16 @@ document.addEventListener('DOMContentLoaded', () => {
             isCurrentWeekValid() {
                 if (!this.employeeStartDate) return true;
                 return this.currentWeekStartDate >= this.employeeStartDate;
+            },
+            currentMonthYear() {
+                const weekStart = this.getWeekStartDate(this.currentYear, this.currentWeek);
+                const monthNames = [
+                    'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+                    'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
+                ];
+                const month = monthNames[weekStart.getMonth()];
+                const year = weekStart.getFullYear();
+                return `${month} ${year}`;
             },
             calendarDays() {
                 const weekStart = this.getWeekStartDate(this.currentYear, this.currentWeek);
@@ -81,11 +100,60 @@ document.addEventListener('DOMContentLoaded', () => {
                     endDate: weekEnd.toLocaleDateString('de-CH'),
                     fullRange: `${weekStart.toLocaleDateString('de-CH')} - ${weekEnd.toLocaleDateString('de-CH')}`
                 };
+            },
+            visibleHours() {
+                return this.timeRangeEnd - this.timeRangeStart + 1;
+            },
+            allWeeks() {
+                const weeks = [];
+                const year = this.currentYear;
+                
+                // Generate all 52 weeks of the year
+                for (let weekNumber = 1; weekNumber <= 52; weekNumber++) {
+                    const weekStart = this.getWeekStartDate(year, weekNumber);
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekStart.getDate() + 6);
+                    
+                    // Determine approval status based on actual data
+                    const today = new Date();
+                    const isPast = weekEnd < today;
+                    const isFuture = weekStart > today;
+                    
+                    let approvalStatus = 'empty';
+                    
+                    if (isFuture) {
+                        approvalStatus = 'future';
+                    } else {
+                        // For past and current weeks, we'll set a default status
+                        // The actual status will be loaded asynchronously
+                        approvalStatus = 'pending';
+                    }
+                    
+                    weeks.push({
+                        weekNumber: weekNumber,
+                        year: year,
+                        weekStart: weekStart,
+                        weekEnd: weekEnd,
+                        shortRange: `${weekStart.getDate()}.${weekStart.getMonth() + 1} – ${weekEnd.getDate()}.${weekEnd.getMonth() + 1}`,
+                        fullRange: `${weekStart.toLocaleDateString('de-CH')} – ${weekEnd.toLocaleDateString('de-CH')}`,
+                        approvalStatus: approvalStatus
+                    });
+                }
+                
+                return weeks;
             }
         },
         methods: {
+            // Save current state to localStorage
+            saveState() {
+                localStorage.setItem('calendar-current-week', this.currentWeek.toString());
+                localStorage.setItem('calendar-current-year', this.currentYear.toString());
+                localStorage.setItem('calendar-selected-employee', this.selectedEmployeeId?.toString() || '');
+            },
+            
             navigateToEdit(id) {
-                window.location.href = `/timetracking/${id}`;
+                // Use the new edit method instead of the general method
+                this.openEditTimeEntryForm(id);
             },
             getCurrentWeek() {
                 // For testing, default to week 25 of 2025 where we have sample data
@@ -151,16 +219,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.currentWeek--;
                 }
                 
-                // Check if we're going before the employee's start date
-                if (this.employeeStartDate && this.currentWeekStartDate < this.employeeStartDate) {
-                    // Reset to the week of the employee's start date
-                    const startWeek = this.getWeekOfYear(this.employeeStartDate);
-                    const startYear = this.employeeStartDate.getFullYear();
-                    this.currentWeek = startWeek;
-                    this.currentYear = startYear;
+                // Only check employee start date if an employee is selected
+                if (this.selectedEmployeeId && this.employeeStartDate && this.currentWeekStartDate < this.employeeStartDate) {
+                    // Allow going back to past weeks even if before employee start date
+                    // This is useful for viewing historical data
+                    console.log('Navigating to week before employee start date - this is allowed for viewing historical data');
                 }
                 
-                this.loadDailySummaries();
+                this.onWeekChange();
+                this.saveState(); // Save state after changing week
             },
             nextWeek() {
                 if (this.currentWeek === 52) {
@@ -169,7 +236,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     this.currentWeek++;
                 }
+                
                 this.onWeekChange();
+                this.saveState(); // Save state after changing week
             },
             onWeekChange() {
                 this.loadDailySummaries();
@@ -232,7 +301,11 @@ document.addEventListener('DOMContentLoaded', () => {
             onEmployeeChange() {
                 this.loadDailySummaries();
                 this.loadWeeklySummaries();
-                this.loadWeekPickerData();
+                this.saveState(); // Save state after changing employee
+            },
+            loadTimeEntries() {
+                this.loadDailySummaries();
+                this.loadWeeklySummaries();
             },
             toLocalDateString(date) {
                 const year = date.getFullYear();
@@ -241,15 +314,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 return `${year}-${month}-${day}`;
             },
             getTimeBlockStyle(start, end) {
-                // Grid is 06:00 (0%) to 20:00 (100%)
+                // Grid is now dynamic based on timeRangeStart and timeRangeEnd
                 if (!start || !end) return {};
                 const [sh, sm] = start.split(":").map(Number);
                 const [eh, em] = end.split(":").map(Number);
-                const startMins = (sh * 60 + sm) - 360; // 360 = 6*60
-                const endMins = (eh * 60 + em) - 360;
-                const totalMins = 14 * 60; // 14 hours
+                const startMins = (sh * 60 + sm) - (this.timeRangeStart * 60); // Adjust to current range
+                const endMins = (eh * 60 + em) - (this.timeRangeStart * 60);
+                const totalMins = this.visibleHours * 60; // Dynamic total hours
                 const top = Math.max(0, (startMins / totalMins) * 100);
-                const height = Math.max(8, ((endMins - startMins) / totalMins) * 100);
+                const height = Math.max(12, ((endMins - startMins) / totalMins) * 100); // Increased minimum height
                 return {
                     position: 'absolute',
                     left: '6px',
@@ -260,31 +333,74 @@ document.addEventListener('DOMContentLoaded', () => {
                     border: '1px solid #0d6efd',
                     borderRadius: '4px',
                     color: '#222',
-                    padding: '2px 4px',
+                    padding: '3px 6px', // Increased padding
                     cursor: 'pointer',
                     overflow: 'hidden',
                     zIndex: 2
                 };
             },
             getProjectColor(projectName) {
-                if (!projectName) return '#6c757d';
+                if (!projectName) return '#8DA0CB'; // Pastell-Blau als Standard
                 
                 if (!this.projectColors[projectName]) {
-                    // Generate a consistent color based on project name
+                    // Harmonische Pastelltöne
                     const colors = [
-                        '#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1',
-                        '#fd7e14', '#20c997', '#e83e8c', '#6c757d', '#0dcaf0',
-                        '#6610f2', '#d63384', '#198754', '#fd7e14', '#20c997'
+                        '#66C2A5', // Mint-Grün
+                        '#FC8D62', // Korallen-Orange
+                        '#8DA0CB', // Pastell-Blau
+                        '#E78AC3', // Zart-Rosa
+                        '#A6D854', // Hell-Gelb-Grün
+                        '#FFD92F'  // Creme-Gelb
                     ];
+                    
+                    // Hash-basierte Farbzuweisung für Konsistenz
                     const hash = projectName.split('').reduce((a, b) => {
                         a = ((a << 5) - a) + b.charCodeAt(0);
                         return a & a;
                     }, 0);
                     const index = Math.abs(hash) % colors.length;
-                    this.projectColors[projectName] = colors[index];
+                    
+                    // Wenn mehr als 6 Projekte, verwende eine Variation der Grundfarben
+                    if (Object.keys(this.projectColors).length >= 6) {
+                        // Verwende eine hellere oder dunklere Variation der Grundfarbe
+                        const baseColor = colors[index];
+                        const variation = Math.floor(Object.keys(this.projectColors).length / 6) % 3;
+                        
+                        if (variation === 1) {
+                            // Hellere Variation (20% heller)
+                            this.projectColors[projectName] = this.lightenColor(baseColor, 0.2);
+                        } else if (variation === 2) {
+                            // Dunklere Variation (20% dunkler)
+                            this.projectColors[projectName] = this.darkenColor(baseColor, 0.2);
+                        } else {
+                            this.projectColors[projectName] = baseColor;
+                        }
+                    } else {
+                        this.projectColors[projectName] = colors[index];
+                    }
                 }
                 
                 return this.projectColors[projectName];
+            },
+            lightenColor(color, amount) {
+                const num = parseInt(color.replace("#", ""), 16);
+                const amt = Math.round(2.55 * amount * 100);
+                const R = (num >> 16) + amt;
+                const G = (num >> 8 & 0x00FF) + amt;
+                const B = (num & 0x0000FF) + amt;
+                return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                    (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                    (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+            },
+            darkenColor(color, amount) {
+                const num = parseInt(color.replace("#", ""), 16);
+                const amt = Math.round(2.55 * amount * 100);
+                const R = (num >> 16) - amt;
+                const G = (num >> 8 & 0x00FF) - amt;
+                const B = (num & 0x0000FF) - amt;
+                return "#" + (0x1000000 + (R > 255 ? 255 : R < 0 ? 0 : R) * 0x10000 +
+                    (G > 255 ? 255 : G < 0 ? 0 : G) * 0x100 +
+                    (B > 255 ? 255 : B < 0 ? 0 : B)).toString(16).slice(1);
             },
             getTimeBlockStyleWithProject(start, end, projectName) {
                 const baseStyle = this.getTimeBlockStyle(start, end);
@@ -298,7 +414,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             },
             calculateTimeBlockLayout(timeEntries) {
-                if (!timeEntries || timeEntries.length === 0) return [];
+                if (!timeEntries || timeEntries.length === 0) {
+                    console.log('No time entries to layout');
+                    return [];
+                }
+                
+                console.log('Processing time entries:', timeEntries.length);
                 
                 // Sort entries by start time
                 const sortedEntries = [...timeEntries].sort((a, b) => {
@@ -311,6 +432,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const lanes = []; // Track occupied lanes
                 
                 for (const entry of sortedEntries) {
+                    if (!entry || !entry.startTime || !entry.endTime) {
+                        console.log('Skipping invalid entry:', entry);
+                        continue; // Skip invalid entries
+                    }
+                    
                     const startMins = this.timeToMinutes(entry.startTime);
                     const endMins = this.timeToMinutes(entry.endTime);
                     
@@ -331,13 +457,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         lanes.push(endMins);
                     }
                     
-                    layout.push({
+                    const layoutItem = {
                         entry: entry,
                         laneIndex: laneIndex,
                         totalLanes: Math.max(lanes.length, 1)
-                    });
+                    };
+                    
+                    console.log('Created layout item:', layoutItem);
+                    layout.push(layoutItem);
                 }
                 
+                console.log('Final layout:', layout);
                 return layout;
             },
             timeToMinutes(timeStr) {
@@ -346,21 +476,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 return hours * 60 + minutes;
             },
             getTimeBlockStyleWithLayout(start, end, projectName, laneIndex, totalLanes) {
+                if (!start || !end) return {};
+                
                 const baseStyle = this.getTimeBlockStyle(start, end);
                 const projectColor = this.getProjectColor(projectName);
                 
                 // Calculate width and position based on lane
-                const laneWidth = 100 / totalLanes;
-                const left = (laneIndex * laneWidth) + 2; // 2% margin
-                const right = ((totalLanes - laneIndex - 1) * laneWidth) + 2; // 2% margin
+                const laneWidth = 100 / Math.max(totalLanes || 1, 1);
+                const left = ((laneIndex || 0) * laneWidth) + 2; // 2% margin
+                const right = (((totalLanes || 1) - (laneIndex || 0) - 1) * laneWidth) + 2; // 2% margin
                 
                 return {
                     ...baseStyle,
                     left: left + '%',
                     right: right + '%',
-                    background: projectColor + '22',
+                    '--project-color': projectColor, // Set CSS custom property for color
+                    background: projectColor + 'E6', // 90% opacity background
                     border: '1px solid ' + projectColor,
-                    color: '#222'
+                    color: '#222',
+                    padding: '4px 8px', // Increased padding for better readability
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.15)', // Add shadow for better visibility
+                    zIndex: '10 !important' // High z-index but not extreme
                 };
             },
             calculateBreakPositions(entry) {
@@ -481,113 +617,34 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.successMessage = '';
                 }, 3000);
             },
-            // Week picker methods
-            async loadWeekPickerData() {
-                this.weekPickerData = await this.getVisibleWeeks();
-            },
-            async getVisibleWeeks() {
-                const weeks = [];
-                
-                for (let i = 0; i < this.weekPickerVisibleCount; i++) {
-                    const weekNumber = this.weekPickerStart + i;
-                    const weekStart = this.getWeekStartDate(this.currentYear, weekNumber);
-                    const weekEnd = new Date(weekStart);
-                    weekEnd.setDate(weekStart.getDate() + 6);
-                    
-                    // Determine approval status
-                    const today = new Date();
-                    const isPast = weekEnd < today;
-                    const isFuture = weekStart > today;
-                    
-                    let approvalStatus = 'empty';
-                    
-                    if (isFuture) {
-                        approvalStatus = 'future';
-                    } else {
-                        // For past and current weeks, check actual approval status
-                        try {
-                            const weekStartStr = this.toLocalDateString(weekStart);
-                            const weekEndStr = this.toLocalDateString(weekEnd);
-                            
-                            // Fetch time entries and vacation requests for this week
-                            const [timeEntriesResponse, holidaysResponse] = await Promise.all([
-                                fetch(`/timetracking/api/summary/daily?employeeId=${this.selectedEmployeeId}&from=${weekStartStr}&to=${weekEndStr}`),
-                                fetch(`/timetracking/api/holidays/employee/${this.selectedEmployeeId}`)
-                            ]);
-                            
-                            if (timeEntriesResponse.ok && holidaysResponse.ok) {
-                                const dailySummaries = await timeEntriesResponse.json();
-                                const holidays = await holidaysResponse.json();
-                                
-                                // Filter holidays for this week
-                                const weekHolidays = holidays.filter(holiday => {
-                                    const holidayStart = new Date(holiday.startDate);
-                                    const holidayEnd = new Date(holiday.endDate);
-                                    return holidayStart <= weekEnd && holidayEnd >= weekStart;
-                                });
-                                
-                                // Check if there are any entries or holidays
-                                const hasTimeEntries = dailySummaries.some(day => day.timeEntries && day.timeEntries.length > 0);
-                                const hasHolidays = weekHolidays.length > 0;
-                                
-                                // Check approval status for time entries
-                                let timeEntriesApproved = true;
-                                if (hasTimeEntries) {
-                                    timeEntriesApproved = dailySummaries.every(day => 
-                                        !day.timeEntries || day.timeEntries.length === 0 || 
-                                        day.timeEntries.every(entry => entry.approval?.approved === true)
-                                    );
-                                }
-                                
-                                // Check approval status for holidays
-                                let holidaysApproved = true;
-                                if (hasHolidays) {
-                                    holidaysApproved = weekHolidays.every(holiday => 
-                                        holiday.status === 'APPROVED' || holiday.approval?.approved === true
-                                    );
-                                }
-                                
-                                // Determine overall approval status
-                                if (hasTimeEntries || hasHolidays) {
-                                    if (timeEntriesApproved && holidaysApproved) {
-                                        approvalStatus = 'approved';
-                                    } else {
-                                        approvalStatus = 'pending';
-                                    }
-                                } else {
-                                    approvalStatus = 'empty';
-                                }
-                            }
-                        } catch (error) {
-                            console.error('Error fetching approval status for week:', weekNumber, error);
-                            approvalStatus = 'pending'; // Default to pending on error
-                        }
-                    }
-                    
-                    weeks.push({
-                        weekNumber: weekNumber,
-                        year: this.currentYear,
-                        weekStart: weekStart,
-                        weekEnd: weekEnd,
-                        shortRange: `${weekStart.getDate()}.${weekStart.getMonth() + 1} – ${weekEnd.getDate()}.${weekEnd.getMonth() + 1}`,
-                        fullRange: `${weekStart.toLocaleDateString('de-CH')} – ${weekEnd.toLocaleDateString('de-CH')}`,
-                        approvalStatus: approvalStatus
-                    });
-                }
-                
-                return weeks;
-            },
+
             selectWeek(week) {
                 this.currentWeek = week.weekNumber;
                 this.currentYear = week.year;
                 this.onWeekChange();
             },
-            scrollWeekPicker(direction) {
-                this.weekPickerStart += direction * this.weekPickerVisibleCount;
-                // Ensure we don't go below week 1 or above week 52
-                this.weekPickerStart = Math.max(1, Math.min(52 - this.weekPickerVisibleCount + 1, this.weekPickerStart));
-                this.loadWeekPickerData();
+            selectWeekFromPopup(week) {
+                this.currentWeek = week.weekNumber;
+                this.currentYear = week.year;
+                this.onWeekChange();
+                this.showWeekPicker = false; // Close popup after selection
+                this.saveState(); // Save state after changing week
             },
+            
+            scrollToCurrentWeekInPopup() {
+                this.$nextTick(() => {
+                    setTimeout(() => {
+                        const currentWeekElement = document.querySelector('.week-picker-item.active');
+                        if (currentWeekElement) {
+                            currentWeekElement.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'center' 
+                            });
+                        }
+                    }, 100);
+                });
+            },
+
             getWeekPickerItemClass(week) {
                 const isCurrentWeek = week.weekNumber === this.currentWeek && week.year === this.currentYear;
                 
@@ -600,18 +657,103 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Color coding based on approval status
                 if (week.approvalStatus === 'future') {
-                    classes.push('future-week');
+                    classes.push('future-week'); // Gray for future weeks
                 } else if (week.approvalStatus === 'approved') {
-                    classes.push('approved');
+                    classes.push('approved'); // Green for approved weeks
                 } else if (week.approvalStatus === 'pending') {
-                    classes.push('pending');
+                    classes.push('pending'); // Yellow for pending weeks
                 } else if (week.approvalStatus === 'rejected') {
-                    classes.push('rejected');
+                    classes.push('rejected'); // Red for rejected weeks
                 } else {
-                    classes.push('empty');
+                    classes.push('empty'); // Default for weeks with no data
                 }
                 
                 return classes.join(' ');
+            },
+            async getWeekData(year, weekNumber) {
+                // Get the week start and end dates
+                const weekStart = this.getWeekStartDate(year, weekNumber);
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekStart.getDate() + 6);
+                
+                const from = this.toLocalDateString(weekStart);
+                const to = this.toLocalDateString(weekEnd);
+                
+                try {
+                    // Fetch daily summaries for this week
+                    const response = await fetch(`/timetracking/api/summary/daily?employeeId=${this.selectedEmployeeId}&from=${from}&to=${to}`);
+                    if (!response.ok) {
+                        return { approvalStatus: 'empty', hasData: false };
+                    }
+                    
+                    const dailySummaries = await response.json();
+                    
+                    // Check if there are any time entries or holidays in this week
+                    let hasTimeEntries = false;
+                    let hasHolidays = false;
+                    let allTimeEntriesApproved = true;
+                    let allHolidaysApproved = true;
+                    
+                    for (const daySummary of dailySummaries) {
+                        // Check for time entries
+                        if (daySummary.timeEntries && daySummary.timeEntries.length > 0) {
+                            hasTimeEntries = true;
+                            // Check if all time entries are approved
+                            for (const entry of daySummary.timeEntries) {
+                                if (!entry.approval?.approved) {
+                                    allTimeEntriesApproved = false;
+                                }
+                            }
+                        }
+                        
+                        // Check for holidays
+                        if (daySummary.holidayType && !daySummary.isPublicHoliday) {
+                            hasHolidays = true;
+                            if (!daySummary.holidayApproved) {
+                                allHolidaysApproved = false;
+                            }
+                        }
+                    }
+                    
+                    // Determine approval status
+                    if (!hasTimeEntries && !hasHolidays) {
+                        return { approvalStatus: 'empty', hasData: false };
+                    } else if (hasTimeEntries && allTimeEntriesApproved && (!hasHolidays || allHolidaysApproved)) {
+                        return { approvalStatus: 'approved', hasData: true };
+                    } else {
+                        return { approvalStatus: 'pending', hasData: true };
+                    }
+                    
+                } catch (error) {
+                    console.error('Error fetching week data:', error);
+                    return { approvalStatus: 'empty', hasData: false };
+                }
+            },
+            async loadWeekData() {
+                // Load actual data for all weeks
+                const weeks = this.allWeeks;
+                const today = new Date();
+                
+                for (let i = 0; i < weeks.length; i++) {
+                    const week = weeks[i];
+                    const weekEnd = new Date(week.weekEnd);
+                    const weekStart = new Date(week.weekStart);
+                    
+                    // Skip future weeks
+                    if (weekStart > today) {
+                        continue;
+                    }
+                    
+                    try {
+                        const weekData = await this.getWeekData(week.year, week.weekNumber);
+                        if (weekData) {
+                            // Update the week's approval status
+                            week.approvalStatus = weekData.approvalStatus;
+                        }
+                    } catch (error) {
+                        console.error(`Error loading data for week ${week.weekNumber}:`, error);
+                    }
+                }
             },
             getWeekOfYear(date) {
                 const d = new Date(date.getTime());
@@ -622,14 +764,408 @@ document.addEventListener('DOMContentLoaded', () => {
                 const week1 = new Date(d.getFullYear(), 0, 4);
                 // Adjust to Thursday in week 1 and count number of weeks from date to week1
                 return 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+            },
+            goToToday() {
+                const today = new Date();
+                this.currentYear = today.getFullYear();
+                this.currentWeek = this.getWeekOfYear(today);
+                this.onWeekChange();
+                this.saveState(); // Save state after going to today
+            },
+            openTimeEntryForm() {
+                console.log('Opening NEW time entry form...');
+                this.showFormModal = true;
+                this.currentEntryData = null; // Clear any existing entry data
+                // Wait for the modal to be fully rendered before initializing
+                this.$nextTick(() => {
+                    setTimeout(() => {
+                        this.initializeTimeTrackingForm();
+                    }, 600);
+                });
+            },
+            
+            openEditTimeEntryForm(entryId) {
+                console.log('Opening EDIT time entry form for ID:', entryId);
+                this.showFormModal = true;
+                // Wait for the modal to be fully rendered before initializing
+                this.$nextTick(() => {
+                    setTimeout(() => {
+                        this.initializeTimeTrackingFormWithEntry(entryId);
+                    }, 600);
+                });
+            },
+            initializeTimeTrackingForm() {
+                console.log('Initializing time tracking form...');
+                this.formLoaded = false;
+                
+                // Check if the form script is already loaded
+                if (window.timeTrackingFormInitialized) {
+                    console.log('Form already initialized, reinitializing...');
+                    // Clean up existing form
+                    const formContainer = document.getElementById('time-tracking-form-app');
+                    if (formContainer) {
+                        formContainer.innerHTML = '';
+                        if (window.timeTrackingFormApp) {
+                            window.timeTrackingFormApp.unmount();
+                        }
+                    }
+                }
+                
+                // Load the form script if not already loaded
+                if (!window.timeTrackingFormScriptLoaded) {
+                    console.log('Loading time tracking form script...');
+                    const script = document.createElement('script');
+                    script.type = 'module';
+                    script.src = '/js/time-tracking-form.js';
+                    script.onload = () => {
+                        console.log('Time tracking form script loaded successfully');
+                        window.timeTrackingFormScriptLoaded = true;
+                        this.initializeFormAfterScriptLoad();
+                    };
+                    script.onerror = (error) => {
+                        console.error('Failed to load time tracking form script:', error);
+                    };
+                    document.head.appendChild(script);
+                } else {
+                    console.log('Form script already loaded, initializing directly...');
+                    this.initializeFormAfterScriptLoad();
+                }
+            },
+            
+            initializeFormAfterScriptLoad() {
+                // Wait for the modal to be fully rendered
+                this.$nextTick(() => {
+                    setTimeout(() => {
+                        // Debug: Check if modal is in DOM
+                        const modal = document.querySelector('.modal');
+                        console.log('Modal in DOM:', !!modal);
+                        if (modal) {
+                            console.log('Modal HTML:', modal.outerHTML.substring(0, 500));
+                        }
+                        
+                        const formContainer = document.getElementById('time-tracking-form-app');
+                        console.log('Form container found:', !!formContainer);
+                        if (formContainer) {
+                            console.log('Form container HTML:', formContainer.outerHTML);
+                            console.log('Form container dataset:', formContainer.dataset);
+                            
+                            // Force the form container to be visible so the script can find it
+                            formContainer.style.display = 'block';
+                            
+                            // Manually trigger the form initialization
+                            if (window.timeTrackingFormScriptLoaded) {
+                                console.log('Manually triggering form initialization...');
+                                // Call the initializeForm function directly
+                                if (typeof window.initializeTimeTrackingForm === 'function') {
+                                    window.initializeTimeTrackingForm();
+                                } else {
+                                    // If the function doesn't exist, try to load the script again
+                                    console.log('Form script not available, loading...');
+                                    const script = document.createElement('script');
+                                    script.type = 'module';
+                                    script.src = '/js/time-tracking-form.js';
+                                    script.onload = () => {
+                                        console.log('Form script loaded manually');
+                                        window.timeTrackingFormScriptLoaded = true;
+                                        // Try to initialize again
+                                        setTimeout(() => {
+                                            if (typeof window.initializeTimeTrackingForm === 'function') {
+                                                window.initializeTimeTrackingForm();
+                                            }
+                                        }, 100);
+                                    };
+                                    document.head.appendChild(script);
+                                }
+                            }
+                            
+                            // Set formLoaded to true after a short delay to ensure the form script can initialize
+                            setTimeout(() => {
+                                this.formLoaded = true;
+                            }, 100);
+                        } else {
+                            console.error('Form container not found after script load');
+                        }
+                    }, 200); // Reduced delay since container is always in DOM
+                });
+            },
+            
+            async initializeTimeTrackingFormWithEntry(entryId) {
+                console.log('Initializing time tracking form with entry:', entryId);
+                this.formLoaded = false;
+                
+                try {
+                    // First, fetch the entry data
+                    const response = await fetch(`/timetracking/api/${entryId}`);
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch entry data');
+                    }
+                    const entryData = await response.json();
+                    console.log('Fetched entry data:', entryData);
+                    
+                    // Store the entry data in Vue state
+                    this.currentEntryData = entryData;
+                    
+                    // Ensure modal is still open before proceeding
+                    if (!this.showFormModal) {
+                        console.log('Modal was closed during data fetch, reopening...');
+                        this.showFormModal = true;
+                    }
+                    
+                    // Load the form script if not already loaded
+                    if (!window.timeTrackingFormScriptLoaded) {
+                        console.log('Loading time tracking form script...');
+                        const script = document.createElement('script');
+                        script.type = 'module';
+                        script.src = '/js/time-tracking-form.js';
+                        script.onload = () => {
+                            console.log('Time tracking form script loaded successfully');
+                            window.timeTrackingFormScriptLoaded = true;
+                            this.initializeFormAfterScriptLoad();
+                        };
+                        script.onerror = (error) => {
+                            console.error('Failed to load time tracking form script:', error);
+                        };
+                        document.head.appendChild(script);
+                    } else {
+                        console.log('Form script already loaded, initializing directly...');
+                        this.initializeFormAfterScriptLoad();
+                    }
+                } catch (error) {
+                    console.error('Error initializing form with entry:', error);
+                    // Don't close the modal on error, just show an error message
+                    this.showSuccessMessage('Fehler beim Laden des Eintrags: ' + error.message);
+                }
+            },
+            closeFormModal() {
+                console.log('closeFormModal called from:', new Error().stack);
+                this.showFormModal = false;
+                this.formLoaded = false;
+                // Clean up the form container
+                const formContainer = document.getElementById('time-tracking-form-app');
+                if (formContainer) {
+                    formContainer.innerHTML = '';
+                    // Remove any Vue apps that might be mounted
+                    if (window.timeTrackingFormApp) {
+                        try {
+                            window.timeTrackingFormApp.unmount();
+                        } catch (e) {
+                            console.log('Error unmounting app:', e);
+                        }
+                        window.timeTrackingFormApp = null;
+                    }
+                }
+            },
+
+            scrollTimeUp() {
+                // Expand the time range upward (earlier times)
+                if (this.timeRangeStart > 6) {
+                    this.timeRangeStart--;
+                }
+            },
+            scrollTimeDown() {
+                // Expand the time range downward (later times)
+                if (this.timeRangeEnd < 20) {
+                    this.timeRangeEnd++;
+                }
+            },
+            // Debug method to check grid lines
+            debugGridLines() {
+                console.log('Debug Grid Lines:');
+                console.log('Visible Hours:', this.visibleHours);
+                console.log('Time Range:', this.timeRangeStart, 'to', this.timeRangeEnd);
+                
+                const lines = this.generateGridLines();
+                console.log('Generated Grid Lines:', lines);
+                
+                lines.forEach(line => {
+                    console.log(`${line.type.toUpperCase()} line at ${line.position}% (${line.key})`);
+                });
+                
+                // Also show the old calculation for comparison
+                console.log('Old calculation:');
+                for (let h = 1; h <= this.visibleHours; h++) {
+                    const hourPosition = (h-1) * (100 / (this.visibleHours-1));
+                    console.log(`Hour ${h}: ${hourPosition}%`);
+                }
+            },
+            // Generate all grid lines for a day column
+            generateGridLines() {
+                const lines = [];
+                const totalHeight = 100;
+                const hourHeight = totalHeight / (this.visibleHours - 1);
+                
+                // Generate hour lines
+                for (let h = 0; h < this.visibleHours; h++) {
+                    lines.push({
+                        type: 'hour',
+                        position: h * hourHeight,
+                        key: `hour-${h}`
+                    });
+                }
+                
+                // Generate quarter lines (only between hours, not after the last hour)
+                for (let h = 0; h < this.visibleHours - 1; h++) {
+                    const hourStart = h * hourHeight;
+                    lines.push({
+                        type: 'quarter',
+                        position: hourStart + (hourHeight * 0.25),
+                        key: `quarter-1-${h}`
+                    });
+                    lines.push({
+                        type: 'quarter',
+                        position: hourStart + (hourHeight * 0.5),
+                        key: `quarter-2-${h}`
+                    });
+                    lines.push({
+                        type: 'quarter',
+                        position: hourStart + (hourHeight * 0.75),
+                        key: `quarter-3-${h}`
+                    });
+                }
+                
+                return lines;
+            },
+            isTimeBlockVisible(startTime, endTime) {
+                if (!startTime || !endTime) {
+                    console.log('Time block not visible - missing times:', { startTime, endTime });
+                    return false;
+                }
+                
+                try {
+                    const [sh, sm] = startTime.split(":").map(Number);
+                    const [eh, em] = endTime.split(":").map(Number);
+                    
+                    if (isNaN(sh) || isNaN(sm) || isNaN(eh) || isNaN(em)) {
+                        console.log('Time block not visible - invalid time format:', { startTime, endTime });
+                        return false;
+                    }
+                    
+                    const startHour = sh + sm / 60;
+                    const endHour = eh + em / 60;
+                    
+                    // Check if the time block overlaps with the visible range
+                    // Now we show blocks that are within or overlap the visible range
+                    const isVisible = (startHour < this.timeRangeEnd && endHour > this.timeRangeStart);
+                    console.log('Time block visibility check:', { 
+                        startTime, endTime, startHour, endHour, 
+                        timeRangeStart: this.timeRangeStart, 
+                        timeRangeEnd: this.timeRangeEnd, 
+                        isVisible 
+                    });
+                    
+                    return isVisible;
+                } catch (error) {
+                    console.warn('Error checking time block visibility:', error);
+                    return false;
+                }
+            },
+            getBreakStyle(breakItem) {
+                const startMins = this.timeToMinutes(breakItem.start);
+                const endMins = this.timeToMinutes(breakItem.end);
+                const totalMins = this.visibleHours * 60; // Use dynamic total hours
+                const top = Math.max(0, ((startMins - (this.timeRangeStart * 60)) / totalMins) * 100);
+                const height = Math.max(2, ((endMins - startMins) / totalMins) * 100);
+                
+                return {
+                    position: 'absolute',
+                    left: '0',
+                    right: '0',
+                    top: top + '%',
+                    height: height + '%',
+                    background: 'rgba(255, 255, 255, 0.7)',
+                    border: '1px dashed #666',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '8px',
+                    color: '#666',
+                    zIndex: 3
+                };
+            },
+            getTimeEntriesForDayAndHour(dateStr, hour) {
+                const dayEntries = this.timeEntries.filter(entry => {
+                    const entryDate = new Date(entry.date);
+                    const targetDate = new Date(dateStr);
+                    return entryDate.toDateString() === targetDate.toDateString();
+                });
+                
+                return dayEntries.filter(entry => {
+                    const startHour = parseInt(entry.startTime.split(':')[0]);
+                    return startHour === hour;
+                }).map(entry => {
+                    const layout = this.calculateTimeBlockLayout([entry]);
+                    return {
+                        ...entry,
+                        laneIndex: layout[0]?.laneIndex || 0,
+                        totalLanes: layout[0]?.totalLanes || 1
+                    };
+                });
+            }
+        },
+        watch: {
+            showFormModal(newVal) {
+                console.log('showFormModal watcher triggered:', newVal);
+                if (newVal) {
+                    // Close week picker popup when modal opens
+                    this.showWeekPicker = false;
+                    
+                    // Modal is opening, check if it's rendered
+                    this.$nextTick(() => {
+                        setTimeout(() => {
+                            const modal = document.querySelector('.modal');
+                            console.log('Modal in DOM after watcher:', !!modal);
+                            if (modal) {
+                                console.log('Modal found in DOM');
+                            } else {
+                                console.log('Modal not found in DOM');
+                            }
+                        }, 100);
+                    });
+                }
+            },
+            showWeekPicker(newVal) {
+                if (newVal && !this.showFormModal) {
+                    // Week picker is opening and modal is not open, scroll to current week
+                    this.$nextTick(() => {
+                        setTimeout(() => {
+                            this.scrollToCurrentWeekInPopup();
+                        }, 100);
+                    });
+                }
             }
         },
         mounted() {
+            console.log('Calendar app mounted');
             this.loadDailySummaries();
             this.loadWeeklySummaries();
-            // Initialize week picker to show current week
-            this.weekPickerStart = Math.max(1, this.currentWeek - Math.floor(this.weekPickerVisibleCount / 2));
-            this.loadWeekPickerData();
+            this.loadWeekData(); // Load week data for color coding
+            
+            // Listen for entry-saved events from the form
+            document.addEventListener('entry-saved', (event) => {
+                if (event.detail.action === 'close-modal') {
+                    this.closeFormModal();
+                    if (event.detail.refresh) {
+                        this.loadDailySummaries();
+                        this.loadWeeklySummaries();
+                        this.loadWeekData(); // Reload week data after changes
+                    }
+                }
+            });
+
+            // Restore saved week and employee from localStorage
+            const savedWeek = localStorage.getItem('calendar-current-week');
+            const savedYear = localStorage.getItem('calendar-current-year');
+            const savedEmployeeId = localStorage.getItem('calendar-selected-employee');
+
+            if (savedWeek) {
+                this.currentWeek = parseInt(savedWeek);
+            }
+            if (savedYear) {
+                this.currentYear = parseInt(savedYear);
+            }
+            if (savedEmployeeId) {
+                this.selectedEmployeeId = parseInt(savedEmployeeId);
+            }
         },
         template: `
         <div class="container-fluid">
@@ -639,26 +1175,107 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button type="button" class="btn-close" @click="successMessage = ''"></button>
             </div>
             
-            <div class="mb-3 d-flex justify-content-between align-items-center">
-                <a href="/timetracking/0" class="btn btn-primary">
-                    <i class="bi bi-plus-circle me-2"></i>Zeit erfassen
-                </a>
-
-                <div class="d-flex gap-2 align-items-center">
-                    <select v-model="selectedEmployeeId" class="form-select w-auto" @change="onEmployeeChange">
-                        <option v-for="emp in employees" :value="emp.id" :key="emp.id">
-                            {{ emp.firstName }} {{ emp.lastName }}
-                        </option>
-                    </select>
+            <!-- Header Navigation -->
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <button @click="goToToday" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-calendar-check"></i> Heute
+                    </button>
+                    <div class="week-navigation d-flex align-items-center gap-2">
+                        <button @click="previousWeek" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <button @click="showWeekPicker = !showWeekPicker" class="btn btn-outline-primary btn-sm week-display">
+                            <i class="bi bi-calendar-week"></i>
+                            
+                            <!-- Week Picker Popup -->
+                            <div v-if="showWeekPicker" class="week-picker-popup">
+                                <div class="week-picker-container">
+                                    <div class="week-picker-scroll">
+                                        <div v-for="week in allWeeks" 
+                                             :key="week.weekNumber" 
+                                             :class="['week-picker-item', getWeekPickerItemClass(week)]"
+                                             @click="selectWeekFromPopup(week)">
+                                            <div class="week-number">KW {{ week.weekNumber }}</div>
+                                            <div class="week-range">{{ week.shortRange }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Legend -->
+                                <div class="mt-3 pt-2 border-top" style="font-size: 11px; color: #666;">
+                                    <div class="d-flex justify-content-center gap-3">
+                                        <div class="d-flex align-items-center">
+                                            <div style="width: 12px; height: 12px; border-radius: 2px; background-color: #d1e7dd; border: 1px solid #198754; margin-right: 4px;"></div>
+                                            <span>Genehmigt</span>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <div style="width: 12px; height: 12px; border-radius: 2px; background-color: #fff3cd; border: 1px solid #ffc107; margin-right: 4px;"></div>
+                                            <span>Nicht genehmigt</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </button>
+                        <button @click="nextWeek" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
+                    <span class="month-year">
+                        <span class="month">{{ currentMonthYear }}</span>
+                        <span class="week-info"> / KW {{ currentWeek }}</span>
+                    </span>
+                </div>
+                
+                <div class="d-flex align-items-center gap-2">
+                    <div class="employee-selector">
+                        <select v-model="selectedEmployeeId" @change="onEmployeeChange" class="form-select form-select-sm">
+                            <option value="">Alle Mitarbeiter</option>
+                            <option v-for="employee in employees" :key="employee.id" :value="employee.id">
+                                {{ employee.firstName }} {{ employee.lastName }}
+                            </option>
+                        </select>
+                    </div>
+                    <button @click="openTimeEntryForm" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus"></i> Zeit erfassen
+                    </button>
+                    <button @click="debugGridLines" class="btn btn-outline-info btn-sm" title="Debug Grid Lines">
+                        <i class="bi bi-bug"></i>
+                    </button>
                 </div>
             </div>
 
-            <!-- Employee Start Date Info -->
-            <div v-if="employeeStartDate" class="alert alert-info mb-3">
-                <i class="bi bi-info-circle me-2"></i>
-                <strong>{{ selectedEmployee?.firstName }} {{ selectedEmployee?.lastName }}</strong> 
-                arbeitet seit {{ new Date(employeeStartDate).toLocaleDateString('de-CH') }}. 
-                Nur Wochen ab diesem Datum werden angezeigt.
+            <!-- Time Entry Form Modal -->
+            <div v-if="showFormModal" class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050;" tabindex="-1" @click="closeFormModal">
+                <div class="modal-dialog modal-lg" style="position: relative; z-index: 1051;">
+                    <div class="modal-content" @click.stop>
+                        <div class="modal-header">
+                            <h5 class="modal-title">Neuer Zeiteintrag</h5>
+                            <button type="button" class="btn-close" @click="closeFormModal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div v-if="!formLoaded" class="text-center p-4">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Lade Formular...</span>
+                                </div>
+                                <p class="mt-2">Formular wird geladen...</p>
+                            </div>
+                            <div id="time-tracking-form-app" 
+                                 :data-entry="currentEntryData ? JSON.stringify(currentEntryData) : '{}'"
+                                 :data-employees="JSON.stringify(employees)"
+                                 :data-projects="JSON.stringify(projects)"
+                                 :data-categories="JSON.stringify(['Arbeit', 'Probleme', 'Material', 'Sonstiges'])"
+                                 :data-catalog-items="JSON.stringify([])"
+                                 :data-current-date="new Date().toISOString().split('T')[0]"
+                                 data-modal="time-entry-modal"
+                                 ref="formContainer">
+                            </div>
+                            <script type="module" src="/js/time-tracking-form.js"></script>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @click="closeFormModal">Abbrechen</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Loading Indicator -->
@@ -671,78 +1288,55 @@ document.addEventListener('DOMContentLoaded', () => {
             <!-- Calendar View -->
             <div v-if="!loading">
                 <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Kalenderwoche {{ weekDisplay.weekNumber }} - {{ weekDisplay.fullRange }}</h5>
-                        <div class="btn-group">
-                            <button @click="previousWeek" class="btn btn-outline-secondary btn-sm">
-                                <i class="bi bi-chevron-left"></i>
-                            </button>
-                            <button @click="nextWeek" class="btn btn-outline-secondary btn-sm">
-                                <i class="bi bi-chevron-right"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Week Picker -->
-                    <div class="card-body border-bottom">
-                        <div class="week-picker-container">
-                            <button @click="scrollWeekPicker(-1)" class="btn btn-outline-secondary btn-sm week-picker-nav">
-                                <i class="bi bi-chevron-left"></i>
-                            </button>
-                            
-                            <div class="week-picker-scroll" ref="weekPickerScroll">
-                                <div v-for="week in weekPickerData" 
-                                     :key="week.weekNumber" 
-                                     :class="['week-picker-item', getWeekPickerItemClass(week)]"
-                                     @click="selectWeek(week)">
-                                    <div class="week-number">{{ week.weekNumber }}</div>
-                                    <div class="week-range">{{ week.shortRange }}</div>
-                                </div>
-                            </div>
-                            
-                            <button @click="scrollWeekPicker(1)" class="btn btn-outline-secondary btn-sm week-picker-nav">
-                                <i class="bi bi-chevron-right"></i>
-                            </button>
-                        </div>
-                        
-                        <!-- Week Picker Legend -->
-                        <div class="mt-2">
-                            <small class="text-muted">
-                                <span class="me-3"><span class="badge bg-secondary">⚪</span> Zukunft</span>
-                                <span class="me-3"><span class="badge bg-success">🟢</span> Genehmigt</span>
-                                <span class="me-3"><span class="badge bg-warning">🟡</span> Ausstehend</span>
-                                <span class="me-3"><span class="badge bg-danger">🔴</span> Abgelehnt</span>
-                            </small>
-                        </div>
-                    </div>
                     
                     <div class="card-body">
                         <!-- Vertical Time Grid -->
-                        <div class="calendar-vertical-grid" style="display:flex; flex-direction:column; overflow-x:auto;">
+                        <div class="calendar-vertical-grid" style="display:flex; flex-direction:column; overflow-x:auto; border-radius: 0.375rem;">
                             <!-- Header Row: Empty cell + day names -->
                             <div style="display:flex;">
                                 <div style="width:48px;"></div>
-                                <div v-for="(day, i) in calendarDays" :key="'header'+i" style="flex:1; min-width:110px; text-align:center; font-weight:bold; border-bottom:1px solid #dee2e6; padding-bottom:4px;">
-                                    {{ day.dayName }}<br>{{ day.day }}
+                                <div v-for="(day, i) in calendarDays" :key="'header'+i" style="flex:1; min-width:110px; text-align:left; font-weight:bold; border-bottom:1px solid #dee2e6; padding-bottom:4px; padding-left:8px;">
+                                    {{ day.day }} {{ day.dayName }}
                                 </div>
                             </div>
-                            <div style="display:flex; height:420px;">
-                                <!-- Time labels -->
-                                <div style="width:48px; display:flex; flex-direction:column; align-items:flex-end; position:relative;">
-                                    <div v-for="h in 15" :key="'label'+h" style="height:28px; font-size:11px; color:#888; position:relative;">
-                                        <span style="position:absolute; right:2px; top:-7px;">{{ (h+5).toString().padStart(2,'0') }}:00</span>
+                            <div style="display:flex; height:calc({{ visibleHours * 40 }}px);">
+                                <!-- Time labels with navigation -->
+                                <div class="time-labels" style="width:48px; display:flex; flex-direction:column; align-items:flex-end; position:relative;">
+                                    <!-- Time navigation buttons -->
+                                    <div style="display:flex; justify-content:center; margin-bottom:5px;">
+                                        <button @click="scrollTimeUp" class="btn btn-outline-secondary btn-sm" style="font-size:10px; padding:2px 4px;" :disabled="timeRangeStart <= 6" title="Zeitbereich nach oben erweitern">
+                                            <i class="bi bi-chevron-up"></i>
+                                        </button>
+                                    </div>
+                                    <!-- Time labels -->
+                                    <div style="flex:1; display:flex; flex-direction:column; align-items:flex-end;">
+                                        <div v-for="h in visibleHours" :key="'label'+h" style="height:40px; font-size:12px; color:#666; position:relative; font-weight:500;">
+                                            <span style="position:absolute; right:4px; top:-10px;">{{ (timeRangeStart + h - 1).toString().padStart(2,'0') }}:00</span>
+                                        </div>
+                                    </div>
+                                    <!-- Time navigation buttons -->
+                                    <div style="display:flex; justify-content:center; margin-top:5px;">
+                                        <button @click="scrollTimeDown" class="btn btn-outline-secondary btn-sm" style="font-size:10px; padding:2px 4px;" :disabled="timeRangeEnd >= 20" title="Zeitbereich nach unten erweitern">
+                                            <i class="bi bi-chevron-down"></i>
+                                        </button>
                                     </div>
                                 </div>
                                 <!-- Day columns -->
-                                <div v-for="(day, dayIdx) in calendarDays" :key="'col'+dayIdx" style="flex:1; min-width:110px; border-left:1px solid #eee; position:relative; background:#f8f9fa;">
-                                    <!-- Hour lines -->
-                                    <div v-for="h in 15" :key="'line'+h" style="position:absolute; left:0; right:0; top:calc((100%/14)*(h-1)); height:0; border-top:1px solid #eee;"></div>
+                                <div v-for="(day, dayIdx) in calendarDays" :key="'col'+dayIdx" class="day-column" style="flex:1; min-width:110px; position:relative;">
+                                    <!-- Grid lines -->
+                                    <div v-for="line in generateGridLines()" 
+                                         :key="line.key" 
+                                         :class="line.type === 'hour' ? 'hour-line' : 'quarter-line'"
+                                         :style="{ top: line.position + '%' }">
+                                    </div>
                                     <!-- Time entry blocks -->
-                                    <div v-for="layoutItem in calculateTimeBlockLayout(day.summary?.timeEntries || [])" :key="layoutItem.entry.id"
-                                         :style="getTimeBlockStyleWithLayout(layoutItem.entry.startTime, layoutItem.entry.endTime, layoutItem.entry.projectName, layoutItem.laneIndex, layoutItem.totalLanes)"
-                                         class="calendar-time-block"
-                                         @click="navigateToEdit(layoutItem.entry.id)"
-                                    >
+                                    <template v-for="(layoutItem, index) in calculateTimeBlockLayout(day.summary?.timeEntries || [])" :key="layoutItem?.entry?.id || index">
+                                        <div v-if="layoutItem && layoutItem.entry && isTimeBlockVisible(layoutItem.entry.startTime, layoutItem.entry.endTime)"
+                                             :style="getTimeBlockStyleWithLayout(layoutItem.entry.startTime, layoutItem.entry.endTime, layoutItem.entry.projectName, layoutItem.laneIndex, layoutItem.totalLanes)"
+                                             class="calendar-time-block"
+                                             @click="navigateToEdit(layoutItem.entry.id)"
+                                             style="position: absolute !important; z-index: 999 !important;"
+                                        >
                                         <!-- Approval Status Indicator -->
                                         <div :class="['approval-indicator', layoutItem.entry.approval?.approved ? 'approved' : 'pending']"
                                              :title="layoutItem.entry.approval?.approved ? 'Genehmigt' : 'Ausstehend'">
@@ -765,19 +1359,20 @@ document.addEventListener('DOMContentLoaded', () => {
                                             <span class="calendar-time-block-break-label">{{ formatBreakDuration(breakItem.duration) }}</span>
                                         </div>
                                         
-                                        <div style="font-size:10px; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color: #333;">
+                                        <div style="font-size:11px; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color: #333; margin-bottom:2px;">
                                             {{ layoutItem.entry.projectName || 'Unbekanntes Projekt' }}
                                         </div>
-                                        <div style="font-size:9px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color: #666;">
+                                        <div style="font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color: #666; margin-bottom:2px;">
                                             {{ layoutItem.entry.title || 'Arbeit' }}
                                         </div>
-                                        <div style="font-size:9px; font-weight:bold; color: #333;">
+                                        <div style="font-size:10px; font-weight:bold; color: #333;">
                                             {{ layoutItem.entry.hoursWorked }}h
                                         </div>
                                         <div v-if="layoutItem.entry.breaks && layoutItem.entry.breaks.length > 0" class="calendar-break-indicator">
                                             {{ layoutItem.entry.breaks.length }} Pause{{ layoutItem.entry.breaks.length > 1 ? 'n' : '' }}
                                         </div>
                                     </div>
+                                </template>
                                 </div>
                             </div>
                             <!-- Daily Summary Row -->
@@ -787,69 +1382,51 @@ document.addEventListener('DOMContentLoaded', () => {
                                      :class="['calendar-day-summary', getDayClass(day)]"
                                      style="flex:1; min-width:110px; border-left:1px solid #eee; padding:8px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
                                     <div v-if="day.summary" style="text-align:center;">
-                                        <div style="font-size:14px; font-weight:bold; color: #333;">
-                                            {{ day.summary.workedHours.toFixed(1) }}h
+                                        <!-- Weekend: Show hours + "Kein Arbeitstag" -->
+                                        <div v-if="day.summary.isWeekend" style="text-align:center;">
+                                            <div style="font-size:14px; font-weight:bold; color: #333;">
+                                                {{ day.summary.workedHours.toFixed(1) }}h
+                                            </div>
+                                            <div style="font-size:12px; color: #666;">
+                                                Kein Arbeitstag
+                                            </div>
                                         </div>
-                                        <div style="font-size:10px; color: #666;">
-                                            von {{ ((day.summary.holidayType && day.summary.holidayApproved) || day.summary.isPublicHoliday ? 0 : day.summary.expectedHours).toFixed(1) }}h
+                                        <!-- Holiday: Show only hours without "von X.Xh" -->
+                                        <div v-else-if="(day.summary.holidayType && day.summary.holidayApproved) || day.summary.isPublicHoliday" style="text-align:center;">
+                                            <div style="font-size:14px; font-weight:bold; color: #333;">
+                                                {{ day.summary.workedHours.toFixed(1) }}h
+                                            </div>
+                                            <div v-if="day.summary.holidayType" style="font-size:9px; color: #0dcaf0;">
+                                                {{ getHolidayTypeDisplayName(day.summary.holidayType) }}
+                                                <!-- Holiday approval button -->
+                                                <button v-if="!day.summary.holidayApproved" 
+                                                        @click.stop="approveHoliday(day.summary.holidayId)"
+                                                        class="btn btn-success btn-sm ms-1"
+                                                        style="font-size: 8px; padding: 1px 4px;">
+                                                    <i class="bi bi-check-circle"></i>
+                                                </button>
+                                            </div>
+                                            <div v-if="day.summary.isPublicHoliday && day.summary.publicHolidayName" style="font-size:9px; color: #0dcaf0;">
+                                                {{ day.summary.publicHolidayName }}
+                                            </div>
                                         </div>
-                                        <div v-if="(day.summary.workedHours - ((day.summary.holidayType && day.summary.holidayApproved) || day.summary.isPublicHoliday ? 0 : day.summary.expectedHours)) !== 0" 
-                                             :style="{ fontSize: '9px', color: (day.summary.workedHours - ((day.summary.holidayType && day.summary.holidayApproved) || day.summary.isPublicHoliday ? 0 : day.summary.expectedHours)) > 0 ? '#198754' : '#dc3545' }">
-                                            {{ (day.summary.workedHours - ((day.summary.holidayType && day.summary.holidayApproved) || day.summary.isPublicHoliday ? 0 : day.summary.expectedHours)) > 0 ? '+' : '' }}{{ (day.summary.workedHours - ((day.summary.holidayType && day.summary.holidayApproved) || day.summary.isPublicHoliday ? 0 : day.summary.expectedHours)).toFixed(1) }}h
-                                        </div>
-                                        <div v-if="day.summary.holidayType" style="font-size:9px; color: #0dcaf0;">
-                                            {{ getHolidayTypeDisplayName(day.summary.holidayType) }}
-                                            <!-- Holiday approval button -->
-                                            <button v-if="!day.summary.holidayApproved" 
-                                                    @click.stop="approveHoliday(day.summary.holidayId)"
-                                                    class="btn btn-success btn-sm ms-1"
-                                                    style="font-size: 8px; padding: 1px 4px;">
-                                                <i class="bi bi-check-circle"></i>
-                                            </button>
-                                        </div>
-                                        <div v-if="day.summary.isPublicHoliday && day.summary.publicHolidayName" style="font-size:9px; color: #0dcaf0;">
-                                            {{ day.summary.publicHolidayName }}
+                                        <!-- Normal workday: Show hours with "von X.Xh" -->
+                                        <div v-else style="text-align:center;">
+                                            <div style="font-size:14px; font-weight:bold; color: #333;">
+                                                {{ day.summary.workedHours.toFixed(1) }}h
+                                            </div>
+                                            <div style="font-size:10px; color: #666;">
+                                                von {{ day.summary.expectedHours.toFixed(1) }}h
+                                            </div>
+                                            <div v-if="(day.summary.workedHours - day.summary.expectedHours) !== 0" 
+                                                 :style="{ fontSize: '9px', color: (day.summary.workedHours - day.summary.expectedHours) > 0 ? '#198754' : '#dc3545' }">
+                                                {{ (day.summary.workedHours - day.summary.expectedHours) > 0 ? '+' : '' }}{{ (day.summary.workedHours - day.summary.expectedHours).toFixed(1) }}h
+                                            </div>
                                         </div>
                                     </div>
                                     <div v-else style="text-align:center; color: #999; font-size:12px;">
                                         Keine Daten
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Legend -->
-                        <div class="mt-3">
-                            <h6>Legende:</h6>
-                            <div class="d-flex flex-wrap gap-3">
-                                <div class="d-flex align-items-center">
-                                    <div class="calendar-legend-item calendar-perfect"></div>
-                                    <span class="ms-1">Perfekt</span>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <div class="calendar-legend-item calendar-overtime"></div>
-                                    <span class="ms-1">Überstunden</span>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <div class="calendar-legend-item calendar-undertime"></div>
-                                    <span class="ms-1">Unterstunden</span>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <div class="calendar-legend-item calendar-missing"></div>
-                                    <span class="ms-1">Fehlend</span>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <div class="calendar-legend-item calendar-holiday"></div>
-                                    <span class="ms-1">Urlaub</span>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <div class="calendar-legend-item calendar-weekend"></div>
-                                    <span class="ms-1">Wochenende</span>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <div style="width:20px; height:20px; border-radius:0.25rem; border:1px dashed #666; background-color:rgba(255,255,255,0.7); position:relative;">
-                                        <span style="position:absolute; left:2px; top:50%; transform:translateY(-50%); font-size:8px; color:#666;">☕</span>
-                                    </div>
-                                    <span class="ms-1">Pausen</span>
                                 </div>
                             </div>
                         </div>
