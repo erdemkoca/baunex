@@ -76,8 +76,6 @@ function initializeForm() {
                 employeeId: null,
                 projectId: null,
                 date: currentDate,
-                startTime: '',
-                endTime: '',
                 title: '',
                 hoursWorked: 0,
                 hourlyRate: 0,
@@ -89,8 +87,6 @@ function initializeForm() {
                 travelTimeMinutes: 0,
                 disposalCost: 0,
                 waitingTimeMinutes: 0,
-                breaks: [],
-                catalogItems: [],
                 ...entry,
                 // Ensure time fields are properly formatted
                 startTime: entry.startTime ? entry.startTime.substring(0, 5) : '', // Convert "HH:MM:SS" to "HH:MM"

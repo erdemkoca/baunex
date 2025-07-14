@@ -227,4 +227,20 @@ class TimeTrackingController {
         return mapOf("expectedHours" to expectedHours)
     }
 
+    @GET
+    @Path("/api/summary/cumulative-hours")
+    @Produces(MediaType.APPLICATION_JSON)
+    fun getCumulativeHoursAccount(
+        @QueryParam("employeeId") employeeId: Long,
+        @QueryParam("year") year: Int,
+        @QueryParam("week") week: Int
+    ): Response {
+        val account = workSummaryService.getCumulativeHoursAccount(employeeId, year, week)
+        return if (account != null) {
+            Response.ok(account).build()
+        } else {
+            Response.status(Response.Status.NOT_FOUND).build()
+        }
+    }
+
 }

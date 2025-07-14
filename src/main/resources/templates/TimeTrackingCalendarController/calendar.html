@@ -467,6 +467,218 @@
       .week-picker-nav {
         flex-shrink: 0;
       }
+      
+      /* Stundenkonto Card Styles */
+      .stundenkonto-card {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        margin-top: 1.5rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+      }
+      
+      .stundenkonto-card:hover {
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        transform: translateY(-2px);
+      }
+      
+      .stundenkonto-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+      }
+      
+      .stundenkonto-header h5 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+      }
+      
+      .stundenkonto-header small {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.875rem;
+      }
+      
+      .stundenkonto-body {
+        padding: 1.5rem;
+      }
+      
+      .stundenkonto-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+      
+      /* Weekly Balance Styles */
+      .weekly-balance {
+        text-align: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+      }
+      
+      .balance-title {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 0.25rem;
+        font-weight: 500;
+      }
+      
+      .balance-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        line-height: 1;
+      }
+      
+      .balance-number.positive {
+        color: #198754;
+      }
+      
+      .balance-number.negative {
+        color: #dc3545;
+      }
+      
+      .balance-subtitle {
+        font-size: 0.875rem;
+        color: #6c757d;
+        font-weight: 500;
+      }
+      
+      /* Cumulative Account Styles */
+      .cumulative-account {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+      }
+      
+      .account-label {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #495057;
+      }
+      
+      .account-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+      }
+      
+      .account-value.positive {
+        color: #198754;
+      }
+      
+      .account-value.negative {
+        color: #dc3545;
+      }
+      
+      /* Absence and Vacation Container */
+      .absence-vacation-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+      
+      .absence-box,
+      .vacation-box {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+        transition: all 0.2s ease;
+      }
+      
+      .absence-box:hover,
+      .vacation-box:hover {
+        background: #e9ecef;
+        transform: translateY(-1px);
+      }
+      
+      .box-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      .box-content {
+        text-align: center;
+      }
+      
+      .absence-count,
+      .vacation-count {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 0.25rem;
+      }
+      
+      .absence-status {
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+      
+      .status-pending {
+        color: #ffc107;
+      }
+      
+      .status-approved {
+        color: #198754;
+      }
+      
+      .vacation-remaining {
+        font-size: 0.75rem;
+        color: #6c757d;
+        font-weight: 500;
+      }
+      
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .stundenkonto-content {
+          gap: 1rem;
+        }
+        
+        .balance-number {
+          font-size: 2rem;
+        }
+        
+        .absence-vacation-container {
+          grid-template-columns: 1fr;
+          gap: 0.75rem;
+        }
+        
+        .stundenkonto-body {
+          padding: 1rem;
+        }
+        
+        .stundenkonto-header {
+          padding: 1rem;
+        }
+      }
+      
+      @media (max-width: 576px) {
+        .balance-number {
+          font-size: 1.75rem;
+        }
+        
+        .account-value {
+          font-size: 1rem;
+        }
+        
+        .absence-count,
+        .vacation-count {
+          font-size: 1rem;
+        }
+      }
     </style>
     
     <div id="time-tracking-calendar-app"

@@ -2,6 +2,7 @@ package ch.baunex.timetracking.service
 
 import ch.baunex.timetracking.dto.EmployeeDailyWorkDTO
 import ch.baunex.timetracking.dto.WeeklyWorkSummaryDTO
+import ch.baunex.timetracking.dto.CumulativeHoursAccountDTO
 import ch.baunex.timetracking.model.ApprovalStatus
 import ch.baunex.timetracking.repository.TimeEntryRepository
 import ch.baunex.timetracking.repository.HolidayRepository
@@ -207,5 +208,72 @@ class WorkSummaryService @Inject constructor(
         return employees.mapNotNull { employee ->
             getWeeklyWorkSummary(employee.id!!, year, week)
         }
+    }
+
+    /**
+     * Get cumulative hours account for an employee
+     * Calculates the balance since the employee's start date
+     */
+    fun getCumulativeHoursAccount(employeeId: Long, year: Int, week: Int): CumulativeHoursAccountDTO? {
+        val employee = employeeRepository.findById(employeeId) ?: return null
+        val employeeName = "${employee.person.firstName} ${employee.person.lastName}"
+        
+        // Calculate current week start and end dates
+        val weekFields = WeekFields.of(Locale.getDefault())
+        val currentWeekStart = LocalDate.now().withYear(year).with(weekFields.weekOfYear(), week.toLong())
+            .with(weekFields.dayOfWeek(), 1L) // Monday
+        val currentWeekEnd = currentWeekStart.plusDays(6) // Sunday
+        
+        // Get current week summary
+        val currentWeekSummary = getWeeklyWorkSummary(employeeId, year, week) ?: return null
+        
+        // Calculate cumulative balance since start date
+        val startDate = employee.startDate
+        val endDate = currentWeekEnd
+        
+        // Get all daily summaries from start date to current week end
+        val allDailySummaries = getDailyWorkSummary(employeeId, startDate, endDate)
+        
+        // Calculate cumulative totals
+        val cumulativeWorked = allDailySummaries.sumOf { it.workedHours }
+        val cumulativeExpected = allDailySummaries.sumOf { it.expectedHours }
+        val cumulativeOvertime = allDailySummaries.sumOf { if (it.delta > 0) it.delta else 0.0 }
+        val cumulativeUndertime = allDailySummaries.sumOf { if (it.delta < 0) -it.delta else 0.0 }
+        val cumulativeBalance = cumulativeOvertime - cumulativeUndertime
+        
+        // Calculate vacation statistics
+        val currentYear = currentWeekStart.year
+        val totalVacationDays = employee.vacationDays
+        val usedVacationDays = calculateUsedVacationDays(employeeId, currentYear)
+        val remainingVacationDays = totalVacationDays - usedVacationDays
+        
+        return CumulativeHoursAccountDTO(
+            employeeId = employeeId,
+            employeeName = employeeName,
+            startDate = startDate,
+            
+            // Current week balance
+            weeklyBalance = currentWeekSummary.overtime - currentWeekSummary.undertime,
+            weeklyWorkedHours = currentWeekSummary.totalWorked,
+            weeklyExpectedHours = currentWeekSummary.totalExpected,
+            
+            // Cumulative balance since start date
+            cumulativeBalance = cumulativeBalance,
+            cumulativeWorkedHours = cumulativeWorked,
+            cumulativeExpectedHours = cumulativeExpected,
+            
+            // Current week info
+            currentWeekStart = currentWeekStart,
+            currentWeekEnd = currentWeekEnd,
+            currentWeekNumber = week,
+            currentYear = year,
+            
+            // Vacation and absence info
+            holidayDays = currentWeekSummary.holidayDays,
+            pendingHolidayRequests = currentWeekSummary.pendingHolidayRequests,
+            totalVacationDays = totalVacationDays,
+            usedVacationDays = usedVacationDays,
+            remainingVacationDays = remainingVacationDays
+        )
     }
 } 

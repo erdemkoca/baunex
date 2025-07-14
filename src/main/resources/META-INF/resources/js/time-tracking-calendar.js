@@ -39,7 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 timeRangeEnd: 17, // End hour (17:00)
                 showFormModal: false, // New state for form modal
                 formLoaded: false, // Track if form is loaded
-                currentEntryData: null // Store current entry data for modal
+                currentEntryData: null, // Store current entry data for modal
+                cumulativeHoursAccount: null // Store cumulative hours account data
             };
         },
         computed: {
@@ -211,6 +212,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.loading = false;
                 }
             },
+            
+            async loadCumulativeHoursAccount() {
+                if (!this.selectedEmployeeId) return;
+                
+                try {
+                    const res = await fetch(`/timetracking/api/summary/cumulative-hours?employeeId=${this.selectedEmployeeId}&year=${this.currentYear}&week=${this.currentWeek}`);
+                    if (res.ok) {
+                        this.cumulativeHoursAccount = await res.json();
+                    }
+                } catch (error) {
+                    console.error('Error loading cumulative hours account:', error);
+                }
+            },
             previousWeek() {
                 if (this.currentWeek === 1) {
                     this.currentWeek = 52;
@@ -243,6 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
             onWeekChange() {
                 this.loadDailySummaries();
                 this.loadWeeklySummaries();
+                this.loadCumulativeHoursAccount();
             },
             getDayClass(day) {
                 if (!day || !day.summary) return '';
@@ -301,6 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
             onEmployeeChange() {
                 this.loadDailySummaries();
                 this.loadWeeklySummaries();
+                this.loadCumulativeHoursAccount();
                 this.saveState(); // Save state after changing employee
             },
             loadTimeEntries() {
@@ -1138,6 +1154,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Calendar app mounted');
             this.loadDailySummaries();
             this.loadWeeklySummaries();
+            this.loadCumulativeHoursAccount();
             this.loadWeekData(); // Load week data for color coding
             
             // Listen for entry-saved events from the form
@@ -1147,6 +1164,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (event.detail.refresh) {
                         this.loadDailySummaries();
                         this.loadWeeklySummaries();
+                        this.loadCumulativeHoursAccount();
                         this.loadWeekData(); // Reload week data after changes
                     }
                 }
@@ -1433,69 +1451,64 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 
-                <!-- Weekly Summary -->
-                <div class="card mt-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">Wochenzusammenfassung - {{ weekDisplay.fullRange }}</h5>
+                <!-- Stundenkonto -->
+                <div class="stundenkonto-card">
+                    <div class="stundenkonto-header">
+                        <h5 class="mb-0">Stundenkonto</h5>
+                        <small class="text-muted">{{ weekDisplay.fullRange }}</small>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div v-for="summary in weeklySummaries" :key="summary.employeeId" class="col-md-6 col-lg-4 mb-3">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h6 class="mb-0">{{ summary.employeeName }}</h6>
-                                        <small class="text-muted">KW {{ weekDisplay.weekNumber }} - {{ weekDisplay.fullRange }}</small>
+                    <div class="stundenkonto-body">
+                        <div v-if="cumulativeHoursAccount" class="stundenkonto-content">
+                            <!-- Weekly Balance (Large Number) -->
+                            <div class="weekly-balance">
+                                <div class="balance-title">Wochensaldo:</div>
+                                <div :class="['balance-number', cumulativeHoursAccount.weeklyBalance >= 0 ? 'positive' : 'negative']">
+                                    {{ cumulativeHoursAccount.weeklyBalance >= 0 ? '+' : '' }}{{ cumulativeHoursAccount.weeklyBalance.toFixed(1) }} h
+                                </div>
+                                <div class="balance-subtitle">
+                                    {{ cumulativeHoursAccount.weeklyWorkedHours.toFixed(1) }}:{{ Math.round((cumulativeHoursAccount.weeklyWorkedHours % 1) * 60).toString().padStart(2, '0') }} h von {{ cumulativeHoursAccount.weeklyExpectedHours.toFixed(1) }}:{{ Math.round((cumulativeHoursAccount.weeklyExpectedHours % 1) * 60).toString().padStart(2, '0') }} h Soll-Stunden
+                                </div>
+                            </div>
+                            
+                            <!-- Cumulative Hours Account -->
+                            <div class="cumulative-account">
+                                <div class="account-label">Stundenkonto (seit {{ formatDate(cumulativeHoursAccount.startDate) }}):</div>
+                                <div :class="['account-value', cumulativeHoursAccount.cumulativeBalance >= 0 ? 'positive' : 'negative']">
+                                    {{ cumulativeHoursAccount.cumulativeBalance >= 0 ? '+' : '' }}{{ cumulativeHoursAccount.cumulativeBalance.toFixed(1) }} h
+                                </div>
+                            </div>
+                            
+                            <!-- Absence and Vacation Boxes -->
+                            <div class="absence-vacation-container">
+                                <div class="absence-box">
+                                    <div class="box-title">Abwesenheitstage</div>
+                                    <div class="box-content">
+                                        <div class="absence-count">{{ cumulativeHoursAccount.holidayDays }} Tage</div>
+                                        <div class="absence-status">
+                                            <span v-if="cumulativeHoursAccount.pendingHolidayRequests > 0" class="status-pending">
+                                                {{ cumulativeHoursAccount.pendingHolidayRequests }} ausstehend
+                                            </span>
+                                            <span v-else class="status-approved">Genehmigt</span>
+                                        </div>
                                     </div>
-                                    <div class="card-body">
-                                        <div class="row text-center">
-                                            <div class="col-6">
-                                                <div class="summary-stat">
-                                                    <div class="summary-value">{{ summary.totalWorked.toFixed(1) }}h</div>
-                                                    <div class="summary-label">Gearbeitet</div>
-                                                </div>
-                                            </div>
-                                            <div class="col-6">
-                                                <div class="summary-stat">
-                                                    <div class="summary-value">{{ summary.totalExpected.toFixed(1) }}h</div>
-                                                    <div class="summary-label">Erwartet</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row mt-3">
-                                            <div class="col-6">
-                                                <div class="summary-stat">
-                                                    <div :class="['summary-value', summary.overtime > 0 ? 'text-success' : 'text-muted']">
-                                                        +{{ summary.overtime.toFixed(1) }}h
-                                                    </div>
-                                                    <div class="summary-label">Überstunden</div>
-                                                </div>
-                                            </div>
-                                            <div class="col-6">
-                                                <div class="summary-stat">
-                                                    <div :class="['summary-value', summary.undertime > 0 ? 'text-warning' : 'text-muted']">
-                                                        -{{ summary.undertime.toFixed(1) }}h
-                                                    </div>
-                                                    <div class="summary-label">Unterstunden</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="mt-3">
-                                            <div class="d-flex justify-content-between mb-1">
-                                                <span>Urlaubstage: {{ summary.holidayDays }}</span>
-                                                <span v-if="summary.pendingHolidayRequests > 0" class="text-warning">
-                                                    {{ summary.pendingHolidayRequests }} ausstehend
-                                                </span>
-                                            </div>
-                                            <div class="d-flex justify-content-between small text-muted">
-                                                <span>Verbraucht: {{ summary.usedVacationDays }}/{{ summary.totalVacationDays }}</span>
-                                                <span :class="summary.remainingVacationDays < 5 ? 'text-warning' : 'text-success'">
-                                                    {{ summary.remainingVacationDays }} verbleibend
-                                                </span>
-                                            </div>
+                                </div>
+                                
+                                <div class="vacation-box">
+                                    <div class="box-title">Urlaubstage</div>
+                                    <div class="box-content">
+                                        <div class="vacation-count">{{ cumulativeHoursAccount.usedVacationDays }} von {{ cumulativeHoursAccount.totalVacationDays }} Tagen</div>
+                                        <div class="vacation-remaining">
+                                            {{ cumulativeHoursAccount.remainingVacationDays }} verbleibend
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                        <div v-else class="text-center p-4">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Lade Stundenkonto...</span>
+                            </div>
+                            <p class="mt-2">Stundenkonto wird geladen...</p>
                         </div>
                     </div>
                 </div>
@@ -1505,4 +1518,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     app.mount('#time-tracking-calendar-app');
-}); 
+});
