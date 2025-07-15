@@ -1536,47 +1536,90 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="stundenkonto-body">
                         <div v-if="cumulativeHoursAccount" class="stundenkonto-content">
-                            <!-- Weekly Balance (Large Number) -->
-                            <div class="weekly-balance">
-                                <div class="balance-title">Wochensaldo:</div>
-                                <div :class="['balance-number', cumulativeHoursAccount.weeklyBalance >= 0 ? 'positive' : 'negative']">
-                                    {{ cumulativeHoursAccount.weeklyBalance >= 0 ? '+' : '' }}{{ cumulativeHoursAccount.weeklyBalance.toFixed(1) }} h
-                                </div>
-                                <div class="balance-subtitle">
-                                    {{ cumulativeHoursAccount.weeklyWorkedHours.toFixed(1) }}:{{ Math.round((cumulativeHoursAccount.weeklyWorkedHours % 1) * 60).toString().padStart(2, '0') }} h von {{ cumulativeHoursAccount.weeklyExpectedHours.toFixed(1) }}:{{ Math.round((cumulativeHoursAccount.weeklyExpectedHours % 1) * 60).toString().padStart(2, '0') }} h Soll-Stunden
-                                </div>
-                            </div>
-                            
-                            <!-- Cumulative Hours Account -->
-                            <div class="cumulative-account">
-                                <div class="account-label">Stundenkonto (seit {{ formatDate(cumulativeHoursAccount.startDate) }}):</div>
-                                <div :class="['account-value', cumulativeHoursAccount.cumulativeBalance >= 0 ? 'positive' : 'negative']">
-                                    {{ cumulativeHoursAccount.cumulativeBalance >= 0 ? '+' : '' }}{{ cumulativeHoursAccount.cumulativeBalance.toFixed(1) }} h
-                                </div>
-                            </div>
-                            
-                            <!-- Absence and Vacation Boxes -->
-                            <div class="absence-vacation-container">
-                                <div class="absence-box">
-                                    <div class="box-title">Abwesenheitstage</div>
-                                    <div class="box-content">
-                                        <div class="absence-count">{{ cumulativeHoursAccount.holidayDays }} Tage</div>
-                                        <div class="absence-status">
-                                            <span v-if="cumulativeHoursAccount.pendingHolidayRequests > 0" class="status-pending">
-                                                {{ cumulativeHoursAccount.pendingHolidayRequests }} ausstehend
-                                            </span>
-                                            <span v-else class="status-approved">Genehmigt</span>
-                                        </div>
+                            <!-- Einheitliches Grid mit 5 Karten -->
+                            <div class="metrics-grid">
+                                <!-- Aktuelle Woche - Links -->
+                                <div class="metric-card primary-metric" 
+                                     :aria-label="'Wochensaldo: ' + (cumulativeHoursAccount.weeklyBalance >= 0 ? 'plus' : 'minus') + ' ' + Math.abs(cumulativeHoursAccount.weeklyBalance).toFixed(1) + ' Stunden'">
+                                    <div class="metric-icon">
+                                        <i class="bi bi-clock-history"></i>
+                                    </div>
+                                    <div class="metric-title">Wochensaldo</div>
+                                    <div :class="['metric-value primary', cumulativeHoursAccount.weeklyBalance >= 0 ? 'positive' : 'negative']">
+                                        {{ cumulativeHoursAccount.weeklyBalance >= 0 ? '+' : '' }}{{ cumulativeHoursAccount.weeklyBalance.toFixed(1) }} h
+                                    </div>
+                                    <div class="metric-subtitle">
+                                        {{ cumulativeHoursAccount.weeklyWorkedHours.toFixed(1) }} h von {{ cumulativeHoursAccount.weeklyExpectedHours.toFixed(1) }} h Soll
                                     </div>
                                 </div>
                                 
-                                <div class="vacation-box">
-                                    <div class="box-title">Urlaubstage</div>
-                                    <div class="box-content">
-                                        <div class="vacation-count">{{ cumulativeHoursAccount.usedVacationDays }} von {{ cumulativeHoursAccount.totalVacationDays }} Tagen</div>
-                                        <div class="vacation-remaining">
-                                            {{ cumulativeHoursAccount.remainingVacationDays }} verbleibend
-                                        </div>
+                                <div class="metric-card secondary-metric"
+                                     :aria-label="'Gearbeitete Stunden: ' + cumulativeHoursAccount.weeklyWorkedHours.toFixed(1) + ' Stunden diese Woche'">
+                                    <div class="metric-icon">
+                                        <i class="bi bi-calendar-check"></i>
+                                    </div>
+                                    <div class="metric-title">Gearbeitete Stunden</div>
+                                    <div class="metric-value secondary">
+                                        {{ cumulativeHoursAccount.weeklyWorkedHours.toFixed(1) }} h
+                                    </div>
+                                    <div class="metric-subtitle">
+                                        Diese Woche
+                                    </div>
+                                </div>
+                                
+                                <!-- Vertikale Trennung -->
+                                <div class="vertical-divider"></div>
+                                
+                                <!-- Kumulativ - Rechts -->
+                                <div class="metric-card secondary-metric"
+                                     :aria-label="'Stundenkonto: ' + (cumulativeHoursAccount.cumulativeBalance >= 0 ? 'plus' : 'minus') + ' ' + Math.abs(cumulativeHoursAccount.cumulativeBalance).toFixed(1) + ' Stunden kumulativ'">
+                                    <div class="metric-icon">
+                                        <i class="bi bi-calculator"></i>
+                                    </div>
+                                    <div class="metric-title">Stundenkonto</div>
+                                    <div :class="['metric-value secondary', cumulativeHoursAccount.cumulativeBalance >= 0 ? 'positive' : 'negative']">
+                                        {{ cumulativeHoursAccount.cumulativeBalance >= 0 ? '+' : '' }}{{ cumulativeHoursAccount.cumulativeBalance.toFixed(1) }} h
+                                    </div>
+                                    <div class="metric-subtitle">
+                                        Kumulativ bis KW {{ currentWeek }}
+                                    </div>
+                                </div>
+                                
+                                <div class="metric-card secondary-metric"
+                                     :aria-label="'Urlaubstage: ' + cumulativeHoursAccount.remainingVacationDays + ' von ' + cumulativeHoursAccount.totalVacationDays + ' Tagen verbleibend'">
+                                    <div class="metric-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                            <!-- Sonne -->
+                                            <circle cx="12" cy="8" r="3" fill="#FFD700"/>
+                                            <!-- Sonnenstrahlen -->
+                                            <path d="M12 2V4M12 20V22M22 12H20M4 12H2M19.8 4.2L18.4 5.6M5.6 18.4L4.2 19.8M19.8 19.8L18.4 18.4M5.6 5.6L4.2 4.2" stroke="#FFD700" stroke-width="1.5" stroke-linecap="round"/>
+                                            <!-- Strand/Welle -->
+                                            <path d="M2 18C4 16 8 17 12 17C16 17 20 16 22 18" stroke="#fd7e14" stroke-width="2" fill="none" stroke-linecap="round"/>
+                                        </svg>
+                                    </div>
+                                    <div class="metric-title">Urlaubstage</div>
+                                    <div class="metric-value secondary">
+                                        {{ cumulativeHoursAccount.remainingVacationDays }} / {{ cumulativeHoursAccount.totalVacationDays }}
+                                    </div>
+                                    <div class="metric-subtitle">
+                                        Verbraucht {{ cumulativeHoursAccount.usedVacationDays }}, Rest {{ cumulativeHoursAccount.remainingVacationDays }}
+                                    </div>
+                                </div>
+                                
+                                <div class="metric-card secondary-metric"
+                                     :aria-label="'Abwesenheitstage: ' + cumulativeHoursAccount.holidayDays + ' Tage, ' + (cumulativeHoursAccount.pendingHolidayRequests > 0 ? cumulativeHoursAccount.pendingHolidayRequests + ' ausstehend' : 'alle genehmigt')">
+                                    <div class="metric-icon">
+                                        <i class="bi bi-briefcase"></i>
+                                    </div>
+                                    <div class="metric-title">Abwesenheitstage</div>
+                                    <div class="metric-value secondary">
+                                        {{ cumulativeHoursAccount.holidayDays }} Tage
+                                    </div>
+                                    <div class="metric-subtitle">
+                                        <span v-if="cumulativeHoursAccount.pendingHolidayRequests > 0" class="status-pending">
+                                            {{ cumulativeHoursAccount.pendingHolidayRequests }} ausstehend
+                                        </span>
+                                        <span v-else class="status-approved">Genehmigt</span>
                                     </div>
                                 </div>
                             </div>

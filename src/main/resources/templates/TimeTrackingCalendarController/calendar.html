@@ -517,6 +517,114 @@
         gap: 1.5rem;
       }
       
+      /* Einheitliches Grid-Layout */
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1px 1fr 1fr 1fr;
+        gap: 1rem;
+        align-items: stretch;
+      }
+      
+      .metric-card {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 160px;
+      }
+      
+      .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+      }
+      
+      .metric-card.primary-metric {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-color: #dee2e6;
+      }
+      
+      .metric-card.secondary-metric {
+        background: #f8f9fa;
+        border-color: #e9ecef;
+      }
+      
+      .metric-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.75rem;
+        color: #6c757d;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 2rem;
+      }
+      
+      .metric-card.primary-metric .metric-icon {
+        color: #495057;
+      }
+      
+      .metric-title {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+        line-height: 1.2;
+      }
+      
+      .metric-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        line-height: 1.2;
+      }
+      
+      .metric-value.primary {
+        font-size: 2rem;
+      }
+      
+      .metric-value.secondary {
+        font-size: 1.5rem;
+        color: #495057;
+      }
+      
+      .metric-value.positive {
+        color: #198754;
+      }
+      
+      .metric-value.negative {
+        color: #dc3545;
+      }
+      
+      .metric-subtitle {
+        font-size: 0.75rem;
+        color: #6c757d;
+        font-weight: 500;
+        line-height: 1.3;
+        font-style: italic;
+      }
+      
+      .vertical-divider {
+        background: #e9ecef;
+        width: 1px;
+        height: 100%;
+        margin: 0 0.5rem;
+      }
+      
+      /* Farbliche Akzente für Kategorien */
+      .metric-card:nth-child(1) .metric-icon { color: #6f42c1; } /* Violett für Wochensaldo */
+      .metric-card:nth-child(2) .metric-icon { color: #0d6efd; } /* Blau für gearbeitete Stunden */
+      .metric-card:nth-child(4) .metric-icon { color: #6f42c1; } /* Violett für Stundenkonto */
+      .metric-card:nth-child(5) .metric-icon { color: #fd7e14; } /* Orange für Urlaub */
+      .metric-card:nth-child(6) .metric-icon { color: #6c757d; } /* Grau für Abwesenheit */
+      
       /* Weekly Balance Styles */
       .weekly-balance {
         text-align: center;
@@ -557,8 +665,7 @@
       /* Cumulative Account Styles */
       .cumulative-account {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
+        flex-direction: column;
         padding: 1rem;
         background: #f8f9fa;
         border-radius: 8px;
@@ -569,11 +676,14 @@
         font-size: 1rem;
         font-weight: 600;
         color: #495057;
+        margin-bottom: 0.5rem;
       }
       
       .account-value {
         font-size: 1.25rem;
         font-weight: 700;
+        text-align: center;
+        margin-bottom: 0.25rem;
       }
       
       .account-value.positive {
@@ -582,6 +692,13 @@
       
       .account-value.negative {
         color: #dc3545;
+      }
+      
+      .account-subtitle {
+        font-size: 0.875rem;
+        color: #6c757d;
+        font-weight: 500;
+        margin-top: 0.25rem;
       }
       
       /* Absence and Vacation Container */
@@ -652,13 +769,26 @@
           gap: 1rem;
         }
         
-        .balance-number {
-          font-size: 2rem;
+        .metrics-grid {
+          grid-template-columns: 1fr 1fr;
+          gap: 0.75rem;
         }
         
-        .absence-vacation-container {
-          grid-template-columns: 1fr;
-          gap: 0.75rem;
+        .vertical-divider {
+          display: none;
+        }
+        
+        .metric-card {
+          padding: 1rem;
+          min-height: 140px;
+        }
+        
+        .metric-value.primary {
+          font-size: 1.75rem;
+        }
+        
+        .metric-value.secondary {
+          font-size: 1.25rem;
         }
         
         .stundenkonto-body {
@@ -671,17 +801,21 @@
       }
       
       @media (max-width: 576px) {
-        .balance-number {
-          font-size: 1.75rem;
+        .metrics-grid {
+          grid-template-columns: 1fr;
+          gap: 0.75rem;
         }
         
-        .account-value {
-          font-size: 1rem;
+        .metric-value.primary {
+          font-size: 1.5rem;
         }
         
-        .absence-count,
-        .vacation-count {
-          font-size: 1rem;
+        .metric-value.secondary {
+          font-size: 1.125rem;
+        }
+        
+        .metric-card {
+          min-height: 120px;
         }
       }
     </style>
