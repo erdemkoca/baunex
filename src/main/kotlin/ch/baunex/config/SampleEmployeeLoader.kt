@@ -31,7 +31,7 @@ class SampleEmployeeLoader {
                 ahvNumber = "756.1234.5678.97",
                 bankIban = "CH9300762011623852957",
                 hourlyRate = 200.0,
-                startDate = LocalDate.now().minusDays(30)
+                startDate = LocalDate.now().minusWeeks(12)
             ),
             EmployeeCreateDTO(
                 firstName = "Max",
@@ -47,7 +47,7 @@ class SampleEmployeeLoader {
                 ahvNumber = "756.2345.6789.01",
                 bankIban = "CH5604835012345678009",
                 hourlyRate = 180.0,
-                startDate = LocalDate.now().minusDays(30)
+                startDate = LocalDate.now().minusWeeks(12)
             ),
             EmployeeCreateDTO(
                 firstName = "Hans",
@@ -63,7 +63,7 @@ class SampleEmployeeLoader {
                 ahvNumber = "756.3456.7890.12",
                 bankIban = "CH4401234123412341234",
                 hourlyRate = 160.0,
-                startDate = LocalDate.now().minusDays(30)
+                startDate = LocalDate.now().minusWeeks(12)
             ),
             EmployeeCreateDTO(
                 firstName = "Leni",
@@ -79,7 +79,7 @@ class SampleEmployeeLoader {
                 ahvNumber = "756.4567.8901.23",
                 bankIban = "CH5800791123000889012",
                 hourlyRate = 150.0,
-                startDate = LocalDate.now().minusDays(30)
+                startDate = LocalDate.now().minusWeeks(12)
             )
         )
 

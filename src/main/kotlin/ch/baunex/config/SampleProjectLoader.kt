@@ -182,6 +182,88 @@ class SampleProjectLoader {
                         attachments   = emptyList()
                     )
                 )
+            ),
+            // --- drei neue Projekte unten angehängt ---
+            ProjectCreateDTO(
+                name        = "Smart‑Home Nachrüstung",
+                customerId  = idOf("Muster AG"),
+                budget      = 15_000,
+                startDate   = today.minusDays(20),
+                endDate     = today.plusDays(40),
+                description = "Installation von Smart‑Home‑System (Beleuchtung, Heizung).",
+                status      = ProjectStatus.PLANNED,
+                street      = "Bahnhofstrasse 10",
+                city        = "Zürich",
+                initialNotes = listOf(
+                    NoteDto(
+                        id          = 0L,
+                        projectId   = null,
+                        timeEntryId = null,
+                        documentId  = null,
+                        createdById = 1L,
+                        createdAt   = today.minusDays(19),
+                        updatedAt   = null,
+                        title       = "Bedarfsanalyse",
+                        content     = "Smart‑Switches und Sensoren definieren.",
+                        category    = NoteCategory.VORBEREITUNG,
+                        tags        = listOf("SmartHome", "Analyse"),
+                        attachments = emptyList()
+                    )
+                )
+            ),
+            ProjectCreateDTO(
+                name        = "Photovoltaik‑Anlage Thun",
+                customerId  = idOf("Beispiel GmbH"),
+                budget      = 60_000,
+                startDate   = today.minusDays(60),
+                endDate     = today.plusDays(120),
+                description = "Montage und Inbetriebnahme einer PV‑Anlage auf Firmenhalle.",
+                status      = ProjectStatus.IN_PROGRESS,
+                street      = "Industriestrasse 7",
+                city        = "Thun",
+                initialNotes = listOf(
+                    NoteDto(
+                        id          = 0L,
+                        projectId   = null,
+                        timeEntryId = null,
+                        documentId  = null,
+                        createdById = 1L,
+                        createdAt   = today.minusDays(55),
+                        updatedAt   = null,
+                        title       = "Dach-Statik prüfen",
+                        content     = "Traglast und Neigung ermittelt.",
+                        category    = NoteCategory.INFO,
+                        tags        = listOf("Statik", "PV"),
+                        attachments = emptyList()
+                    )
+                )
+            ),
+            ProjectCreateDTO(
+                name        = "Netzwerk‑Upgrade Basel",
+                customerId  = idOf("Prova SRL"),
+                budget      = 22_000,
+                startDate   = today.minusMonths(2),
+                endDate     = today.plusMonths(2),
+                description = "Gigabit‑Switches und Verkabelung in Lagerhalle.",
+                status      = ProjectStatus.PLANNED,
+                street      = "Münzgraben 14",
+                city        = "Basel",
+                initialNotes = listOf(
+                    NoteDto(
+                        id          = 0L,
+                        projectId   = null,
+                        timeEntryId = null,
+                        documentId  = null,
+                        createdById = 1L,
+                        createdAt   = today.minusDays(50),
+                        updatedAt   = null,
+                        title       = "Switch‑Inventar",
+                        content     = "Vorhandene Hardware und Ports dokumentiert.",
+                        category    = NoteCategory.INFO,
+                        tags        = listOf("Netzwerk", "Inventory"),
+                        attachments = emptyList()
+                    )
+                )
             )
         )
 
