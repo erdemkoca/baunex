@@ -336,4 +336,316 @@
     .week-picker-scroll {
         max-width: 200px;
     }
+}
+
+/* Stundenkonto specific styles */
+.summary-section {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.summary-stat {
+    text-align: center;
+    padding: 1rem;
+    background-color: white;
+    border-radius: 0.375rem;
+    border: 1px solid #dee2e6;
+}
+
+.summary-stat-label {
+    display: block;
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.summary-stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.summary-stat-value.positive {
+    color: #198754;
+}
+
+.summary-stat-value.negative {
+    color: #dc3545;
+}
+
+.monthly-overview {
+    margin-top: 2rem;
+}
+
+.month-section {
+    margin-bottom: 3rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    overflow: hidden;
+}
+
+.month-header {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.month-name {
+    margin: 0;
+    color: #495057;
+    font-weight: 600;
+}
+
+.month-balance {
+    font-size: 0.875rem;
+    color: #6c757d;
+    flex: 1;
+}
+
+.month-balance-box {
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #495057;
+    min-width: 80px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+}
+
+/* Header container and row styles */
+.header-container {
+    display: flex;
+    background-color: #e9ecef;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    color: #495057;
+}
+
+.header-row {
+    display: grid;
+    grid-template-columns: 60px repeat(7, 1fr);
+    width: calc(100% - 80px);
+}
+
+.header-row .day-header {
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    border-right: 1px solid #dee2e6;
+    font-size: 0.875rem;
+}
+
+.header-row .day-header:last-child {
+    border-right: none;
+}
+
+.header-row .week-number {
+    background-color: #f8f9fa;
+    font-weight: 700;
+}
+
+.total-header-box {
+    width: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    font-weight: 700;
+    font-size: 0.875rem;
+    border-left: 1px solid #dee2e6;
+}
+
+.week-container {
+    display: flex;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.week-container:last-child {
+    border-bottom: none;
+}
+
+.week-grid {
+    display: grid;
+    grid-template-columns: 60px repeat(7, 1fr) 80px;
+    flex: 1;
+    min-height: 60px;
+}
+
+.week-number {
+    background-color: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #495057;
+    border-right: 1px solid #dee2e6;
+    font-size: 0.875rem;
+}
+
+.day-cell {
+    border-right: 1px solid #dee2e6;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60px;
+    position: relative;
+}
+
+.day-cell:last-child {
+    border-right: none;
+}
+
+.day-cell.empty {
+    background-color: #f8f9fa;
+}
+
+.day-cell.empty-outside-month {
+    background-color: #f8f9fa;
+    background-image: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.1) 2px,
+        rgba(0, 0, 0, 0.1) 4px
+    );
+    color: #6c757d;
+}
+
+.day-cell.empty-outside-month .date {
+    color: #6c757d;
+    opacity: 0.5;
+}
+
+.day-cell .date {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.25rem;
+}
+
+.day-cell .delta {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.day-cell .delta.positive {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: #198754;
+}
+
+.day-cell .delta.negative {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.day-cell .delta.neutral {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+}
+
+.week-total-box {
+    width: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-left: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+}
+
+.week-total-box.positive {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: #198754;
+}
+
+.week-total-box.negative {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.week-total-box.neutral {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+}
+
+/* Responsive adjustments for Stundenkonto */
+@media (max-width: 768px) {
+    .summary-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .month-header {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+    
+    .month-balance {
+        flex: none;
+    }
+    
+    .month-balance-box {
+        min-width: 60px;
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    .header-row {
+        grid-template-columns: 50px repeat(7, 1fr);
+        width: calc(100% - 70px);
+        font-size: 0.75rem;
+    }
+    
+    .total-header-box {
+        width: 70px;
+        font-size: 0.75rem;
+    }
+    
+    .week-grid {
+        grid-template-columns: 50px repeat(7, 1fr);
+        font-size: 0.75rem;
+    }
+    
+    .day-cell {
+        padding: 0.25rem;
+        min-height: 50px;
+    }
+    
+    .day-cell .date {
+        font-size: 0.75rem;
+    }
+    
+    .day-cell .delta {
+        font-size: 0.625rem;
+        padding: 0.125rem 0.25rem;
+    }
+    
+    .week-total-box {
+        width: 70px;
+        font-size: 0.75rem;
+    }
 } 

@@ -3,6 +3,10 @@ package ch.baunex.timetracking.service
 import ch.baunex.timetracking.dto.EmployeeDailyWorkDTO
 import ch.baunex.timetracking.dto.WeeklyWorkSummaryDTO
 import ch.baunex.timetracking.dto.CumulativeHoursAccountDTO
+import ch.baunex.timetracking.dto.MonthlyHoursAccountDTO
+import ch.baunex.timetracking.dto.MonthDataDTO
+import ch.baunex.timetracking.dto.WeekDataDTO
+import ch.baunex.timetracking.dto.DayDataDTO
 import ch.baunex.timetracking.model.ApprovalStatus
 import ch.baunex.timetracking.repository.TimeEntryRepository
 import ch.baunex.timetracking.repository.HolidayRepository
@@ -12,6 +16,7 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import java.time.LocalDate
 import java.time.DayOfWeek
+import java.time.format.TextStyle
 import java.time.temporal.WeekFields
 import java.util.*
 
@@ -276,4 +281,225 @@ class WorkSummaryService @Inject constructor(
             remainingVacationDays = remainingVacationDays
         )
     }
-} 
+
+    /**
+     * Format hours with sign and specified decimal places
+     */
+    private fun formatHours(value: Double, decimals: Int = 1): String {
+        val sign = if (value >= 0) "+" else ""
+        return sign + "%.${decimals}f".format(value)
+    }
+
+    /**
+     * Format date to day string (e.g., "07")
+     */
+    private fun formatDateDay(date: LocalDate): String {
+        return "%02d".format(date.dayOfMonth)
+    }
+
+    /**
+     * Get monthly hours account for an employee
+     * Returns detailed monthly breakdown with weeks and days
+     */
+    fun getMonthlyHoursAccount(employeeId: Long, year: Int): MonthlyHoursAccountDTO? {
+        val employee = employeeRepository.findById(employeeId) ?: return null
+        val employeeName = "${employee.person.firstName} ${employee.person.lastName}"
+        
+        // Get current week for summary
+        val currentDate = LocalDate.now()
+        val weekFields = WeekFields.of(Locale.getDefault())
+        val currentWeek = currentDate.get(weekFields.weekOfYear())
+        val currentYear = currentDate.year
+        
+        // Get current week summary for the summary section
+        val currentWeekSummary = getWeeklyWorkSummary(employeeId, currentYear, currentWeek)
+        
+        // Calculate cumulative balance since start date
+        val startDate = employee.startDate
+        val yearStart = LocalDate.of(year, 1, 1)
+        val yearEnd = LocalDate.of(year, 12, 31)
+        
+        // Get all daily summaries from start date to year end
+        val allDailySummaries = getDailyWorkSummary(employeeId, startDate, yearEnd)
+        
+        // Calculate cumulative totals
+        val cumulativeWorked = allDailySummaries.sumOf { it.workedHours }
+        val cumulativeExpected = allDailySummaries.sumOf { it.expectedHours }
+        val cumulativeBalance = cumulativeWorked - cumulativeExpected
+        
+        // Build monthly data
+        val monthlyData = mutableListOf<MonthDataDTO>()
+        
+        // Only show months from employee start date or current year, whichever is later
+        val startMonth = if (startDate.year == year) startDate.monthValue else 1
+        val endMonth = if (currentDate.year == year) currentDate.monthValue else 12
+        
+        for (month in startMonth..endMonth) {
+            val monthStart = LocalDate.of(year, month, 1)
+            val monthEnd = monthStart.plusMonths(1).minusDays(1)
+            
+            // Get daily summaries for this month
+            val monthDailySummaries = getDailyWorkSummary(employeeId, monthStart, monthEnd)
+            
+            // Find the Monday of the week containing the first day of the month
+            val firstDayOfMonth = monthStart
+            val firstDayOfWeek = firstDayOfMonth.dayOfWeek.value // 1=Monday, 7=Sunday
+            val daysToSubtract = if (firstDayOfWeek == 1) 0 else firstDayOfWeek - 1
+            val firstMondayOfMonth = firstDayOfMonth.minusDays(daysToSubtract.toLong())
+            
+            // Find the last Sunday of the month
+            val lastDayOfMonth = monthEnd
+            val lastDayOfWeek = lastDayOfMonth.dayOfWeek.value // 1=Monday, 7=Sunday
+            val daysToAdd = if (lastDayOfWeek == 7) 0 else 7 - lastDayOfWeek
+            val lastSundayOfMonth = lastDayOfMonth.plusDays(daysToAdd.toLong())
+            
+            // Group by weeks
+            val weeks = mutableListOf<WeekDataDTO>()
+            var currentWeekStart = firstMondayOfMonth
+            
+            while (!currentWeekStart.isAfter(lastSundayOfMonth)) {
+                val weekNumber = currentWeekStart.get(weekFields.weekOfYear())
+                val weekEnd = currentWeekStart.plusDays(6)
+                
+                // Build day data for the full week (Monday to Sunday)
+                val days = mutableListOf<DayDataDTO>()
+                
+                for (i in 0..6) {
+                    val currentDay = currentWeekStart.plusDays(i.toLong())
+                    
+                    // Check if this day is within the month
+                    if (currentDay.isBefore(monthStart) || currentDay.isAfter(monthEnd)) {
+                        // This day is outside the month - create empty day
+                        days.add(
+                            DayDataDTO(
+                                date = currentDay,
+                                dateDay = "", // Empty for days outside month
+                                dayOfWeek = currentDay.dayOfWeek.value,
+                                dayName = currentDay.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.GERMAN),
+                                workedHours = 0.0,
+                                expectedHours = 0.0,
+                                balance = 0.0,
+                                saldo = 0.0,
+                                saldoFormatted = "",
+                                isWeekend = currentDay.dayOfWeek == DayOfWeek.SATURDAY || currentDay.dayOfWeek == DayOfWeek.SUNDAY,
+                                isHoliday = false,
+                                holidayType = null,
+                                holidayApproved = null,
+                                isEmpty = true // Mark as empty for styling
+                            )
+                        )
+                    } else {
+                        // This day is within the month
+                        val dailySummary = monthDailySummaries.find { it.date == currentDay }
+                        
+                        if (dailySummary != null) {
+                            val saldo = dailySummary.delta
+                            days.add(
+                                DayDataDTO(
+                                    date = currentDay,
+                                    dateDay = formatDateDay(currentDay),
+                                    dayOfWeek = currentDay.dayOfWeek.value,
+                                    dayName = currentDay.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.GERMAN),
+                                    workedHours = dailySummary.workedHours,
+                                    expectedHours = dailySummary.expectedHours,
+                                    balance = dailySummary.delta,
+                                    saldo = saldo,
+                                    saldoFormatted = formatHours(saldo),
+                                    isWeekend = dailySummary.isWeekend,
+                                    isHoliday = dailySummary.holidayType != null,
+                                    holidayType = dailySummary.holidayType,
+                                    holidayApproved = dailySummary.holidayApproved,
+                                    isEmpty = false
+                                )
+                            )
+                        } else {
+                            // Add empty day within month
+                            days.add(
+                                DayDataDTO(
+                                    date = currentDay,
+                                    dateDay = formatDateDay(currentDay),
+                                    dayOfWeek = currentDay.dayOfWeek.value,
+                                    dayName = currentDay.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.GERMAN),
+                                    workedHours = 0.0,
+                                    expectedHours = 0.0,
+                                    balance = 0.0,
+                                    saldo = 0.0,
+                                    saldoFormatted = "",
+                                    isWeekend = currentDay.dayOfWeek == DayOfWeek.SATURDAY || currentDay.dayOfWeek == DayOfWeek.SUNDAY,
+                                    isHoliday = false,
+                                    holidayType = null,
+                                    holidayApproved = null,
+                                    isEmpty = false
+                                )
+                            )
+                        }
+                    }
+                }
+                
+                // Calculate week totals (only for days within the month)
+                val weekWorkedHours = days.filter { !it.isEmpty }.sumOf { it.workedHours }
+                val weekExpectedHours = days.filter { !it.isEmpty }.sumOf { it.expectedHours }
+                val weekTotal = weekWorkedHours - weekExpectedHours
+                
+                weeks.add(
+                    WeekDataDTO(
+                        weekNumber = weekNumber,
+                        weekStart = currentWeekStart,
+                        weekEnd = weekEnd,
+                        days = days,
+                        weekTotal = weekTotal,
+                        weekTotalFormatted = formatHours(weekTotal),
+                        weekWorkedHours = weekWorkedHours,
+                        weekExpectedHours = weekExpectedHours
+                    )
+                )
+                
+                currentWeekStart = currentWeekStart.plusWeeks(1)
+            }
+            
+            // Calculate month totals
+            val monthWorkedHours = monthDailySummaries.sumOf { it.workedHours }
+            val monthExpectedHours = monthDailySummaries.sumOf { it.expectedHours }
+            val monthTotal = monthWorkedHours - monthExpectedHours
+            
+            monthlyData.add(
+                MonthDataDTO(
+                    year = year,
+                    month = month,
+                    monthName = monthStart.month.getDisplayName(TextStyle.FULL, Locale.GERMAN),
+                    weeks = weeks,
+                    monthTotal = monthTotal,
+                    monthTotalFormatted = formatHours(monthTotal, 2),
+                    monthWorkedHours = monthWorkedHours,
+                    monthWorkedHoursFormatted = "%.1f".format(monthWorkedHours),
+                    monthExpectedHours = monthExpectedHours,
+                    monthExpectedHoursFormatted = "%.1f".format(monthExpectedHours)
+                )
+            )
+        }
+        
+        // Sort months in descending order (most recent first)
+        monthlyData.sortByDescending { monthData -> monthData.month }
+        
+        val currentWeekBalance = currentWeekSummary?.let { it.overtime - it.undertime } ?: 0.0
+        val currentWeekWorkedHours = currentWeekSummary?.totalWorked ?: 0.0
+        val currentWeekExpectedHours = currentWeekSummary?.totalExpected ?: 0.0
+        
+        return MonthlyHoursAccountDTO(
+            employeeId = employeeId,
+            employeeName = employeeName,
+            startDate = startDate,
+            currentWeekBalance = currentWeekBalance,
+            currentWeekBalanceFormatted = formatHours(currentWeekBalance, 2),
+            currentWeekWorkedHours = currentWeekWorkedHours,
+            currentWeekWorkedHoursFormatted = "%.1f".format(currentWeekWorkedHours),
+            currentWeekExpectedHours = currentWeekExpectedHours,
+            currentWeekExpectedHoursFormatted = "%.1f".format(currentWeekExpectedHours),
+            cumulativeBalance = cumulativeBalance,
+            cumulativeBalanceFormatted = formatHours(cumulativeBalance, 2),
+            cumulativeWorkedHours = cumulativeWorked,
+            cumulativeExpectedHours = cumulativeExpected,
+            monthlyData = monthlyData
+        )
+    }
+}

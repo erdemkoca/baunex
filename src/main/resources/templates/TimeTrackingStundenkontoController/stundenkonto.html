@@ -1,0 +1,121 @@
+{#include layout}
+  {#title}Stundenkonto – Baunex{/title}
+  {#header}Stundenkonto{/header}
+  {#content}
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4>Stundenkonto</h4>
+            <div class="d-flex gap-3">
+              <div class="employee-selector">
+                <select id="employee-select" class="form-select">
+                  <option value="">Mitarbeiter auswählen...</option>
+                  {#for employee in employees}
+                    <option value="{employee.id}" {#if employee.id == selectedEmployeeId}selected{/if}>
+                      {employee.firstName} {employee.lastName}
+                    </option>
+                  {/for}
+                </select>
+              </div>
+              <div>
+                <select id="year-select" class="form-select">
+                  {#for year in years}
+                    <option value="{year}" {#if year == currentYear}selected{/if}>
+                      {year}
+                    </option>
+                  {/for}
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          {#if monthlyAccount}
+            <!-- Summary Section -->
+            <div class="summary-section">
+              <h4>Zusammenfassung</h4>
+              <div class="summary-stats">
+                <div class="summary-stat">
+                  <span class="summary-stat-label">Aktueller Wochensaldo</span>
+                  <span class="summary-stat-value {#if monthlyAccount.currentWeekBalance >= 0}positive{#else}negative{/if}">
+                    {monthlyAccount.currentWeekBalanceFormatted} h
+                  </span>
+                </div>
+                <div class="summary-stat">
+                  <span class="summary-stat-label">Woche gearbeitet</span>
+                  <span class="summary-stat-value">{monthlyAccount.currentWeekWorkedHoursFormatted} h</span>
+                </div>
+                <div class="summary-stat">
+                  <span class="summary-stat-label">Woche Soll</span>
+                  <span class="summary-stat-value">{monthlyAccount.currentWeekExpectedHoursFormatted} h</span>
+                </div>
+                <div class="summary-stat">
+                  <span class="summary-stat-label">Kumuliertes Saldo</span>
+                  <span class="summary-stat-value {#if monthlyAccount.cumulativeBalance >= 0}positive{#else}negative{/if}">
+                    {monthlyAccount.cumulativeBalanceFormatted} h
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Monthly Overview -->
+            <div class="monthly-overview">
+              {#for monthData in monthlyAccount.monthlyData}
+                <div class="month-section">
+                  <div class="month-header">
+                    <h5 class="month-name">{monthData.monthName} {currentYear}</h5>
+                    <div class="month-balance-box">
+                      {monthData.monthTotalFormatted} h
+                    </div>
+                  </div>
+                  
+                  <!-- Column headers - only once per month -->
+                  <div class="header-container">
+                    <div class="week-grid header-row">
+                      <div class="day-header week-number">KW</div>
+                      <div class="day-header">Mo</div>
+                      <div class="day-header">Di</div>
+                      <div class="day-header">Mi</div>
+                      <div class="day-header">Do</div>
+                      <div class="day-header">Fr</div>
+                      <div class="day-header">Sa</div>
+                      <div class="day-header">So</div>
+                    </div>
+                    <div class="total-header-box">Summe</div>
+                  </div>
+                  
+                  {#for weekData in monthData.weeks}
+                    <div class="week-container">
+                      <div class="week-grid">
+                        <div class="week-number">{weekData.weekNumber}</div>
+                        {#for dayData in weekData.days}
+                          <div class="day-cell {#if dayData.isEmpty}empty-outside-month{#else if dayData.saldo == 0 && dayData.workedHours == 0}empty{/if}">
+                            <div class="date">{dayData.dateDay}</div>
+                            {#if !dayData.isEmpty && dayData.saldo != 0}
+                              <div class="delta {#if dayData.saldo > 0}positive{#else if dayData.saldo < 0}negative{#else}neutral{/if}">
+                                {dayData.saldoFormatted} h
+                              </div>
+                            {/if}
+                          </div>
+                        {/for}
+                      </div>
+                      <div class="week-total-box {#if weekData.weekTotal > 0}positive{#else if weekData.weekTotal < 0}negative{#else}neutral{/if}">
+                        {weekData.weekTotalFormatted} h
+                      </div>
+                    </div>
+                  {/for}
+                </div>
+              {/for}
+            </div>
+          {#else}
+            <div class="text-center py-5">
+              <p class="text-muted">Bitte wählen Sie einen Mitarbeiter aus, um das Stundenkonto anzuzeigen.</p>
+            </div>
+          {/if}
+        </div>
+      </div>
+    </div>
+    
+    <script src="/js/stundenkonto.js"></script>
+  {/content}
+{/include} 

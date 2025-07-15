@@ -28,6 +28,7 @@ import ch.baunex.timetracking.facade.HolidayFacade
 import ch.baunex.timetracking.service.WorkSummaryService
 import ch.baunex.timetracking.dto.EmployeeDailyWorkDTO
 import ch.baunex.timetracking.dto.WeeklyWorkSummaryDTO
+import ch.baunex.timetracking.dto.MonthlyHoursAccountDTO
 import java.net.URI
 
 @Path("/timetracking")
@@ -236,6 +237,21 @@ class TimeTrackingController {
         @QueryParam("week") week: Int
     ): Response {
         val account = workSummaryService.getCumulativeHoursAccount(employeeId, year, week)
+        return if (account != null) {
+            Response.ok(account).build()
+        } else {
+            Response.status(Response.Status.NOT_FOUND).build()
+        }
+    }
+
+    @GET
+    @Path("/api/summary/monthly-account")
+    @Produces(MediaType.APPLICATION_JSON)
+    fun getMonthlyHoursAccount(
+        @QueryParam("employeeId") employeeId: Long,
+        @QueryParam("year") year: Int
+    ): Response {
+        val account = workSummaryService.getMonthlyHoursAccount(employeeId, year)
         return if (account != null) {
             Response.ok(account).build()
         } else {
