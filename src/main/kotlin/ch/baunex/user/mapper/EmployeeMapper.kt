@@ -49,6 +49,7 @@ fun EmployeeCreateDTO.toEmployeeModel(): EmployeeModel {
         bankIban     = this@toEmployeeModel.bankIban
         hourlyRate   = this@toEmployeeModel.hourlyRate
         vacationDays = this@toEmployeeModel.vacationDays
+        startDate    = this@toEmployeeModel.startDate
     }
 }
 
@@ -70,6 +71,7 @@ fun EmployeeCreateDTO.applyTo(employee: EmployeeModel): EmployeeModel {
         bankIban   = this@applyTo.bankIban
         hourlyRate = this@applyTo.hourlyRate
         vacationDays = this@applyTo.vacationDays
+        startDate  = this@applyTo.startDate
     }
     return employee
 }

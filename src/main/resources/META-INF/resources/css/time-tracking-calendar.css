@@ -536,6 +536,23 @@
     opacity: 0.5;
 }
 
+.day-cell.future-day {
+    background-color: #f8f9fa;
+    background-image: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.05) 2px,
+        rgba(0, 0, 0, 0.05) 4px
+    );
+    color: #adb5bd;
+}
+
+.day-cell.future-day .date {
+    color: #adb5bd;
+    opacity: 0.7;
+}
+
 .day-cell .date {
     font-size: 0.875rem;
     font-weight: 500;

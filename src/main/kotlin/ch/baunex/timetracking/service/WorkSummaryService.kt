@@ -71,7 +71,8 @@ class WorkSummaryService @Inject constructor(
         var currentDate = from
         while (!currentDate.isAfter(to)) {
             val workedHours = timeEntriesByDate[currentDate]?.sumOf { it.hoursWorked } ?: 0.0
-            val expectedHours = calculateExpectedHours(employeeId, currentDate)
+            // Don't calculate expected hours for future dates
+            val expectedHours = if (currentDate.isAfter(LocalDate.now())) 0.0 else calculateExpectedHours(employeeId, currentDate)
             val delta = workedHours - expectedHours
             
             // Check for holidays on this date
@@ -302,14 +303,23 @@ class WorkSummaryService @Inject constructor(
      * Returns detailed monthly breakdown with weeks and days
      */
     fun getMonthlyHoursAccount(employeeId: Long, year: Int): MonthlyHoursAccountDTO? {
+        println("DEBUG: Service - getMonthlyHoursAccount called for employee $employeeId, year $year")
+        
         val employee = employeeRepository.findById(employeeId) ?: return null
         val employeeName = "${employee.person.firstName} ${employee.person.lastName}"
+        
+        println("DEBUG: Service - Employee found: $employeeName")
+        println("DEBUG: Service - Employee start date: ${employee.startDate}")
         
         // Get current week for summary
         val currentDate = LocalDate.now()
         val weekFields = WeekFields.of(Locale.getDefault())
         val currentWeek = currentDate.get(weekFields.weekOfYear())
         val currentYear = currentDate.year
+        
+        println("DEBUG: Service - Current date: $currentDate")
+        println("DEBUG: Service - Current year: $currentYear")
+        println("DEBUG: Service - Requested year: $year")
         
         // Get current week summary for the summary section
         val currentWeekSummary = getWeeklyWorkSummary(employeeId, currentYear, currentWeek)
@@ -319,16 +329,17 @@ class WorkSummaryService @Inject constructor(
         val yearStart = LocalDate.of(year, 1, 1)
         val yearEnd = LocalDate.of(year, 12, 31)
         
+        println("DEBUG: Service - Year start: $yearStart")
+        println("DEBUG: Service - Year end: $yearEnd")
+        
         // Determine the effective start date for cumulative calculation
-        // If employee started this year, use their start date
-        // If employee started before this year, use January 1st of this year
-        val effectiveStartDate = if (startDate.year == year) {
+        // Use the same logic as for month range calculation
+        val effectiveStartDate = if (startDate.isAfter(yearStart)) {
+            // Employee started after January 1st of this year
             startDate
-        } else if (startDate.year < year) {
-            yearStart
         } else {
-            // Employee started after this year (future case)
-            return null
+            // Employee started before or on January 1st of this year
+            yearStart
         }
         
         // Get all daily summaries from effective start date to today (or year end if future year)
@@ -343,11 +354,41 @@ class WorkSummaryService @Inject constructor(
         // Build monthly data
         val monthlyData = mutableListOf<MonthDataDTO>()
         
-        // Only show months from employee start date or current year, whichever is later
-        val startMonth = if (startDate.year == year) startDate.monthValue else 1
-        val endMonth = if (currentDate.year == year) currentDate.monthValue else 12
+        // Determine which months to show based on employee start date and current date
+        val startMonth: Int
+        val endMonth: Int
+        
+        println("DEBUG: Service - Determining month range...")
+        println("DEBUG: Service - Start date year: ${startDate.year}")
+        println("DEBUG: Service - Requested year: $year")
+        println("DEBUG: Service - Current date year: ${currentDate.year}")
+        
+        // Determine start month based on employee start date vs year start
+        startMonth = effectiveStartDate.monthValue
+        endMonth = if (year == currentDate.year) currentDate.monthValue else 12
+        
+        println("DEBUG: Service - Employee start date: $startDate")
+        println("DEBUG: Service - Year start: $yearStart")
+        println("DEBUG: Service - Effective start date: $effectiveStartDate")
+        println("DEBUG: Service - Showing months from ${effectiveStartDate.month.getDisplayName(TextStyle.FULL, Locale.GERMAN)}. Start month: $startMonth, End month: $endMonth")
+        
+        // Don't show future months
+        if (year > currentDate.year) {
+            println("DEBUG: Service - Requested year is in the future, returning null")
+            return null
+        }
+        
+        println("DEBUG: Service - Final month range: $startMonth to $endMonth")
+        
+        // Debug: Log the month range
+        println("DEBUG: Employee ${employeeName} (ID: $employeeId)")
+        println("DEBUG: Start date: $startDate")
+        println("DEBUG: Current date: $currentDate")
+        println("DEBUG: Year: $year")
+        println("DEBUG: Month range: $startMonth to $endMonth")
         
         for (month in startMonth..endMonth) {
+            println("DEBUG: Processing month $month")
             val monthStart = LocalDate.of(year, month, 1)
             val monthEnd = monthStart.plusMonths(1).minusDays(1)
             
@@ -398,14 +439,17 @@ class WorkSummaryService @Inject constructor(
                                 isHoliday = false,
                                 holidayType = null,
                                 holidayApproved = null,
-                                isEmpty = true // Mark as empty for styling
+                                isEmpty = true, // Mark as empty for styling
+                                isFuture = false
                             )
                         )
                     } else {
                         // This day is within the month
+                        val isFuture = currentDay.isAfter(currentDate)
+                        val isBeforeStartDate = currentDay.isBefore(startDate)
                         val dailySummary = monthDailySummaries.find { it.date == currentDay }
                         
-                        if (dailySummary != null) {
+                        if (dailySummary != null && !isFuture && !isBeforeStartDate) {
                             val saldo = dailySummary.delta
                             days.add(
                                 DayDataDTO(
@@ -422,11 +466,12 @@ class WorkSummaryService @Inject constructor(
                                     isHoliday = dailySummary.holidayType != null,
                                     holidayType = dailySummary.holidayType,
                                     holidayApproved = dailySummary.holidayApproved,
-                                    isEmpty = false
+                                    isEmpty = false,
+                                    isFuture = false
                                 )
                             )
                         } else {
-                            // Add empty day within month
+                            // Add empty day within month (either no data, future date, or before start date)
                             days.add(
                                 DayDataDTO(
                                     date = currentDay,
@@ -442,16 +487,17 @@ class WorkSummaryService @Inject constructor(
                                     isHoliday = false,
                                     holidayType = null,
                                     holidayApproved = null,
-                                    isEmpty = false
+                                    isEmpty = false,
+                                    isFuture = isFuture || isBeforeStartDate
                                 )
                             )
                         }
                     }
                 }
                 
-                // Calculate week totals (only for days within the month)
-                val weekWorkedHours = days.filter { !it.isEmpty }.sumOf { it.workedHours }
-                val weekExpectedHours = days.filter { !it.isEmpty }.sumOf { it.expectedHours }
+                // Calculate week totals (only for days within the month, not future, and not before start date)
+                val weekWorkedHours = days.filter { !it.isEmpty && !it.isFuture }.sumOf { it.workedHours }
+                val weekExpectedHours = days.filter { !it.isEmpty && !it.isFuture }.sumOf { it.expectedHours }
                 val weekTotal = weekWorkedHours - weekExpectedHours
                 
                 weeks.add(
@@ -470,9 +516,9 @@ class WorkSummaryService @Inject constructor(
                 currentWeekStart = currentWeekStart.plusWeeks(1)
             }
             
-            // Calculate month totals
-            val monthWorkedHours = monthDailySummaries.sumOf { it.workedHours }
-            val monthExpectedHours = monthDailySummaries.sumOf { it.expectedHours }
+            // Calculate month totals (exclude future dates and dates before start date)
+            val monthWorkedHours = monthDailySummaries.filter { it.date <= currentDate && !it.date.isBefore(startDate) }.sumOf { it.workedHours }
+            val monthExpectedHours = monthDailySummaries.filter { it.date <= currentDate && !it.date.isBefore(startDate) }.sumOf { it.expectedHours }
             val monthTotal = monthWorkedHours - monthExpectedHours
             
             monthlyData.add(
@@ -491,8 +537,14 @@ class WorkSummaryService @Inject constructor(
             )
         }
         
-        // Sort months in descending order (most recent first)
+        // Sort months in descending order (newest first)
         monthlyData.sortByDescending { monthData -> monthData.month }
+        
+        // Debug: Log final result
+        println("DEBUG: Generated ${monthlyData.size} months")
+        monthlyData.forEach { month ->
+            println("DEBUG: Month ${month.month} - ${month.monthName}")
+        }
         
         val currentWeekBalance = currentWeekSummary?.let { it.overtime - it.undertime } ?: 0.0
         val currentWeekWorkedHours = currentWeekSummary?.totalWorked ?: 0.0

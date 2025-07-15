@@ -17,13 +17,11 @@ data class MonthlyHoursAccountDTO(
     val currentWeekWorkedHoursFormatted: String,
     val currentWeekExpectedHours: Double,
     val currentWeekExpectedHoursFormatted: String,
-    
     // Cumulative balance since start date
     val cumulativeBalance: Double,
     val cumulativeBalanceFormatted: String,
     val cumulativeWorkedHours: Double,
     val cumulativeExpectedHours: Double,
-    
     // Monthly data
     val monthlyData: List<MonthDataDTO>
 )
@@ -69,5 +67,6 @@ data class DayDataDTO(
     val isHoliday: Boolean,
     val holidayType: String?,
     val holidayApproved: Boolean?,
-    val isEmpty: Boolean = false // Marks days outside the month
+    val isEmpty: Boolean = false, // Marks days outside the month
+    val isFuture: Boolean = false // Marks future dates
 ) 

@@ -60,7 +60,12 @@
 
             <!-- Monthly Overview -->
             <div class="monthly-overview">
+              <!-- Debug: Number of months: {monthlyAccount.monthlyData.size} -->
+              <!-- Debug: Employee start date: {monthlyAccount.startDate} -->
+              <!-- Debug: Current year: {currentYear} -->
+              <!-- Debug: Employee ID: {monthlyAccount.employeeId} -->
               {#for monthData in monthlyAccount.monthlyData}
+                <!-- Debug: Month {monthData.month} - {monthData.monthName} - Weeks: {monthData.weeks.size} -->
                 <div class="month-section">
                   <div class="month-header">
                     <h5 class="month-name">{monthData.monthName} {currentYear}</h5>
@@ -89,9 +94,9 @@
                       <div class="week-grid">
                         <div class="week-number">{weekData.weekNumber}</div>
                         {#for dayData in weekData.days}
-                          <div class="day-cell {#if dayData.isEmpty}empty-outside-month{#else if dayData.saldo == 0 && dayData.workedHours == 0}empty{/if}">
+                          <div class="day-cell {#if dayData.isEmpty}empty-outside-month{#else if dayData.isFuture}future-day{#else if dayData.saldo == 0 && dayData.workedHours == 0}empty{/if}">
                             <div class="date">{dayData.dateDay}</div>
-                            {#if !dayData.isEmpty && dayData.saldo != 0}
+                            {#if !dayData.isEmpty && !dayData.isFuture && dayData.saldo != 0}
                               <div class="delta {#if dayData.saldo > 0}positive{#else if dayData.saldo < 0}negative{#else}neutral{/if}">
                                 {dayData.saldoFormatted} h
                               </div>
