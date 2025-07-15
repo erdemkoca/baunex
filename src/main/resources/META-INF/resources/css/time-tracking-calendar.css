@@ -168,6 +168,26 @@
     border-color: #6c757d;
 }
 
+.calendar-day-summary.calendar-before-start {
+    background-color: #f8d7da;
+    border-color: #dc3545;
+    position: relative;
+}
+
+.calendar-day-summary.calendar-before-start::after {
+    content: "Vor Eintritt";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    background-color: #dc3545;
+    color: white;
+    font-size: 8px;
+    padding: 1px 3px;
+    border-radius: 2px;
+    font-weight: bold;
+    z-index: 10;
+}
+
 /* Legend styles */
 .calendar-legend-item {
     width: 20px;
@@ -204,6 +224,11 @@
 .calendar-legend-item.calendar-weekend {
     background-color: #e9ecef;
     border-color: #6c757d;
+}
+
+.calendar-legend-item.calendar-before-start {
+    background-color: #f8d7da;
+    border-color: #dc3545;
 }
 
 /* Week picker styles */
@@ -274,6 +299,27 @@
     background-color: #e9ecef;
     border-color: #6c757d;
     color: #6c757d;
+}
+
+.week-picker-item.before-start-week {
+    background-color: #f8d7da;
+    border-color: #dc3545;
+    color: #721c24;
+    opacity: 0.6;
+    position: relative;
+}
+
+.week-picker-item.before-start-week::after {
+    content: "Vor Start";
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: #dc3545;
+    color: white;
+    font-size: 8px;
+    padding: 1px 3px;
+    border-radius: 2px;
+    font-weight: bold;
 }
 
 .week-picker-item.empty {

@@ -33,6 +33,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 projectColors: {}, // Cache for project colors
                 successMessage: '',
                 showSuccessMessageTimeout: null,
+                errorMessage: '',
+                errorTimeout: null,
 
                 showWeekPicker: false, // New state for popup visibility
                 timeRangeStart: 8, // Start hour (08:00)
@@ -79,12 +81,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     const dateStr = this.toLocalDateString(date);
                     const summary = this.dailySummaries.find(s => s.date === dateStr);
                     
+                    // Check if this day is before employee start date
+                    const isBeforeStartDate = this.employeeStartDate && date < this.employeeStartDate;
+                    
                     days.push({
                         date: date,
                         dateStr: dateStr,
                         day: date.getDate(),
                         dayName: this.getDayName(date.getDay()),
-                        summary: summary
+                        summary: summary,
+                        isBeforeStartDate: isBeforeStartDate
                     });
                 }
                 
@@ -109,11 +115,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 const weeks = [];
                 const year = this.currentYear;
                 
-                // Generate all 52 weeks of the year
-                for (let weekNumber = 1; weekNumber <= 52; weekNumber++) {
+                // Get employee start year if available
+                const employeeStartYear = this.employeeStartDate ? this.employeeStartDate.getFullYear() : null;
+                
+                // If employee start year is in the past relative to current year, show all weeks
+                // Otherwise, only show weeks from the employee's start year
+                let startWeek;
+                if (employeeStartYear && employeeStartYear > year) {
+                    // Employee starts in a future year, show no weeks
+                    startWeek = 53; // This will result in no weeks being shown
+                } else if (employeeStartYear && employeeStartYear === year) {
+                    // Employee starts this year, find the week of their start date
+                    const startDate = this.employeeStartDate;
+                    startWeek = this.getWeekOfYear(startDate);
+                } else {
+                    // Employee started in past years or no start date, show all weeks
+                    startWeek = 1;
+                }
+                
+                // Generate weeks from start week to 52
+                for (let weekNumber = startWeek; weekNumber <= 52; weekNumber++) {
                     const weekStart = this.getWeekStartDate(year, weekNumber);
                     const weekEnd = new Date(weekStart);
                     weekEnd.setDate(weekStart.getDate() + 6);
+                    
+                    // Check if this week is before employee start date
+                    const isBeforeStartDate = this.employeeStartDate && weekEnd < this.employeeStartDate;
                     
                     // Determine approval status based on actual data
                     const today = new Date();
@@ -122,7 +149,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     let approvalStatus = 'empty';
                     
-                    if (isFuture) {
+                    if (isBeforeStartDate) {
+                        approvalStatus = 'before-start';
+                    } else if (isFuture) {
                         approvalStatus = 'future';
                     } else {
                         // For past and current weeks, we'll set a default status
@@ -137,7 +166,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         weekEnd: weekEnd,
                         shortRange: `${weekStart.getDate()}.${weekStart.getMonth() + 1} – ${weekEnd.getDate()}.${weekEnd.getMonth() + 1}`,
                         fullRange: `${weekStart.toLocaleDateString('de-CH')} – ${weekEnd.toLocaleDateString('de-CH')}`,
-                        approvalStatus: approvalStatus
+                        approvalStatus: approvalStatus,
+                        isBeforeStartDate: isBeforeStartDate
                     });
                 }
                 
@@ -226,20 +256,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
             previousWeek() {
+                // Calculate what the previous week would be
+                let newWeek = this.currentWeek;
+                let newYear = this.currentYear;
+                
                 if (this.currentWeek === 1) {
-                    this.currentWeek = 52;
-                    this.currentYear--;
+                    newWeek = 52;
+                    newYear = this.currentYear - 1;
                 } else {
-                    this.currentWeek--;
+                    newWeek = this.currentWeek - 1;
                 }
                 
-                // Only check employee start date if an employee is selected
-                if (this.selectedEmployeeId && this.employeeStartDate && this.currentWeekStartDate < this.employeeStartDate) {
-                    // Allow going back to past weeks even if before employee start date
-                    // This is useful for viewing historical data
-                    console.log('Navigating to week before employee start date - this is allowed for viewing historical data');
+                // Check if the new week would be before employee start date
+                if (this.selectedEmployeeId && this.employeeStartDate) {
+                    const newWeekStart = this.getWeekStartDate(newYear, newWeek);
+                    const employeeStartWeek = this.getWeekOfYear(this.employeeStartDate);
+                    const employeeStartYear = this.employeeStartDate.getFullYear();
+                    
+                    if (newYear < employeeStartYear || 
+                        (newYear === employeeStartYear && newWeek < employeeStartWeek)) {
+                        // Show error message and don't navigate
+                        this.showErrorMessage('Diese Woche ist vor dem Eintrittsdatum!');
+                        return;
+                    }
                 }
                 
+                // If we get here, the navigation is valid
+                this.currentWeek = newWeek;
+                this.currentYear = newYear;
                 this.onWeekChange();
                 this.saveState(); // Save state after changing week
             },
@@ -260,7 +304,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.loadCumulativeHoursAccount();
             },
             getDayClass(day) {
-                if (!day || !day.summary) return '';
+                if (!day) return '';
+                
+                // Check if day is before employee start date
+                if (day.isBeforeStartDate) return 'calendar-before-start';
+                
+                if (!day.summary) return '';
                 
                 const summary = day.summary;
                 
@@ -633,6 +682,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.successMessage = '';
                 }, 3000);
             },
+            showErrorMessage(message) {
+                this.errorMessage = message;
+                if (this.errorTimeout) clearTimeout(this.errorTimeout);
+                this.errorTimeout = setTimeout(() => {
+                    this.errorMessage = '';
+                }, 2000);
+            },
 
             selectWeek(week) {
                 this.currentWeek = week.weekNumber;
@@ -640,6 +696,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.onWeekChange();
             },
             selectWeekFromPopup(week) {
+                // Check if the selected week is before employee start date
+                if (this.selectedEmployeeId && this.employeeStartDate && week.isBeforeStartDate) {
+                    this.showErrorMessage('Diese Woche ist vor dem Eintrittsdatum!');
+                    return;
+                }
+                
                 this.currentWeek = week.weekNumber;
                 this.currentYear = week.year;
                 this.onWeekChange();
@@ -672,7 +734,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 // Color coding based on approval status
-                if (week.approvalStatus === 'future') {
+                if (week.approvalStatus === 'before-start') {
+                    classes.push('before-start-week'); // Special styling for weeks before employee start date
+                } else if (week.approvalStatus === 'future') {
                     classes.push('future-week'); // Gray for future weeks
                 } else if (week.approvalStatus === 'approved') {
                     classes.push('approved'); // Green for approved weeks
@@ -1199,7 +1263,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button @click="goToToday" class="btn btn-outline-secondary btn-sm">
                         <i class="bi bi-calendar-check"></i> Heute
                     </button>
-                    <div class="week-navigation d-flex align-items-center gap-2">
+                    <div class="week-navigation d-flex align-items-center gap-2" style="position: relative;">
+                        <!-- Error Toast -->
+                        <div v-if="errorMessage" class="toast align-items-center text-bg-danger border-0 show" style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); z-index: 2000; min-width: 220px;">
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>{{ errorMessage }}
+                                </div>
+                            </div>
+                        </div>
                         <button @click="previousWeek" class="btn btn-outline-secondary btn-sm">
                             <i class="bi bi-chevron-left"></i>
                         </button>
@@ -1341,6 +1413,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                                 <!-- Day columns -->
                                 <div v-for="(day, dayIdx) in calendarDays" :key="'col'+dayIdx" class="day-column" style="flex:1; min-width:110px; position:relative;">
+                                    <!-- Overlay für Tage vor Eintritt -->
+                                    <div v-if="day.isBeforeStartDate"
+                                         style="position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(220,53,69,0.15); border:2px solid #dc3545; z-index:20; display:flex; align-items:center; justify-content:center; pointer-events:none;">
+                                      <span style="color:#dc3545; font-weight:bold; font-size:13px; text-shadow:1px 1px 2px #fff;">Vor Eintritt</span>
+                                    </div>
                                     <!-- Grid lines -->
                                     <div v-for="line in generateGridLines()" 
                                          :key="line.key" 
