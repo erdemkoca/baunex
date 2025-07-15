@@ -319,8 +319,21 @@ class WorkSummaryService @Inject constructor(
         val yearStart = LocalDate.of(year, 1, 1)
         val yearEnd = LocalDate.of(year, 12, 31)
         
-        // Get all daily summaries from start date to year end
-        val allDailySummaries = getDailyWorkSummary(employeeId, startDate, yearEnd)
+        // Determine the effective start date for cumulative calculation
+        // If employee started this year, use their start date
+        // If employee started before this year, use January 1st of this year
+        val effectiveStartDate = if (startDate.year == year) {
+            startDate
+        } else if (startDate.year < year) {
+            yearStart
+        } else {
+            // Employee started after this year (future case)
+            return null
+        }
+        
+        // Get all daily summaries from effective start date to today (or year end if future year)
+        val endDate = if (year > currentDate.year) yearEnd else currentDate
+        val allDailySummaries = getDailyWorkSummary(employeeId, effectiveStartDate, endDate)
         
         // Calculate cumulative totals
         val cumulativeWorked = allDailySummaries.sumOf { it.workedHours }
