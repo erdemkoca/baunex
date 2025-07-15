@@ -2,6 +2,7 @@
   {#title}Stundenkonto – Baunex{/title}
   {#header}Stundenkonto{/header}
   {#content}
+    <link rel="stylesheet" href="/css/stundenkonto.css">
     <div class="container-fluid">
       <div class="row">
         <div class="col-12">
@@ -33,27 +34,36 @@
           {#if monthlyAccount}
             <!-- Summary Section -->
             <div class="summary-section">
-              <h4>Zusammenfassung</h4>
-              <div class="summary-stats">
-                <div class="summary-stat">
-                  <span class="summary-stat-label">Aktueller Wochensaldo</span>
-                  <span class="summary-stat-value {#if monthlyAccount.currentWeekBalance >= 0}positive{#else}negative{/if}">
-                    {monthlyAccount.currentWeekBalanceFormatted} h
-                  </span>
+              <div class="row">
+                <!-- Urlaubstage Box -->
+                <div class="col-md-6 mb-4">
+                  <div class="summary-card">
+                    <h5 class="summary-card-title">Urlaubstage</h5>
+                    <div class="summary-card-content">
+                      {#if vacationStats}
+                        {vacationStats.usedVacationDays} von {vacationStats.totalVacationDays}, Rest {vacationStats.remainingVacationDays}
+                      {#else}
+                        Keine Daten verfügbar
+                      {/if}
+                    </div>
+                  </div>
                 </div>
-                <div class="summary-stat">
-                  <span class="summary-stat-label">Woche gearbeitet</span>
-                  <span class="summary-stat-value">{monthlyAccount.currentWeekWorkedHoursFormatted} h</span>
-                </div>
-                <div class="summary-stat">
-                  <span class="summary-stat-label">Woche Soll</span>
-                  <span class="summary-stat-value">{monthlyAccount.currentWeekExpectedHoursFormatted} h</span>
-                </div>
-                <div class="summary-stat">
-                  <span class="summary-stat-label">Kumuliertes Saldo</span>
-                  <span class="summary-stat-value {#if monthlyAccount.cumulativeBalance >= 0}positive{#else}negative{/if}">
-                    {monthlyAccount.cumulativeBalanceFormatted} h
-                  </span>
+                
+                <!-- Stundenkonto Box -->
+                <div class="col-md-6 mb-4">
+                  <div class="summary-card">
+                    <h5 class="summary-card-title">Stundenkonto</h5>
+                    <div class="summary-card-content">
+                      <div class="d-flex justify-content-between align-items-start">
+                        <div class="hours-info">
+                          {monthlyAccount.cumulativeWorkedHoursFormatted} h von {monthlyAccount.cumulativeExpectedHoursFormatted} h Soll-Stunden
+                        </div>
+                        <div class="balance-indicator {#if monthlyAccount.cumulativeBalance >= 0}positive{#else}negative{/if}">
+                          {monthlyAccount.cumulativeBalanceFormatted} h
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -69,7 +79,7 @@
                 <div class="month-section">
                   <div class="month-header">
                     <h5 class="month-name">{monthData.monthName} {currentYear}</h5>
-                    <div class="month-balance-box">
+                    <div class="month-balance-box {#if monthData.monthTotal > 0}positive{#else if monthData.monthTotal < 0}negative{#else}neutral{/if}">
                       {monthData.monthTotalFormatted} h
                     </div>
                   </div>
@@ -99,6 +109,16 @@
                             {#if !dayData.isEmpty && !dayData.isFuture && dayData.saldo != 0}
                               <div class="delta {#if dayData.saldo > 0}positive{#else if dayData.saldo < 0}negative{#else}neutral{/if}">
                                 {dayData.saldoFormatted} h
+                              </div>
+                            {/if}
+                            {#if !dayData.isEmpty && !dayData.isFuture && dayData.isHoliday && dayData.holidayApproved}
+                              <div class="holiday-label">
+                                {#if dayData.holidayType == "PAID_VACATION"}Urlaub{#else}{dayData.holidayType}{/if}
+                              </div>
+                            {/if}
+                            {#if !dayData.isEmpty && !dayData.isFuture && dayData.isPublicHoliday}
+                              <div class="holiday-label public-holiday">
+                                {dayData.publicHolidayName ?: "Feiertag"}
                               </div>
                             {/if}
                           </div>

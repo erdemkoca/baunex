@@ -45,13 +45,6 @@ class TimeTrackingService @Inject constructor(
         val workedMinutes = totalDurationMinutes - breakMinutes
         val calculatedHoursWorked = workedMinutes / 60.0
         
-        println("DEBUG: Creating single time entry")
-        println("DEBUG: Start time: ${dto.startTime}, End time: ${dto.endTime}")
-        println("DEBUG: Total duration: ${totalDurationMinutes} minutes")
-        println("DEBUG: Break minutes: ${breakMinutes}")
-        println("DEBUG: Worked minutes: ${workedMinutes}")
-        println("DEBUG: Calculated hours worked: ${calculatedHoursWorked}")
-        
         val timeEntry = TimeEntryModel().apply {
             this.employee = employee
             this.project = project
@@ -157,12 +150,6 @@ class TimeTrackingService @Inject constructor(
         }
         val workedMinutes = totalDurationMinutes - breakMinutes
         val calculatedHoursWorked = workedMinutes / 60.0
-        
-        println("DEBUG: Start time: ${dto.startTime}, End time: ${dto.endTime}")
-        println("DEBUG: Total duration: ${totalDurationMinutes} minutes")
-        println("DEBUG: Break minutes: ${breakMinutes}")
-        println("DEBUG: Worked minutes: ${workedMinutes}")
-        println("DEBUG: Calculated hours worked: ${calculatedHoursWorked}")
         
         // Update the existing entry
         existingEntry.apply {

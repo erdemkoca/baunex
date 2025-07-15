@@ -2,6 +2,7 @@ package ch.baunex.web
 
 import ch.baunex.timetracking.dto.MonthlyHoursAccountDTO
 import ch.baunex.timetracking.facade.TimeTrackingFacade
+import ch.baunex.timetracking.facade.HolidayFacade
 import ch.baunex.user.dto.EmployeeDTO
 import ch.baunex.user.facade.EmployeeFacade
 import ch.baunex.timetracking.service.WorkSummaryService
@@ -26,6 +27,9 @@ class TimeTrackingStundenkontoController {
     @Inject
     lateinit var workSummaryService: WorkSummaryService
 
+    @Inject
+    lateinit var holidayFacade: HolidayFacade
+
     @CheckedTemplate(requireTypeSafeExpressions = false)
     object Templates {
         @JvmStatic
@@ -34,7 +38,8 @@ class TimeTrackingStundenkontoController {
             currentYear: Int,
             selectedEmployeeId: Long?,
             monthlyAccount: MonthlyHoursAccountDTO?,
-            years: List<Int>
+            years: List<Int>,
+            vacationStats: Map<String, Any>?
         ): TemplateInstance
     }
 
@@ -73,12 +78,29 @@ class TimeTrackingStundenkontoController {
             null
         }
 
+        // Calculate vacation statistics for selected employee
+        val vacationStats = if (selectedEmployeeId > 0) {
+            val employee = employees.find { it.id == selectedEmployeeId }
+            if (employee != null) {
+                val totalVacationDays = employee.vacationDays
+                val usedVacationDays = workSummaryService.calculateUsedVacationDays(selectedEmployeeId, currentYear)
+                val remainingVacationDays = totalVacationDays - usedVacationDays
+                
+                mapOf(
+                    "totalVacationDays" to totalVacationDays,
+                    "usedVacationDays" to usedVacationDays,
+                    "remainingVacationDays" to remainingVacationDays
+                )
+            } else null
+        } else null
+
         val template = Templates.stundenkonto(
             employees = employees,
             currentYear = currentYear,
             selectedEmployeeId = selectedEmployeeId,
             monthlyAccount = monthlyAccount,
-            years = years
+            years = years,
+            vacationStats = vacationStats
         )
         .data("activeMenu", "timetracking")
         .data("activeSubMenu", "stundenkonto")

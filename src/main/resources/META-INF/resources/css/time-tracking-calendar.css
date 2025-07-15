@@ -431,6 +431,18 @@
     flex-shrink: 0;
 }
 
+.month-balance-box.positive {
+    color: #198754;
+}
+
+.month-balance-box.negative {
+    color: #dc3545;
+}
+
+.month-balance-box.neutral {
+    color: #6c757d;
+}
+
 /* Header container and row styles */
 .header-container {
     display: flex;

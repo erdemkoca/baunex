@@ -31,7 +31,7 @@ class WorkSummaryService @Inject constructor(
 
     /**
      * Calculate expected working hours for a specific date
-     * Default: 8 hours per working day (Monday-Friday), excluding holidays
+     * Default: 8 hours per working day (Monday-Friday), excluding holidays and approved vacation
      */
     fun calculateExpectedHours(employeeId: Long, date: LocalDate): Double {
         val employee = employeeRepository.findById(employeeId) ?: return 0.0
@@ -43,6 +43,18 @@ class WorkSummaryService @Inject constructor(
         
         // Check if it's a public holiday
         if (holidayDefinitionService.isHoliday(date)) {
+            return 0.0
+        }
+        
+        // Check if employee has approved vacation on this date
+        val approvedHoliday = holidayRepository.findByEmployeeAndDateRange(employeeId, date, date)
+            .find { holiday ->
+                date >= holiday.startDate && 
+                date <= holiday.endDate && 
+                holiday.approvalStatus == ApprovalStatus.APPROVED
+            }
+        
+        if (approvedHoliday != null) {
             return 0.0
         }
 
@@ -439,6 +451,8 @@ class WorkSummaryService @Inject constructor(
                                 isHoliday = false,
                                 holidayType = null,
                                 holidayApproved = null,
+                                isPublicHoliday = false,
+                                publicHolidayName = null,
                                 isEmpty = true, // Mark as empty for styling
                                 isFuture = false
                             )
@@ -466,12 +480,21 @@ class WorkSummaryService @Inject constructor(
                                     isHoliday = dailySummary.holidayType != null,
                                     holidayType = dailySummary.holidayType,
                                     holidayApproved = dailySummary.holidayApproved,
+                                    isPublicHoliday = dailySummary.isPublicHoliday,
+                                    publicHolidayName = dailySummary.publicHolidayName,
                                     isEmpty = false,
                                     isFuture = false
                                 )
                             )
                         } else {
                             // Add empty day within month (either no data, future date, or before start date)
+                            // Check if it's a public holiday for this day
+                            val isPublicHoliday = holidayDefinitionService.isHoliday(currentDay)
+                            val publicHolidayName = if (isPublicHoliday) {
+                                val holidayDefinitions = holidayDefinitionService.getHolidaysForDateRange(currentDay, currentDay)
+                                holidayDefinitions.firstOrNull()?.name
+                            } else null
+                            
                             days.add(
                                 DayDataDTO(
                                     date = currentDay,
@@ -487,6 +510,8 @@ class WorkSummaryService @Inject constructor(
                                     isHoliday = false,
                                     holidayType = null,
                                     holidayApproved = null,
+                                    isPublicHoliday = isPublicHoliday,
+                                    publicHolidayName = publicHolidayName,
                                     isEmpty = false,
                                     isFuture = isFuture || isBeforeStartDate
                                 )
@@ -563,7 +588,9 @@ class WorkSummaryService @Inject constructor(
             cumulativeBalance = cumulativeBalance,
             cumulativeBalanceFormatted = formatHours(cumulativeBalance, 2),
             cumulativeWorkedHours = cumulativeWorked,
+            cumulativeWorkedHoursFormatted = "%.1f".format(cumulativeWorked),
             cumulativeExpectedHours = cumulativeExpected,
+            cumulativeExpectedHoursFormatted = "%.1f".format(cumulativeExpected),
             monthlyData = monthlyData
         )
     }

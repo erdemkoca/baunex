@@ -14,22 +14,13 @@ class TimeEntryMapper @Inject constructor(
 ) {
 
     fun toTimeEntryResponseDTO(entry: TimeEntryModel): TimeEntryDTO {
-        println("DEBUG: Mapper called for entry ID: ${entry.id}")
-        println("DEBUG: Entry employee: ${entry.employee}")
-        println("DEBUG: Entry project: ${entry.project}")
-        println("DEBUG: Entry employee ID: ${entry.employee?.id}")
-        println("DEBUG: Entry project ID: ${entry.project?.id}")
-        
         // 1) Compute the cost breakdown directly from the model
-        println("DEBUG: About to calculate cost breakdown")
         val breakdown = try {
             timeEntryCostService.calculateCostBreakdown(entry)
         } catch (e: Exception) {
-            println("DEBUG: Error in cost breakdown calculation: ${e.message}")
             e.printStackTrace()
             throw e
         }
-        println("DEBUG: Cost breakdown calculated successfully")
 
         // 2) Build and return your single Response DTO:
         return TimeEntryDTO(
@@ -43,9 +34,7 @@ class TimeEntryMapper @Inject constructor(
             hoursWorked         = entry.hoursWorked,
             title               = entry.title,
             notes               = try {
-                println("DEBUG: About to map notes, count: ${entry.notes.size}")
                 entry.notes.filter { it.id != null }.map { nm ->
-                    println("DEBUG: Mapping note: ${nm.id}, createdBy: ${nm.createdBy}")
                     NoteDto(
                         id           = nm.id!!,
                         projectId    = nm.project?.id,
@@ -62,7 +51,6 @@ class TimeEntryMapper @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
-                println("DEBUG: Error in notes mapping: ${e.message}")
                 e.printStackTrace()
                 throw e
             },
@@ -70,9 +58,7 @@ class TimeEntryMapper @Inject constructor(
             billable            = entry.billable,
             invoiced            = entry.invoiced,
             catalogItems        = try {
-                println("DEBUG: About to map catalog items, count: ${entry.usedCatalogItems.size}")
                 entry.usedCatalogItems.map { ci ->
-                    println("DEBUG: Mapping catalog item: ${ci.id}")
                     TimeEntryCatalogItemDTO(
                         id            = ci.id,
                         timeEntryId   = ci.timeEntry.id!!,
@@ -84,7 +70,6 @@ class TimeEntryMapper @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
-                println("DEBUG: Error in catalog items mapping: ${e.message}")
                 e.printStackTrace()
                 throw e
             },
@@ -105,7 +90,6 @@ class TimeEntryMapper @Inject constructor(
                     emptyList()
                 }
             } catch (e: Exception) {
-                println("DEBUG: Error parsing breaks JSON: ${e.message}")
                 emptyList()
             },
 

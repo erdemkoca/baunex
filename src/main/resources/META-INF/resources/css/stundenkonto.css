@@ -2,47 +2,61 @@
 
 /* Summary section */
 .summary-section {
-    background: #f8f9fa;
-    border-radius: 0.5rem;
-    padding: 1.5rem;
     margin-bottom: 2rem;
 }
 
-.summary-section h4 {
-    margin-bottom: 1rem;
-    font-weight: 600;
-    color: #212529;
+.summary-card {
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    height: 100%;
+    transition: all 0.3s ease;
 }
 
-.summary-stats {
-    display: flex;
-    gap: 2rem;
-    flex-wrap: wrap;
+.summary-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
 }
 
-.summary-stat {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.summary-stat-label {
-    font-size: 0.875rem;
-    color: #6c757d;
-    font-weight: 500;
-}
-
-.summary-stat-value {
+.summary-card-title {
     font-size: 1.125rem;
     font-weight: 600;
+    color: #495057;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e9ecef;
 }
 
-.summary-stat-value.positive {
+.summary-card-content {
+    font-size: 1rem;
+    color: #495057;
+    line-height: 1.5;
+}
+
+.hours-info {
+    font-size: 0.875rem;
+    color: #6c757d;
+    line-height: 1.4;
+}
+
+.balance-indicator {
+    font-size: 1.25rem;
+    font-weight: 700;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.5rem;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.balance-indicator.positive {
     color: #198754;
+    background-color: rgba(25, 135, 84, 0.1);
 }
 
-.summary-stat-value.negative {
+.balance-indicator.negative {
     color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.1);
 }
 
 /* Month sections */
@@ -194,6 +208,29 @@
 }
 
 .week-total-box.neutral {
+    color: #6c757d;
+}
+
+/* Holiday labels */
+.holiday-label {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    padding: 1px 3px;
+    border-radius: 2px;
+    background-color: rgba(13, 202, 240, 0.1);
+    color: #0dcaf0;
+    z-index: 5;
+    max-width: calc(100% - 4px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.holiday-label.public-holiday {
+    background-color: rgba(108, 117, 125, 0.1);
     color: #6c757d;
 }
 
