@@ -26,12 +26,13 @@ class WorkSummaryService @Inject constructor(
     private val holidayRepository: HolidayRepository,
     private val employeeRepository: EmployeeRepository,
     private val timeEntryMapper: TimeEntryMapper,
-    private val holidayDefinitionService: ch.baunex.timetracking.service.HolidayDefinitionService
+    private val holidayDefinitionService: ch.baunex.timetracking.service.HolidayDefinitionService,
+    private val holidayTypeService: ch.baunex.timetracking.service.HolidayTypeService
 ) {
 
     /**
      * Calculate expected working hours for a specific date
-     * Default: 8 hours per working day (Monday-Friday), excluding holidays and approved vacation
+     * Uses the holiday configuration to determine expected hours for different holiday types
      */
     fun calculateExpectedHours(employeeId: Long, date: LocalDate): Double {
         val employee = employeeRepository.findById(employeeId) ?: return 0.0
@@ -43,9 +44,9 @@ class WorkSummaryService @Inject constructor(
         
         // Check if it's a public holiday
         if (holidayDefinitionService.isHoliday(date)) {
-            return 0.0
+            return holidayTypeService.getExpectedHoursForHolidayType("PUBLIC_HOLIDAY")
         }
-        
+
         // Check if employee has approved vacation on this date
         val approvedHoliday = holidayRepository.findByEmployeeAndDateRange(employeeId, date, date)
             .find { holiday ->
@@ -55,12 +56,12 @@ class WorkSummaryService @Inject constructor(
             }
         
         if (approvedHoliday != null) {
-            return 0.0
+            // Use the holiday type service to determine expected hours for this holiday type
+            return holidayTypeService.getExpectedHoursForHolidayType(approvedHoliday.holidayType.code)
         }
 
-        // For now, use 8 hours per day as default
-        // TODO: Could be enhanced with employee-specific contracts
-        return employee.plannedWeeklyHours / 5
+        // Default workday hours from service
+        return holidayTypeService.getDefaultWorkdayHours()
     }
 
     /**
@@ -109,7 +110,8 @@ class WorkSummaryService @Inject constructor(
                     workedHours = workedHours,
                     expectedHours = expectedHours,
                     delta = delta,
-                    holidayType = holiday?.type?.displayName,
+                    holidayTypeCode = holiday?.holidayType?.code,
+                    holidayTypeDisplayName = holiday?.holidayType?.displayName,
                     holidayId = holiday?.id,
                     holidayApproved = holiday?.approvalStatus == ApprovalStatus.APPROVED,
                     holidayReason = holiday?.reason,
@@ -137,7 +139,7 @@ class WorkSummaryService @Inject constructor(
         val yearEnd = LocalDate.of(year, 12, 31)
         
         val vacationDays = holidayRepository.findByEmployeeAndDateRange(employeeId, yearStart, yearEnd)
-            .filter { it.type.name == "PAID_VACATION" && it.approvalStatus == ApprovalStatus.APPROVED }
+            .filter { it.holidayType.code == "PAID_VACATION" && it.approvalStatus == ApprovalStatus.APPROVED }
             .sumOf { holiday ->
                 // Calculate the number of working days in the holiday period (excluding weekends and public holidays)
                 holidayDefinitionService.calculateWorkingDays(holiday.startDate, holiday.endDate)
@@ -154,7 +156,7 @@ class WorkSummaryService @Inject constructor(
         val yearEnd = LocalDate.of(year, 12, 31)
         
         return holidayRepository.findByEmployeeAndDateRange(employeeId, yearStart, yearEnd)
-            .filter { it.type.name == "PAID_VACATION" && it.approvalStatus == ApprovalStatus.APPROVED }
+            .filter { it.holidayType.code == "PAID_VACATION" && it.approvalStatus == ApprovalStatus.APPROVED }
             .sumOf { holiday ->
                 // Calculate the number of working days in the holiday period (excluding weekends and public holidays)
                 holidayDefinitionService.calculateWorkingDays(holiday.startDate, holiday.endDate)
@@ -181,8 +183,8 @@ class WorkSummaryService @Inject constructor(
         val overtime = dailySummaries.sumOf { if (it.delta > 0) it.delta else 0.0 }
         val undertime = dailySummaries.sumOf { if (it.delta < 0) -it.delta else 0.0 }
         
-        val holidayDays = dailySummaries.count { it.holidayType != null && it.holidayApproved == true }
-        val pendingHolidayRequests = dailySummaries.count { it.holidayType != null && it.holidayApproved == false }
+        val holidayDays = dailySummaries.count { it.holidayTypeCode != null && it.holidayApproved == true }
+        val pendingHolidayRequests = dailySummaries.count { it.holidayTypeCode != null && it.holidayApproved == false }
         
         // Calculate vacation statistics
         val currentYear = weekStart.year
@@ -477,8 +479,8 @@ class WorkSummaryService @Inject constructor(
                                     saldo = saldo,
                                     saldoFormatted = formatHours(saldo),
                                     isWeekend = dailySummary.isWeekend,
-                                    isHoliday = dailySummary.holidayType != null,
-                                    holidayType = dailySummary.holidayType,
+                                    isHoliday = dailySummary.holidayTypeCode != null,
+                                    holidayType = dailySummary.holidayTypeDisplayName,
                                     holidayApproved = dailySummary.holidayApproved,
                                     isPublicHoliday = dailySummary.isPublicHoliday,
                                     publicHolidayName = dailySummary.publicHolidayName,
@@ -594,4 +596,4 @@ class WorkSummaryService @Inject constructor(
             monthlyData = monthlyData
         )
     }
-}
+} 

@@ -42,7 +42,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 showFormModal: false, // New state for form modal
                 formLoaded: false, // Track if form is loaded
                 currentEntryData: null, // Store current entry data for modal
-                cumulativeHoursAccount: null // Store cumulative hours account data
+                cumulativeHoursAccount: null, // Store cumulative hours account data
+                
+                // Holiday types
+                holidayTypes: [],
+                defaultWorkdayHours: 8.0
             };
         },
         computed: {
@@ -175,6 +179,77 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
         methods: {
+            /**
+             * Lädt die Holiday-Types vom Server
+             */
+            async loadHolidayTypes() {
+                try {
+                    const response = await fetch('/api/holiday-types');
+                    if (response.ok) {
+                        this.holidayTypes = await response.json();
+                        console.log('Holiday types loaded:', this.holidayTypes);
+                    } else {
+                        console.warn('Failed to load holiday types, using defaults');
+                        this.useDefaultHolidayTypes();
+                    }
+                } catch (error) {
+                    console.warn('Error loading holiday types, using defaults:', error);
+                    this.useDefaultHolidayTypes();
+                }
+            },
+            
+            /**
+             * Verwendet die Standard-Holiday-Types falls der Server nicht erreichbar ist
+             */
+            useDefaultHolidayTypes() {
+                this.holidayTypes = [
+                    { code: 'PAID_VACATION', displayName: 'Bezahlter Urlaub', defaultExpectedHours: 0.0 },
+                    { code: 'UNPAID_LEAVE', displayName: 'Unbezahlter Urlaub', defaultExpectedHours: 8.0 },
+                    { code: 'SICK_LEAVE', displayName: 'Krankheit', defaultExpectedHours: 0.0 },
+                    { code: 'SPECIAL_LEAVE', displayName: 'Sonderurlaub', defaultExpectedHours: 0.0 },
+                    { code: 'COMPENSATORY_TIME', displayName: 'Zeitausgleich', defaultExpectedHours: 0.0 },
+                    { code: 'MATERNITY_LEAVE', displayName: 'Mutterschaftsurlaub', defaultExpectedHours: 0.0 },
+                    { code: 'PATERNITY_LEAVE', displayName: 'Vaterschaftsurlaub', defaultExpectedHours: 0.0 }
+                ];
+            },
+            
+            /**
+             * Gibt die erwarteten Arbeitsstunden für einen gegebenen HolidayType zurück.
+             * Falls der Typ nicht konfiguriert ist, wird der Standard-Arbeitstag zurückgegeben.
+             */
+            getExpectedHoursForHolidayType(holidayTypeCode) {
+                if (!holidayTypeCode) {
+                    return this.defaultWorkdayHours;
+                }
+                
+                const holidayType = this.holidayTypes.find(ht => ht.code === holidayTypeCode);
+                return holidayType ? holidayType.defaultExpectedHours : this.defaultWorkdayHours;
+            },
+            
+            /**
+             * Gibt die Beschreibung für einen HolidayType zurück.
+             */
+            getHolidayTypeDescription(holidayTypeCode) {
+                if (!holidayTypeCode) {
+                    return null;
+                }
+                
+                const holidayType = this.holidayTypes.find(ht => ht.code === holidayTypeCode);
+                return holidayType ? holidayType.description : null;
+            },
+            
+            /**
+             * Gibt den Display-Namen für einen HolidayType zurück.
+             */
+            getHolidayTypeDisplayName(holidayTypeCode) {
+                if (!holidayTypeCode) {
+                    return 'Unbekannt';
+                }
+                
+                const holidayType = this.holidayTypes.find(ht => ht.code === holidayTypeCode);
+                return holidayType ? holidayType.displayName : holidayTypeCode;
+            },
+            
             // Save current state to localStorage
             saveState() {
                 localStorage.setItem('calendar-current-week', this.currentWeek.toString());
@@ -314,10 +389,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const summary = day.summary;
                 
                 if (summary.isWeekend) return 'calendar-weekend';
-                if (summary.holidayType || summary.isPublicHoliday) return 'calendar-holiday';
+                if (summary.holidayTypeCode || summary.isPublicHoliday) return 'calendar-holiday';
                 
                 // For approved holidays and public holidays, treat like weekends (0 expected hours)
-                const effectiveExpectedHours = ((summary.holidayType && summary.holidayApproved) || summary.isPublicHoliday) ? 0 : summary.expectedHours;
+                const effectiveExpectedHours = ((summary.holidayTypeCode && summary.holidayApproved) || summary.isPublicHoliday) ? 0 : summary.expectedHours;
                 const effectiveDelta = summary.workedHours - effectiveExpectedHours;
                 
                 if (summary.workedHours === 0 && effectiveExpectedHours > 0) return 'calendar-missing';
@@ -343,8 +418,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     tooltip += `Differenz: ${effectiveDelta > 0 ? '+' : ''}${effectiveDelta.toFixed(1)}h\n`;
                 }
                 
-                if (summary.holidayType) {
-                    tooltip += `Urlaub: ${this.getHolidayTypeDisplayName(summary.holidayType)}\n`;
+                if (summary.holidayTypeCode) {
+                    tooltip += `Urlaub: ${this.getHolidayTypeDisplayName(summary.holidayTypeCode)}\n`;
                     if (summary.holidayReason) tooltip += `Grund: ${summary.holidayReason}\n`;
                     if (summary.holidayApproved) tooltip += `Status: Genehmigt\n`;
                 }
@@ -665,9 +740,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('Fehler beim Genehmigen des Urlaubsantrags');
                 }
             },
-            getHolidayTypeDisplayName(holidayType) {
-                return holidayType || 'Nicht definiert';
-            },
+
             formatDate(date) {
                 return new Date(date).toLocaleDateString('de-CH');
             },
@@ -1216,10 +1289,12 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         mounted() {
             console.log('Calendar app mounted');
+            this.loadHolidayTypes().then(() => {
             this.loadDailySummaries();
             this.loadWeeklySummaries();
             this.loadCumulativeHoursAccount();
             this.loadWeekData(); // Load week data for color coding
+            });
             
             // Listen for entry-saved events from the form
             document.addEventListener('entry-saved', (event) => {
@@ -1486,13 +1561,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                                 Kein Arbeitstag
                                             </div>
                                         </div>
-                                        <!-- Holiday: Show only hours without "von X.Xh" -->
-                                        <div v-else-if="(day.summary.holidayType && day.summary.holidayApproved) || day.summary.isPublicHoliday" style="text-align:center;">
+                                        <!-- Holiday: Show holiday type instead of "von X.Xh" -->
+                                        <div v-else-if="day.summary.holidayTypeCode || day.summary.isPublicHoliday" style="text-align:center;">
                                             <div style="font-size:14px; font-weight:bold; color: #333;">
                                                 {{ day.summary.workedHours.toFixed(1) }}h
                                             </div>
-                                            <div v-if="day.summary.holidayType" style="font-size:9px; color: #0dcaf0;">
-                                                {{ getHolidayTypeDisplayName(day.summary.holidayType) }}
+                                            <div v-if="day.summary.holidayTypeCode" style="font-size:10px; color: #0dcaf0; font-weight: 500;">
+                                                {{ getHolidayTypeDisplayName(day.summary.holidayTypeCode) }}
                                                 <!-- Holiday approval button -->
                                                 <button v-if="!day.summary.holidayApproved" 
                                                         @click.stop="approveHoliday(day.summary.holidayId)"
@@ -1501,7 +1576,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                                     <i class="bi bi-check-circle"></i>
                                                 </button>
                                             </div>
-                                            <div v-if="day.summary.isPublicHoliday && day.summary.publicHolidayName" style="font-size:9px; color: #0dcaf0;">
+                                            <div v-if="day.summary.holidayReason" style="font-size:8px; color: #666; font-style: italic; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                {{ day.summary.holidayReason }}
+                                            </div>
+                                            <div v-if="day.summary.isPublicHoliday && day.summary.publicHolidayName" style="font-size:10px; color: #0dcaf0; font-weight: 500;">
                                                 {{ day.summary.publicHolidayName }}
                                             </div>
                                         </div>
@@ -1546,13 +1624,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </div>
                                     <div class="metric-title">Wochensaldo</div>
                                     <div :class="['metric-value primary', cumulativeHoursAccount.weeklyBalance >= 0 ? 'positive' : 'negative']">
-                                        {{ cumulativeHoursAccount.weeklyBalance >= 0 ? '+' : '' }}{{ cumulativeHoursAccount.weeklyBalance.toFixed(1) }} h
-                                    </div>
+                                    {{ cumulativeHoursAccount.weeklyBalance >= 0 ? '+' : '' }}{{ cumulativeHoursAccount.weeklyBalance.toFixed(1) }} h
+                                </div>
                                     <div class="metric-subtitle">
                                         {{ cumulativeHoursAccount.weeklyWorkedHours.toFixed(1) }} h von {{ cumulativeHoursAccount.weeklyExpectedHours.toFixed(1) }} h Soll
-                                    </div>
                                 </div>
-                                
+                            </div>
+                            
                                 <div class="metric-card secondary-metric"
                                      :aria-label="'Gearbeitete Stunden: ' + cumulativeHoursAccount.weeklyWorkedHours.toFixed(1) + ' Stunden diese Woche'">
                                     <div class="metric-icon">
@@ -1578,13 +1656,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </div>
                                     <div class="metric-title">Stundenkonto</div>
                                     <div :class="['metric-value secondary', cumulativeHoursAccount.cumulativeBalance >= 0 ? 'positive' : 'negative']">
-                                        {{ cumulativeHoursAccount.cumulativeBalance >= 0 ? '+' : '' }}{{ cumulativeHoursAccount.cumulativeBalance.toFixed(1) }} h
-                                    </div>
+                                    {{ cumulativeHoursAccount.cumulativeBalance >= 0 ? '+' : '' }}{{ cumulativeHoursAccount.cumulativeBalance.toFixed(1) }} h
+                                </div>
                                     <div class="metric-subtitle">
                                         Kumulativ bis KW {{ currentWeek }}
                                     </div>
-                                </div>
-                                
+                            </div>
+                            
                                 <div class="metric-card secondary-metric"
                                      :aria-label="'Urlaubstage: ' + cumulativeHoursAccount.remainingVacationDays + ' von ' + cumulativeHoursAccount.totalVacationDays + ' Tagen verbleibend'">
                                     <div class="metric-icon">
@@ -1596,7 +1674,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                             <!-- Strand/Welle -->
                                             <path d="M2 18C4 16 8 17 12 17C16 17 20 16 22 18" stroke="#fd7e14" stroke-width="2" fill="none" stroke-linecap="round"/>
                                         </svg>
-                                    </div>
+                                        </div>
                                     <div class="metric-title">Urlaubstage</div>
                                     <div class="metric-value secondary">
                                         {{ cumulativeHoursAccount.remainingVacationDays }} / {{ cumulativeHoursAccount.totalVacationDays }}
@@ -1610,7 +1688,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                      :aria-label="'Abwesenheitstage: ' + cumulativeHoursAccount.holidayDays + ' Tage, ' + (cumulativeHoursAccount.pendingHolidayRequests > 0 ? cumulativeHoursAccount.pendingHolidayRequests + ' ausstehend' : 'alle genehmigt')">
                                     <div class="metric-icon">
                                         <i class="bi bi-briefcase"></i>
-                                    </div>
+                                        </div>
                                     <div class="metric-title">Abwesenheitstage</div>
                                     <div class="metric-value secondary">
                                         {{ cumulativeHoursAccount.holidayDays }} Tage

@@ -156,7 +156,7 @@ class ApprovalService @Inject constructor(
                     employeeName = "${holiday.employee.person.firstName} ${holiday.employee.person.lastName}",
                     startDate = holiday.startDate,
                     endDate = holiday.endDate,
-                    type = holiday.type.displayName,
+                    type = holiday.holidayType.displayName,
                     reason = holiday.reason,
                     approvalStatus = holiday.approvalStatus.name,
                     approverId = holiday.approvedBy?.id,

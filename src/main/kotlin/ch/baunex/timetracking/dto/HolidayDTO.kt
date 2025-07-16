@@ -16,5 +16,7 @@ data class HolidayDTO(
     val type: String,
     val reason: String? = null,
     val status: String = "PENDING",
-    val approval: ApprovalDTO = ApprovalDTO()
+    val approval: ApprovalDTO = ApprovalDTO(),
+    @Serializable(with = LocalDateSerializer::class)
+    val createdAt: LocalDate? = null
 )

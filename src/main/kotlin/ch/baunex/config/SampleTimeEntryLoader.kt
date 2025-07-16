@@ -7,7 +7,7 @@ import ch.baunex.timetracking.dto.HolidayDTO
 import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.timetracking.facade.HolidayFacade
 import ch.baunex.timetracking.facade.TimeTrackingFacade
-import ch.baunex.timetracking.model.HolidayType
+import ch.baunex.timetracking.service.HolidayTypeService
 import ch.baunex.user.facade.EmployeeFacade
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
@@ -30,6 +30,9 @@ class SampleTimeEntryLoader {
 
     @Inject
     lateinit var employeeFacade: EmployeeFacade
+
+    @Inject
+    lateinit var holidayTypeService: HolidayTypeService
 
     // Konfigurierbare Parameter
     private val weeksToGenerate = 10
@@ -130,20 +133,102 @@ class SampleTimeEntryLoader {
     }
 
     private fun createHoliday(employee: ch.baunex.user.dto.EmployeeDTO, date: LocalDate) {
-        val holidayTypes = listOf(
-            HolidayType.PAID_VACATION.name,
-            HolidayType.UNPAID_LEAVE.name,
-            HolidayType.SICK_LEAVE.name
+        // Lade Holiday-Types aus der Datenbank
+        val holidayTypes = holidayTypeService.getActiveHolidayTypes()
+        
+        if (holidayTypes.isEmpty()) {
+            println("WARNING: No holiday types found in database, skipping holiday creation")
+            return
+        }
+        
+        // Erstelle Wahrscheinlichkeitsverteilung basierend auf Holiday-Types
+        val holidayTypesWithProbabilities = mutableMapOf<String, Double>()
+        
+        // Standard-Wahrscheinlichkeiten für bekannte Typen
+        val defaultProbabilities = mapOf(
+            "PAID_VACATION" to 0.45,     // 45% - häufigster Typ
+            "SICK_LEAVE" to 0.25,        // 25% - relativ häufig
+            "UNPAID_LEAVE" to 0.15,      // 15% - gelegentlich
+            "SPECIAL_LEAVE" to 0.08,     // 8% - selten
+            "COMPENSATORY_TIME" to 0.04, // 4% - selten
+            "MATERNITY_LEAVE" to 0.015,  // 1.5% - sehr selten
+            "PATERNITY_LEAVE" to 0.015   // 1.5% - sehr selten
         )
         
-        val randomType = holidayTypes.random()
-        val reasons = listOf(
-            "Urlaub",
-            "Krankheit",
+        // Verwende Standard-Wahrscheinlichkeiten für bekannte Typen, sonst 0.01
+        holidayTypes.forEach { holidayType ->
+            val probability = defaultProbabilities[holidayType.code] ?: 0.01
+            holidayTypesWithProbabilities[holidayType.code] = probability
+        }
+        
+        // Normalisiere Wahrscheinlichkeiten (sollten sich zu 1.0 addieren)
+        val totalProbability = holidayTypesWithProbabilities.values.sum()
+        holidayTypesWithProbabilities.replaceAll { _, value -> value / totalProbability }
+        
+        // Wähle Holiday-Type basierend auf Wahrscheinlichkeiten
+        val random = Math.random()
+        var cumulativeProbability = 0.0
+        var selectedType = holidayTypes.first().code // Fallback auf ersten verfügbaren Typ
+        
+        for ((type, probability) in holidayTypesWithProbabilities) {
+            cumulativeProbability += probability
+            if (random <= cumulativeProbability) {
+                selectedType = type
+                break
+            }
+        }
+        
+        // Gründe für verschiedene Holiday-Types
+        val reasonsByType = mapOf(
+            "PAID_VACATION" to listOf(
+                "Sommerurlaub",
+                "Winterurlaub",
+                "Familienurlaub",
+                "Erholungsurlaub",
+                "Urlaub mit Freunden",
+                "Kurzer Ausflug"
+            ),
+            "SICK_LEAVE" to listOf(
+                "Erkältung",
+                "Grippe",
+                "Migräne",
+                "Rückenprobleme",
+                "Magen-Darm",
+                "Arzttermin"
+            ),
+            "UNPAID_LEAVE" to listOf(
             "Persönliche Angelegenheit",
-            "Arzttermin",
-            "Familienangelegenheit"
+                "Familienangelegenheit",
+                "Reise ohne Urlaub",
+                "Studium",
+                "Weiterbildung"
+            ),
+            "SPECIAL_LEAVE" to listOf(
+                "Hochzeit",
+                "Beerdigung",
+                "Geburt",
+                "Umzug",
+                "Gerichtstermin",
+                "Prüfung"
+            ),
+            "COMPENSATORY_TIME" to listOf(
+                "Überstundenausgleich",
+                "Zeitausgleich",
+                "Gleitzeitausgleich",
+                "Feiertagsausgleich"
+            ),
+            "MATERNITY_LEAVE" to listOf(
+                "Mutterschaftsurlaub",
+                "Schwangerschaftsurlaub"
+            ),
+            "PATERNITY_LEAVE" to listOf(
+                "Vaterschaftsurlaub",
+                "Vaterschaftsfreistellung"
+            )
         )
+        
+        val reasons = reasonsByType[selectedType] ?: listOf("Urlaub")
+        val selectedReason = reasons.random()
         
         try {
             holidayFacade.requestHoliday(
@@ -152,8 +237,8 @@ class SampleTimeEntryLoader {
                     employeeId = employee.id,
                     startDate = date,
                     endDate = date,
-                    type = randomType,
-                    reason = reasons.random(),
+                    type = selectedType,
+                    reason = selectedReason,
                     approval = ApprovalDTO(
                         approved = Math.random() > 0.2, // 80% approved
                         approverId = 1,

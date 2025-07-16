@@ -19,9 +19,9 @@ class HolidayModel : PanacheEntity() {
     @Column(name = "end_date", nullable = false)
     lateinit var endDate: LocalDate
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    var type: HolidayType = HolidayType.PAID_VACATION
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "holiday_type_id")
+    lateinit var holidayType: HolidayTypeModel
 
     @Enumerated(EnumType.STRING)
     @Column(name = "approval_status", nullable = false)
@@ -36,4 +36,7 @@ class HolidayModel : PanacheEntity() {
 
     @Column(length = 255)
     var reason: String? = null
+
+    @Column(name = "created_at", nullable = false)
+    var createdAt: LocalDate = LocalDate.now()
 }

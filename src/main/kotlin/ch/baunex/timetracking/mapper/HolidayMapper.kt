@@ -3,18 +3,29 @@ package ch.baunex.timetracking.mapper
 import ch.baunex.timetracking.dto.HolidayDTO
 import ch.baunex.timetracking.model.ApprovalStatus
 import ch.baunex.timetracking.model.HolidayModel
-import ch.baunex.timetracking.model.HolidayType
+import ch.baunex.timetracking.repository.HolidayTypeRepository
 import jakarta.enterprise.context.ApplicationScoped
+import jakarta.inject.Inject
 
 @ApplicationScoped
-class HolidayMapper {
+class HolidayMapper @Inject constructor(
+    private val holidayTypeRepository: HolidayTypeRepository
+) {
 
     fun toModel(dto: HolidayDTO): HolidayModel {
         return HolidayModel().apply {
             id = dto.id
             startDate = dto.startDate
             endDate = dto.endDate
-            type = HolidayType.fromDisplayNameOrDefault(dto.type)
+            // Find holiday type by code or display name
+            holidayType = holidayTypeRepository.findActiveByCode(dto.type) ?: run {
+                // Fallback: try to find by display name
+                holidayTypeRepository.findActive().find { it.displayName == dto.type } ?: run {
+                    // Default to PAID_VACATION if not found
+                    holidayTypeRepository.findActiveByCode("PAID_VACATION") ?: 
+                        throw IllegalStateException("No holiday type found for: ${dto.type}")
+                }
+            }
             approvalStatus = ApprovalStatus.valueOf(dto.status)
             reason = dto.reason
         }
@@ -27,7 +38,7 @@ class HolidayMapper {
             employeeName = "${model.employee.person.firstName} ${model.employee.person.lastName}",
             startDate = model.startDate,
             endDate = model.endDate,
-            type = model.type.displayName,
+            type = model.holidayType.displayName,
             status = model.approvalStatus.name,
             reason = model.reason,
             approval = ch.baunex.timetracking.dto.ApprovalDTO(
@@ -36,7 +47,8 @@ class HolidayMapper {
                 approverName = model.approvedBy?.let { "${it.person.firstName} ${it.person.lastName}" } ?: "",
                 approvedAt = model.approvedAt,
                 status = model.approvalStatus.name
-            )
+            ),
+            createdAt = model.createdAt
         )
     }
 }

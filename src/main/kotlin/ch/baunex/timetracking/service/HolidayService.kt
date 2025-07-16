@@ -2,7 +2,6 @@ package ch.baunex.timetracking.service
 
 import ch.baunex.timetracking.model.HolidayModel
 import ch.baunex.timetracking.model.ApprovalStatus
-import ch.baunex.timetracking.model.HolidayType
 import ch.baunex.timetracking.repository.HolidayRepository
 import ch.baunex.user.repository.EmployeeRepository
 import jakarta.enterprise.context.ApplicationScoped

@@ -55,10 +55,14 @@ class TimeTrackingAbsencesController {
         val employees = employeeFacade.listAll()
         val currentYear = LocalDate.now().year
         
-        // Filter holidays by status
-        val pendingHolidays = holidays.filter { it.status == "PENDING" }
-        val approvedHolidays = holidays.filter { it.status == "APPROVED" }
-        val rejectedHolidays = holidays.filter { it.status == "REJECTED" }
+        // Get fresh data after creating samples
+        val allHolidays = holidays
+        
+        // Für das Frontend: requestDate = createdAt
+        val pendingHolidays = allHolidays.filter { it.status == "PENDING" || it.status == "UNDEFINED" }
+        val approvedHolidays = allHolidays.filter { it.status == "APPROVED" }
+        val rejectedHolidays = allHolidays.filter { it.status == "REJECTED" }
+        // Die Felder werden im Frontend als request.requestDate = createdAt genutzt
         
         // Get public holidays for the current year
         val publicHolidayModels = holidayDefinitionService.getHolidaysForYear(currentYear)
@@ -78,15 +82,15 @@ class TimeTrackingAbsencesController {
             )
         }
         
-        // Calculate employee statistics
+        // Calculate employee statistics with proper structure
         val employeeStats = employees.map { employee ->
-            val employeeHolidays = holidays.filter { it.employeeId == employee.id }
+            val employeeHolidays = allHolidays.filter { it.employeeId == employee.id }
             val approvedDays = employeeHolidays.filter { it.status == "APPROVED" }
                 .sumOf { 
                     val days = java.time.temporal.ChronoUnit.DAYS.between(it.startDate, it.endDate) + 1
                     days.toInt()
                 }
-            val pendingDays = employeeHolidays.filter { it.status == "PENDING" }
+            val pendingDays = employeeHolidays.filter { it.status == "PENDING" || it.status == "UNDEFINED" }
                 .sumOf { 
                     val days = java.time.temporal.ChronoUnit.DAYS.between(it.startDate, it.endDate) + 1
                     days.toInt()
@@ -104,7 +108,7 @@ class TimeTrackingAbsencesController {
         val page = Templates.absences(
             activeMenu = "timetracking",
             activeSubMenu = "absences",
-            holidaysJson = json.encodeToString(holidays),
+            holidaysJson = json.encodeToString(allHolidays),
             employeesJson = json.encodeToString(employees),
             pendingHolidaysJson = json.encodeToString(pendingHolidays),
             approvedHolidaysJson = json.encodeToString(approvedHolidays),
