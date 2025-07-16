@@ -361,7 +361,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         return days;
     }
-
+    
     function getEventsForDate(dateString) {
         const events = [];
         
@@ -459,10 +459,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const banner = document.getElementById('pending-requests-banner');
             if (banner) {
                 banner.style.display = 'none';
-            }
-        });
-    }
-
+                }
+            });
+        }
+        
     function filterEmployees(employeeId = null, searchTerm = '') {
         // This function can be expanded to filter the calendar view
         console.log('Filtering employees:', { employeeId, searchTerm });
@@ -684,7 +684,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentUserId = 1; // Default admin user ID
         
         fetch(`/timetracking/api/holidays/${holidayId}/approve`, {
-            method: 'POST',
+                method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -737,9 +737,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Get proper German status text
         const statusText = getGermanStatusText(holiday.status);
         
-        // Debug: Log what we're putting in the tooltip
-        console.log('Tooltip status text:', statusText);
-        console.log('Holiday status:', holiday.status);
+
         
         // Ensure status is defined before using toLowerCase()
         // If status is undefined, assume it's pending
@@ -774,8 +772,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        // Debug: Log the tooltip HTML
-        console.log('Tooltip HTML:', tooltipHTML);
+
         
         tooltip.innerHTML = tooltipHTML;
         
@@ -784,18 +781,28 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Position tooltip relative to the holiday bar element
         const barElement = event.target;
-        const barRect = barElement.getBoundingClientRect();
+        
+        // Get the actual holiday bar element (not a child element)
+        const actualBarElement = barElement.classList.contains('holiday-bar') ? barElement : barElement.closest('.holiday-bar');
+        if (!actualBarElement) return;
+        
+        // Get positions relative to viewport
+        const barRect = actualBarElement.getBoundingClientRect();
         const tooltipRect = tooltip.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
         const viewportWidth = window.innerWidth;
         
+        // Add scroll offset to get absolute positions
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+        
         // Calculate horizontal position (center over the bar)
-        let left = barRect.left + (barRect.width / 2) - (tooltipRect.width / 2);
+        let left = barRect.left + scrollX + (barRect.width / 2) - (tooltipRect.width / 2);
         
         // Ensure tooltip doesn't go off-screen horizontally
-        if (left < 10) left = 10;
-        if (left + tooltipRect.width > viewportWidth - 10) {
-            left = viewportWidth - tooltipRect.width - 10;
+        if (left < scrollX + 10) left = scrollX + 10;
+        if (left + tooltipRect.width > scrollX + viewportWidth - 10) {
+            left = scrollX + viewportWidth - tooltipRect.width - 10;
         }
         
         // Calculate vertical position
@@ -804,31 +811,33 @@ document.addEventListener('DOMContentLoaded', function() {
         let tooltipPosition = 'below'; // Default position
         
         // Check if there's enough space below the bar
-        if (barRect.bottom + tooltipRect.height + gap <= viewportHeight) {
+        if (barRect.bottom + scrollY + tooltipRect.height + gap <= scrollY + viewportHeight) {
             // Position below the bar
-            top = barRect.bottom + gap;
+            top = barRect.bottom + scrollY + gap;
             tooltipPosition = 'below';
         } else {
             // Position above the bar
-            top = barRect.top - tooltipRect.height - gap;
+            top = barRect.top + scrollY - tooltipRect.height - gap;
             tooltipPosition = 'above';
         }
         
         // Ensure tooltip doesn't go off-screen vertically
-        if (top < 10) {
-            top = 10;
+        if (top < scrollY + 10) {
+            top = scrollY + 10;
             tooltipPosition = 'below';
         }
-        if (top + tooltipRect.height > viewportHeight - 10) {
-            top = viewportHeight - tooltipRect.height - 10;
+        if (top + tooltipRect.height > scrollY + viewportHeight - 10) {
+            top = scrollY + viewportHeight - tooltipRect.height - 10;
             tooltipPosition = 'above';
         }
         
         // Add position class for proper arrow direction
         tooltip.classList.add(`tooltip-${tooltipPosition}`);
         
-        tooltip.style.left = left + 'px';
-        tooltip.style.top = top + 'px';
+        // Set position using fixed positioning to avoid scroll issues
+        tooltip.style.position = 'fixed';
+        tooltip.style.left = (left - scrollX) + 'px';
+        tooltip.style.top = (top - scrollY) + 'px';
         
         // Show with animation
         setTimeout(() => {
@@ -848,12 +857,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Helper function to get German status text
     function getGermanStatusText(status) {
-        // Debug: Log the status value to see what we're getting
-        console.log('Status value:', status, 'Type:', typeof status);
-        
         // If status is undefined/null, assume it's pending (new requests often don't have status set)
         if (!status) {
-            console.log('Status is undefined/null, assuming PENDING');
             return 'Ausstehend';
         }
         
@@ -872,9 +877,7 @@ document.addEventListener('DOMContentLoaded', function() {
             'abgelehnt': 'Abgelehnt'
         };
         
-        const result = statusMap[status] || 'Unbekannt';
-        console.log('Mapped status:', status, '→', result);
-        return result;
+        return statusMap[status] || 'Unbekannt';
     }
 
     // Initialize the app
