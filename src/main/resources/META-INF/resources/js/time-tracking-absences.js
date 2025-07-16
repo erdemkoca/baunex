@@ -20,6 +20,21 @@ document.addEventListener('DOMContentLoaded', function() {
     try { publicHolidays = JSON.parse(el.dataset.publicHolidays || '[]'); } catch {};
     try { currentYear = parseInt(el.dataset.currentYear || '2025'); } catch {};
 
+    // Debug logging
+    console.log('Data loaded:', {
+        holidays: holidays.length,
+        employees: employees.length,
+        pendingHolidays: pendingHolidays.length,
+        approvedHolidays: approvedHolidays.length,
+        rejectedHolidays: rejectedHolidays.length,
+        employeeStats: employeeStats.length,
+        publicHolidays: publicHolidays.length,
+        currentYear: currentYear
+    });
+    console.log('Pending holidays:', pendingHolidays);
+    console.log('Approved holidays:', approvedHolidays);
+    console.log('Rejected holidays:', rejectedHolidays);
+
     // --- Stat Cards ---
     const statCards = [
         { icon: '🕒', number: pendingHolidays.length, label: 'Ausstehend', class: 'pending' },
@@ -445,5 +460,140 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Fehler beim Ablehnen des Urlaubsantrags');
         }
     };
-    // Kalender folgt als nächster Schritt ...
+
+    // --- Modal Functionality ---
+    const addAbsenceBtn = document.getElementById('add-absence-btn');
+    const absenceModal = document.getElementById('absenceModal');
+    const absenceForm = document.getElementById('absenceForm');
+    const saveAbsenceBtn = document.getElementById('save-absence-btn');
+    const employeeSelect = document.getElementById('absence-employee');
+    const typeSelect = document.getElementById('absence-type');
+    const startDateInput = document.getElementById('absence-start-date');
+    const endDateInput = document.getElementById('absence-end-date');
+    const reasonInput = document.getElementById('absence-reason');
+
+    // Load holiday types when modal opens
+    async function loadHolidayTypes() {
+        try {
+            const response = await fetch('/api/holiday-types');
+            if (response.ok) {
+                const types = await response.json();
+                typeSelect.innerHTML = '<option value="">-- Bitte wählen --</option>';
+                types.forEach(type => {
+                    typeSelect.innerHTML += `<option value="${type.code}">${type.displayName}</option>`;
+                });
+            } else {
+                console.error('Failed to load holiday types:', response.status);
+                // Fallback to default types
+                const defaultTypes = [
+                    { code: 'PAID_VACATION', displayName: 'Bezahlter Urlaub' },
+                    { code: 'UNPAID_LEAVE', displayName: 'Unbezahlter Urlaub' },
+                    { code: 'SICK_LEAVE', displayName: 'Krankheit' },
+                    { code: 'SPECIAL_LEAVE', displayName: 'Sonderurlaub' }
+                ];
+                typeSelect.innerHTML = '<option value="">-- Bitte wählen --</option>';
+                defaultTypes.forEach(type => {
+                    typeSelect.innerHTML += `<option value="${type.code}">${type.displayName}</option>`;
+                });
+            }
+        } catch (error) {
+            console.error('Error loading holiday types:', error);
+            // Fallback to default types
+            const defaultTypes = [
+                { code: 'PAID_VACATION', displayName: 'Bezahlter Urlaub' },
+                { code: 'UNPAID_LEAVE', displayName: 'Unbezahlter Urlaub' },
+                { code: 'SICK_LEAVE', displayName: 'Krankheit' },
+                { code: 'SPECIAL_LEAVE', displayName: 'Sonderurlaub' }
+            ];
+            typeSelect.innerHTML = '<option value="">-- Bitte wählen --</option>';
+            defaultTypes.forEach(type => {
+                typeSelect.innerHTML += `<option value="${type.code}">${type.displayName}</option>`;
+            });
+        }
+    }
+
+    // Populate employee select
+    function populateEmployeeSelect() {
+        employeeSelect.innerHTML = '<option value="">-- Bitte wählen --</option>';
+        employees.forEach(employee => {
+            employeeSelect.innerHTML += `<option value="${employee.id}">${employee.firstName} ${employee.lastName}</option>`;
+        });
+    }
+
+    // Open modal
+    addAbsenceBtn.addEventListener('click', function() {
+        // Prefill current year
+        const today = new Date();
+        startDateInput.value = today.toISOString().split('T')[0];
+        endDateInput.value = today.toISOString().split('T')[0];
+        
+        // Load data
+        populateEmployeeSelect();
+        loadHolidayTypes();
+        
+        // Show modal
+        const modal = new bootstrap.Modal(absenceModal);
+        modal.show();
+    });
+
+    // Save absence
+    saveAbsenceBtn.addEventListener('click', async function() {
+        if (!absenceForm.checkValidity()) {
+            absenceForm.reportValidity();
+            return;
+        }
+
+        const formData = {
+            employeeId: parseInt(employeeSelect.value),
+            type: typeSelect.value,
+            startDate: startDateInput.value,
+            endDate: endDateInput.value,
+            reason: reasonInput.value || null
+        };
+
+        saveAbsenceBtn.disabled = true;
+        saveAbsenceBtn.innerHTML = '<i class="bi bi-check"></i> Speichere...';
+
+        try {
+            const response = await fetch('/timetracking/api/holidays', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                // Show success message
+                showSuccessMessage('Abwesenheit erfolgreich erfasst!');
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(absenceModal);
+                modal.hide();
+                
+                // Reset form
+                absenceForm.reset();
+                
+                // Reload page to show new data
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                const errorText = await response.text();
+                alert('Fehler beim Speichern: ' + errorText);
+            }
+        } catch (error) {
+            alert('Fehler beim Speichern der Abwesenheit');
+        } finally {
+            saveAbsenceBtn.disabled = false;
+            saveAbsenceBtn.innerHTML = '<i class="bi bi-check"></i> Abwesenheit speichern';
+        }
+    });
+
+    function showSuccessMessage(message) {
+        const successDiv = document.createElement('div');
+        successDiv.className = 'success-message';
+        successDiv.textContent = message;
+        document.body.appendChild(successDiv);
+        
+        setTimeout(() => {
+            successDiv.remove();
+        }, 3000);
+    }
 });

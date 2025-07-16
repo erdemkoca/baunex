@@ -745,6 +745,13 @@
          data-public-holidays='{publicHolidaysJson}'
          data-current-year='{currentYear}'>
 
+      <!-- Header mit Button -->
+      <div class="d-flex justify-content-end mb-4">
+        <button id="add-absence-btn" class="btn btn-primary btn-sm">
+          <i class="bi bi-plus"></i> Abwesenheit erfassen
+        </button>
+      </div>
+
       <!-- Statistikkarten -->
       <div id="stat-cards" class="row mb-4"></div>
         
@@ -755,9 +762,68 @@
       <div id="calendar-section" class="mb-4"></div>
 
       <!-- Urlaubsanträge Tabs und Karten -->
-      <div id="absence-tabs-section"></div>
+      <div id="absence-tabs-section" class="mb-4"></div>
 
     </div>
-    <script src="/js/time-tracking-absences.js"></script>
+
+    <!-- Abwesenheit Modal -->
+    <div class="modal fade" id="absenceModal" tabindex="-1" aria-labelledby="absenceModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="absenceModalLabel">Neue Abwesenheit erfassen</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="absenceForm">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="absence-employee" class="form-label">Mitarbeiter</label>
+                    <select id="absence-employee" class="form-select" required>
+                      <option value="">-- Bitte wählen --</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="absence-type" class="form-label">Abwesenheitstyp</label>
+                    <select id="absence-type" class="form-select" required>
+                      <option value="">-- Bitte wählen --</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="absence-start-date" class="form-label">Startdatum</label>
+                    <input id="absence-start-date" type="date" class="form-control" required>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="absence-end-date" class="form-label">Enddatum</label>
+                    <input id="absence-end-date" type="date" class="form-control" required>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="absence-reason" class="form-label">Grund (optional)</label>
+                <textarea id="absence-reason" class="form-control" rows="3" placeholder="Grund für die Abwesenheit..."></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+            <button type="button" class="btn btn-primary" id="save-absence-btn">
+              <i class="bi bi-check"></i> Abwesenheit speichern
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/time-tracking-absences.js?v=3"></script>
   {/content}
 {/include} 
