@@ -1,589 +1,783 @@
+// Modern Absences Management JavaScript
+// This script generates all UI (tabs, employee stats, calendar, floating button) dynamically.
 document.addEventListener('DOMContentLoaded', function() {
-    const el = document.getElementById('absences-app');
-    if (!el) return;
+    if (!window.location.pathname.includes('/timetracking/absences')) return;
 
-    // Parse data
-    let holidays = [];
-    let employees = [];
-    let pendingHolidays = [];
-    let approvedHolidays = [];
-    let rejectedHolidays = [];
-    let employeeStats = [];
-    let publicHolidays = [];
-    let currentYear = 2025;
-    try { holidays = JSON.parse(el.dataset.holidays || '[]'); } catch {};
-    try { employees = JSON.parse(el.dataset.employees || '[]'); } catch {};
-    try { pendingHolidays = JSON.parse(el.dataset.pendingHolidays || '[]'); } catch {};
-    try { approvedHolidays = JSON.parse(el.dataset.approvedHolidays || '[]'); } catch {};
-    try { rejectedHolidays = JSON.parse(el.dataset.rejectedHolidays || '[]'); } catch {};
-    try { employeeStats = JSON.parse(el.dataset.employeeStats || '[]'); } catch {};
-    try { publicHolidays = JSON.parse(el.dataset.publicHolidays || '[]'); } catch {};
-    try { currentYear = parseInt(el.dataset.currentYear || '2025'); } catch {};
-
-    // Debug logging
-    console.log('Data loaded:', {
-        holidays: holidays.length,
-        employees: employees.length,
-        pendingHolidays: pendingHolidays.length,
-        approvedHolidays: approvedHolidays.length,
-        rejectedHolidays: rejectedHolidays.length,
-        employeeStats: employeeStats.length,
-        publicHolidays: publicHolidays.length,
-        currentYear: currentYear
-    });
-    console.log('Pending holidays:', pendingHolidays);
-    console.log('Approved holidays:', approvedHolidays);
-    console.log('Rejected holidays:', rejectedHolidays);
-
-    // --- Stat Cards ---
-    const statCards = [
-        { icon: '🕒', number: pendingHolidays.length, label: 'Ausstehend', class: 'pending' },
-        { icon: '✅', number: approvedHolidays.length, label: 'Genehmigt', class: 'approved' },
-        { icon: '❌', number: rejectedHolidays.length, label: 'Abgelehnt', class: 'rejected' },
-        { icon: '🎉', number: publicHolidays.length, label: 'Feiertage ' + currentYear, class: 'holidays' }
-    ];
-    const statCardsDiv = document.getElementById('stat-cards');
-    if (statCardsDiv) {
-        statCardsDiv.innerHTML = '<h2 class="section-header">Übersicht ' + currentYear + '</h2>' +
-            '<div class="stats-grid">' +
-            statCards.map(card =>
-                '<div class="stat-card ' + card.class + '">' +
-                    '<div class="icon">' + card.icon + '</div>' +
-                    '<div class="number">' + card.number + '</div>' +
-                    '<div class="label">' + card.label + '</div>' +
-                '</div>'
-            ).join('') +
-            '</div>';
+    const appElement = document.getElementById('absences-app');
+    if (!appElement) {
+        console.error('App element not found');
+        return;
     }
 
-    // --- Employee Vacation Accounts Table ---
-    const employeeTableDiv = document.getElementById('employee-table-section');
-    if (employeeTableDiv) {
-        let table = '<h2 class="section-header">Mitarbeiter-Urlaubskonten</h2>';
-        table += '<div class="employee-table-container">';
-        table += '<table class="employee-table"><thead><tr>' +
-            '<th>Mitarbeiter-Name</th>' +
-            '<th>Gesamturlaubstage</th>' +
-            '<th>Genommene Tage</th>' +
-            '<th>Ausstehend</th>' +
-            '<th>Verbleibend</th>' +
-            '<th>Fortschritt</th>' +
-            '</tr></thead><tbody>';
-        employeeStats.forEach(emp => {
-            const e = emp.employee;
-            const percent = e.vacationDays > 0 ? Math.round((emp.approvedDays / e.vacationDays) * 100) : 0;
-            table += '<tr>' +
-                '<td><strong>' + e.firstName + ' ' + e.lastName + '</strong></td>' +
-                '<td>' + e.vacationDays + '</td>' +
-                '<td>' + emp.approvedDays + '</td>' +
-                '<td>' + emp.pendingDays + '</td>' +
-                '<td>' + emp.remainingDays + '</td>' +
-                '<td>' +
-                    '<div class="vacation-progress"><div class="progress-bar"><div class="progress-fill" style="width:' + percent + '%"></div></div>' +
-                    '<span style="font-size:0.8rem;color:var(--text-muted);">' + percent + '%</span></div>' +
-                '</td>' +
-                '</tr>';
+    // Parse data from data attributes
+    let appState = {
+        holidays: [],
+        employees: [],
+        pendingHolidays: [],
+        approvedHolidays: [],
+        rejectedHolidays: [],
+        employeeStats: [],
+        publicHolidays: [],
+        currentYear: new Date().getFullYear(),
+        currentMonth: new Date().getMonth(),
+        employeeColors: {}
+    };
+
+    try {
+        appState.holidays = JSON.parse(appElement.dataset.holidays || '[]');
+        appState.employees = JSON.parse(appElement.dataset.employees || '[]');
+        appState.pendingHolidays = JSON.parse(appElement.dataset.pendingHolidays || '[]');
+        appState.approvedHolidays = JSON.parse(appElement.dataset.approvedHolidays || '[]');
+        appState.rejectedHolidays = JSON.parse(appElement.dataset.rejectedHolidays || '[]');
+        appState.employeeStats = JSON.parse(appElement.dataset.employeeStats || '[]');
+        appState.publicHolidays = JSON.parse(appElement.dataset.publicHolidays || '[]');
+        appState.currentYear = parseInt(appElement.dataset.currentYear) || new Date().getFullYear();
+        
+        console.log('Data loaded:', {
+            holidays: appState.holidays.length,
+            employees: appState.employees.length,
+            pending: appState.pendingHolidays.length,
+            approved: appState.approvedHolidays.length,
+            rejected: appState.rejectedHolidays.length,
+            stats: appState.employeeStats.length,
+            publicHolidays: appState.publicHolidays.length
         });
-        table += '</tbody></table></div>';
-        employeeTableDiv.innerHTML = table;
+    } catch (error) {
+        console.error('Error parsing template data:', error);
     }
 
-    // --- Calendar Section ---
-    renderCalendar();
-    function renderCalendar() {
-        const calendarDiv = document.getElementById('calendar-section');
-        if (!calendarDiv) return;
+    // Generate employee colors
+    function generateEmployeeColors() {
+        const approvedHolidays = appState.approvedHolidays;
+        const employeeIds = [...new Set(approvedHolidays.map(h => h.employeeId))];
         
-        let html = '<h2 class="section-header">Urlaubs-Kalender ' + currentYear + '</h2>';
-        html += '<div class="calendar-container">';
-        
-        // Calendar filters
-        html += '<div class="calendar-filters mb-3">';
-        html += '<div class="filter-group">';
-        html += '<label class="filter-label">Filter:</label>';
-        html += '<div class="filter-options">';
-        html += '<label class="filter-option"><input type="checkbox" id="show-approved" checked> <span class="filter-badge approved">Genehmigt</span></label>';
-        html += '<label class="filter-option"><input type="checkbox" id="show-pending" checked> <span class="filter-badge pending">Ausstehend</span></label>';
-        html += '<label class="filter-option"><input type="checkbox" id="show-rejected" checked> <span class="filter-badge rejected">Abgelehnt</span></label>';
-        html += '<label class="filter-option"><input type="checkbox" id="show-holidays" checked> <span class="filter-badge holidays">Feiertage</span></label>';
-        html += '</div>';
-        html += '</div>';
-        html += '<div class="month-navigation">';
-        html += '<button class="btn btn-outline-secondary btn-sm" onclick="previousMonth()">‹</button>';
-        html += '<span class="current-month" id="current-month">Januar ' + currentYear + '</span>';
-        html += '<button class="btn btn-outline-secondary btn-sm" onclick="nextMonth()">›</button>';
-        html += '</div>';
-        html += '</div>';
-        
-        // Month chips
-        html += '<div class="month-chips mb-3">';
-        const months = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
-        months.forEach((month, index) => {
-            html += '<button class="month-chip' + (index === 0 ? ' active' : '') + '" data-month="' + index + '">' + month + '</button>';
-        });
-        html += '</div>';
-        
-        // Calendar grid
-        html += '<div class="calendar-grid" id="calendar-grid"></div>';
-        html += '</div>';
-        
-        calendarDiv.innerHTML = html;
-        
-        // Add event listeners
-        document.querySelectorAll('.month-chip').forEach(chip => {
-            chip.addEventListener('click', function() {
-                document.querySelectorAll('.month-chip').forEach(c => c.classList.remove('active'));
-                this.classList.add('active');
-                renderCalendarGrid(parseInt(this.dataset.month));
-            });
-        });
-        
-        document.querySelectorAll('.filter-option input').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                renderCalendarGrid(getCurrentMonth());
-            });
-        });
-        
-        // Initial render
-        renderCalendarGrid(0);
-    }
-    
-    let currentMonthIndex = 0;
-    
-    function getCurrentMonth() {
-        return currentMonthIndex;
-    }
-    
-    function previousMonth() {
-        if (currentMonthIndex > 0) {
-            currentMonthIndex--;
-            updateMonthDisplay();
-            renderCalendarGrid(currentMonthIndex);
-        }
-    }
-    
-    function nextMonth() {
-        if (currentMonthIndex < 11) {
-            currentMonthIndex++;
-            updateMonthDisplay();
-            renderCalendarGrid(currentMonthIndex);
-        }
-    }
-    
-    function updateMonthDisplay() {
-        const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
-        document.getElementById('current-month').textContent = monthNames[currentMonthIndex] + ' ' + currentYear;
-        
-        document.querySelectorAll('.month-chip').forEach((chip, index) => {
-            chip.classList.toggle('active', index === currentMonthIndex);
-        });
-    }
-    
-    function renderCalendarGrid(monthIndex) {
-        const grid = document.getElementById('calendar-grid');
-        if (!grid) return;
-        
-        const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
-        const dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-        
-        // Get first day of month and number of days
-        const firstDay = new Date(currentYear, monthIndex, 1);
-        const lastDay = new Date(currentYear, monthIndex + 1, 0);
-        const daysInMonth = lastDay.getDate();
-        const startDayOfWeek = firstDay.getDay() || 7; // Convert Sunday (0) to 7
-        
-        let html = '<div class="calendar-header">';
-        dayNames.forEach(day => {
-            html += '<div class="calendar-day-header">' + day + '</div>';
-        });
-        html += '</div>';
-        
-        html += '<div class="calendar-body">';
-        
-        // Add empty cells for days before the first day of the month
-        for (let i = 1; i < startDayOfWeek; i++) {
-            html += '<div class="calendar-day empty"></div>';
-        }
-        
-        // Add days of the month
-        for (let day = 1; day <= daysInMonth; day++) {
-            const date = new Date(currentYear, monthIndex, day);
-            const dateString = date.toISOString().split('T')[0];
-            const dayOfWeek = date.getDay() || 7;
-            
-            let dayClass = 'calendar-day';
-            if (dayOfWeek === 6 || dayOfWeek === 7) dayClass += ' weekend';
-            
-            // Check for events on this day
-            const events = getEventsForDate(dateString);
-            if (events.length > 0) {
-                dayClass += ' has-events';
-            }
-            
-            html += '<div class="' + dayClass + '" data-date="' + dateString + '">';
-            html += '<div class="day-number">' + day + '</div>';
-            
-            if (events.length > 0) {
-                html += '<div class="day-events">';
-                events.forEach(event => {
-                    html += '<div class="event-dot ' + event.type + '" title="' + event.title + '"></div>';
-                });
-                html += '</div>';
-            }
-            
-            html += '</div>';
-        }
-        
-        html += '</div>';
-        grid.innerHTML = html;
-        
-        // Add click handlers for days with events
-        grid.querySelectorAll('.calendar-day.has-events').forEach(day => {
-            day.addEventListener('click', function() {
-                showDayDetails(this.dataset.date);
-            });
-        });
-    }
-    
-    function getEventsForDate(dateString) {
-        const events = [];
-        
-        // Check filters
-        const showApproved = document.getElementById('show-approved')?.checked !== false;
-        const showPending = document.getElementById('show-pending')?.checked !== false;
-        const showRejected = document.getElementById('show-rejected')?.checked !== false;
-        const showHolidays = document.getElementById('show-holidays')?.checked !== false;
-        
-        // Add holidays
-        if (showHolidays) {
-            holidays.forEach(holiday => {
-                if (isDateInRange(dateString, holiday.startDate, holiday.endDate)) {
-                    events.push({
-                        type: 'holiday',
-                        title: holiday.employeeName + ' - ' + holiday.type + ' (' + holiday.status + ')',
-                        status: holiday.status
-                    });
-                }
-            });
-        }
-        
-        // Add public holidays
-        if (showHolidays) {
-            publicHolidays.forEach(holiday => {
-                if (holiday.holidayDate === dateString) {
-                    events.push({
-                        type: 'public-holiday',
-                        title: holiday.name + ' (Feiertag)',
-                        status: 'PUBLIC'
-                    });
-                }
-            });
-        }
-        
-        return events;
-    }
-    
-    function isDateInRange(date, startDate, endDate) {
-        const checkDate = new Date(date);
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        return checkDate >= start && checkDate <= end;
-    }
-    
-    function showDayDetails(dateString) {
-        const events = getEventsForDate(dateString);
-        if (events.length === 0) return;
-        
-        let details = '<h5>Details für ' + formatDate(dateString) + '</h5><ul>';
-        events.forEach(event => {
-            details += '<li><strong>' + event.title + '</strong></li>';
-        });
-        details += '</ul>';
-        
-        alert(details);
-    }
-    
-    function formatDate(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('de-DE', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-        });
-    }
-    
-    // Make functions globally available
-    window.previousMonth = previousMonth;
-    window.nextMonth = nextMonth;
-
-    // --- Absence Tabs & Cards ---
-    renderAbsenceTabs();
-    function renderAbsenceTabs() {
-        const section = document.getElementById('absence-tabs-section');
-        if (!section) return;
-        section.innerHTML = '';
-        // Tabs
-        const tabs = [
-            { key: 'pending', label: '🕒 Offen', count: pendingHolidays.length, badge: 'bg-warning text-dark' },
-            { key: 'approved', label: '✅ Genehmigt', count: approvedHolidays.length, badge: 'bg-success' },
-            { key: 'rejected', label: '❌ Abgelehnt', count: rejectedHolidays.length, badge: 'bg-danger' }
+        // Predefined colors for good contrast
+        const colors = [
+            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+            '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
+            '#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#D7BDE2'
         ];
-        let html = '<h2 class="section-header">Urlaubsanfragen</h2>';
-        html += '<div id="absence-tabs" class="absence-tabs"><ul class="nav nav-tabs justify-content-center">';
-        tabs.forEach((tab, i) => {
-            html += '<li class="nav-item">' +
-                '<a class="nav-link' + (i === 0 ? ' active' : '') + '" href="#" data-tab="' + tab.key + '" onclick="return false;">' +
-                tab.label + ' <span class="badge ' + tab.badge + '">' + tab.count + '</span></a></li>';
-        });
-        html += '</ul></div>';
-        html += '<div class="requests-section"><div class="requests-header"><h5 id="tab-title">Ausstehende Anfragen</h5></div>';
-        html += '<div class="requests-grid" id="pending-requests"></div>';
-        html += '<div class="requests-grid" id="approved-requests" style="display:none"></div>';
-        html += '<div class="requests-grid" id="rejected-requests" style="display:none"></div>';
-        html += '<div id="no-requests" class="requests-grid" style="display:none"><div class="text-center" style="grid-column:1/-1;padding:2rem;color:var(--text-muted);">Keine Anfragen in diesem Status</div></div>';
-        html += '</div>';
-        section.innerHTML = html;
-        // Tab click handler
-        section.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                section.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-                this.classList.add('active');
-                showTab(this.getAttribute('data-tab'));
-            });
-        });
-        showTab('pending');
-    }
-    function showTab(tab) {
-        const tabs = ['pending', 'approved', 'rejected'];
-        tabs.forEach(t => {
-            document.getElementById(t + '-requests').style.display = (t === tab) ? 'grid' : 'none';
-        });
-        document.getElementById('tab-title').textContent =
-            tab === 'pending' ? 'Ausstehende Anfragen' :
-            tab === 'approved' ? 'Genehmigte Urlaube' : 'Abgelehnte Anfragen';
-        // Render cards
-        let data = tab === 'pending' ? pendingHolidays : tab === 'approved' ? approvedHolidays : rejectedHolidays;
-        renderRequests(document.getElementById(tab + '-requests'), data, tab);
-        document.getElementById('no-requests').style.display = (data.length === 0) ? 'grid' : 'none';
-    }
-    function renderRequests(container, requests, tabName) {
-        container.innerHTML = '';
-        requests.forEach(function(request) {
-            var card = document.createElement('div');
-            card.className = 'request-card ' + tabName;
-            var badgeClass = getHolidayTypeClass(request.type);
-            var badgeIcon = getHolidayTypeIcon(request.type);
-            var cardContent = '<div class="request-header">' +
-                '<h6 class="employee-name">' + request.employeeName + '</h6>' +
-                '<span class="holiday-badge ' + badgeClass + '">' + badgeIcon + ' ' + request.type + '</span>' +
-                '</div>';
-            cardContent += '<div class="request-period">' + request.startDate + ' - ' + request.endDate + '</div>';
-            if (request.reason) {
-                cardContent += '<div class="request-reason"><strong>Grund:</strong> ' + request.reason + '</div>';
-            }
-            var dateLabel = '';
-            var dateValue = '';
-            if (tabName === 'pending') {
-                dateLabel = 'Angefordert';
-                dateValue = request.createdAt || request.startDate || 'Unbekannt';
-            } else if (tabName === 'approved') {
-                dateLabel = 'Genehmigt';
-                dateValue = (request.approval && request.approval.approvedAt) ? request.approval.approvedAt : (request.startDate || 'Unbekannt');
-            } else {
-                dateLabel = 'Abgelehnt';
-                dateValue = (request.approval && request.approval.approvedAt) ? request.approval.approvedAt : (request.startDate || 'Unbekannt');
-            }
-            cardContent += '<div class="request-date"><strong>' + dateLabel + ' am:</strong> ' + dateValue + '</div>';
-            if (tabName === 'pending') {
-                cardContent += '<div class="request-actions">' +
-                    '<button class="btn btn-success btn-sm" onclick="approveRequest(' + request.id + ')">Genehmigen</button>' +
-                    '<button class="btn btn-danger btn-sm" onclick="rejectRequest(' + request.id + ')">Ablehnen</button>' +
-                    '</div>';
-            }
-            card.innerHTML = cardContent;
-            container.appendChild(card);
-        });
-    }
-    function getHolidayTypeClass(type) {
-        var typeLower = type.toLowerCase();
-        if (typeLower.includes('urlaub') || typeLower.includes('vacation')) return 'vacation';
-        if (typeLower.includes('unbezahlt') || typeLower.includes('unpaid')) return 'unpaid';
-        if (typeLower.includes('krank') || typeLower.includes('sick')) return 'sick';
-        return 'vacation';
-    }
-    function getHolidayTypeIcon(type) {
-        var typeLower = type.toLowerCase();
-        if (typeLower.includes('urlaub') || typeLower.includes('vacation')) return '🟢';
-        if (typeLower.includes('unbezahlt') || typeLower.includes('unpaid')) return '🔴';
-        if (typeLower.includes('krank') || typeLower.includes('sick')) return '💊';
-        return '🟢';
-    }
-    window.approveRequest = async function(requestId) {
-        if (!confirm('Möchten Sie diesen Urlaubsantrag genehmigen?')) return;
-        try {
-            var url = '/timetracking/api/holidays/' + requestId + '/approve';
-            var response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ approval: { status: 'APPROVED', approverId: 1, approvedAt: new Date().toISOString().split('T')[0] } })
-            });
-            if (response.ok) {
-                alert('Urlaubsantrag erfolgreich genehmigt!');
-                window.location.reload();
-            } else {
-                var errorText = await response.text();
-                alert('Fehler beim Genehmigen: ' + errorText);
-            }
-        } catch (error) {
-            alert('Fehler beim Genehmigen des Urlaubsantrags');
-        }
-    };
-    window.rejectRequest = async function(requestId) {
-        if (!confirm('Möchten Sie diesen Urlaubsantrag ablehnen?')) return;
-        try {
-            var url = '/timetracking/api/holidays/' + requestId + '/approve';
-            var response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ approval: { status: 'REJECTED', approverId: 1, approvedAt: new Date().toISOString().split('T')[0] } })
-            });
-            if (response.ok) {
-                alert('Urlaubsantrag erfolgreich abgelehnt!');
-                window.location.reload();
-            } else {
-                var errorText = await response.text();
-                alert('Fehler beim Ablehnen: ' + errorText);
-            }
-        } catch (error) {
-            alert('Fehler beim Ablehnen des Urlaubsantrags');
-        }
-    };
-
-    // --- Modal Functionality ---
-    const addAbsenceBtn = document.getElementById('add-absence-btn');
-    const absenceModal = document.getElementById('absenceModal');
-    const absenceForm = document.getElementById('absenceForm');
-    const saveAbsenceBtn = document.getElementById('save-absence-btn');
-    const employeeSelect = document.getElementById('absence-employee');
-    const typeSelect = document.getElementById('absence-type');
-    const startDateInput = document.getElementById('absence-start-date');
-    const endDateInput = document.getElementById('absence-end-date');
-    const reasonInput = document.getElementById('absence-reason');
-
-    // Load holiday types when modal opens
-    async function loadHolidayTypes() {
-        try {
-            const response = await fetch('/api/holiday-types');
-            if (response.ok) {
-                const types = await response.json();
-                typeSelect.innerHTML = '<option value="">-- Bitte wählen --</option>';
-                types.forEach(type => {
-                    typeSelect.innerHTML += `<option value="${type.code}">${type.displayName}</option>`;
-                });
-            } else {
-                console.error('Failed to load holiday types:', response.status);
-                // Fallback to default types
-                const defaultTypes = [
-                    { code: 'PAID_VACATION', displayName: 'Bezahlter Urlaub' },
-                    { code: 'UNPAID_LEAVE', displayName: 'Unbezahlter Urlaub' },
-                    { code: 'SICK_LEAVE', displayName: 'Krankheit' },
-                    { code: 'SPECIAL_LEAVE', displayName: 'Sonderurlaub' }
-                ];
-                typeSelect.innerHTML = '<option value="">-- Bitte wählen --</option>';
-                defaultTypes.forEach(type => {
-                    typeSelect.innerHTML += `<option value="${type.code}">${type.displayName}</option>`;
-                });
-            }
-        } catch (error) {
-            console.error('Error loading holiday types:', error);
-            // Fallback to default types
-            const defaultTypes = [
-                { code: 'PAID_VACATION', displayName: 'Bezahlter Urlaub' },
-                { code: 'UNPAID_LEAVE', displayName: 'Unbezahlter Urlaub' },
-                { code: 'SICK_LEAVE', displayName: 'Krankheit' },
-                { code: 'SPECIAL_LEAVE', displayName: 'Sonderurlaub' }
-            ];
-            typeSelect.innerHTML = '<option value="">-- Bitte wählen --</option>';
-            defaultTypes.forEach(type => {
-                typeSelect.innerHTML += `<option value="${type.code}">${type.displayName}</option>`;
-            });
-        }
-    }
-
-    // Populate employee select
-    function populateEmployeeSelect() {
-        employeeSelect.innerHTML = '<option value="">-- Bitte wählen --</option>';
-        employees.forEach(employee => {
-            employeeSelect.innerHTML += `<option value="${employee.id}">${employee.firstName} ${employee.lastName}</option>`;
-        });
-    }
-
-    // Open modal
-    addAbsenceBtn.addEventListener('click', function() {
-        // Prefill current year
-        const today = new Date();
-        startDateInput.value = today.toISOString().split('T')[0];
-        endDateInput.value = today.toISOString().split('T')[0];
         
-        // Load data
-        populateEmployeeSelect();
-        loadHolidayTypes();
-        
-        // Show modal
-        const modal = new bootstrap.Modal(absenceModal);
-        modal.show();
-    });
+        employeeIds.forEach((employeeId, index) => {
+            appState.employeeColors[employeeId] = colors[index % colors.length];
+        });
+    }
 
-    // Save absence
-    saveAbsenceBtn.addEventListener('click', async function() {
-        if (!absenceForm.checkValidity()) {
-            absenceForm.reportValidity();
+    // Render employee legend
+    function renderEmployeeLegend() {
+        const legendContainer = document.getElementById('employee-legend');
+        if (!legendContainer) return;
+
+        const approvedHolidays = appState.approvedHolidays;
+        const uniqueEmployees = [...new Set(approvedHolidays.map(h => h.employeeId))];
+        
+        if (uniqueEmployees.length === 0) {
+            legendContainer.innerHTML = '<div class="no-employees">Keine genehmigten Urlaube vorhanden</div>';
             return;
         }
 
-        const formData = {
-            employeeId: parseInt(employeeSelect.value),
-            type: typeSelect.value,
-            startDate: startDateInput.value,
-            endDate: endDateInput.value,
-            reason: reasonInput.value || null
+        const legendItems = uniqueEmployees.map(employeeId => {
+            const employee = appState.employees.find(e => e.id === employeeId);
+            
+            // Use employeeName from holiday data as fallback, or construct from employee data
+            let employeeName = 'Unbekannt';
+            if (employee) {
+                employeeName = `${employee.firstName} ${employee.lastName}`;
+            } else {
+                // Try to find the holiday with this employeeId to get the employeeName
+                const holiday = approvedHolidays.find(h => h.employeeId === employeeId);
+                if (holiday && holiday.employeeName) {
+                    employeeName = holiday.employeeName;
+                }
+            }
+            
+            const color = appState.employeeColors[employeeId];
+            
+            return `
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: ${color}"></div>
+                    <span class="legend-name">${employeeName}</span>
+                </div>
+            `;
+        }).join('');
+
+        legendContainer.innerHTML = `
+            <div class="legend-container">
+                <h4>Mitarbeiter</h4>
+                <div class="legend-items">
+                    ${legendItems}
+                </div>
+            </div>
+        `;
+    }
+
+    // --- UI Generation ---
+    appElement.innerHTML = `
+        <!-- Sticky Holiday Requests Tabs -->
+        <div class="sticky-tabs">
+            <div class="container-fluid">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#pending-tab" data-bs-toggle="tab" role="tab">
+                            🕒 Offen <span class="badge bg-warning text-dark" id="pending-count">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#approved-tab" data-bs-toggle="tab" role="tab">
+                            ✅ Genehmigt <span class="badge bg-success" id="approved-count">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#rejected-tab" data-bs-toggle="tab" role="tab">
+                            ❌ Abgelehnt <span class="badge bg-danger" id="rejected-count">0</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- Pending Tab -->
+            <div class="tab-pane fade show active" id="pending-tab" role="tabpanel">
+                <div id="pending-requests"></div>
+                <div id="no-pending" class="text-center py-5" style="display: none;">
+                    <div class="text-muted">
+                        <i class="bi bi-check-circle" style="font-size: 3rem;"></i>
+                        <h4 class="mt-3">Keine ausstehenden Anfragen</h4>
+                        <p>Alle Urlaubsanträge wurden bearbeitet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approved Tab -->
+            <div class="tab-pane fade" id="approved-tab" role="tabpanel">
+                <div id="approved-requests"></div>
+                <div id="no-approved" class="text-center py-5" style="display: none;">
+                    <div class="text-muted">
+                        <i class="bi bi-calendar-check" style="font-size: 3rem;"></i>
+                        <h4 class="mt-3">Keine genehmigten Urlaube</h4>
+                        <p>Noch keine Urlaubsanträge genehmigt.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rejected Tab -->
+            <div class="tab-pane fade" id="rejected-tab" role="tabpanel">
+                <div id="rejected-requests"></div>
+                <div id="no-rejected" class="text-center py-5" style="display: none;">
+                    <div class="text-muted">
+                        <i class="bi bi-calendar-x" style="font-size: 3rem;"></i>
+                        <h4 class="mt-3">Keine abgelehnten Anfragen</h4>
+                        <p>Alle Urlaubsanträge wurden genehmigt.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employee Accounts Table -->
+        <div class="container-fluid">
+            <div class="employee-accounts-section">
+                <div class="section-header">
+                    <h2>Mitarbeiter-Urlaubskonten</h2>
+                </div>
+                <div class="search-filter">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" id="employee-search" placeholder="Filter nach Name...">
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <button class="btn btn-outline-secondary btn-sm" id="sort-remaining">
+                                <i class="bi bi-sort-down"></i> Nach Verbleibend sortieren
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="employee-table" id="employee-table">
+                        <thead>
+                            <tr>
+                                <th>Mitarbeiter</th>
+                                <th>Gesamttage</th>
+                                <th>Genommen</th>
+                                <th>Ausstehend</th>
+                                <th>Verbleibend</th>
+                                <th>Fortschritt</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employee-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar Section -->
+        <div class="container-fluid">
+            <div class="calendar-section">
+                <div class="section-header">
+                    <h2>Urlaubs-Kalender ${appState.currentYear}</h2>
+                </div>
+                <div class="calendar-navigation">
+                    <div class="month-navigation">
+                        <button class="btn btn-outline-secondary btn-sm" id="prev-month">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <span class="current-month" id="current-month">Januar ${appState.currentYear}</span>
+                        <button class="btn btn-outline-secondary btn-sm" id="next-month">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="employee-legend" id="employee-legend"></div>
+                <div class="month-chips" id="month-chips"></div>
+                <div class="calendar-grid" id="calendar-grid"></div>
+            </div>
+        </div>
+
+        <!-- Floating Add Button -->
+        <button class="add-absence-btn" id="add-absence-btn" title="Neue Abwesenheit erfassen">
+            <i class="bi bi-plus"></i>
+        </button>
+    `;
+
+    // --- Tab Rendering ---
+    function renderRequestTab(containerId, requests, status) {
+        const container = document.getElementById(containerId);
+        const noDataElement = document.getElementById(`no-${status}`);
+        const tabContent = document.querySelector('.tab-content');
+        
+        if (!container) return;
+
+        if (requests.length === 0) {
+            container.innerHTML = '';
+            if (noDataElement) noDataElement.style.display = 'block';
+            
+            // Reduce tab-content height when no requests
+            if (tabContent) {
+                tabContent.style.minHeight = '150px';
+                tabContent.style.maxHeight = '200px';
+            }
+            return;
+        }
+
+        if (noDataElement) noDataElement.style.display = 'none';
+        
+        // Restore normal tab-content height when there are requests
+        if (tabContent) {
+            tabContent.style.minHeight = '200px';
+            tabContent.style.maxHeight = 'calc(100vh - 300px)';
+        }
+
+        const cardsHtml = requests.map(holiday => createHolidayCard(holiday, status)).join('');
+        container.innerHTML = cardsHtml;
+    }
+
+    function createHolidayCard(holiday, status) {
+        // Use employeeName from holiday data if available, otherwise fallback to employees list
+        let employeeName = holiday.employeeName;
+        if (!employeeName || employeeName.trim() === '') {
+            const employee = appState.employees.find(emp => emp.id === holiday.employeeId);
+            employeeName = employee ? `${employee.firstName} ${employee.lastName}` : 'Unbekannter Mitarbeiter';
+        }
+        
+        const startDate = new Date(holiday.startDate).toLocaleDateString('de-DE');
+        const endDate = new Date(holiday.endDate).toLocaleDateString('de-DE');
+        const dateRange = startDate === endDate ? startDate : `${startDate} - ${endDate}`;
+        
+        const typeBadgeClass = getHolidayTypeBadgeClass(holiday.type);
+        const typeLabel = getHolidayTypeLabel(holiday.type);
+        
+        const actionsHtml = status === 'pending' ? `
+            <div class="request-actions">
+                <button class="btn btn-success btn-sm" onclick="approveHoliday(${holiday.id})">
+                    <i class="bi bi-check"></i> Genehmigen
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="rejectHoliday(${holiday.id})">
+                    <i class="bi bi-x"></i> Ablehnen
+                </button>
+            </div>
+        ` : '';
+
+        return `
+            <div class="holiday-request-card ${status}">
+                <div class="request-header">
+                    <div class="request-info">
+                        <h5>${employeeName}</h5>
+                        <div class="request-dates">
+                            <i class="bi bi-calendar"></i> ${dateRange}
+                        </div>
+                    </div>
+                    <span class="holiday-type-badge ${typeBadgeClass}">${typeLabel}</span>
+                </div>
+                ${holiday.reason ? `<div class="request-reason">${holiday.reason}</div>` : ''}
+                ${actionsHtml}
+            </div>
+        `;
+    }
+
+    function getHolidayTypeBadgeClass(type) {
+        const typeMap = {
+            'Urlaub': 'vacation',
+            'Unbezahlt': 'unpaid',
+            'Krank': 'sick',
+            'Sonderurlaub': 'special',
+            'PAID_VACATION': 'vacation',
+            'UNPAID_VACATION': 'unpaid',
+            'SICK_LEAVE': 'sick',
+            'SPECIAL_LEAVE': 'special'
+        };
+        return typeMap[type] || 'vacation';
+    }
+
+    function getHolidayTypeLabel(type) {
+        const typeMap = {
+            'Urlaub': 'Urlaub',
+            'Unbezahlt': 'Unbezahlt',
+            'Krank': 'Krank',
+            'Sonderurlaub': 'Sonderurlaub',
+            'PAID_VACATION': 'Urlaub',
+            'UNPAID_VACATION': 'Unbezahlt',
+            'SICK_LEAVE': 'Krank',
+            'SPECIAL_LEAVE': 'Sonderurlaub'
+        };
+        return typeMap[type] || 'Urlaub';
+    }
+
+    function updateTabCounts() {
+        document.getElementById('pending-count').textContent = appState.pendingHolidays.length;
+        document.getElementById('approved-count').textContent = appState.approvedHolidays.length;
+        document.getElementById('rejected-count').textContent = appState.rejectedHolidays.length;
+    }
+
+    renderRequestTab('pending-requests', appState.pendingHolidays, 'pending');
+    renderRequestTab('approved-requests', appState.approvedHolidays, 'approved');
+    renderRequestTab('rejected-requests', appState.rejectedHolidays, 'rejected');
+    updateTabCounts();
+
+    // --- Employee Accounts Table ---
+    function renderEmployeeAccounts() {
+        const tbody = document.getElementById('employee-table-body');
+        if (!tbody) return;
+
+        const rowsHtml = appState.employeeStats.map(stat => {
+            const employee = stat.employee || {};
+            const employeeName = employee.firstName && employee.lastName ? 
+                `${employee.firstName} ${employee.lastName}` : 'Unbekannter Mitarbeiter';
+            
+            const totalDays = employee.vacationDays || 0;
+            const takenDays = stat.approvedDays || 0;
+            const pendingDays = stat.pendingDays || 0;
+            const remainingDays = totalDays - takenDays - pendingDays;
+            const progressPercent = totalDays > 0 ? Math.round((takenDays / totalDays) * 100) : 0;
+
+            return `
+                <tr>
+                    <td><strong>${employeeName}</strong></td>
+                    <td>${totalDays}</td>
+                    <td>${takenDays}</td>
+                    <td>${pendingDays}</td>
+                    <td><strong>${remainingDays}</strong></td>
+                    <td>
+                        <div class="vacation-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progressPercent}%"></div>
+                            </div>
+                            <span class="progress-text">${progressPercent}%</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        tbody.innerHTML = rowsHtml;
+    }
+
+    renderEmployeeAccounts();
+
+    // --- Calendar Section ---
+    function renderMonthChips() {
+        const container = document.getElementById('month-chips');
+        if (!container) return;
+
+        const months = [
+            'Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun',
+            'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'
+        ];
+
+        const chipsHtml = months.map((month, index) => `
+            <span class="month-chip ${index === appState.currentMonth ? 'active' : ''}" 
+                  onclick="selectMonth(${index})">
+                ${month}
+            </span>
+        `).join('');
+
+        container.innerHTML = chipsHtml;
+    }
+
+    function renderCalendarGrid() {
+        const container = document.getElementById('calendar-grid');
+        if (!container) return;
+
+        const year = appState.currentYear;
+        const month = appState.currentMonth;
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const startDate = new Date(firstDay);
+        startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+        // Header
+        const headerHtml = `
+            <div class="calendar-header">
+                <div class="calendar-day-header">Mo</div>
+                <div class="calendar-day-header">Di</div>
+                <div class="calendar-day-header">Mi</div>
+                <div class="calendar-day-header">Do</div>
+                <div class="calendar-day-header">Fr</div>
+                <div class="calendar-day-header">Sa</div>
+                <div class="calendar-day-header">So</div>
+            </div>
+        `;
+
+        // Body
+        const bodyHtml = `
+            <div class="calendar-body">
+                ${generateCalendarDays(startDate, lastDay, year, month)}
+            </div>
+        `;
+
+        container.innerHTML = headerHtml + bodyHtml;
+        updateCurrentMonthDisplay();
+    }
+
+    function generateCalendarDays(startDate, lastDay, year, month) {
+        const days = [];
+        const currentDate = new Date(startDate);
+
+        while (currentDate <= lastDay || currentDate.getDay() !== 0) {
+            const dayNumber = currentDate.getDate();
+            const isCurrentMonth = currentDate.getMonth() === month;
+            const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
+            const isToday = currentDate.toDateString() === new Date().toDateString();
+            
+            const events = getEventsForDate(currentDate);
+            const hasEvents = events.length > 0;
+
+            let dayClass = 'calendar-day';
+            if (!isCurrentMonth) dayClass += ' empty';
+            if (isWeekend) dayClass += ' weekend';
+            if (isToday) dayClass += ' today';
+            if (hasEvents) dayClass += ' has-events';
+
+            const eventsHtml = events.map(event => {
+                let barClass = 'holiday-bar';
+                if (event.isStart) barClass += ' start';
+                if (event.isEnd) barClass += ' end';
+                
+                return `
+                    <div class="${barClass}" 
+                         style="background-color: ${event.color};"
+                         title="${event.tooltip}"
+                         data-employee-id="${event.employeeId}"
+                         data-holiday-id="${event.holidayId}">
+                        ${event.isStart ? event.employeeName : ''}
+                    </div>
+                `;
+            }).join('');
+
+            days.push(`
+                <div class="${dayClass}" data-date="${currentDate.toISOString().split('T')[0]}">
+                    <div class="day-number">${isCurrentMonth ? dayNumber : ''}</div>
+                    <div class="day-events">${eventsHtml}</div>
+                </div>
+            `);
+
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        return days.join('');
+    }
+
+    function getEventsForDate(date) {
+        const events = [];
+        const dateStr = date.toISOString().split('T')[0];
+
+        // Only show approved holidays
+        appState.approvedHolidays.forEach(holiday => {
+            // Parse dates properly - handle both string and Date objects
+            const startDate = holiday.startDate instanceof Date ? holiday.startDate : new Date(holiday.startDate + 'T00:00:00');
+            const endDate = holiday.endDate instanceof Date ? holiday.endDate : new Date(holiday.endDate + 'T23:59:59');
+            
+            // Compare dates using time components
+            const currentDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+            const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+            
+            if (currentDate >= startDateOnly && currentDate <= endDateOnly) {
+                const employee = appState.employees.find(e => e.id === holiday.employeeId);
+                
+                // Use employeeName from holiday data as fallback, or construct from employee data
+                let employeeName = 'Unbekannt';
+                if (employee) {
+                    employeeName = `${employee.firstName} ${employee.lastName}`;
+                } else if (holiday.employeeName) {
+                    employeeName = holiday.employeeName;
+                }
+                
+                const typeLabel = getHolidayTypeLabel(holiday.type);
+                const color = appState.employeeColors[holiday.employeeId];
+                
+                events.push({
+                    type: 'approved',
+                    employeeId: holiday.employeeId,
+                    employeeName: employeeName,
+                    holidayType: typeLabel,
+                    color: color,
+                    tooltip: `${typeLabel}: ${employeeName}`,
+                    isStart: currentDate.getTime() === startDateOnly.getTime(),
+                    isEnd: currentDate.getTime() === endDateOnly.getTime(),
+                    holidayId: holiday.id
+                });
+            }
+        });
+
+        return events;
+    }
+
+    function updateCurrentMonthDisplay() {
+        const months = [
+            'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+            'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
+        ];
+        document.getElementById('current-month').textContent = `${months[appState.currentMonth]} ${appState.currentYear}`;
+    }
+
+    // Global function for month chip selection
+    window.selectMonth = function(monthIndex) {
+        appState.currentMonth = monthIndex;
+        renderMonthChips();
+        renderCalendarGrid();
+        updateCurrentMonthDisplay();
+    };
+
+    // Initialize calendar
+    generateEmployeeColors();
+    renderEmployeeLegend();
+    renderMonthChips();
+    renderCalendarGrid();
+
+    // --- Event Listeners ---
+    function setupEventListeners() {
+        // Add absence button
+        const addBtn = document.getElementById('add-absence-btn');
+        if (addBtn) {
+            addBtn.addEventListener('click', openAbsenceModal);
+        }
+
+        // Search filter
+        const searchInput = document.getElementById('employee-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', filterEmployees);
+        }
+
+        // Sort button
+        const sortBtn = document.getElementById('sort-remaining');
+        if (sortBtn) {
+            sortBtn.addEventListener('click', sortByRemaining);
+        }
+
+        // Month navigation
+        const prevMonthBtn = document.getElementById('prev-month');
+        const nextMonthBtn = document.getElementById('next-month');
+        
+        if (prevMonthBtn) {
+            prevMonthBtn.addEventListener('click', () => {
+                appState.currentMonth--;
+                if (appState.currentMonth < 0) {
+                    appState.currentMonth = 11;
+                    appState.currentYear--;
+                }
+                renderMonthChips();
+                renderCalendarGrid();
+                updateCurrentMonthDisplay();
+            });
+        }
+        
+        if (nextMonthBtn) {
+            nextMonthBtn.addEventListener('click', () => {
+                appState.currentMonth++;
+                if (appState.currentMonth > 11) {
+                    appState.currentMonth = 0;
+                    appState.currentYear++;
+                }
+                renderMonthChips();
+                renderCalendarGrid();
+                updateCurrentMonthDisplay();
+            });
+        }
+    }
+
+    function filterEmployees() {
+        const searchTerm = document.getElementById('employee-search').value.toLowerCase();
+        const rows = document.querySelectorAll('#employee-table-body tr');
+        
+        rows.forEach(row => {
+            const employeeName = row.querySelector('td:first-child').textContent.toLowerCase();
+            row.style.display = employeeName.includes(searchTerm) ? '' : 'none';
+        });
+    }
+
+    function sortByRemaining() {
+        appState.employeeStats.sort((a, b) => {
+            const aRemaining = (a.employee?.vacationDays || 0) - (a.approvedDays || 0) - (a.pendingDays || 0);
+            const bRemaining = (b.employee?.vacationDays || 0) - (b.approvedDays || 0) - (b.pendingDays || 0);
+            return bRemaining - aRemaining;
+        });
+        renderEmployeeAccounts();
+    }
+
+    // Modal functionality
+    function openAbsenceModal() {
+        loadHolidayTypes();
+        loadEmployees();
+        prefillForm();
+        
+        const modalElement = document.getElementById('absenceModal');
+        const modal = new bootstrap.Modal(modalElement);
+        
+        // Add event listeners for proper focus management
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            // Reset focus when modal is hidden
+            document.activeElement?.blur();
+        });
+        
+        modal.show();
+    }
+
+    function loadHolidayTypes() {
+        fetch('/api/holiday-types')
+            .then(response => response.json())
+            .then(types => {
+                const select = document.getElementById('absence-type');
+                if (!select) return;
+                
+                select.innerHTML = '<option value="">-- Bitte wählen --</option>';
+                types.forEach(type => {
+                    select.innerHTML += `<option value="${type.id}">${type.displayName}</option>`;
+                });
+            })
+            .catch(error => {
+                console.error('Error loading holiday types:', error);
+                alert('Fehler beim Laden der Abwesenheitstypen');
+            });
+    }
+
+    function loadEmployees() {
+        const select = document.getElementById('absence-employee');
+        if (!select) return;
+        
+        select.innerHTML = '<option value="">-- Bitte wählen --</option>';
+        appState.employees.forEach(employee => {
+            select.innerHTML += `<option value="${employee.id}">${employee.firstName} ${employee.lastName}</option>`;
+        });
+    }
+
+    function prefillForm() {
+        const today = new Date().toISOString().split('T')[0];
+        const startDateInput = document.getElementById('absence-start-date');
+        const endDateInput = document.getElementById('absence-end-date');
+        
+        if (startDateInput) startDateInput.value = today;
+        if (endDateInput) endDateInput.value = today;
+    }
+
+    // Save absence
+    document.getElementById('save-absence-btn')?.addEventListener('click', function() {
+        const form = document.getElementById('absenceForm');
+        const formData = new FormData(form);
+        
+        // Get the selected holiday type display name
+        const typeSelect = document.getElementById('absence-type');
+        const selectedTypeOption = typeSelect.options[typeSelect.selectedIndex];
+        const holidayTypeName = selectedTypeOption ? selectedTypeOption.text : '';
+        
+        const absenceData = {
+            employeeId: parseInt(formData.get('employee')),
+            type: holidayTypeName,
+            startDate: formData.get('startDate'),
+            endDate: formData.get('endDate'),
+            reason: formData.get('reason') || null
         };
 
-        saveAbsenceBtn.disabled = true;
-        saveAbsenceBtn.innerHTML = '<i class="bi bi-check"></i> Speichere...';
-
-        try {
-            const response = await fetch('/timetracking/api/holidays', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
-            });
-
-            if (response.ok) {
-                // Show success message
-                showSuccessMessage('Abwesenheit erfolgreich erfasst!');
-                
-                // Close modal
-                const modal = bootstrap.Modal.getInstance(absenceModal);
-                modal.hide();
-                
-                // Reset form
-                absenceForm.reset();
-                
-                // Reload page to show new data
-                setTimeout(() => window.location.reload(), 1500);
-            } else {
-                const errorText = await response.text();
-                alert('Fehler beim Speichern: ' + errorText);
-            }
-        } catch (error) {
-            alert('Fehler beim Speichern der Abwesenheit');
-        } finally {
-            saveAbsenceBtn.disabled = false;
-            saveAbsenceBtn.innerHTML = '<i class="bi bi-check"></i> Abwesenheit speichern';
+        // Detaillierte Validierung mit spezifischen Fehlermeldungen
+        const errors = [];
+        
+        if (!absenceData.employeeId) {
+            errors.push('Mitarbeiter muss ausgewählt werden');
         }
+        
+        if (!absenceData.type) {
+            errors.push('Abwesenheitstyp muss ausgewählt werden');
+        }
+        
+        if (!absenceData.startDate) {
+            errors.push('Startdatum muss angegeben werden');
+        }
+        
+        if (!absenceData.endDate) {
+            errors.push('Enddatum muss angegeben werden');
+        }
+        
+        if (absenceData.startDate && absenceData.endDate) {
+            const startDate = new Date(absenceData.startDate);
+            const endDate = new Date(absenceData.endDate);
+            
+            if (endDate < startDate) {
+                errors.push('Enddatum darf nicht vor dem Startdatum liegen');
+            }
+        }
+
+        if (errors.length > 0) {
+            alert('Bitte korrigieren Sie folgende Fehler:\n\n' + errors.join('\n'));
+            return;
+        }
+
+        fetch('/timetracking/api/holidays', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(absenceData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            showSuccessMessage('Abwesenheit erfolgreich erfasst!');
+            
+            // Properly close the modal and reset focus
+            const modal = document.getElementById('absenceModal');
+            const modalInstance = bootstrap.Modal.getInstance(modal);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+            
+            // Reset form
+            form.reset();
+            
+            // Remove focus from modal elements
+            document.activeElement?.blur();
+            
+            // Reload page to refresh data
+            setTimeout(() => window.location.reload(), 1500);
+        })
+        .catch(error => {
+            console.error('Error saving absence:', error);
+            alert('Fehler beim Speichern der Abwesenheit.');
+        });
     });
 
     function showSuccessMessage(message) {
@@ -596,4 +790,85 @@ document.addEventListener('DOMContentLoaded', function() {
             successDiv.remove();
         }, 3000);
     }
+
+    // Global functions for calendar navigation
+    window.previousMonth = function() {
+        if (appState.currentMonth > 0) {
+            appState.currentMonth--;
+        } else {
+            appState.currentMonth = 11;
+            appState.currentYear--;
+        }
+        renderCalendar();
+    };
+
+    window.nextMonth = function() {
+        if (appState.currentMonth < 11) {
+            appState.currentMonth++;
+        } else {
+            appState.currentMonth = 0;
+            appState.currentYear++;
+        }
+        renderCalendar();
+    };
+
+    window.selectMonth = function(month) {
+        appState.currentMonth = month;
+        renderCalendar();
+    };
+
+    function renderCalendar() {
+        renderMonthChips();
+        renderCalendarGrid();
+    }
+
+    // Holiday approval/rejection functions
+    window.approveHoliday = function(holidayId) {
+        if (confirm('Urlaubsantrag genehmigen?')) {
+            updateHolidayStatus(holidayId, 'APPROVED');
+        }
+    };
+
+    window.rejectHoliday = function(holidayId) {
+        if (confirm('Urlaubsantrag ablehnen?')) {
+            updateHolidayStatus(holidayId, 'REJECTED');
+        }
+    };
+
+    function updateHolidayStatus(holidayId, status) {
+        // Find current user ID (you might need to adjust this based on your auth system)
+        const currentUserId = 1; // Default admin user ID
+        
+        fetch(`/timetracking/api/holidays/${holidayId}/approve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                approval: {
+                    status: status,
+                    approverId: currentUserId,
+                    approvedAt: new Date().toISOString().split('T')[0]
+                }
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            showSuccessMessage(`Urlaubsantrag ${status === 'APPROVED' ? 'genehmigt' : 'abgelehnt'}!`);
+            setTimeout(() => window.location.reload(), 1500);
+        })
+        .catch(error => {
+            console.error('Error updating holiday status:', error);
+            alert('Fehler beim Aktualisieren des Urlaubsantrags.');
+        });
+    }
+
+    // Initialize the app
+    setupEventListeners();
+    console.log('Absences app initialized successfully');
 });
