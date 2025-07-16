@@ -15,6 +15,73 @@
   --transition: all 0.3s ease;
 }
 
+/* Pending Requests Banner */
+.pending-banner {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border: 1px solid #ffc107;
+  border-radius: var(--border-radius);
+  margin-bottom: 1.5rem;
+  box-shadow: var(--card-shadow);
+  animation: slideInDown 0.5s ease-out;
+}
+
+.banner-content {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  gap: 1rem;
+}
+
+.banner-icon {
+  color: #856404;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.banner-text {
+  flex: 1;
+  color: #856404;
+}
+
+.banner-text strong {
+  display: block;
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.banner-text span {
+  font-size: 0.95rem;
+}
+
+.banner-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.banner-actions .btn {
+  font-weight: 600;
+  border-radius: var(--border-radius);
+  transition: var(--transition);
+}
+
+.banner-actions .btn-primary {
+  background: #856404;
+  border-color: #856404;
+}
+
+.banner-actions .btn-primary:hover {
+  background: #6d5204;
+  border-color: #6d5204;
+}
+
+/* Main Content Container */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--section-margin);
+}
+
 /* Sticky Header for Tabs */
 .sticky-tabs {
   position: sticky;
@@ -53,9 +120,9 @@
 
 /* Tab Content with Scroll */
 .tab-content {
-  /* Remove fixed height - let it adapt to content */
-  min-height: 200px; /* Minimum height for visual consistency */
-  max-height: calc(100vh - 300px); /* Maximum height to prevent excessive space */
+  /* Increased height to show ~1.5 holiday requests */
+  min-height: 300px; /* Increased minimum height */
+  max-height: calc(100vh - 250px); /* Increased maximum height */
   overflow-y: auto;
 }
 
@@ -332,6 +399,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .current-month {
@@ -489,7 +557,7 @@
   border-bottom-right-radius: 6px;
 }
 
-/* Add Absence Button */
+/* Floating Add Button */
 .add-absence-btn {
   position: fixed;
   bottom: 2rem;
@@ -500,41 +568,44 @@
   background: var(--primary-color);
   color: white;
   border: none;
-  box-shadow: 0 4px 16px rgba(13, 110, 253, 0.3);
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+  font-size: 1.5rem;
+  cursor: pointer;
   transition: var(--transition);
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
 }
 
 .add-absence-btn:hover {
+  background: #0b5ed7;
   transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(13, 110, 253, 0.4);
-  color: white;
+  box-shadow: 0 6px 16px rgba(13, 110, 253, 0.5);
 }
 
-/* Loading States */
+/* Loading and Success States */
 .loading {
-  opacity: 0.6;
-  pointer-events: none;
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-muted);
 }
 
-/* Success Message */
 .success-message {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: 2rem;
+  right: 2rem;
   background: var(--success-color);
   color: white;
   padding: 1rem 1.5rem;
   border-radius: var(--border-radius);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  z-index: 1000;
-  animation: slideIn 0.3s ease;
+  box-shadow: var(--card-shadow);
+  z-index: 1001;
+  animation: slideIn 0.3s ease-out;
+  font-weight: 600;
 }
 
+/* Animations */
 @keyframes slideIn {
   from {
     transform: translateX(100%);
@@ -542,6 +613,17 @@
   }
   to {
     transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
     opacity: 1;
   }
 }
@@ -595,6 +677,17 @@
     width: 50px;
     height: 50px;
     font-size: 1.25rem;
+  }
+  
+  .banner-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .banner-actions {
+    width: 100%;
+    justify-content: center;
   }
 }
 
