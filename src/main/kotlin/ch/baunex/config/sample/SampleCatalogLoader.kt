@@ -1,11 +1,17 @@
-package ch.baunex.config
+package ch.baunex.config.sample
 
 import ch.baunex.catalog.dto.CatalogItemDTO
 import ch.baunex.catalog.facade.CatalogFacade
+import io.quarkus.arc.profile.IfBuildProfile
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 
+/**
+ * Sample catalog loader - DEV ONLY
+ * This class can be safely removed before production release.
+ */
+@IfBuildProfile("dev")
 @ApplicationScoped
 class SampleCatalogLoader {
 
@@ -57,4 +63,4 @@ class SampleCatalogLoader {
 
         items.forEach { catalogFacade.createItem(it) }
     }
-}
+} 

@@ -4,10 +4,16 @@ import ch.baunex.catalog.dto.ProjectCatalogItemDTO
 import ch.baunex.catalog.facade.CatalogFacade
 import ch.baunex.catalog.facade.ProjectCatalogItemFacade
 import ch.baunex.project.facade.ProjectFacade
+import io.quarkus.arc.profile.IfBuildProfile
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 
+/**
+ * Sample project catalog item loader - DEV ONLY
+ * This class can be safely removed before production release.
+ */
+@IfBuildProfile("dev")
 @ApplicationScoped
 class SampleProjectCatalogItemLoader {
 
@@ -88,4 +94,4 @@ class SampleProjectCatalogItemLoader {
             ).forEach { projectCatalogItemFacade.addItemToProject(garageProjectId, it) }
         }
     }
-}
+} 

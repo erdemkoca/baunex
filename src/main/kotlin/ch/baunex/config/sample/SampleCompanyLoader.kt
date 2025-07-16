@@ -1,11 +1,17 @@
-package ch.baunex.config
+package ch.baunex.config.sample
 
 import ch.baunex.company.dto.CompanyDTO
 import ch.baunex.company.facade.CompanyFacade
+import io.quarkus.arc.profile.IfBuildProfile
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 
+/**
+ * Sample company loader - DEV ONLY
+ * This class can be safely removed before production release.
+ */
+@IfBuildProfile("dev")
 @ApplicationScoped
 class SampleCompanyLoader {
 

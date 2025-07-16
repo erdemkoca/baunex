@@ -1,4 +1,4 @@
-package ch.baunex.config
+package ch.baunex.bootstrap
 
 import ch.baunex.timetracking.dto.HolidayTypeCreateDTO
 import ch.baunex.timetracking.service.HolidayTypeService
@@ -8,13 +8,23 @@ import jakarta.enterprise.event.Observes
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 
+/**
+ * Core data bootstrap that runs in ALL environments (dev, test, prod).
+ * Ensures essential system data is always present.
+ */
 @ApplicationScoped
-class SampleHolidayTypeLoader @Inject constructor(
+class CoreDataBootstrap @Inject constructor(
     private val holidayTypeService: HolidayTypeService
 ) {
+    
     @Transactional
-    fun onStart(@Observes ev: StartupEvent) {
-        val defaultTypes = listOf(
+    fun bootstrapCoreData(@Observes ev: StartupEvent) {
+        bootstrapHolidayTypes()
+        // Add other core data bootstrap methods here as needed
+    }
+    
+    private fun bootstrapHolidayTypes() {
+        val coreHolidayTypes = listOf(
             HolidayTypeCreateDTO("PAID_VACATION", "Bezahlter Urlaub", 0.0),
             HolidayTypeCreateDTO("UNPAID_LEAVE", "Unbezahlter Urlaub", 8.0),
             HolidayTypeCreateDTO("SICK_LEAVE", "Krankheit", 0.0),
@@ -23,15 +33,17 @@ class SampleHolidayTypeLoader @Inject constructor(
             HolidayTypeCreateDTO("MATERNITY_LEAVE", "Mutterschaftsurlaub", 0.0),
             HolidayTypeCreateDTO("PATERNITY_LEAVE", "Vaterschaftsurlaub", 0.0)
         )
-        for (type in defaultTypes) {
+        
+        for (type in coreHolidayTypes) {
             try {
                 if (holidayTypeService.getHolidayTypeByCode(type.code) == null) {
                     holidayTypeService.createHolidayType(type)
                 }
             } catch (e: Exception) {
-                // ignore if already exists or fails
+                // Log but don't fail startup if holiday type creation fails
+                println("⚠️  Warning: Could not create holiday type ${type.code}: ${e.message}")
             }
         }
-        println("✅ Loaded sample holiday types.")
+        println("✅ Core holiday types bootstrapped.")
     }
-}
+} 

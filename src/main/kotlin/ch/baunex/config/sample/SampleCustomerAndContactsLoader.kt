@@ -1,4 +1,4 @@
-package ch.baunex.config
+package ch.baunex.config.sample
 
 import ch.baunex.user.dto.CustomerContactCreateDTO
 import ch.baunex.user.dto.CustomerCreateDTO
@@ -7,13 +7,17 @@ import ch.baunex.user.model.CustomerContact
 import ch.baunex.user.model.CustomerModel
 import ch.baunex.user.service.CustomerContactService
 import ch.baunex.user.service.CustomerService
-import io.quarkus.runtime.StartupEvent
+import io.quarkus.arc.profile.IfBuildProfile
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.enterprise.event.Observes
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import java.util.concurrent.atomic.AtomicLong
 
+/**
+ * Sample customer and contacts loader - DEV ONLY
+ * This class can be safely removed before production release.
+ */
+@IfBuildProfile("dev")
 @ApplicationScoped
 class SampleCustomerAndContactsLoader @Inject constructor(
     private val customerService: CustomerService,
@@ -196,4 +200,4 @@ class SampleCustomerAndContactsLoader @Inject constructor(
         )
         return customerContactService.createContact(customer, dto)
     }
-}
+} 

@@ -1,13 +1,18 @@
-// File: ch/baunex/config/SampleEmployeeLoader.kt
-package ch.baunex.config
+package ch.baunex.config.sample
 
 import ch.baunex.user.dto.EmployeeCreateDTO
 import ch.baunex.user.facade.EmployeeFacade
+import io.quarkus.arc.profile.IfBuildProfile
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import java.time.LocalDate
 
+/**
+ * Sample employee loader - DEV ONLY
+ * This class can be safely removed before production release.
+ */
+@IfBuildProfile("dev")
 @ApplicationScoped
 class SampleEmployeeLoader {
 
@@ -91,4 +96,4 @@ class SampleEmployeeLoader {
             }
         }
     }
-}
+} 

@@ -294,12 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         container.innerHTML = '';
         
-        const firstDay = new Date(appState.currentYear, appState.currentMonth, 1);
-        const lastDay = new Date(appState.currentYear, appState.currentMonth + 1, 0);
-        const startDate = new Date(firstDay);
-        startDate.setDate(startDate.getDate() - firstDay.getDay() + 1);
-        
-        const days = generateCalendarDays(startDate, lastDay.getDate(), appState.currentYear, appState.currentMonth);
+        const days = generateCalendarDays(appState.currentYear, appState.currentMonth);
         
         days.forEach(day => {
             const dayElement = document.createElement('div');
@@ -316,21 +311,38 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function generateCalendarDays(startDate, lastDay, year, month) {
+    function generateCalendarDays(year, month) {
         const days = [];
-        const currentDate = new Date(startDate);
         
-        // Generate 6 weeks (42 days) to ensure full calendar display
-        for (let i = 0; i < 42; i++) {
-            const dayNumber = currentDate.getDate();
-            const isCurrentMonth = currentDate.getMonth() === month && currentDate.getFullYear() === year;
-            const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
+        // Calculate the first and last day of the month
+        const firstDayOfMonth = new Date(year, month, 1);
+        const lastDayOfMonth = new Date(year, month + 1, 0);
+        
+        // Calculate the start of the calendar grid (Monday of the week containing the first day)
+        const dayOfWeek = firstDayOfMonth.getDay(); // 0 = Sunday, 1 = Monday, etc.
+        const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert to Monday-based week
+        const gridStart = new Date(firstDayOfMonth);
+        gridStart.setDate(gridStart.getDate() - daysToSubtract);
+        
+        // Calculate the end of the calendar grid (Sunday of the week containing the last day)
+        const lastDayOfWeek = lastDayOfMonth.getDay(); // 0 = Sunday, 1 = Monday, etc.
+        const daysToAdd = lastDayOfWeek === 0 ? 0 : 7 - lastDayOfWeek; // Convert to Sunday-based week
+        const gridEnd = new Date(lastDayOfMonth);
+        gridEnd.setDate(gridEnd.getDate() + daysToAdd);
+        
+        // Generate all days in the grid
+        const currentGridDate = new Date(gridStart);
+        while (currentGridDate <= gridEnd) {
+            const dayNumber = currentGridDate.getDate();
+            const isCurrentMonth = currentGridDate.getMonth() === month && currentGridDate.getFullYear() === year;
+            const isWeekend = currentGridDate.getDay() === 0 || currentGridDate.getDay() === 6;
             
             let events = '';
             let hasEvents = false;
             
             if (isCurrentMonth) {
-                const dateString = currentDate.toISOString().split('T')[0];
+                // Create date string in YYYY-MM-DD format for comparison
+                const dateString = currentGridDate.toISOString().split('T')[0];
                 const dayEvents = getEventsForDate(dateString);
                 events = dayEvents;
                 hasEvents = dayEvents.length > 0;
@@ -344,7 +356,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 events: events
             });
             
-            currentDate.setDate(currentDate.getDate() + 1);
+            currentGridDate.setDate(currentGridDate.getDate() + 1);
         }
         
         return days;
@@ -353,11 +365,17 @@ document.addEventListener('DOMContentLoaded', function() {
     function getEventsForDate(dateString) {
         const events = [];
         
-        // Check holidays for this date
+        // Check holidays for this date - only show APPROVED and PENDING
         appState.holidays.forEach(holiday => {
-            const startDate = new Date(holiday.startDate);
-            const endDate = new Date(holiday.endDate);
-            const checkDate = new Date(dateString);
+            // Skip rejected holidays
+            if (holiday.status === 'REJECTED') {
+                return;
+            }
+            
+            // Create dates in local timezone to avoid UTC issues
+            const startDate = new Date(holiday.startDate + 'T00:00:00');
+            const endDate = new Date(holiday.endDate + 'T00:00:00');
+            const checkDate = new Date(dateString + 'T00:00:00');
             
             if (checkDate >= startDate && checkDate <= endDate) {
                 const employee = appState.employees.find(emp => emp.id === holiday.employeeId);
@@ -367,10 +385,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 const isStart = checkDate.getTime() === startDate.getTime();
                 const isEnd = checkDate.getTime() === endDate.getTime();
                 
+                // More robust status checking - handle different possible values
+                const isPending = holiday.status === 'PENDING' || holiday.status === 'pending' || holiday.status === 'Offen';
+                const isApproved = holiday.status === 'APPROVED' || holiday.status === 'approved' || holiday.status === 'Genehmigt';
+                
+                // Create tooltip data
+                const tooltipData = {
+                    employeeName: employeeName,
+                    holidayType: holiday.type,
+                    startDate: holiday.startDate,
+                    endDate: holiday.endDate,
+                    status: holiday.status,
+                    reason: holiday.reason,
+                    color: color
+                };
+                
+                // Apply different styles based on status
+                const statusClass = isPending ? 'pending' : (isApproved ? 'approved' : 'unknown');
+                const barStyle = isPending 
+                    ? `color: ${color};` 
+                    : `background-color: ${color};`;
+                
                 events.push(`
-                    <div class="holiday-bar ${isStart ? 'start' : ''} ${isEnd ? 'end' : ''}" 
-                         style="background-color: ${color};"
-                         title="${employeeName} - ${holiday.type}">
+                    <div class="holiday-bar ${isStart ? 'start' : ''} ${isEnd ? 'end' : ''} ${statusClass}" 
+                         style="${barStyle}"
+                         data-holiday-id="${holiday.id}"
+                         data-tooltip='${JSON.stringify(tooltipData)}'
+                         onmouseenter="showHolidayTooltip(event, ${holiday.id})"
+                         onmouseleave="hideHolidayTooltip()">
                         ${employeeName}
                     </div>
                 `);
@@ -436,7 +478,8 @@ document.addEventListener('DOMContentLoaded', function() {
         renderEmployeeAccounts();
     }
 
-    function openAbsenceModal() {
+    // Make openAbsenceModal globally accessible
+    window.openAbsenceModal = function() {
         loadHolidayTypes();
         loadEmployees();
         prefillForm();
@@ -451,7 +494,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         modal.show();
-    }
+    };
 
     function loadHolidayTypes() {
         fetch('/api/holiday-types')
@@ -667,6 +710,171 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error updating holiday status:', error);
             alert('Fehler beim Aktualisieren des Urlaubsantrags.');
         });
+    }
+
+    // Tooltip functions
+    window.showHolidayTooltip = function(event, holidayId) {
+        const holiday = appState.holidays.find(h => h.id === holidayId);
+        if (!holiday) return;
+        
+        const employee = appState.employees.find(emp => emp.id === holiday.employeeId);
+        const employeeName = employee ? `${employee.firstName} ${employee.lastName}` : 'Unbekannt';
+        
+        // Remove existing tooltip
+        const existingTooltip = document.querySelector('.holiday-tooltip');
+        if (existingTooltip) {
+            existingTooltip.remove();
+        }
+        
+        // Create tooltip
+        const tooltip = document.createElement('div');
+        tooltip.className = 'holiday-tooltip';
+        
+        const startDate = new Date(holiday.startDate).toLocaleDateString('de-DE');
+        const endDate = new Date(holiday.endDate).toLocaleDateString('de-DE');
+        const requestDate = holiday.createdAt ? new Date(holiday.createdAt).toLocaleDateString('de-DE') : 'Unbekannt';
+        
+        // Get proper German status text
+        const statusText = getGermanStatusText(holiday.status);
+        
+        // Debug: Log what we're putting in the tooltip
+        console.log('Tooltip status text:', statusText);
+        console.log('Holiday status:', holiday.status);
+        
+        // Ensure status is defined before using toLowerCase()
+        // If status is undefined, assume it's pending
+        const statusClass = holiday.status ? holiday.status.toLowerCase() : 'pending';
+        
+        const tooltipHTML = `
+            <div class="tooltip-header">
+                <i class="bi bi-person"></i> ${employeeName}
+            </div>
+            <div class="tooltip-content">
+                <div class="tooltip-row">
+                    <span class="tooltip-label">Urlaubstyp:</span>
+                    <span class="tooltip-value">${holiday.type || 'Unbekannt'}</span>
+                </div>
+                <div class="tooltip-row">
+                    <span class="tooltip-label">Zeitraum:</span>
+                    <span class="tooltip-value">${startDate} - ${endDate}</span>
+                </div>
+                <div class="tooltip-row">
+                    <span class="tooltip-label">Antrag eingereicht:</span>
+                    <span class="tooltip-value">${requestDate}</span>
+                </div>
+                ${holiday.reason ? `
+                <div class="tooltip-row">
+                    <span class="tooltip-label">Grund:</span>
+                    <span class="tooltip-value">${holiday.reason}</span>
+                </div>
+                ` : ''}
+                <div class="tooltip-status ${statusClass}">
+                    ${statusText}
+                </div>
+            </div>
+        `;
+        
+        // Debug: Log the tooltip HTML
+        console.log('Tooltip HTML:', tooltipHTML);
+        
+        tooltip.innerHTML = tooltipHTML;
+        
+        // Add to body first to get proper dimensions
+        document.body.appendChild(tooltip);
+        
+        // Position tooltip relative to the holiday bar element
+        const barElement = event.target;
+        const barRect = barElement.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+        
+        // Calculate horizontal position (center over the bar)
+        let left = barRect.left + (barRect.width / 2) - (tooltipRect.width / 2);
+        
+        // Ensure tooltip doesn't go off-screen horizontally
+        if (left < 10) left = 10;
+        if (left + tooltipRect.width > viewportWidth - 10) {
+            left = viewportWidth - tooltipRect.width - 10;
+        }
+        
+        // Calculate vertical position
+        let top;
+        const gap = 4; // Small gap between tooltip and bar
+        let tooltipPosition = 'below'; // Default position
+        
+        // Check if there's enough space below the bar
+        if (barRect.bottom + tooltipRect.height + gap <= viewportHeight) {
+            // Position below the bar
+            top = barRect.bottom + gap;
+            tooltipPosition = 'below';
+        } else {
+            // Position above the bar
+            top = barRect.top - tooltipRect.height - gap;
+            tooltipPosition = 'above';
+        }
+        
+        // Ensure tooltip doesn't go off-screen vertically
+        if (top < 10) {
+            top = 10;
+            tooltipPosition = 'below';
+        }
+        if (top + tooltipRect.height > viewportHeight - 10) {
+            top = viewportHeight - tooltipRect.height - 10;
+            tooltipPosition = 'above';
+        }
+        
+        // Add position class for proper arrow direction
+        tooltip.classList.add(`tooltip-${tooltipPosition}`);
+        
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = top + 'px';
+        
+        // Show with animation
+        setTimeout(() => {
+            tooltip.classList.add('show');
+        }, 10);
+    };
+
+    window.hideHolidayTooltip = function() {
+        const tooltip = document.querySelector('.holiday-tooltip');
+        if (tooltip) {
+            tooltip.classList.remove('show');
+            setTimeout(() => {
+                tooltip.remove();
+            }, 200);
+        }
+    };
+
+    // Helper function to get German status text
+    function getGermanStatusText(status) {
+        // Debug: Log the status value to see what we're getting
+        console.log('Status value:', status, 'Type:', typeof status);
+        
+        // If status is undefined/null, assume it's pending (new requests often don't have status set)
+        if (!status) {
+            console.log('Status is undefined/null, assuming PENDING');
+            return 'Ausstehend';
+        }
+        
+        const statusMap = {
+            'PENDING': 'Ausstehend',
+            'pending': 'Ausstehend',
+            'Offen': 'Ausstehend',
+            'offen': 'Ausstehend',
+            'APPROVED': 'Genehmigt',
+            'approved': 'Genehmigt',
+            'Genehmigt': 'Genehmigt',
+            'genehmigt': 'Genehmigt',
+            'REJECTED': 'Abgelehnt',
+            'rejected': 'Abgelehnt',
+            'Abgelehnt': 'Abgelehnt',
+            'abgelehnt': 'Abgelehnt'
+        };
+        
+        const result = statusMap[status] || 'Unbekannt';
+        console.log('Mapped status:', status, '→', result);
+        return result;
     }
 
     // Initialize the app

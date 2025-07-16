@@ -203,7 +203,10 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   background: var(--primary-color);
+  position: relative;
 }
+
+
 
 .holiday-type-badge.vacation { background: var(--success-color); }
 .holiday-type-badge.unpaid { background: var(--danger-color); }
@@ -555,6 +558,140 @@
 .holiday-bar.end {
   border-top-right-radius: 6px;
   border-bottom-right-radius: 6px;
+}
+
+/* Pending holiday bars - hatched pattern with dashed border */
+.holiday-bar.pending {
+  background-image: repeating-linear-gradient(45deg, currentColor, currentColor 2px, transparent 2px, transparent 4px) !important;
+  opacity: 0.3;
+  color: inherit;
+  border: 2px dashed rgba(255, 255, 255, 0.6) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.holiday-bar.pending:hover {
+  opacity: 0.5;
+  border-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Approved holiday bars - solid fill with solid border */
+.holiday-bar.approved {
+  opacity: 1;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.holiday-bar.approved:hover {
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+}
+
+/* Unknown status holiday bars - fallback styling */
+.holiday-bar.unknown {
+  opacity: 0.6;
+  border: 2px dashed rgba(255, 255, 255, 0.4) !important;
+  background-color: #6c757d !important;
+}
+
+/* Holiday Tooltip */
+.holiday-tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 0.75rem;
+  border-radius: var(--border-radius);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  max-width: 300px;
+  white-space: normal;
+  line-height: 1.4;
+}
+
+.holiday-tooltip.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.holiday-tooltip::before {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 5px solid transparent;
+  transition: opacity 0.2s ease;
+}
+
+.holiday-tooltip.tooltip-below::before {
+  border-bottom-color: rgba(0, 0, 0, 0.9);
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.holiday-tooltip.tooltip-above::before {
+  border-top-color: rgba(0, 0, 0, 0.9);
+  bottom: -10px;
+  top: auto;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.holiday-tooltip .tooltip-header {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #fff;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  padding-bottom: 0.25rem;
+}
+
+.holiday-tooltip .tooltip-content {
+  color: #e9ecef;
+}
+
+.holiday-tooltip .tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.holiday-tooltip .tooltip-label {
+  font-weight: 500;
+  color: #adb5bd;
+}
+
+.holiday-tooltip .tooltip-value {
+  color: #fff;
+}
+
+.holiday-tooltip .tooltip-status {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-top: 0.5rem;
+}
+
+.holiday-tooltip .tooltip-status.pending {
+  background: var(--warning-color);
+  color: #000;
+}
+
+.holiday-tooltip .tooltip-status.approved {
+  background: var(--success-color);
+  color: white;
+}
+
+.holiday-tooltip .tooltip-status.rejected {
+  background: var(--danger-color);
+  color: white;
 }
 
 /* Floating Add Button */

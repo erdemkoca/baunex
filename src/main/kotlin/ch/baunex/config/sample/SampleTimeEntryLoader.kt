@@ -1,4 +1,4 @@
-package ch.baunex.config
+package ch.baunex.config.sample
 
 import ch.baunex.notes.dto.NoteDto
 import ch.baunex.notes.model.NoteCategory
@@ -9,6 +9,7 @@ import ch.baunex.timetracking.facade.HolidayFacade
 import ch.baunex.timetracking.facade.TimeTrackingFacade
 import ch.baunex.timetracking.service.HolidayTypeService
 import ch.baunex.user.facade.EmployeeFacade
+import io.quarkus.arc.profile.IfBuildProfile
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -19,6 +20,11 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.temporal.TemporalAdjusters
 
+/**
+ * Sample time entry loader - DEV ONLY
+ * This class can be safely removed before production release.
+ */
+@IfBuildProfile("dev")
 @ApplicationScoped
 class SampleTimeEntryLoader {
 
@@ -375,4 +381,4 @@ class SampleTimeEntryLoader {
             // Ignore if entry already exists or other errors
         }
     }
-}
+} 

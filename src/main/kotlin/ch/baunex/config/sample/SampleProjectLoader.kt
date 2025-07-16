@@ -6,6 +6,7 @@ import ch.baunex.project.dto.ProjectCreateDTO
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.project.model.ProjectStatus
 import ch.baunex.user.facade.CustomerFacade
+import io.quarkus.arc.profile.IfBuildProfile
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -13,8 +14,10 @@ import java.time.LocalDate
 import org.jboss.logging.Logger
 
 /**
- * Lädt Beispiel-Projekte und verknüpft sie mit bestehenden Kunden aus dem CustomerFacade.
+ * Sample project loader - DEV ONLY
+ * This class can be safely removed before production release.
  */
+@IfBuildProfile("dev")
 @ApplicationScoped
 class SampleProjectLoader {
 
@@ -183,7 +186,6 @@ class SampleProjectLoader {
                     )
                 )
             ),
-            // --- drei neue Projekte unten angehängt ---
             ProjectCreateDTO(
                 name        = "Smart‑Home Nachrüstung",
                 customerId  = idOf("Muster AG"),
@@ -201,52 +203,25 @@ class SampleProjectLoader {
                         timeEntryId = null,
                         documentId  = null,
                         createdById = 1L,
-                        createdAt   = today.minusDays(19),
+                        createdAt   = LocalDate.now().minusDays(19),
                         updatedAt   = null,
-                        title       = "Bedarfsanalyse",
-                        content     = "Smart‑Switches und Sensoren definieren.",
+                        title       = "Smart‑Home Beratung",
+                        content     = "Kunde interessiert sich für KNX‑System. Kostenvoranschlag für 8 Räume erstellt.",
                         category    = NoteCategory.VORBEREITUNG,
-                        tags        = listOf("SmartHome", "Analyse"),
+                        tags        = listOf("Smart‑Home", "KNX"),
                         attachments = emptyList()
                     )
                 )
             ),
             ProjectCreateDTO(
-                name        = "Photovoltaik‑Anlage Thun",
+                name        = "Serverraum‑Klimatisierung",
                 customerId  = idOf("Beispiel GmbH"),
-                budget      = 60_000,
-                startDate   = today.minusDays(60),
-                endDate     = today.plusDays(120),
-                description = "Montage und Inbetriebnahme einer PV‑Anlage auf Firmenhalle.",
+                budget      = 25_000,
+                startDate   = today.minusDays(15),
+                endDate     = today.plusDays(30),
+                description = "Klimaanlage für Serverraum mit Notfallkühlung.",
                 status      = ProjectStatus.IN_PROGRESS,
-                street      = "Industriestrasse 7",
-                city        = "Thun",
-                initialNotes = listOf(
-                    NoteDto(
-                        id          = 0L,
-                        projectId   = null,
-                        timeEntryId = null,
-                        documentId  = null,
-                        createdById = 1L,
-                        createdAt   = today.minusDays(55),
-                        updatedAt   = null,
-                        title       = "Dach-Statik prüfen",
-                        content     = "Traglast und Neigung ermittelt.",
-                        category    = NoteCategory.INFO,
-                        tags        = listOf("Statik", "PV"),
-                        attachments = emptyList()
-                    )
-                )
-            ),
-            ProjectCreateDTO(
-                name        = "Netzwerk‑Upgrade Basel",
-                customerId  = idOf("Prova SRL"),
-                budget      = 22_000,
-                startDate   = today.minusMonths(2),
-                endDate     = today.plusMonths(2),
-                description = "Gigabit‑Switches und Verkabelung in Lagerhalle.",
-                status      = ProjectStatus.PLANNED,
-                street      = "Münzgraben 14",
+                street      = "Industriestrasse 5",
                 city        = "Basel",
                 initialNotes = listOf(
                     NoteDto(
@@ -255,18 +230,51 @@ class SampleProjectLoader {
                         timeEntryId = null,
                         documentId  = null,
                         createdById = 1L,
-                        createdAt   = today.minusDays(50),
+                        createdAt   = LocalDate.now().minusDays(14),
                         updatedAt   = null,
-                        title       = "Switch‑Inventar",
-                        content     = "Vorhandene Hardware und Ports dokumentiert.",
-                        category    = NoteCategory.INFO,
-                        tags        = listOf("Netzwerk", "Inventory"),
+                        title       = "Serverraum vermessen",
+                        content     = "Raumgrösse: 4x6m, Höhe 3m. Aktuelle Temperatur: 28°C (zu hoch).",
+                        category    = NoteCategory.SKIZZE,
+                        tags        = listOf("Serverraum", "Klima"),
+                        attachments = emptyList()
+                    )
+                )
+            ),
+            ProjectCreateDTO(
+                name        = "Alarmanlage Villa",
+                customerId  = idOf("Test SA"),
+                budget      = 18_000,
+                startDate   = today.minusDays(8),
+                endDate     = today.plusDays(25),
+                description = "Komplette Alarmanlage für Villa mit Zutrittskontrolle.",
+                status      = ProjectStatus.PLANNED,
+                street      = "Seestrasse 88",
+                city        = "Luzern",
+                initialNotes = listOf(
+                    NoteDto(
+                        id          = 0L,
+                        projectId   = null,
+                        timeEntryId = null,
+                        documentId  = null,
+                        createdById = 1L,
+                        createdAt   = LocalDate.now().minusDays(7),
+                        updatedAt   = null,
+                        title       = "Sicherheitsanforderungen",
+                        content     = "Kunde wünscht: Bewegungsmelder, Glasbruchsensoren, Videoüberwachung.",
+                        category    = NoteCategory.VORBEREITUNG,
+                        tags        = listOf("Alarmanlage", "Sicherheit"),
                         attachments = emptyList()
                     )
                 )
             )
         )
 
-        samples.forEach { projectFacade.createProject(it) }
+        samples.forEach { project ->
+            try {
+                projectFacade.createProject(project)
+            } catch (e: Exception) {
+                logger.error("Failed to create project ${project.name}: ${e.message}")
+            }
+        }
     }
-}
+} 
