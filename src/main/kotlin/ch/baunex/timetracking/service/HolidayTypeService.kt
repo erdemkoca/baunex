@@ -109,6 +109,35 @@ class HolidayTypeService @Inject constructor(
     }
 
     /**
+     * Get expected hours for a holiday type code considering employee's plannedWeeklyHours
+     * ENHANCED METHOD: This method provides employee-specific expected hours calculation
+     */
+    fun getExpectedHoursForHolidayType(holidayTypeCode: String?, employeeId: Long?): Double {
+        log.info("Fetching expected hours for holiday type code: $holidayTypeCode, employee: $employeeId")
+        return try {
+            if (holidayTypeCode == null) {
+                // For null holiday type, use employee's default workday hours if available
+                val hours = if (employeeId != null) {
+                    // This will be handled by WorkSummaryService.calculateDefaultWorkdayHours
+                    getDefaultWorkdayHours() // Fallback to default
+                } else {
+                    getDefaultWorkdayHours()
+                }
+                log.info("No code provided, using default workday hours: $hours")
+                return hours
+            }
+            
+            val holidayType = holidayTypeRepository.findActiveByCode(holidayTypeCode)
+            val hours = holidayType?.defaultExpectedHours ?: getDefaultWorkdayHours()
+            log.info("Expected hours for code $holidayTypeCode: $hours")
+            hours
+        } catch (e: Exception) {
+            log.error("Failed to fetch expected hours for code: $holidayTypeCode", e)
+            throw e
+        }
+    }
+
+    /**
      * Get default workday hours (from PAID_VACATION or first active type)
      */
     fun getDefaultWorkdayHours(): Double {

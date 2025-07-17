@@ -49,6 +49,13 @@ class HolidayTypeFacade @Inject constructor(
     }
 
     /**
+     * Get expected hours for a holiday type code considering employee's plannedWeeklyHours
+     */
+    fun getExpectedHoursForHolidayType(holidayTypeCode: String?, employeeId: Long?): Double {
+        return holidayTypeService.getExpectedHoursForHolidayType(holidayTypeCode, employeeId)
+    }
+
+    /**
      * Get default workday hours
      */
     fun getDefaultWorkdayHours(): Double {

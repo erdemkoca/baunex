@@ -2,7 +2,6 @@ package ch.baunex.timetracking.service
 
 import ch.baunex.timetracking.dto.EmployeeDailyWorkDTO
 import ch.baunex.timetracking.dto.WeeklyWorkSummaryDTO
-import ch.baunex.timetracking.dto.CumulativeHoursAccountDTO
 import ch.baunex.timetracking.dto.MonthlyHoursAccountDTO
 import ch.baunex.timetracking.dto.MonthDataDTO
 import ch.baunex.timetracking.dto.WeekDataDTO
@@ -35,22 +34,26 @@ class WorkSummaryService @Inject constructor(
     /**
      * Calculate expected working hours for a specific date
      * Uses the holiday configuration to determine expected hours for different holiday types
+     * UNIFIED APPROACH: This method is now the single source of truth for expected hours calculation
      */
     fun calculateExpectedHours(employeeId: Long, date: LocalDate): Double {
         log.info("Calculating expected hours for employee $employeeId on $date")
         val employee = employeeRepository.findById(employeeId) ?: return 0.0
         
-        // Check if it's a weekend
+        // 1. Check if it's a weekend (Saturday or Sunday)
         if (date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY) {
+            log.debug("$date is a weekend, expected hours: 0.0")
             return 0.0
         }
         
-        // Check if it's a public holiday
+        // 2. Check if it's a public holiday
         if (holidayDefinitionService.isHoliday(date)) {
-            return holidayTypeService.getExpectedHoursForHolidayType("PUBLIC_HOLIDAY")
+            val publicHolidayHours = holidayTypeService.getExpectedHoursForHolidayType("PUBLIC_HOLIDAY")
+            log.debug("$date is a public holiday, expected hours: $publicHolidayHours")
+            return publicHolidayHours
         }
 
-        // Check if employee has approved vacation on this date
+        // 3. Check if employee has approved vacation on this date
         val approvedHoliday = holidayRepository.findByEmployeeAndDateRange(employeeId, date, date)
             .find { holiday ->
                 date >= holiday.startDate && 
@@ -59,16 +62,43 @@ class WorkSummaryService @Inject constructor(
             }
         
         if (approvedHoliday != null) {
-            // Use the holiday type service to determine expected hours for this holiday type
-            return holidayTypeService.getExpectedHoursForHolidayType(approvedHoliday.holidayType.code)
+            val holidayHours = holidayTypeService.getExpectedHoursForHolidayType(approvedHoliday.holidayType.code)
+            log.debug("$date is an approved holiday (${approvedHoliday.holidayType.code}), expected hours: $holidayHours")
+            return holidayHours
         }
 
-        // Default workday hours from service
-        return holidayTypeService.getDefaultWorkdayHours()
+        // 4. Calculate default workday hours based on employee's plannedWeeklyHours
+        val defaultHours = calculateDefaultWorkdayHours(employee)
+        log.debug("$date is a regular workday, expected hours: $defaultHours (based on plannedWeeklyHours: ${employee.plannedWeeklyHours})")
+        return defaultHours
+    }
+
+    /**
+     * Calculate default workday hours based on employee's plannedWeeklyHours
+     * CENTRAL FUNCTION: This method provides the single source of truth for workday hours calculation
+     * Assumes 5 working days per week (Monday to Friday)
+     */
+    fun calculateDefaultWorkdayHours(employee: ch.baunex.user.model.EmployeeModel): Double {
+        val plannedWeeklyHours = employee.plannedWeeklyHours
+        val workdaysPerWeek = 5.0 // Monday to Friday
+        val defaultHours = plannedWeeklyHours / workdaysPerWeek
+        
+        log.debug("Calculated default workday hours: $defaultHours (plannedWeeklyHours: $plannedWeeklyHours / workdaysPerWeek: $workdaysPerWeek)")
+        return defaultHours
+    }
+
+    /**
+     * Get default workday hours for a specific employee
+     * CONVENIENCE METHOD: Returns the default workday hours for an employee
+     */
+    fun getDefaultWorkdayHoursForEmployee(employeeId: Long): Double {
+        val employee = employeeRepository.findById(employeeId) ?: return 8.0
+        return calculateDefaultWorkdayHours(employee)
     }
 
     /**
      * Get daily work summary for an employee in a date range
+     * UNIFIED APPROACH: Uses the unified calculateExpectedHours method
      */
     fun getDailyWorkSummary(employeeId: Long, from: LocalDate, to: LocalDate): List<EmployeeDailyWorkDTO> {
         log.info("Fetching daily work summary for employee $employeeId from $from to $to")
@@ -135,26 +165,17 @@ class WorkSummaryService @Inject constructor(
 
     /**
      * Calculate remaining vacation days for an employee in a given year
+     * UNIFIED APPROACH: Uses the unified calculateUsedVacationDays method
      */
     fun calculateRemainingVacationDays(employeeId: Long, year: Int): Int {
         val employee = employeeRepository.findById(employeeId) ?: return 0
-        
-        // Get all approved vacation days for the year
-        val yearStart = LocalDate.of(year, 1, 1)
-        val yearEnd = LocalDate.of(year, 12, 31)
-        
-        val vacationDays = holidayRepository.findByEmployeeAndDateRange(employeeId, yearStart, yearEnd)
-            .filter { it.holidayType.code == "PAID_VACATION" && it.approvalStatus == ApprovalStatus.APPROVED }
-            .sumOf { holiday ->
-                // Calculate the number of working days in the holiday period (excluding weekends and public holidays)
-                holidayDefinitionService.calculateWorkingDays(holiday.startDate, holiday.endDate)
-            }
-        
-        return employee.vacationDays - vacationDays
+        val usedVacationDays = calculateUsedVacationDays(employeeId, year)
+        return employee.vacationDays - usedVacationDays
     }
 
     /**
      * Calculate used vacation days for an employee in a given year
+     * UNIFIED APPROACH: Uses HolidayDefinitionService for consistent working days calculation
      */
     fun calculateUsedVacationDays(employeeId: Long, year: Int): Int {
         val yearStart = LocalDate.of(year, 1, 1)
@@ -170,6 +191,7 @@ class WorkSummaryService @Inject constructor(
 
     /**
      * Get weekly work summary for an employee
+     * UNIFIED APPROACH: Uses the unified getDailyWorkSummary method
      */
     fun getWeeklyWorkSummary(employeeId: Long, year: Int, week: Int): WeeklyWorkSummaryDTO? {
         val employee = employeeRepository.findById(employeeId) ?: return null
@@ -236,75 +258,6 @@ class WorkSummaryService @Inject constructor(
     }
 
     /**
-     * Get cumulative hours account for an employee
-     * Calculates the balance since the employee's start date
-     */
-    fun getCumulativeHoursAccount(employeeId: Long, year: Int, week: Int): CumulativeHoursAccountDTO? {
-        log.info("Fetching cumulative hours account for employee $employeeId, year $year, week $week")
-        val employee = employeeRepository.findById(employeeId) ?: return null
-        val employeeName = "${employee.person.firstName} ${employee.person.lastName}"
-        
-        // Calculate current week start and end dates
-        val weekFields = WeekFields.of(Locale.getDefault())
-        val currentWeekStart = LocalDate.now().withYear(year).with(weekFields.weekOfYear(), week.toLong())
-            .with(weekFields.dayOfWeek(), 1L) // Monday
-        val currentWeekEnd = currentWeekStart.plusDays(6) // Sunday
-        
-        // Get current week summary
-        val currentWeekSummary = getWeeklyWorkSummary(employeeId, year, week) ?: return null
-        
-        // Calculate cumulative balance since start date
-        val startDate = employee.startDate
-        val endDate = currentWeekEnd
-        
-        // Get all daily summaries from start date to current week end
-        val allDailySummaries = getDailyWorkSummary(employeeId, startDate, endDate)
-        
-        // Calculate cumulative totals
-        val cumulativeWorked = allDailySummaries.sumOf { it.workedHours }
-        val cumulativeExpected = allDailySummaries.sumOf { it.expectedHours }
-        val cumulativeOvertime = allDailySummaries.sumOf { if (it.delta > 0) it.delta else 0.0 }
-        val cumulativeUndertime = allDailySummaries.sumOf { if (it.delta < 0) -it.delta else 0.0 }
-        val cumulativeBalance = cumulativeOvertime - cumulativeUndertime
-        
-        // Calculate vacation statistics
-        val currentYear = currentWeekStart.year
-        val totalVacationDays = employee.vacationDays
-        val usedVacationDays = calculateUsedVacationDays(employeeId, currentYear)
-        val remainingVacationDays = totalVacationDays - usedVacationDays
-        
-        log.info("Fetched cumulative hours account for employee $employeeId, year $year, week $week")
-        return CumulativeHoursAccountDTO(
-            employeeId = employeeId,
-            employeeName = employeeName,
-            startDate = startDate,
-            
-            // Current week balance
-            weeklyBalance = currentWeekSummary.overtime - currentWeekSummary.undertime,
-            weeklyWorkedHours = currentWeekSummary.totalWorked,
-            weeklyExpectedHours = currentWeekSummary.totalExpected,
-            
-            // Cumulative balance since start date
-            cumulativeBalance = cumulativeBalance,
-            cumulativeWorkedHours = cumulativeWorked,
-            cumulativeExpectedHours = cumulativeExpected,
-            
-            // Current week info
-            currentWeekStart = currentWeekStart,
-            currentWeekEnd = currentWeekEnd,
-            currentWeekNumber = week,
-            currentYear = year,
-            
-            // Vacation and absence info
-            holidayDays = currentWeekSummary.holidayDays,
-            pendingHolidayRequests = currentWeekSummary.pendingHolidayRequests,
-            totalVacationDays = totalVacationDays,
-            usedVacationDays = usedVacationDays,
-            remainingVacationDays = remainingVacationDays
-        )
-    }
-
-    /**
      * Format hours with sign and specified decimal places
      */
     private fun formatHours(value: Double, decimals: Int = 1): String {
@@ -321,6 +274,7 @@ class WorkSummaryService @Inject constructor(
 
     /**
      * Get monthly hours account for an employee
+     * UNIFIED APPROACH: This method now serves as the reference implementation
      * Returns detailed monthly breakdown with weeks and days
      */
     fun getMonthlyHoursAccount(employeeId: Long, year: Int): MonthlyHoursAccountDTO? {
@@ -336,13 +290,11 @@ class WorkSummaryService @Inject constructor(
         // Get current week summary for the summary section
         val currentWeekSummary = getWeeklyWorkSummary(employeeId, currentYear, currentWeek)
         
-        // Calculate cumulative balance since start date
+        // UNIFIED START DATE LOGIC: Determine the effective start date for cumulative calculation
         val startDate = employee.startDate
         val yearStart = LocalDate.of(year, 1, 1)
-        val yearEnd = LocalDate.of(year, 12, 31)
         
         // Determine the effective start date for cumulative calculation
-        // Use the same logic as for month range calculation
         val effectiveStartDate = if (startDate.isAfter(yearStart)) {
             // Employee started after January 1st of this year
             startDate
@@ -352,6 +304,7 @@ class WorkSummaryService @Inject constructor(
         }
         
         // Get all daily summaries from effective start date to today (or year end if future year)
+        val yearEnd = LocalDate.of(year, 12, 31)
         val endDate = if (year > currentDate.year) yearEnd else currentDate
         val allDailySummaries = getDailyWorkSummary(employeeId, effectiveStartDate, endDate)
         
@@ -550,7 +503,7 @@ class WorkSummaryService @Inject constructor(
         return MonthlyHoursAccountDTO(
             employeeId = employeeId,
             employeeName = employeeName,
-            startDate = startDate,
+            startDate = effectiveStartDate, // Use effective start date for consistency
             currentWeekBalance = currentWeekBalance,
             currentWeekBalanceFormatted = formatHours(currentWeekBalance, 2),
             currentWeekWorkedHours = currentWeekWorkedHours,
@@ -564,6 +517,73 @@ class WorkSummaryService @Inject constructor(
             cumulativeExpectedHours = cumulativeExpected,
             cumulativeExpectedHoursFormatted = "%.1f".format(cumulativeExpected),
             monthlyData = monthlyData
+        )
+    }
+
+    /**
+     * Get cumulative hours account for an employee up to a specific week
+     * CALENDAR-SPECIFIC: Used by calendar view to show cumulative balance up to selected week
+     */
+    fun getCumulativeHoursAccountUpToWeek(employeeId: Long, year: Int, week: Int): MonthlyHoursAccountDTO? {
+        log.info("Fetching cumulative hours account for employee $employeeId up to year $year, week $week")
+        val employee = employeeRepository.findById(employeeId) ?: return null
+        val employeeName = "${employee.person.firstName} ${employee.person.lastName}"
+        
+        val weekFields = WeekFields.of(Locale.getDefault())
+        val currentDate = LocalDate.now()
+        
+        // Calculate the end date for the specified week
+        val weekStart = LocalDate.now().withYear(year).with(weekFields.weekOfYear(), week.toLong())
+            .with(weekFields.dayOfWeek(), 1L) // Monday
+        val weekEnd = weekStart.plusDays(6) // Sunday
+        
+        // Get weekly summary for the specified week
+        val weekSummary = getWeeklyWorkSummary(employeeId, year, week)
+        
+        // UNIFIED START DATE LOGIC: Determine the effective start date for cumulative calculation
+        val startDate = employee.startDate
+        val yearStart = LocalDate.of(year, 1, 1)
+        
+        // Determine the effective start date for cumulative calculation
+        val effectiveStartDate = if (startDate.isAfter(yearStart)) {
+            // Employee started after January 1st of this year
+            startDate
+        } else {
+            // Employee started before or on January 1st of this year
+            yearStart
+        }
+        
+        // Get all daily summaries from effective start date to the end of the specified week
+        val allDailySummaries = getDailyWorkSummary(employeeId, effectiveStartDate, weekEnd)
+        
+        // Calculate cumulative totals up to the specified week
+        val cumulativeWorked = allDailySummaries.sumOf { it.workedHours }
+        val cumulativeExpected = allDailySummaries.sumOf { it.expectedHours }
+        val cumulativeBalance = cumulativeWorked - cumulativeExpected
+        
+        // For calendar view, we only need the summary data, not the full monthly breakdown
+        log.info("Fetched cumulative hours account for employee $employeeId up to year $year, week $week")
+        val weeklyBalance = weekSummary?.let { it.overtime - it.undertime } ?: 0.0
+        val weeklyWorkedHours = weekSummary?.totalWorked ?: 0.0
+        val weeklyExpectedHours = weekSummary?.totalExpected ?: 0.0
+        
+        return MonthlyHoursAccountDTO(
+            employeeId = employeeId,
+            employeeName = employeeName,
+            startDate = effectiveStartDate,
+            currentWeekBalance = weeklyBalance,
+            currentWeekBalanceFormatted = formatHours(weeklyBalance, 2),
+            currentWeekWorkedHours = weeklyWorkedHours,
+            currentWeekWorkedHoursFormatted = "%.1f".format(weeklyWorkedHours),
+            currentWeekExpectedHours = weeklyExpectedHours,
+            currentWeekExpectedHoursFormatted = "%.1f".format(weeklyExpectedHours),
+            cumulativeBalance = cumulativeBalance,
+            cumulativeBalanceFormatted = formatHours(cumulativeBalance, 2),
+            cumulativeWorkedHours = cumulativeWorked,
+            cumulativeWorkedHoursFormatted = "%.1f".format(cumulativeWorked),
+            cumulativeExpectedHours = cumulativeExpected,
+            cumulativeExpectedHoursFormatted = "%.1f".format(cumulativeExpected),
+            monthlyData = emptyList() // Not needed for calendar view
         )
     }
 } 

@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const holidays = JSON.parse(el.dataset.holidays || '[]');
     const employees = JSON.parse(el.dataset.employees || '[]');
     const projects = JSON.parse(el.dataset.projects || '[]');
+    const monthlyAccount = JSON.parse(el.dataset.monthlyAccount || 'null');
 
     const app = createApp({
         data() {
@@ -24,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 holidays,
                 employees,
                 projects,
+                monthlyAccount,
                 selectedEmployeeId: savedEmployeeId ? parseInt(savedEmployeeId) : (employees[0]?.id || null),
                 currentWeek: savedWeek ? parseInt(savedWeek) : this.getCurrentWeek(),
                 currentYear: savedYear ? parseInt(savedYear) : 2025, // Default to 2025 where we have sample data
@@ -42,11 +44,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 showFormModal: false, // New state for form modal
                 formLoaded: false, // Track if form is loaded
                 currentEntryData: null, // Store current entry data for modal
-                cumulativeHoursAccount: null, // Store cumulative hours account data
+                cumulativeHoursAccount: {
+                    weeklyBalance: 0,
+                    weeklyWorkedHours: 0,
+                    weeklyExpectedHours: 0,
+                    cumulativeBalance: 0,
+                    cumulativeWorkedHours: 0,
+                    cumulativeExpectedHours: 0,
+                    cumulativeBalanceFormatted: '+0.0',
+                    totalVacationDays: 0,
+                    usedVacationDays: 0,
+                    remainingVacationDays: 0,
+                    holidayDays: 0,
+                    pendingHolidayRequests: 0
+                }, // Store cumulative hours account data
                 
                 // Holiday types
                 holidayTypes: [],
-                defaultWorkdayHours: 8.0
+                defaultWorkdayHours: 8.0, // Will be updated from API
+                employeeDefaultWorkdayHours: {} // Cache for employee-specific workday hours
             };
         },
         computed: {
@@ -209,7 +225,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     { code: 'SPECIAL_LEAVE', displayName: 'Sonderurlaub', defaultExpectedHours: 0.0 },
                     { code: 'COMPENSATORY_TIME', displayName: 'Zeitausgleich', defaultExpectedHours: 0.0 },
                     { code: 'MATERNITY_LEAVE', displayName: 'Mutterschaftsurlaub', defaultExpectedHours: 0.0 },
-                    { code: 'PATERNITY_LEAVE', displayName: 'Vaterschaftsurlaub', defaultExpectedHours: 0.0 }
+                    { code: 'PATERNITY_LEAVE', displayName: 'Vaterschaftsurlaub', defaultExpectedHours: 0.0 },
+                    { code: 'PUBLIC_HOLIDAY', displayName: 'Öffentlicher Feiertag', defaultExpectedHours: 0.0 }
                 ];
             },
             
@@ -318,16 +335,79 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
             
-            async loadCumulativeHoursAccount() {
+            async loadCumulativeSaldo() {
                 if (!this.selectedEmployeeId) return;
                 
                 try {
-                    const res = await fetch(`/timetracking/api/summary/cumulative-hours?employeeId=${this.selectedEmployeeId}&year=${this.currentYear}&week=${this.currentWeek}`);
+                    // Use the new endpoint for cumulative calculation up to the selected week
+                    const res = await fetch(`/timetracking/api/summary/cumulative-up-to-week?employeeId=${this.selectedEmployeeId}&year=${this.currentYear}&week=${this.currentWeek}`);
                     if (res.ok) {
-                        this.cumulativeHoursAccount = await res.json();
+                        const cumulativeAccount = await res.json();
+                        // Store the cumulative balance up to the selected week
+                        this.cumulativeHoursAccount = {
+                            // Weekly data for the selected week
+                            weeklyBalance: cumulativeAccount.currentWeekBalance,
+                            weeklyWorkedHours: cumulativeAccount.currentWeekWorkedHours,
+                            weeklyExpectedHours: cumulativeAccount.currentWeekExpectedHours,
+                            
+                            // Cumulative data up to the selected week
+                            cumulativeBalance: cumulativeAccount.cumulativeBalance,
+                            cumulativeWorkedHours: cumulativeAccount.cumulativeWorkedHours,
+                            cumulativeExpectedHours: cumulativeAccount.cumulativeExpectedHours,
+                            cumulativeBalanceFormatted: cumulativeAccount.cumulativeBalanceFormatted,
+                            
+                            // Vacation data (we need to get this from weekly summary)
+                            totalVacationDays: 0,
+                            usedVacationDays: 0,
+                            remainingVacationDays: 0,
+                            holidayDays: 0,
+                            pendingHolidayRequests: 0
+                        };
+                        
+                        // Load weekly summary to get vacation data
+                        const weeklyRes = await fetch(`/timetracking/api/summary/weekly?employeeId=${this.selectedEmployeeId}&year=${this.currentYear}&week=${this.currentWeek}`);
+                        if (weeklyRes.ok) {
+                            const weeklySummary = await weeklyRes.json();
+                            if (weeklySummary && weeklySummary.length > 0) {
+                                const summary = weeklySummary[0];
+                                this.cumulativeHoursAccount.totalVacationDays = summary.totalVacationDays;
+                                this.cumulativeHoursAccount.usedVacationDays = summary.usedVacationDays;
+                                this.cumulativeHoursAccount.remainingVacationDays = summary.remainingVacationDays;
+                                this.cumulativeHoursAccount.holidayDays = summary.holidayDays;
+                                this.cumulativeHoursAccount.pendingHolidayRequests = summary.pendingHolidayRequests;
+                            }
+                        }
                     }
                 } catch (error) {
-                    console.error('Error loading cumulative hours account:', error);
+                    console.error('Error loading cumulative account for saldo calculation:', error);
+                    // Set default values to prevent undefined errors
+                    this.cumulativeHoursAccount = {
+                        weeklyBalance: 0,
+                        weeklyWorkedHours: 0,
+                        weeklyExpectedHours: 0,
+                        cumulativeBalance: 0,
+                        cumulativeWorkedHours: 0,
+                        cumulativeExpectedHours: 0,
+                        cumulativeBalanceFormatted: '+0.0',
+                        totalVacationDays: 0,
+                        usedVacationDays: 0,
+                        remainingVacationDays: 0,
+                        holidayDays: 0,
+                        pendingHolidayRequests: 0
+                    };
+                }
+            },
+            
+            async loadMonthlyAccount() {
+                if (!this.selectedEmployeeId) return;
+                
+                try {
+                    const res = await fetch(`/timetracking/api/summary/monthly-account?employeeId=${this.selectedEmployeeId}&year=${this.currentYear}`);
+                    if (res.ok) {
+                        this.monthlyAccount = await res.json();
+                    }
+                } catch (error) {
+                    console.error('Error loading monthly account:', error);
                 }
             },
             previousWeek() {
@@ -376,7 +456,8 @@ document.addEventListener('DOMContentLoaded', () => {
             onWeekChange() {
                 this.loadDailySummaries();
                 this.loadWeeklySummaries();
-                this.loadCumulativeHoursAccount();
+                this.loadCumulativeSaldo();
+                this.loadMonthlyAccount(); // Load monthly account for consistent saldo
             },
             getDayClass(day) {
                 if (!day) return '';
@@ -438,9 +519,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 return tooltip;
             },
             onEmployeeChange() {
+                console.log('Employee changed to:', this.selectedEmployeeId);
+                localStorage.setItem('calendar-selected-employee', this.selectedEmployeeId);
+                
+                // Load employee's default workday hours
+                if (this.selectedEmployeeId) {
+                    this.loadEmployeeDefaultWorkdayHours(this.selectedEmployeeId);
+                }
+                
                 this.loadDailySummaries();
                 this.loadWeeklySummaries();
-                this.loadCumulativeHoursAccount();
+                this.loadCumulativeSaldo();
+                this.loadMonthlyAccount(); // Load fresh monthly account data
                 this.saveState(); // Save state after changing employee
             },
             loadTimeEntries() {
@@ -1272,6 +1362,35 @@ document.addEventListener('DOMContentLoaded', () => {
                         totalLanes: layout[0]?.totalLanes || 1
                     };
                 });
+            },
+            /**
+             * Load default workday hours for the selected employee
+             */
+            async loadEmployeeDefaultWorkdayHours(employeeId) {
+                if (!employeeId) return;
+                
+                // Check cache first
+                if (this.employeeDefaultWorkdayHours[employeeId]) {
+                    this.defaultWorkdayHours = this.employeeDefaultWorkdayHours[employeeId];
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/api/summary/default-workday-hours?employeeId=${employeeId}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        const hours = data.defaultWorkdayHours;
+                        this.employeeDefaultWorkdayHours[employeeId] = hours;
+                        this.defaultWorkdayHours = hours;
+                        console.log(`Loaded default workday hours for employee ${employeeId}: ${hours}`);
+                    } else {
+                        console.warn(`Failed to load default workday hours for employee ${employeeId}, using fallback`);
+                        this.defaultWorkdayHours = 8.0;
+                    }
+                } catch (error) {
+                    console.error(`Error loading default workday hours for employee ${employeeId}:`, error);
+                    this.defaultWorkdayHours = 8.0;
+                }
             }
         },
         watch: {
@@ -1309,10 +1428,16 @@ document.addEventListener('DOMContentLoaded', () => {
         mounted() {
             console.log('Calendar app mounted');
             this.loadHolidayTypes().then(() => {
-            this.loadDailySummaries();
-            this.loadWeeklySummaries();
-            this.loadCumulativeHoursAccount();
-            this.loadWeekData(); // Load week data for color coding
+                this.loadDailySummaries();
+                this.loadWeeklySummaries();
+                this.loadCumulativeSaldo();
+                this.loadMonthlyAccount(); // Load monthly account for consistent saldo
+                this.loadWeekData(); // Load week data for color coding
+                
+                // Load employee's default workday hours
+                if (this.selectedEmployeeId) {
+                    this.loadEmployeeDefaultWorkdayHours(this.selectedEmployeeId);
+                }
             });
             
             // Listen for entry-saved events from the form
@@ -1322,7 +1447,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (event.detail.refresh) {
                         this.loadDailySummaries();
                         this.loadWeeklySummaries();
-                        this.loadCumulativeHoursAccount();
+                        this.loadCumulativeSaldo();
+                        this.loadMonthlyAccount(); // Reload monthly account after changes
                         this.loadWeekData(); // Reload week data after changes
                     }
                 }

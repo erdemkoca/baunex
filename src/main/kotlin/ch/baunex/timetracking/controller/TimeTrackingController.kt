@@ -258,19 +258,13 @@ class TimeTrackingController {
     }
 
     @GET
-    @Path("/api/summary/cumulative-hours")
+    @Path("/api/summary/default-workday-hours")
     @Produces(MediaType.APPLICATION_JSON)
-    fun getCumulativeHoursAccount(
-        @QueryParam("employeeId") employeeId: Long,
-        @QueryParam("year") year: Int,
-        @QueryParam("week") week: Int
+    fun getDefaultWorkdayHoursForEmployee(
+        @QueryParam("employeeId") employeeId: Long
     ): Response {
-        val account = workSummaryService.getCumulativeHoursAccount(employeeId, year, week)
-        return if (account != null) {
-            Response.ok(account).build()
-        } else {
-            Response.status(Response.Status.NOT_FOUND).build()
-        }
+        val defaultHours = workSummaryService.getDefaultWorkdayHoursForEmployee(employeeId)
+        return Response.ok(mapOf("defaultWorkdayHours" to defaultHours)).build()
     }
 
     @GET
@@ -281,6 +275,22 @@ class TimeTrackingController {
         @QueryParam("year") year: Int
     ): Response {
         val account = workSummaryService.getMonthlyHoursAccount(employeeId, year)
+        return if (account != null) {
+            Response.ok(account).build()
+        } else {
+            Response.status(Response.Status.NOT_FOUND).build()
+        }
+    }
+
+    @GET
+    @Path("/api/summary/cumulative-up-to-week")
+    @Produces(MediaType.APPLICATION_JSON)
+    fun getCumulativeHoursAccountUpToWeek(
+        @QueryParam("employeeId") employeeId: Long,
+        @QueryParam("year") year: Int,
+        @QueryParam("week") week: Int
+    ): Response {
+        val account = workSummaryService.getCumulativeHoursAccountUpToWeek(employeeId, year, week)
         return if (account != null) {
             Response.ok(account).build()
         } else {

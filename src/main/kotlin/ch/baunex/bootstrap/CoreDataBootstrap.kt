@@ -32,7 +32,8 @@ class CoreDataBootstrap @Inject constructor(
             HolidayTypeCreateDTO("SPECIAL_LEAVE", "Sonderurlaub", 0.0),
             HolidayTypeCreateDTO("COMPENSATORY_TIME", "Zeitausgleich", 0.0),
             HolidayTypeCreateDTO("MATERNITY_LEAVE", "Mutterschaftsurlaub", 0.0),
-            HolidayTypeCreateDTO("PATERNITY_LEAVE", "Vaterschaftsurlaub", 0.0)
+            HolidayTypeCreateDTO("PATERNITY_LEAVE", "Vaterschaftsurlaub", 0.0),
+            HolidayTypeCreateDTO("PUBLIC_HOLIDAY", "Öffentlicher Feiertag", 0.0)
         )
         
         for (type in coreHolidayTypes) {

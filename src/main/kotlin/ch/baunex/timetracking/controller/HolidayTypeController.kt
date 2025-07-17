@@ -100,6 +100,23 @@ class HolidayTypeController @Inject constructor(
     }
 
     @GET
+    @Path("/expected-hours/{code}/employee")
+    fun getExpectedHoursForHolidayTypeWithEmployee(
+        @PathParam("code") code: String,
+        @QueryParam("employeeId") employeeId: Long?
+    ): Response {
+        log.info("Fetching expected hours for holiday type code: $code, employee: $employeeId")
+        return try {
+            val expectedHours = holidayTypeFacade.getExpectedHoursForHolidayType(code, employeeId)
+            log.info("Successfully fetched expected hours ($expectedHours) for holiday type code: $code, employee: $employeeId")
+            Response.ok(mapOf("expectedHours" to expectedHours)).build()
+        } catch (e: Exception) {
+            log.error("Failed to fetch expected hours for holiday type code: $code, employee: $employeeId", e)
+            throw e
+        }
+    }
+
+    @GET
     @Path("/default-workday-hours")
     fun getDefaultWorkdayHours(): Response {
         log.info("Fetching default workday hours")
