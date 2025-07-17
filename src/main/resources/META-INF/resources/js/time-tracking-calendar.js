@@ -933,7 +933,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.$nextTick(() => {
                     setTimeout(() => {
                         this.initializeTimeTrackingForm();
-                    }, 600);
+                    }, 100); // Reduced delay for faster response
                 });
             },
             
@@ -944,7 +944,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.$nextTick(() => {
                     setTimeout(() => {
                         this.initializeTimeTrackingFormWithEntry(entryId);
-                    }, 600);
+                    }, 100); // Reduced delay for faster response
                 });
             },
             initializeTimeTrackingForm() {
@@ -1005,12 +1005,31 @@ document.addEventListener('DOMContentLoaded', () => {
                             // Force the form container to be visible so the script can find it
                             formContainer.style.display = 'block';
                             
+                            // Ensure the container is properly initialized before mounting Vue
+                            if (!formContainer.dataset.entry || !formContainer.dataset.employees) {
+                                console.log('Form container not properly initialized, retrying...');
+                                setTimeout(() => {
+                                    this.initializeFormAfterScriptLoad();
+                                }, 50);
+                                return;
+                            }
+                            
                             // Manually trigger the form initialization
                             if (window.timeTrackingFormScriptLoaded) {
                                 console.log('Manually triggering form initialization...');
                                 // Call the initializeForm function directly
                                 if (typeof window.initializeTimeTrackingForm === 'function') {
-                                    window.initializeTimeTrackingForm();
+                                    try {
+                                        window.initializeTimeTrackingForm();
+                                    } catch (error) {
+                                        console.error('Error initializing form:', error);
+                                        // Retry after a short delay
+                                        setTimeout(() => {
+                                            if (typeof window.initializeTimeTrackingForm === 'function') {
+                                                window.initializeTimeTrackingForm();
+                                            }
+                                        }, 100);
+                                    }
                                 } else {
                                     // If the function doesn't exist, try to load the script again
                                     console.log('Form script not available, loading...');
@@ -1038,7 +1057,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         } else {
                             console.error('Form container not found after script load');
                         }
-                    }, 200); // Reduced delay since container is always in DOM
+                    }, 100); // Reduced delay for faster initialization
                 });
             },
             

@@ -5,21 +5,32 @@ import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js'
 // Execute immediately when script is loaded
 function initializeForm() {
     console.log('initializeForm called');
+    
+    // Clean up any existing Vue app before creating a new one
+    if (window.timeTrackingFormApp) {
+        try {
+            window.timeTrackingFormApp.unmount();
+            window.timeTrackingFormApp = null;
+        } catch (error) {
+            console.log('Error unmounting existing app:', error);
+        }
+    }
+    
     const el = document.getElementById('time-tracking-form-app');
     if (!el) {
-        console.log('time-tracking-form-app element not found, retrying in 100ms...');
+        console.log('time-tracking-form-app element not found, retrying in 50ms...');
         // Limit retries to prevent infinite loop
         if (!window.formInitRetryCount) {
             window.formInitRetryCount = 0;
         }
         window.formInitRetryCount++;
         
-        if (window.formInitRetryCount > 20) { // Max 2 seconds of retries
-            console.error('Failed to initialize form after 20 retries - form container may not be ready');
+        if (window.formInitRetryCount > 40) { // Max 2 seconds of retries (40 * 50ms)
+            console.error('Failed to initialize form after 40 retries - form container may not be ready');
             return;
         }
         
-        setTimeout(initializeForm, 100);
+        setTimeout(initializeForm, 50);
         return;
     }
     
@@ -27,9 +38,15 @@ function initializeForm() {
     console.log('Element dataset:', el.dataset);
     
     // Check if the element has been properly initialized by Vue
-    if (!el.dataset.entry && !el.dataset.employees) {
+    if (!el.dataset.entry || !el.dataset.employees) {
         console.log('Form element found but not yet initialized by Vue, retrying...');
-        setTimeout(initializeForm, 100);
+        setTimeout(initializeForm, 50);
+        return;
+    }
+    
+    // Check if the element already has a Vue app mounted
+    if (el._vue_app) {
+        console.log('Vue app already mounted on this element, skipping...');
         return;
     }
     
@@ -790,12 +807,27 @@ function initializeForm() {
     
     // Store the app globally so it can be unmounted
     try {
+        // Ensure the element is still in the DOM before mounting
+        if (!document.contains(el)) {
+            console.error('Form element no longer in DOM, cannot mount Vue app');
+            return;
+        }
+        
         window.timeTrackingFormApp = app.mount(el);
+        // Mark the element as mounted
+        el._vue_app = true;
         console.log('Time tracking form Vue app mounted successfully');
         // Reset retry counter on successful initialization
         window.formInitRetryCount = 0;
     } catch (error) {
         console.error('Failed to mount time tracking form Vue app:', error);
+        // If mounting fails, try again after a short delay
+        if (window.formInitRetryCount < 10) {
+            console.log('Retrying Vue app mount...');
+            setTimeout(() => {
+                initializeForm();
+            }, 100);
+        }
     }
 }
 
