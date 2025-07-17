@@ -20,7 +20,16 @@ document.addEventListener('DOMContentLoaded', function() {
     function initializeApp() {
         loadData();
         setupEventListeners();
+        initializeTooltips();
         console.log('Absences app initialized successfully');
+    }
+
+    function initializeTooltips() {
+        // Initialize Bootstrap tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
     }
 
     function loadData() {
@@ -85,6 +94,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Always render calendar and employee accounts
         renderCalendar();
         renderEmployeeAccounts();
+        
+        // Re-initialize tooltips after rendering
+        initializeTooltips();
     }
 
     function updateBannerContent() {
