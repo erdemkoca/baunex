@@ -1,0 +1,153 @@
+{#include layout}
+  {#title}Abwesenheitstypen verwalten – Baunex{/title}
+  {#header}Abwesenheitstypen verwalten{/header}
+  {#content}
+    <style>
+        .holiday-type-table th {
+            background-color: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .system-type {
+            background-color: #f8f9fa;
+        }
+        .system-type:hover {
+            background-color: #e9ecef;
+        }
+        .custom-type {
+            background-color: #ffffff;
+        }
+        .custom-type:hover {
+            background-color: #f8f9fa;
+        }
+        .status-badge {
+            font-size: 0.75rem;
+        }
+        .expected-hours-cell {
+            text-align: center;
+            font-weight: 500;
+        }
+        .sort-order-cell {
+            text-align: center;
+            font-weight: 500;
+        }
+    </style>
+    
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1><i class="bi bi-calendar-check"></i> Abwesenheitstypen verwalten</h1>
+                    <div class="d-flex gap-2">
+                        <a href="/settings/holidays" class="btn btn-outline-primary">
+                            <i class="bi bi-calendar-event"></i> Feiertage verwalten
+                        </a>
+                        <a href="/timetracking/list" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Zurück zur Zeiterfassung
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h5 class="mb-0">Abwesenheitstypen</h5>
+                                <small class="text-muted">Verwalten Sie die verschiedenen Arten von Abwesenheiten und deren erwartete Arbeitsstunden</small>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <button type="button" class="btn btn-primary" onclick="addHolidayType()">
+                                    <i class="bi bi-plus"></i> Abwesenheitstyp hinzufügen
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="loadingSpinner" class="text-center d-none">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Laden...</span>
+                            </div>
+                        </div>
+                        <div id="holidayTypeTable" class="table-responsive">
+                            <table class="table table-hover holiday-type-table">
+                                <thead>
+                                    <tr>
+                                        <th>Anzeigename</th>
+                                        <th>Erwartete Stunden</th>
+                                        <th>Beschreibung</th>
+                                        <th>Sortierung</th>
+                                        <th>Status</th>
+                                        <th>Typ</th>
+                                        <th>Aktionen</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="holidayTypeTableBody">
+                                    <!-- Holiday types will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Holiday Type Modal -->
+    <div class="modal fade" id="holidayTypeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Abwesenheitstyp hinzufügen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="holidayTypeForm">
+                        <input type="hidden" id="holidayTypeId">
+                        <input type="hidden" id="holidayTypeCode">
+                        <div class="mb-3">
+                            <label for="holidayTypeDisplayName" class="form-label">Name *</label>
+                            <input type="text" class="form-control" id="holidayTypeDisplayName" required 
+                                   placeholder="z.B. Bezahlter Urlaub">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="holidayTypeExpectedHours" class="form-label">Erwartete Arbeitsstunden *</label>
+                            <input type="number" class="form-control" id="holidayTypeExpectedHours" required 
+                                   min="0" max="24" step="0.5" value="0.0">
+                            <div class="form-text">Anzahl Stunden, die an diesem Tag erwartet werden (0.0 = arbeitsfrei)</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="holidayTypeDescription" class="form-label">Beschreibung</label>
+                            <textarea class="form-control" id="holidayTypeDescription" rows="3" 
+                                      placeholder="Optionale Beschreibung für diesen Abwesenheitstyp"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="holidayTypeSortOrder" class="form-label">Sortierung</label>
+                            <input type="number" class="form-control" id="holidayTypeSortOrder" 
+                                   min="1" value="1">
+                            <div class="form-text">Reihenfolge in der Anzeige (niedrigere Zahlen werden zuerst angezeigt)</div>
+                        </div>
+                        <div class="mb-3" id="activeCheckboxContainer">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="holidayTypeActive" checked>
+                                <label class="form-check-label" for="holidayTypeActive">
+                                    Aktiv
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="button" class="btn btn-primary" onclick="saveHolidayType()">Speichern</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script src="/js/holiday-type-settings.js"></script>
+  {/content}
+{/include} 
