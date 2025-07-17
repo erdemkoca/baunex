@@ -19,6 +19,7 @@ import java.time.DayOfWeek
 import java.time.format.TextStyle
 import java.time.temporal.WeekFields
 import java.util.*
+import org.jboss.logging.Logger
 
 @ApplicationScoped
 class WorkSummaryService @Inject constructor(
@@ -29,12 +30,14 @@ class WorkSummaryService @Inject constructor(
     private val holidayDefinitionService: ch.baunex.timetracking.service.HolidayDefinitionService,
     private val holidayTypeService: ch.baunex.timetracking.service.HolidayTypeService
 ) {
+    private val log = Logger.getLogger(WorkSummaryService::class.java)
 
     /**
      * Calculate expected working hours for a specific date
      * Uses the holiday configuration to determine expected hours for different holiday types
      */
     fun calculateExpectedHours(employeeId: Long, date: LocalDate): Double {
+        log.info("Calculating expected hours for employee $employeeId on $date")
         val employee = employeeRepository.findById(employeeId) ?: return 0.0
         
         // Check if it's a weekend
@@ -68,6 +71,7 @@ class WorkSummaryService @Inject constructor(
      * Get daily work summary for an employee in a date range
      */
     fun getDailyWorkSummary(employeeId: Long, from: LocalDate, to: LocalDate): List<EmployeeDailyWorkDTO> {
+        log.info("Fetching daily work summary for employee $employeeId from $from to $to")
         val employee = employeeRepository.findById(employeeId) ?: return emptyList()
         val employeeName = "${employee.person.firstName} ${employee.person.lastName}"
         
@@ -125,6 +129,7 @@ class WorkSummaryService @Inject constructor(
             currentDate = currentDate.plusDays(1)
         }
         
+        log.info("Fetched daily work summary for employee $employeeId from $from to $to")
         return result
     }
 
@@ -235,6 +240,7 @@ class WorkSummaryService @Inject constructor(
      * Calculates the balance since the employee's start date
      */
     fun getCumulativeHoursAccount(employeeId: Long, year: Int, week: Int): CumulativeHoursAccountDTO? {
+        log.info("Fetching cumulative hours account for employee $employeeId, year $year, week $week")
         val employee = employeeRepository.findById(employeeId) ?: return null
         val employeeName = "${employee.person.firstName} ${employee.person.lastName}"
         
@@ -267,6 +273,7 @@ class WorkSummaryService @Inject constructor(
         val usedVacationDays = calculateUsedVacationDays(employeeId, currentYear)
         val remainingVacationDays = totalVacationDays - usedVacationDays
         
+        log.info("Fetched cumulative hours account for employee $employeeId, year $year, week $week")
         return CumulativeHoursAccountDTO(
             employeeId = employeeId,
             employeeName = employeeName,
@@ -317,23 +324,14 @@ class WorkSummaryService @Inject constructor(
      * Returns detailed monthly breakdown with weeks and days
      */
     fun getMonthlyHoursAccount(employeeId: Long, year: Int): MonthlyHoursAccountDTO? {
-        println("DEBUG: Service - getMonthlyHoursAccount called for employee $employeeId, year $year")
-        
+        log.info("Fetching monthly hours account for employee $employeeId, year $year")
         val employee = employeeRepository.findById(employeeId) ?: return null
         val employeeName = "${employee.person.firstName} ${employee.person.lastName}"
         
-        println("DEBUG: Service - Employee found: $employeeName")
-        println("DEBUG: Service - Employee start date: ${employee.startDate}")
-        
-        // Get current week for summary
         val currentDate = LocalDate.now()
         val weekFields = WeekFields.of(Locale.getDefault())
         val currentWeek = currentDate.get(weekFields.weekOfYear())
         val currentYear = currentDate.year
-        
-        println("DEBUG: Service - Current date: $currentDate")
-        println("DEBUG: Service - Current year: $currentYear")
-        println("DEBUG: Service - Requested year: $year")
         
         // Get current week summary for the summary section
         val currentWeekSummary = getWeeklyWorkSummary(employeeId, currentYear, currentWeek)
@@ -342,9 +340,6 @@ class WorkSummaryService @Inject constructor(
         val startDate = employee.startDate
         val yearStart = LocalDate.of(year, 1, 1)
         val yearEnd = LocalDate.of(year, 12, 31)
-        
-        println("DEBUG: Service - Year start: $yearStart")
-        println("DEBUG: Service - Year end: $yearEnd")
         
         // Determine the effective start date for cumulative calculation
         // Use the same logic as for month range calculation
@@ -372,37 +367,17 @@ class WorkSummaryService @Inject constructor(
         val startMonth: Int
         val endMonth: Int
         
-        println("DEBUG: Service - Determining month range...")
-        println("DEBUG: Service - Start date year: ${startDate.year}")
-        println("DEBUG: Service - Requested year: $year")
-        println("DEBUG: Service - Current date year: ${currentDate.year}")
-        
         // Determine start month based on employee start date vs year start
         startMonth = effectiveStartDate.monthValue
         endMonth = if (year == currentDate.year) currentDate.monthValue else 12
         
-        println("DEBUG: Service - Employee start date: $startDate")
-        println("DEBUG: Service - Year start: $yearStart")
-        println("DEBUG: Service - Effective start date: $effectiveStartDate")
-        println("DEBUG: Service - Showing months from ${effectiveStartDate.month.getDisplayName(TextStyle.FULL, Locale.GERMAN)}. Start month: $startMonth, End month: $endMonth")
-        
         // Don't show future months
         if (year > currentDate.year) {
-            println("DEBUG: Service - Requested year is in the future, returning null")
+            log.warn("Requested year is in the future, returning null for employee $employeeId, year $year")
             return null
         }
         
-        println("DEBUG: Service - Final month range: $startMonth to $endMonth")
-        
-        // Debug: Log the month range
-        println("DEBUG: Employee ${employeeName} (ID: $employeeId)")
-        println("DEBUG: Start date: $startDate")
-        println("DEBUG: Current date: $currentDate")
-        println("DEBUG: Year: $year")
-        println("DEBUG: Month range: $startMonth to $endMonth")
-        
         for (month in startMonth..endMonth) {
-            println("DEBUG: Processing month $month")
             val monthStart = LocalDate.of(year, month, 1)
             val monthEnd = monthStart.plusMonths(1).minusDays(1)
             
@@ -567,12 +542,7 @@ class WorkSummaryService @Inject constructor(
         // Sort months in descending order (newest first)
         monthlyData.sortByDescending { monthData -> monthData.month }
         
-        // Debug: Log final result
-        println("DEBUG: Generated ${monthlyData.size} months")
-        monthlyData.forEach { month ->
-            println("DEBUG: Month ${month.month} - ${month.monthName}")
-        }
-        
+        log.info("Fetched monthly hours account for employee $employeeId, year $year")
         val currentWeekBalance = currentWeekSummary?.let { it.overtime - it.undertime } ?: 0.0
         val currentWeekWorkedHours = currentWeekSummary?.totalWorked ?: 0.0
         val currentWeekExpectedHours = currentWeekSummary?.totalExpected ?: 0.0

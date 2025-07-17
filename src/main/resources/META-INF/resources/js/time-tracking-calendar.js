@@ -1400,8 +1400,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             </option>
                         </select>
                     </div>
-                    <button @click="openTimeEntryForm" class="btn btn-primary btn-sm">
-                        <i class="bi bi-plus"></i> Zeit erfassen
+                    <button @click="openTimeEntryForm" class="btn btn-primary btn-sm shadow-sm" style="border-radius: 8px; padding: 0.5rem 1rem; font-weight: 500; transition: all 0.2s ease;" title="Neuen Zeiteintrag erstellen">
+                        <i class="bi bi-plus-circle me-1"></i> 
+                        Zeit erfassen
                     </button>
                     <button @click="debugGridLines" class="btn btn-outline-info btn-sm" title="Debug Grid Lines">
                         <i class="bi bi-bug"></i>
@@ -1410,19 +1411,22 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
 
             <!-- Time Entry Form Modal -->
-            <div v-if="showFormModal" class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050;" tabindex="-1" @click="closeFormModal">
-                <div class="modal-dialog modal-lg" style="position: relative; z-index: 1051;">
-                    <div class="modal-content" @click.stop>
-                        <div class="modal-header">
-                            <h5 class="modal-title">Neuer Zeiteintrag</h5>
-                            <button type="button" class="btn-close" @click="closeFormModal"></button>
+            <div v-if="showFormModal" class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.6); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; backdrop-filter: blur(2px);" tabindex="-1" @click="closeFormModal">
+                <div class="modal-dialog modal-lg" style="position: relative; z-index: 1051; max-width: 800px; margin: 1rem auto;">
+                    <div class="modal-content shadow border-0" @click.stop style="border-radius: 8px; overflow: hidden;">
+                        <div class="modal-header text-white" style="background: #495057; border-bottom: none; padding: 1rem 1.5rem;">
+                            <h5 class="modal-title mb-0">
+                                <i class="bi bi-clock me-2"></i>
+                                {{ currentEntryData ? 'Zeiteintrag bearbeiten' : 'Neuer Zeiteintrag' }}
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" @click="closeFormModal" style="opacity: 0.8;"></button>
                         </div>
-                        <div class="modal-body">
-                            <div v-if="!formLoaded" class="text-center p-4">
-                                <div class="spinner-border" role="status">
+                        <div class="modal-body p-0" style="max-height: 80vh; overflow-y: auto;">
+                            <div v-if="!formLoaded" class="text-center p-5">
+                                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
                                     <span class="visually-hidden">Lade Formular...</span>
                                 </div>
-                                <p class="mt-2">Formular wird geladen...</p>
+                                <p class="mt-3 text-muted">Formular wird geladen...</p>
                             </div>
                             <div id="time-tracking-form-app" 
                                  :data-entry="currentEntryData ? JSON.stringify(currentEntryData) : '{}'"
@@ -1432,12 +1436,16 @@ document.addEventListener('DOMContentLoaded', () => {
                                  :data-catalog-items="JSON.stringify([])"
                                  :data-current-date="new Date().toISOString().split('T')[0]"
                                  data-modal="time-entry-modal"
-                                 ref="formContainer">
+                                 ref="formContainer"
+                                 style="padding: 1.5rem;">
                             </div>
                             <script type="module" src="/js/time-tracking-form.js"></script>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @click="closeFormModal">Abbrechen</button>
+                        <div class="modal-footer bg-light border-top" style="padding: 1rem 1.5rem;">
+                            <button type="button" class="btn btn-outline-secondary" @click="closeFormModal">
+                                <i class="bi bi-x-circle me-1"></i>
+                                Abbrechen
+                            </button>
                         </div>
                     </div>
                 </div>

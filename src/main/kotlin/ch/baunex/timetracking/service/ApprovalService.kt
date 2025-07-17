@@ -16,6 +16,7 @@ import java.time.LocalDate
 import java.time.DayOfWeek
 import java.time.temporal.WeekFields
 import java.util.*
+import org.jboss.logging.Logger
 
 @ApplicationScoped
 class ApprovalService @Inject constructor(
@@ -24,20 +25,28 @@ class ApprovalService @Inject constructor(
     private val employeeRepository: EmployeeRepository,
     private val timeEntryMapper: ch.baunex.timetracking.mapper.TimeEntryMapper
 ) {
+    private val log = Logger.getLogger(ApprovalService::class.java)
 
     /**
      * Approve a single time entry
      */
     @Transactional
     fun approveTimeEntry(entryId: Long, approverId: Long): Boolean {
-        val entry = timeEntryRepository.findById(entryId) ?: return false
-        val approver = employeeRepository.findById(approverId) ?: return false
+        log.info("Approving time entry $entryId by approver $approverId")
+        return try {
+            val entry = timeEntryRepository.findById(entryId) ?: return false
+            val approver = employeeRepository.findById(approverId) ?: return false
 
-        entry.approvalStatus = ApprovalStatus.APPROVED
-        entry.approvedBy = approver
-        entry.approvedAt = LocalDate.now()
-        
-        return true
+            entry.approvalStatus = ApprovalStatus.APPROVED
+            entry.approvedBy = approver
+            entry.approvedAt = LocalDate.now()
+            
+            log.info("Successfully approved time entry $entryId")
+            true
+        } catch (e: Exception) {
+            log.error("Failed to approve time entry $entryId", e)
+            throw e
+        }
     }
 
     /**
@@ -45,25 +54,32 @@ class ApprovalService @Inject constructor(
      */
     @Transactional
     fun approveWeeklyEntries(employeeId: Long, year: Int, week: Int, approverId: Long): Boolean {
-        val approver = employeeRepository.findById(approverId) ?: return false
-        
-        // Calculate week start and end dates
-        val weekFields = WeekFields.of(Locale.getDefault())
-        val weekStart = LocalDate.now().withYear(year).with(weekFields.weekOfYear(), week.toLong())
-            .with(weekFields.dayOfWeek(), 1L) // Monday
-        val weekEnd = weekStart.plusDays(6) // Sunday
-        
-        // Get all time entries for the employee in the week
-        val entries = timeEntryRepository.findByEmployeeAndDateRange(employeeId, weekStart, weekEnd)
-        
-        // Approve all entries
-        entries.forEach { entry ->
-            entry.approvalStatus = ApprovalStatus.APPROVED
-            entry.approvedBy = approver
-            entry.approvedAt = LocalDate.now()
+        log.info("Approving weekly entries for employee $employeeId, year $year, week $week by approver $approverId")
+        return try {
+            val approver = employeeRepository.findById(approverId) ?: return false
+            
+            // Calculate week start and end dates
+            val weekFields = WeekFields.of(Locale.getDefault())
+            val weekStart = LocalDate.now().withYear(year).with(weekFields.weekOfYear(), week.toLong())
+                .with(weekFields.dayOfWeek(), 1L) // Monday
+            val weekEnd = weekStart.plusDays(6) // Sunday
+            
+            // Get all time entries for the employee in the week
+            val entries = timeEntryRepository.findByEmployeeAndDateRange(employeeId, weekStart, weekEnd)
+            
+            // Approve all entries
+            entries.forEach { entry ->
+                entry.approvalStatus = ApprovalStatus.APPROVED
+                entry.approvedBy = approver
+                entry.approvedAt = LocalDate.now()
+            }
+            
+            log.info("Successfully approved weekly entries for employee $employeeId, year $year, week $week")
+            return entries.isNotEmpty()
+        } catch (e: Exception) {
+            log.error("Failed to approve weekly entries for employee $employeeId, year $year, week $week", e)
+            throw e
         }
-        
-        return entries.isNotEmpty()
     }
 
     /**
@@ -71,14 +87,21 @@ class ApprovalService @Inject constructor(
      */
     @Transactional
     fun approveVacation(vacationId: Long, approverId: Long): Boolean {
-        val vacation = holidayRepository.findById(vacationId) ?: return false
-        val approver = employeeRepository.findById(approverId) ?: return false
+        log.info("Approving vacation $vacationId by approver $approverId")
+        return try {
+            val vacation = holidayRepository.findById(vacationId) ?: return false
+            val approver = employeeRepository.findById(approverId) ?: return false
 
-        vacation.approvalStatus = ApprovalStatus.APPROVED
-        vacation.approvedBy = approver
-        vacation.approvedAt = LocalDate.now()
-        
-        return true
+            vacation.approvalStatus = ApprovalStatus.APPROVED
+            vacation.approvedBy = approver
+            vacation.approvedAt = LocalDate.now()
+            
+            log.info("Successfully approved vacation $vacationId")
+            true
+        } catch (e: Exception) {
+            log.error("Failed to approve vacation $vacationId", e)
+            throw e
+        }
     }
 
     /**
@@ -86,85 +109,107 @@ class ApprovalService @Inject constructor(
      */
     @Transactional
     fun rejectVacation(vacationId: Long, approverId: Long, reason: String? = null): Boolean {
-        val vacation = holidayRepository.findById(vacationId) ?: return false
-        val approver = employeeRepository.findById(approverId) ?: return false
+        log.info("Rejecting vacation $vacationId by approver $approverId, reason: $reason")
+        return try {
+            val vacation = holidayRepository.findById(vacationId) ?: return false
+            val approver = employeeRepository.findById(approverId) ?: return false
 
-        vacation.approvalStatus = ApprovalStatus.REJECTED
-        vacation.approvedBy = approver
-        vacation.approvedAt = LocalDate.now()
-        if (reason != null) {
-            vacation.reason = reason
+            vacation.approvalStatus = ApprovalStatus.REJECTED
+            vacation.approvedBy = approver
+            vacation.approvedAt = LocalDate.now()
+            if (reason != null) {
+                vacation.reason = reason
+            }
+            
+            log.info("Successfully rejected vacation $vacationId")
+            true
+        } catch (e: Exception) {
+            log.error("Failed to reject vacation $vacationId", e)
+            throw e
         }
-        
-        return true
     }
 
     /**
      * Get weekly approval summary for an employee
      */
     fun getWeeklyApprovalSummary(employeeId: Long, year: Int, week: Int): WeeklyApprovalDTO? {
-        val employee = employeeRepository.findById(employeeId) ?: return null
-        
-        // Calculate week start and end dates
-        val weekFields = WeekFields.of(Locale.getDefault())
-        val weekStart = LocalDate.now().withYear(year).with(weekFields.weekOfYear(), week.toLong())
-            .with(weekFields.dayOfWeek(), 1L) // Monday
-        val weekEnd = weekStart.plusDays(6) // Sunday
-        
-        // Get all time entries for the employee in the week
-        val entries = timeEntryRepository.findByEmployeeAndDateRange(employeeId, weekStart, weekEnd)
-        
-        val totalEntries = entries.size
-        val pendingEntries = entries.count { it.approvalStatus == ApprovalStatus.PENDING }
-        val approvedEntries = entries.count { it.approvalStatus == ApprovalStatus.APPROVED }
-        val totalHours = entries.sumOf { it.hoursWorked }
-        
-        // Determine overall approval status
-        val approvalStatus = when {
-            approvedEntries == totalEntries -> "APPROVED"
-            pendingEntries == totalEntries -> "PENDING"
-            else -> "PARTIAL"
+        log.info("Fetching weekly approval summary for employee $employeeId, year $year, week $week")
+        return try {
+            val employee = employeeRepository.findById(employeeId) ?: return null
+            
+            // Calculate week start and end dates
+            val weekFields = WeekFields.of(Locale.getDefault())
+            val weekStart = LocalDate.now().withYear(year).with(weekFields.weekOfYear(), week.toLong())
+                .with(weekFields.dayOfWeek(), 1L) // Monday
+            val weekEnd = weekStart.plusDays(6) // Sunday
+            
+            // Get all time entries for the employee in the week
+            val entries = timeEntryRepository.findByEmployeeAndDateRange(employeeId, weekStart, weekEnd)
+            
+            val totalEntries = entries.size
+            val pendingEntries = entries.count { it.approvalStatus == ApprovalStatus.PENDING }
+            val approvedEntries = entries.count { it.approvalStatus == ApprovalStatus.APPROVED }
+            val totalHours = entries.sumOf { it.hoursWorked }
+            
+            // Determine overall approval status
+            val approvalStatus = when {
+                approvedEntries == totalEntries -> "APPROVED"
+                pendingEntries == totalEntries -> "PENDING"
+                else -> "PARTIAL"
+            }
+            
+            log.info("Fetched weekly approval summary for employee $employeeId, year $year, week $week")
+            return WeeklyApprovalDTO(
+                employeeId = employeeId,
+                employeeName = "${employee.person.firstName} ${employee.person.lastName}",
+                weekStart = weekStart,
+                weekEnd = weekEnd,
+                totalEntries = totalEntries,
+                pendingEntries = pendingEntries,
+                approvedEntries = approvedEntries,
+                totalHours = totalHours,
+                approvalStatus = approvalStatus,
+                approverId = null, // Would need to track weekly approval
+                approverName = null,
+                approvedAt = null,
+                entries = entries.map { timeEntryMapper.toTimeEntryResponseDTO(it) }
+            )
+        } catch (e: Exception) {
+            log.error("Failed to fetch weekly approval summary for employee $employeeId, year $year, week $week", e)
+            throw e
         }
-        
-        return WeeklyApprovalDTO(
-            employeeId = employeeId,
-            employeeName = "${employee.person.firstName} ${employee.person.lastName}",
-            weekStart = weekStart,
-            weekEnd = weekEnd,
-            totalEntries = totalEntries,
-            pendingEntries = pendingEntries,
-            approvedEntries = approvedEntries,
-            totalHours = totalHours,
-            approvalStatus = approvalStatus,
-            approverId = null, // Would need to track weekly approval
-            approverName = null,
-            approvedAt = null,
-            entries = entries.map { timeEntryMapper.toTimeEntryResponseDTO(it) }
-        )
     }
 
     /**
      * Get all pending vacation requests
      */
     fun getPendingVacationRequests(): List<VacationApprovalDTO> {
-        return holidayRepository.findByStatus(ApprovalStatus.PENDING)
-            .map { holiday ->
-                val workingDays = calculateWorkingDays(holiday.startDate, holiday.endDate)
-                VacationApprovalDTO(
-                    id = holiday.id!!,
-                    employeeId = holiday.employee.id!!,
-                    employeeName = "${holiday.employee.person.firstName} ${holiday.employee.person.lastName}",
-                    startDate = holiday.startDate,
-                    endDate = holiday.endDate,
-                    type = holiday.holidayType.displayName,
-                    reason = holiday.reason,
-                    approvalStatus = holiday.approvalStatus.name,
-                    approverId = holiday.approvedBy?.id,
-                    approverName = holiday.approvedBy?.let { "${it.person.firstName} ${it.person.lastName}" },
-                    approvedAt = holiday.approvedAt,
-                    workingDays = workingDays
-                )
-            }
+        log.info("Fetching pending vacation requests")
+        return try {
+            val result = holidayRepository.findByStatus(ApprovalStatus.PENDING)
+                .map { holiday ->
+                    val workingDays = calculateWorkingDays(holiday.startDate, holiday.endDate)
+                    VacationApprovalDTO(
+                        id = holiday.id!!,
+                        employeeId = holiday.employee.id!!,
+                        employeeName = "${holiday.employee.person.firstName} ${holiday.employee.person.lastName}",
+                        startDate = holiday.startDate,
+                        endDate = holiday.endDate,
+                        type = holiday.holidayType.displayName,
+                        reason = holiday.reason,
+                        approvalStatus = holiday.approvalStatus.name,
+                        approverId = holiday.approvedBy?.id,
+                        approverName = holiday.approvedBy?.let { "${it.person.firstName} ${it.person.lastName}" },
+                        approvedAt = holiday.approvedAt,
+                        workingDays = workingDays
+                    )
+                }
+            log.info("Fetched ${result.size} pending vacation requests")
+            result
+        } catch (e: Exception) {
+            log.error("Failed to fetch pending vacation requests", e)
+            throw e
+        }
     }
 
     /**

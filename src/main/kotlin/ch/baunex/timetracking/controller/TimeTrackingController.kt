@@ -90,22 +90,40 @@ class TimeTrackingController {
 
     @POST
     @Path("/api") @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
-    fun createApi(dto: TimeEntryDTO): TimeEntryDTO =
-        timeTrackingFacade.logTime(dto)
+    fun createApi(dto: TimeEntryDTO): TimeEntryDTO {
+        log.info("Creating new time entry for employee ${dto.employeeId} on project ${dto.projectId}")
+        return try {
+            timeTrackingFacade.logTime(dto)
+        } catch (e: Exception) {
+            log.error("Failed to create time entry", e)
+            throw e
+        }
+    }
 
     @PUT
     @Path("/api/{id}") @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
-    fun updateApi(@PathParam("id") id: Long, dto: TimeEntryDTO): TimeEntryDTO? =
-        timeTrackingFacade.updateTimeEntry(id, dto)
+    fun updateApi(@PathParam("id") id: Long, dto: TimeEntryDTO): TimeEntryDTO? {
+        log.info("Updating time entry $id for employee ${dto.employeeId}")
+        return try {
+            timeTrackingFacade.updateTimeEntry(id, dto)
+        } catch (e: Exception) {
+            log.error("Failed to update time entry $id", e)
+            throw e
+        }
+    }
 
     @POST
     @Path("/api/{id}/approve")
     fun approveApi(@PathParam ("id") id: Long): Response {
-        val adminId = employeeFacade.findByRole(Role.ADMIN).id
-        return if (timeTrackingFacade.approveEntry(id, adminId))
+        log.info("Approving time entry $id")
+        return try {
+            val adminId = employeeFacade.findByRole(Role.ADMIN).id
+            timeTrackingFacade.approveEntry(id, adminId)
             Response.noContent().build()
-        else
-            Response.status(Response.Status.NOT_FOUND).build()
+        } catch (e: Exception) {
+            log.error("Failed to approve time entry $id", e)
+            throw e
+        }
     }
 
     @POST

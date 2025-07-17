@@ -9,10 +9,13 @@ import ch.baunex.timetracking.dto.TimeEntryDTO
 import ch.baunex.timetracking.mapper.TimeEntryMapper
 import ch.baunex.timetracking.model.ApprovalStatus
 import ch.baunex.user.service.EmployeeService
+import ch.baunex.timetracking.validation.TimeEntryValidator
+import ch.baunex.timetracking.exception.*
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import java.time.LocalDate
+import org.jboss.logging.Logger
 
 @ApplicationScoped
 class TimeTrackingService @Inject constructor(
@@ -22,18 +25,29 @@ class TimeTrackingService @Inject constructor(
     private val timeEntryCatalogItemService: TimeEntryCatalogItemService,
     private val catalogService: CatalogService,
     private val employeeService: EmployeeService,
-    private val timeEntryMapper: TimeEntryMapper
+    private val timeEntryMapper: TimeEntryMapper,
+    private val timeEntryValidator: TimeEntryValidator
 ) {
+    
+    private val log = Logger.getLogger(TimeTrackingService::class.java)
 
     @Transactional
     fun logTime(dto: TimeEntryDTO): TimeEntryModel {
-        val employee = employeeRepository.findById(dto.employeeId)
-            ?: throw IllegalArgumentException("Employee not found with id: ${dto.employeeId}")
-        val project = projectRepository.findById(dto.projectId)
-            ?: throw IllegalArgumentException("Project not found with id: ${dto.projectId}")
+        log.info("Creating new time entry for employee ${dto.employeeId} on project ${dto.projectId} for date ${dto.date}")
+        
+        // Validate the time entry before processing
+        timeEntryValidator.validateTimeEntry(dto, isUpdate = false)
+        
+        val employee = employeeRepository.findById(dto.employeeId!!)
+            ?: throw EmployeeNotFoundException(dto.employeeId!!)
+        val project = projectRepository.findById(dto.projectId!!)
+            ?: throw ProjectNotFoundException(dto.projectId!!)
 
         // Always create a single time entry, calculating hours worked from breaks
-        return createSingleTimeEntry(dto, employee, project)
+        val timeEntry = createSingleTimeEntry(dto, employee, project)
+        
+        log.info("Successfully created time entry with ID ${timeEntry.id}")
+        return timeEntry
     }
 
     private fun createSingleTimeEntry(dto: TimeEntryDTO, employee: ch.baunex.user.model.EmployeeModel, project: ch.baunex.project.model.ProjectModel): TimeEntryModel {
@@ -126,25 +140,34 @@ class TimeTrackingService @Inject constructor(
     }
 
     fun getTimeEntryById(id: Long): TimeEntryModel? {
-        return timeEntryRepository.findById(id)
+        log.debug("Fetching time entry with ID: $id")
+        val entry = timeEntryRepository.findById(id)
+        if (entry == null) {
+            log.warn("Time entry with ID $id not found")
+        }
+        return entry
     }
 
     @Transactional
     fun updateTimeEntry(id: Long, dto: TimeEntryDTO): TimeEntryModel? {
-        println("DEBUG: *** updateTimeEntry called with ID: $id ***")
-        println("DEBUG: Breaks count: ${dto.breaks.size}")
+        log.info("Updating time entry with ID: $id for employee ${dto.employeeId}")
         
-        val existingEntry = timeEntryRepository.findById(id) ?: return null
-        val employee = employeeRepository.findById(dto.employeeId)
-            ?: throw IllegalArgumentException("Employee not found with id: ${dto.employeeId}")
-        val project = projectRepository.findById(dto.projectId)
-            ?: throw IllegalArgumentException("Project not found with id: ${dto.projectId}")
+        val existingEntry = timeEntryRepository.findById(id) 
+            ?: throw TimeEntryNotFoundException(id)
+        
+        // Validate the time entry before processing
+        timeEntryValidator.validateTimeEntry(dto, isUpdate = true)
+        
+        val employee = employeeRepository.findById(dto.employeeId!!)
+            ?: throw EmployeeNotFoundException(dto.employeeId!!)
+        val project = projectRepository.findById(dto.projectId!!)
+            ?: throw ProjectNotFoundException(dto.projectId!!)
 
         // Always update the single entry, calculating hours worked from breaks
-        println("DEBUG: Updating single entry with breaks")
+        log.debug("Updating single entry with ${dto.breaks.size} breaks")
         
         // Calculate hours worked by subtracting breaks from total duration
-        val totalDurationMinutes = java.time.temporal.ChronoUnit.MINUTES.between(dto.startTime, dto.endTime)
+        val totalDurationMinutes = java.time.temporal.ChronoUnit.MINUTES.between(dto.startTime!!, dto.endTime!!)
         val breakMinutes = dto.breaks.sumOf { breakItem ->
             java.time.temporal.ChronoUnit.MINUTES.between(breakItem.start, breakItem.end)
         }
@@ -191,34 +214,48 @@ class TimeTrackingService @Inject constructor(
         timeEntryCatalogItemService.deleteByTimeEntryId(id)
         // Then add new ones
         dto.catalogItems.forEach { catalogItemDto ->
-            val catalogItemId = catalogItemDto.catalogItemId ?: throw IllegalArgumentException("Catalog item ID cannot be null")
+            val catalogItemId = catalogItemDto.catalogItemId 
+                ?: throw MissingRequiredFieldException("catalogItemId")
             val catalogItem = catalogService.getCatalogItemById(catalogItemId)
                 ?: throw IllegalArgumentException("Catalog item not found with id: $catalogItemId")
             timeEntryCatalogItemService.addCatalogItemToTimeEntry(existingEntry, catalogItem, catalogItemDto.quantity)
         }
 
+        log.info("Successfully updated time entry with ID ${existingEntry.id}")
         return existingEntry
     }
 
     @Transactional
     fun approveEntry(entryId: Long, approverId: Long): Boolean {
-        val entry = getTimeEntryById(entryId) ?: return false
-        val approver = employeeService.findEmployeeById(approverId) ?: return false
+        log.info("Approving time entry $entryId by approver $approverId")
+        
+        val entry = getTimeEntryById(entryId) 
+            ?: throw TimeEntryNotFoundException(entryId)
+        val approver = employeeService.findEmployeeById(approverId) 
+            ?: throw EmployeeNotFoundException(approverId)
 
         entry.approvalStatus = ApprovalStatus.APPROVED
         entry.approvedBy = approver
         entry.approvedAt = LocalDate.now()
+        
+        log.info("Successfully approved time entry $entryId")
         return true
     }
 
     @Transactional
     fun approveWeeklyEntries(employeeId: Long, fromDate: LocalDate, toDate: LocalDate, approverId: Long): Boolean {
-        val approver = employeeService.findEmployeeById(approverId) ?: return false
+        log.info("Approving weekly entries for employee $employeeId from $fromDate to $toDate by approver $approverId")
+        
+        val approver = employeeService.findEmployeeById(approverId) 
+            ?: throw EmployeeNotFoundException(approverId)
         
         // Find all time entries for the employee in the date range
         val entries = timeEntryRepository.list("employee.id = ?1 and date between ?2 and ?3", employeeId, fromDate, toDate)
         
-        if (entries.isEmpty()) return false
+        if (entries.isEmpty()) {
+            log.warn("No time entries found for employee $employeeId in date range $fromDate to $toDate")
+            return false
+        }
         
         // Approve all entries
         entries.forEach { entry ->
@@ -227,6 +264,7 @@ class TimeTrackingService @Inject constructor(
             entry.approvedAt = LocalDate.now()
         }
         
+        log.info("Successfully approved ${entries.size} time entries for employee $employeeId")
         return true
     }
 

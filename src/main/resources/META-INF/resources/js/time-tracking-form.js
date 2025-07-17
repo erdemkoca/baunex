@@ -158,6 +158,35 @@ function initializeForm() {
                 let mins = (eh * 60 + em) - (sh * 60 + sm) - this.totalBreakMinutes;
                 if (mins < 0) mins = 0;
                 return (mins / 60).toFixed(2);
+            },
+            // Tab validation
+            isGeneralTabValid() {
+                return this.entry.employeeId && this.entry.projectId && this.entry.date && this.entry.title && this.entry.title.trim() !== '';
+            },
+            isWorkTimeTabValid() {
+                return this.entry.startTime && this.entry.endTime;
+            },
+            getTabIcon() {
+                return (tabIndex) => {
+                    const icons = ['person-badge', 'clock', 'box-seam', 'sticky', 'check2-circle'];
+                    const isValid = tabIndex === 0 ? this.isGeneralTabValid : 
+                                   tabIndex === 1 ? this.isWorkTimeTabValid : true;
+                    
+                    return isValid ? icons[tabIndex] : 'exclamation-triangle';
+                };
+            },
+            getTabClass() {
+                return (tabIndex) => {
+                    const isValid = tabIndex === 0 ? this.isGeneralTabValid : 
+                                   tabIndex === 1 ? this.isWorkTimeTabValid : true;
+                    
+                    return {
+                        'nav-link': true,
+                        'active': this.activeTab === tabIndex,
+                        'text-warning': !isValid && this.activeTab !== tabIndex,
+                        'text-danger': !isValid && this.activeTab === tabIndex
+                    };
+                };
             }
         },
         mounted() {
@@ -253,9 +282,31 @@ function initializeForm() {
             },
             // Save
             async saveEntry() {
+                if (this.saving) return;
+                
+                // Validate required fields
                 if (!this.entry.employeeId) {
                     alert("Bitte Mitarbeiter auswählen");
-                    this.saving = false;
+                    return;
+                }
+                if (!this.entry.projectId) {
+                    alert("Bitte Projekt auswählen");
+                    return;
+                }
+                if (!this.entry.date) {
+                    alert("Bitte Datum auswählen");
+                    return;
+                }
+                if (!this.entry.title || this.entry.title.trim() === '') {
+                    alert("Bitte Titel eingeben");
+                    return;
+                }
+                if (!this.entry.startTime) {
+                    alert("Bitte Startzeit eingeben");
+                    return;
+                }
+                if (!this.entry.endTime) {
+                    alert("Bitte Endzeit eingeben");
                     return;
                 }
                 // Ensure every note has createdById
@@ -369,12 +420,8 @@ function initializeForm() {
                     <!-- Tab Navigation -->
                     <ul class="nav nav-tabs mb-4" role="tablist">
                         <li class="nav-item" v-for="(tab, i) in ['Allgemein', 'Arbeitszeit', 'Material', 'Notizen', 'Übersicht']" :key="i">
-                            <button class="nav-link" :class="{active: activeTab === i}" @click="setTab(i)">
-                                <span v-if="i===0" v-html="icon('person-badge')"></span>
-                                <span v-else-if="i===1" v-html="icon('clock')"></span>
-                                <span v-else-if="i===2" v-html="icon('box-seam')"></span>
-                                <span v-else-if="i===3" v-html="icon('sticky')"></span>
-                                <span v-else v-html="icon('check2-circle')"></span>
+                            <button :class="getTabClass(i)" @click="setTab(i)">
+                                <span v-html="icon(getTabIcon(i))"></span>
                                 {{ tab }}
                             </button>
                         </li>
@@ -408,8 +455,8 @@ function initializeForm() {
                                 <input v-model="entry.date" type="date" class="form-control" required>
                             </div>
                             <div class="col-md-8">
-                                <label class="form-label">Titel (optional)</label>
-                                <input v-model="entry.title" type="text" class="form-control" placeholder="Kurze Beschreibung">
+                                <label class="form-label">Titel <span class="text-danger">*</span></label>
+                                <input v-model="entry.title" type="text" class="form-control" placeholder="Kurze Beschreibung" required>
                             </div>
                         </div>
                                 </div>
