@@ -1,12 +1,11 @@
 package ch.baunex.timetracking.exception
 
+import ch.baunex.timetracking.dto.ErrorResponseDTO
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.ext.ExceptionMapper
 import jakarta.ws.rs.ext.Provider
 import org.jboss.logging.Logger
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 /**
  * Global exception handler for time tracking exceptions
@@ -30,19 +29,13 @@ class TimeTrackingExceptionHandler : ExceptionMapper<TimeTrackingException> {
             .build()
     }
     
-    private fun createErrorResponse(exception: TimeTrackingException): Map<String, Any> {
-        val baseResponse = mutableMapOf<String, Any>()
-        baseResponse["timestamp"] = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-        baseResponse["error"] = exception.message ?: "Unbekannter Fehler"
-        baseResponse["type"] = exception.javaClass.simpleName
-        
-        // Add field-specific information for validation exceptions
-        if (exception is TimeEntryValidationException) {
-            exception.field?.let { baseResponse["field"] = it }
-            exception.value?.let { baseResponse["value"] = it }
-        }
-        
-        return baseResponse
+    private fun createErrorResponse(exception: TimeTrackingException): ErrorResponseDTO {
+        return ErrorResponseDTO.create(
+            error = exception.message ?: "Unbekannter Fehler",
+            type = exception.javaClass.simpleName,
+            field = if (exception is TimeEntryValidationException) exception.field else null,
+            value = if (exception is TimeEntryValidationException) exception.value?.toString() else null
+        )
     }
     
     private fun determineHttpStatus(exception: TimeTrackingException): Response.Status {
@@ -89,10 +82,10 @@ class GeneralValidationExceptionHandler : ExceptionMapper<IllegalArgumentExcepti
     private val log = Logger.getLogger(GeneralValidationExceptionHandler::class.java)
     
     override fun toResponse(exception: IllegalArgumentException): Response {
-        val errorResponse = mutableMapOf<String, Any>()
-        errorResponse["timestamp"] = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-        errorResponse["error"] = exception.message ?: "Validierungsfehler"
-        errorResponse["type"] = "ValidationError"
+        val errorResponse = ErrorResponseDTO.create(
+            error = exception.message ?: "Validierungsfehler",
+            type = "ValidationError"
+        )
         
         log.warn("Validation error: ${exception.message}", exception)
         
@@ -112,12 +105,37 @@ class GeneralRuntimeExceptionHandler : ExceptionMapper<RuntimeException> {
     private val log = Logger.getLogger(GeneralRuntimeExceptionHandler::class.java)
     
     override fun toResponse(exception: RuntimeException): Response {
-        val errorResponse = mutableMapOf<String, Any>()
-        errorResponse["timestamp"] = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-        errorResponse["error"] = "Ein interner Fehler ist aufgetreten"
-        errorResponse["type"] = "InternalError"
+        val errorResponse = ErrorResponseDTO.create(
+            error = "Ein interner Fehler ist aufgetreten",
+            type = "InternalError",
+            details = exception.message
+        )
         
         log.error("Runtime error in time tracking API", exception)
+        
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+            .entity(errorResponse)
+            .type(MediaType.APPLICATION_JSON)
+            .build()
+    }
+}
+
+/**
+ * Handler for all other exceptions that might not be caught by specific handlers
+ */
+@Provider
+class GeneralExceptionHandler : ExceptionMapper<Exception> {
+    
+    private val log = Logger.getLogger(GeneralExceptionHandler::class.java)
+    
+    override fun toResponse(exception: Exception): Response {
+        val errorResponse = ErrorResponseDTO.create(
+            error = "Ein unerwarteter Fehler ist aufgetreten",
+            type = "UnexpectedError",
+            details = exception.message
+        )
+        
+        log.error("Unexpected error in time tracking API", exception)
         
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
             .entity(errorResponse)

@@ -5,6 +5,7 @@ import ch.baunex.notes.facade.NoteAttachmentFacade
 import ch.baunex.notes.model.NoteCategory
 import ch.baunex.project.facade.ProjectFacade
 import ch.baunex.timetracking.dto.TimeEntryDTO
+import ch.baunex.timetracking.dto.ErrorResponseDTO
 import ch.baunex.timetracking.facade.TimeTrackingFacade
 import ch.baunex.user.facade.EmployeeFacade
 import ch.baunex.user.model.Role
@@ -29,6 +30,7 @@ import ch.baunex.timetracking.service.WorkSummaryService
 import ch.baunex.timetracking.dto.EmployeeDailyWorkDTO
 import ch.baunex.timetracking.dto.WeeklyWorkSummaryDTO
 import ch.baunex.timetracking.dto.MonthlyHoursAccountDTO
+import ch.baunex.timetracking.dto.ExpectedHoursDTO
 import java.net.URI
 
 @Path("/timetracking")
@@ -147,8 +149,12 @@ class TimeTrackingController {
         @RestForm("file") upload: FileUpload?
     ): Response {
         if (upload == null) {
+            val errorResponse = ErrorResponseDTO.create(
+                error = "Datei fehlt",
+                type = "MissingFileError"
+            )
             return Response.status(Response.Status.BAD_REQUEST)
-                .entity(mapOf("error" to "Missing file")).build()
+                .entity(errorResponse).build()
         }
         return try {
             val dto = noteAttachmentFacade.uploadAttachment(
@@ -159,8 +165,13 @@ class TimeTrackingController {
             Response.status(Response.Status.NOT_FOUND).build()
         } catch (e: Exception) {
             log.error("upload error", e)
+            val errorResponse = ErrorResponseDTO.create(
+                error = "Fehler beim Hochladen der Datei",
+                type = "UploadError",
+                details = e.message
+            )
             Response.serverError()
-                .entity(mapOf("error" to e.message)).build()
+                .entity(errorResponse).build()
         }
     }
 
@@ -240,10 +251,10 @@ class TimeTrackingController {
     fun getExpectedHours(
         @QueryParam("employeeId") employeeId: Long,
         @QueryParam("date") date: String
-    ): Map<String, Double> {
+    ): ExpectedHoursDTO {
         val localDate = LocalDate.parse(date)
         val expectedHours = workSummaryService.calculateExpectedHours(employeeId, localDate)
-        return mapOf("expectedHours" to expectedHours)
+        return ExpectedHoursDTO(expectedHours)
     }
 
     @GET

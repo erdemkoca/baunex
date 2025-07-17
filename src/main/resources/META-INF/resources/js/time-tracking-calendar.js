@@ -1411,17 +1411,20 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
 
             <!-- Time Entry Form Modal -->
-            <div v-if="showFormModal" class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.6); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; backdrop-filter: blur(2px);" tabindex="-1" @click="closeFormModal">
-                <div class="modal-dialog modal-lg" style="position: relative; z-index: 1051; max-width: 800px; margin: 1rem auto;">
-                    <div class="modal-content shadow border-0" @click.stop style="border-radius: 8px; overflow: hidden;">
-                        <div class="modal-header text-white" style="background: #495057; border-bottom: none; padding: 1rem 1.5rem;">
-                            <h5 class="modal-title mb-0">
+            <div v-if="showFormModal" class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; backdrop-filter: blur(3px);" tabindex="-1" @click="closeFormModal">
+                <div class="modal-dialog modal-lg" style="position: relative; z-index: 1051; max-width: 800px; margin: 1.5rem auto;">
+                    <div class="modal-content shadow-lg border-0" @click.stop style="border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                        <!-- Single Header -->
+                        <div class="modal-header text-white" style="background: linear-gradient(135deg, #495057 0%, #6c757d 100%); border-bottom: none; padding: 1.25rem 1.5rem;">
+                            <h5 class="modal-title mb-0" style="font-weight: 600; font-size: 1.1rem;">
                                 <i class="bi bi-clock me-2"></i>
                                 {{ currentEntryData ? 'Zeiteintrag bearbeiten' : 'Neuer Zeiteintrag' }}
                             </h5>
-                            <button type="button" class="btn-close btn-close-white" @click="closeFormModal" style="opacity: 0.8;"></button>
+                            <button type="button" class="btn-close btn-close-white" @click="closeFormModal" style="opacity: 0.9; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.9'"></button>
                         </div>
-                        <div class="modal-body p-0" style="max-height: 80vh; overflow-y: auto;">
+                        
+                        <!-- Form Content -->
+                        <div class="modal-body p-0" style="max-height: 75vh; overflow-y: auto; background: #f8f9fa;">
                             <div v-if="!formLoaded" class="text-center p-5">
                                 <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
                                     <span class="visually-hidden">Lade Formular...</span>
@@ -1437,15 +1440,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                  :data-current-date="new Date().toISOString().split('T')[0]"
                                  data-modal="time-entry-modal"
                                  ref="formContainer"
-                                 style="padding: 1.5rem;">
+                                 style="padding: 2rem; background: white; margin: 1rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                             </div>
                             <script type="module" src="/js/time-tracking-form.js"></script>
-                        </div>
-                        <div class="modal-footer bg-light border-top" style="padding: 1rem 1.5rem;">
-                            <button type="button" class="btn btn-outline-secondary" @click="closeFormModal">
-                                <i class="bi bi-x-circle me-1"></i>
-                                Abbrechen
-                            </button>
                         </div>
                     </div>
                 </div>

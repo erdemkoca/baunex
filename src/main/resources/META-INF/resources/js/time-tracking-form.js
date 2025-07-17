@@ -259,6 +259,94 @@ function initializeForm() {
             removeCatalogItem(i) {
                 this.entry.catalogItems.splice(i, 1);
             },
+            
+            parseErrorMessage(error) {
+                try {
+                    // Versuche, die Fehlermeldung als JSON zu parsen
+                    if (typeof error.message === 'string' && error.message.startsWith('{')) {
+                        const errorData = JSON.parse(error.message);
+                        return this.formatErrorResponse(errorData);
+                    }
+                    // Fallback für andere Fehlertypen
+                    return error.message || 'Ein unbekannter Fehler ist aufgetreten';
+                } catch (parseError) {
+                    // Falls JSON-Parsing fehlschlägt, verwende die ursprüngliche Nachricht
+                    return error.message || 'Ein Fehler ist aufgetreten';
+                }
+            },
+            
+            formatErrorResponse(errorData) {
+                const { error, type, field, value } = errorData;
+                
+                // Benutzerfreundliche Fehlermeldungen basierend auf dem Fehlertyp
+                switch (type) {
+                    case 'DuplicateTimeEntryException':
+                        return '⏰ Zeitüberschneidung: Es existiert bereits ein Zeiteintrag für diesen Zeitraum. Bitte wählen Sie einen anderen Zeitraum oder bearbeiten Sie den bestehenden Eintrag.';
+                    
+                    case 'MissingRequiredFieldException':
+                        return `📝 **Pflichtfeld fehlt**: Das Feld "${field}" ist erforderlich. Bitte füllen Sie alle markierten Felder aus.`;
+                    
+                    case 'InvalidTimeRangeException':
+                        return '⏰ **Ungültiger Zeitbereich**: Die Endzeit muss nach der Startzeit liegen.';
+                    
+                    case 'InvalidDateException':
+                        return '📅 **Ungültiges Datum**: Das ausgewählte Datum ist nicht erlaubt (z.B. Wochenende, Feiertag oder Zukunft).';
+                    
+                    case 'EmployeeNotFoundException':
+                        return '👤 **Mitarbeiter nicht gefunden**: Der ausgewählte Mitarbeiter existiert nicht mehr.';
+                    
+                    case 'ProjectNotFoundException':
+                        return '📋 **Projekt nicht gefunden**: Das ausgewählte Projekt existiert nicht mehr.';
+                    
+                    case 'InvalidHoursException':
+                        return '⏱️ **Ungültige Arbeitsstunden**: Die eingegebenen Stunden sind nicht zulässig.';
+                    
+                    case 'InvalidBreakException':
+                        return '☕ **Ungültige Pause**: Die Pausenkonfiguration ist fehlerhaft.';
+                    
+                    case 'ValidationError':
+                        return `⚠️ **Validierungsfehler**: ${error}`;
+                    
+                    case 'InternalError':
+                    case 'UnexpectedError':
+                        return '🔧 **Systemfehler**: Ein interner Fehler ist aufgetreten. Bitte versuchen Sie es später erneut oder kontaktieren Sie den Administrator.';
+                    
+                    default:
+                        return `❌ **${type}**: ${error}`;
+                }
+            },
+            
+            showError(message) {
+                // Erstelle eine schöne Fehlermeldung mit Bootstrap
+                const errorHtml = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert" style="border-radius: 8px; border: none; box-shadow: 0 2px 8px rgba(220,53,69,0.2);">
+                        <div style="display: flex; align-items: flex-start;">
+                            <div style="flex-shrink: 0; margin-right: 12px; margin-top: 2px;">
+                                <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.2rem; color: #dc3545;"></i>
+                            </div>
+                            <div style="flex-grow: 1;">
+                                <div style="font-weight: 600; margin-bottom: 4px; color: #721c24;">Fehler beim Speichern</div>
+                                <div style="line-height: 1.5; color: #721c24;">${message}</div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="position: absolute; top: 12px; right: 12px;"></button>
+                    </div>
+                `;
+                
+                // Füge die Fehlermeldung am Anfang des Formulars hinzu
+                const formContainer = document.querySelector('#time-tracking-form-app');
+                if (formContainer) {
+                    // Entferne vorherige Fehlermeldungen
+                    const existingAlerts = formContainer.querySelectorAll('.alert-danger');
+                    existingAlerts.forEach(alert => alert.remove());
+                    
+                    // Füge neue Fehlermeldung hinzu
+                    formContainer.insertAdjacentHTML('afterbegin', errorHtml);
+                    
+                    // Scroll zum Anfang des Formulars
+                    formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            },
             // Notes formatting
             formatNote(note) {
                 let createdById = this.entry.employeeId;
@@ -285,28 +373,30 @@ function initializeForm() {
                 if (this.saving) return;
                 
                 // Validate required fields
+                const validationErrors = [];
+                
                 if (!this.entry.employeeId) {
-                    alert("Bitte Mitarbeiter auswählen");
-                    return;
+                    validationErrors.push("Mitarbeiter");
                 }
                 if (!this.entry.projectId) {
-                    alert("Bitte Projekt auswählen");
-                    return;
+                    validationErrors.push("Projekt");
                 }
                 if (!this.entry.date) {
-                    alert("Bitte Datum auswählen");
-                    return;
+                    validationErrors.push("Datum");
                 }
                 if (!this.entry.title || this.entry.title.trim() === '') {
-                    alert("Bitte Titel eingeben");
-                    return;
+                    validationErrors.push("Titel");
                 }
                 if (!this.entry.startTime) {
-                    alert("Bitte Startzeit eingeben");
-                    return;
+                    validationErrors.push("Startzeit");
                 }
                 if (!this.entry.endTime) {
-                    alert("Bitte Endzeit eingeben");
+                    validationErrors.push("Endzeit");
+                }
+                
+                if (validationErrors.length > 0) {
+                    const errorMessage = `📝 **Pflichtfelder fehlen**: Bitte füllen Sie folgende Felder aus: ${validationErrors.join(', ')}`;
+                    this.showError(errorMessage);
                     return;
                 }
                 // Ensure every note has createdById
@@ -405,27 +495,22 @@ function initializeForm() {
                     }
                 } catch (e) {
                     console.error(e);
-                    alert('Fehler beim Speichern: ' + e.message);
+                    this.showError(this.parseErrorMessage(e));
                     this.saving = false;
                 }
             }
         },
         template: `
         <div class="container-fluid">
-            <div class="card mt-3">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">{{ entry.id ? 'Eintrag bearbeiten' : 'Neuer Zeiteintrag' }}</h5>
-                </div>
-                <div class="card-body">
-                    <!-- Tab Navigation -->
-                    <ul class="nav nav-tabs mb-4" role="tablist">
-                        <li class="nav-item" v-for="(tab, i) in ['Allgemein', 'Arbeitszeit', 'Material', 'Notizen', 'Übersicht']" :key="i">
-                            <button :class="getTabClass(i)" @click="setTab(i)">
-                                <span v-html="icon(getTabIcon(i))"></span>
-                                {{ tab }}
-                            </button>
-                        </li>
-                    </ul>
+            <!-- Tab Navigation -->
+            <ul class="nav nav-tabs mb-4" role="tablist" style="border-bottom: 2px solid #e9ecef;">
+                <li class="nav-item" v-for="(tab, i) in ['Allgemein', 'Arbeitszeit', 'Material', 'Notizen', 'Übersicht']" :key="i">
+                    <button :class="getTabClass(i)" @click="setTab(i)" style="border: none; border-radius: 6px 6px 0 0; margin-right: 0.25rem; font-weight: 500; transition: all 0.2s ease;">
+                        <span v-html="icon(getTabIcon(i))"></span>
+                        {{ tab }}
+                    </button>
+                </li>
+            </ul>
 
                     <!-- Allgemein -->
                     <div v-show="activeTab === 0">
@@ -685,20 +770,17 @@ function initializeForm() {
                         </div>
                     </div>
                 </div>
-                <!-- Sticky Save Bar -->
+                <!-- Clean Footer with Action Buttons Only -->
                 <div :style="stickyBarStyle">
-                    <div class="container d-flex justify-content-between align-items-center">
-                        <div>
-                            <button v-for="(tab, i) in ['Allgemein', 'Arbeitszeit', 'Material', 'Notizen', 'Übersicht']" :key="i" class="btn btn-link" :class="{'fw-bold text-primary': activeTab === i}" @click="setTab(i)">
-                                {{ tab }}
-                            </button>
-                        </div>
-                        <div>
-                            <button type="button" class="btn btn-outline-secondary me-2" @click="window.location.href='/timetracking'">Abbrechen</button>
-                            <button type="button" class="btn btn-primary" :disabled="saving" @click="saveEntry">
-                                {{ saving ? 'Speichern...' : 'Speichern' }}
-                            </button>
-                        </div>
+                    <div class="container d-flex justify-content-end align-items-center" style="padding: 1rem 0;">
+                        <button type="button" class="btn btn-outline-secondary me-3" @click="window.location.href='/timetracking'" style="border-radius: 6px; padding: 0.5rem 1.25rem; font-weight: 500;">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Abbrechen
+                        </button>
+                        <button type="button" class="btn btn-primary" :disabled="saving" @click="saveEntry" style="border-radius: 6px; padding: 0.5rem 1.5rem; font-weight: 500; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <i class="bi bi-check-circle me-1"></i>
+                            {{ saving ? 'Speichern...' : 'Speichern' }}
+                        </button>
                     </div>
                 </div>
             </div>
