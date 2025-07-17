@@ -224,6 +224,13 @@ class WebController {
         ): TemplateInstance
 
         @JvmStatic
+        external fun holidayTypeSettings(
+            activeMenu: String,
+            currentDate: LocalDate,
+            activeSubMenu: String = "holiday-types"
+        ): TemplateInstance
+
+        @JvmStatic
         external fun invoiceShell(activeMenu: String = "invoice"): TemplateInstance
 
         @JvmStatic

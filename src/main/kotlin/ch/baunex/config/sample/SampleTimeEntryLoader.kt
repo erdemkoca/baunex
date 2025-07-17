@@ -140,11 +140,18 @@ class SampleTimeEntryLoader {
 
     private fun createHoliday(employee: ch.baunex.user.dto.EmployeeDTO, date: LocalDate) {
         // Lade Holiday-Types aus der Datenbank
-        val holidayTypes = holidayTypeService.getActiveHolidayTypes()
+        var holidayTypes = holidayTypeService.getActiveHolidayTypes()
         
+        // Falls keine Holiday-Types gefunden wurden, warte kurz und versuche es nochmal
         if (holidayTypes.isEmpty()) {
-            println("WARNING: No holiday types found in database, skipping holiday creation")
-            return
+            println("WARNING: No holiday types found in database, waiting for core bootstrap...")
+            Thread.sleep(1000) // Warte 1 Sekunde
+            holidayTypes = holidayTypeService.getActiveHolidayTypes()
+            
+            if (holidayTypes.isEmpty()) {
+                println("WARNING: Still no holiday types found, skipping holiday creation")
+                return
+            }
         }
         
         // Erstelle Wahrscheinlichkeitsverteilung basierend auf Holiday-Types

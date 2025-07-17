@@ -7,6 +7,7 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.enterprise.event.Observes
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
+import jakarta.annotation.Priority
 
 /**
  * Core data bootstrap that runs in ALL environments (dev, test, prod).
@@ -18,7 +19,7 @@ class CoreDataBootstrap @Inject constructor(
 ) {
     
     @Transactional
-    fun bootstrapCoreData(@Observes ev: StartupEvent) {
+    fun bootstrapCoreData(@Observes @Priority(1) ev: StartupEvent) {
         bootstrapHolidayTypes()
         // Add other core data bootstrap methods here as needed
     }
@@ -44,6 +45,6 @@ class CoreDataBootstrap @Inject constructor(
                 println("⚠️  Warning: Could not create holiday type ${type.code}: ${e.message}")
             }
         }
-        println("✅ Core holiday types bootstrapped.")
+        println("✅ Core holiday types bootstrapped at ${java.time.LocalDateTime.now()}")
     }
 } 

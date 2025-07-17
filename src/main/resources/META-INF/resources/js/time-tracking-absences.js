@@ -314,10 +314,20 @@ document.addEventListener('DOMContentLoaded', function() {
     function generateCalendarDays(year, month) {
         const days = [];
         
+        console.log(`Generating calendar for ${year}-${month + 1}`);
+        
         // Calculate the first and last day of the month
         const firstDayOfMonth = new Date(year, month, 1);
         const lastDayOfMonth = new Date(year, month + 1, 0);
         
+        // Helper function to format date as YYYY-MM-DD
+        const formatDate = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
         // Calculate the start of the calendar grid (Monday of the week containing the first day)
         const dayOfWeek = firstDayOfMonth.getDay(); // 0 = Sunday, 1 = Monday, etc.
         const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert to Monday-based week
@@ -329,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const daysToAdd = lastDayOfWeek === 0 ? 0 : 7 - lastDayOfWeek; // Convert to Sunday-based week
         const gridEnd = new Date(lastDayOfMonth);
         gridEnd.setDate(gridEnd.getDate() + daysToAdd);
-        
+
         // Generate all days in the grid
         const currentGridDate = new Date(gridStart);
         while (currentGridDate <= gridEnd) {
@@ -342,7 +352,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (isCurrentMonth) {
                 // Create date string in YYYY-MM-DD format for comparison
-                const dateString = currentGridDate.toISOString().split('T')[0];
+                const dateString = formatDate(currentGridDate);
                 const dayEvents = getEventsForDate(dateString);
                 events = dayEvents;
                 hasEvents = dayEvents.length > 0;
@@ -364,7 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function getEventsForDate(dateString) {
         const events = [];
-        
+
         // Check holidays for this date - only show APPROVED and PENDING
         appState.holidays.forEach(holiday => {
             // Skip rejected holidays
@@ -372,18 +382,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Create dates in local timezone to avoid UTC issues
-            const startDate = new Date(holiday.startDate + 'T00:00:00');
-            const endDate = new Date(holiday.endDate + 'T00:00:00');
-            const checkDate = new Date(dateString + 'T00:00:00');
-            
-            if (checkDate >= startDate && checkDate <= endDate) {
+            // Compare dates as strings to avoid timezone issues
+            // Backend sends dates in YYYY-MM-DD format
+            const holidayStartDate = holiday.startDate;
+            const holidayEndDate = holiday.endDate;
+
+            if (dateString >= holidayStartDate && dateString <= holidayEndDate) {
                 const employee = appState.employees.find(emp => emp.id === holiday.employeeId);
                 const employeeName = employee ? `${employee.firstName} ${employee.lastName}` : 'Unbekannt';
                 const color = appState.employeeColors[holiday.employeeId] || '#6c757d';
                 
-                const isStart = checkDate.getTime() === startDate.getTime();
-                const isEnd = checkDate.getTime() === endDate.getTime();
+                const isStart = dateString === holidayStartDate;
+                const isEnd = dateString === holidayEndDate;
                 
                 // More robust status checking - handle different possible values
                 const isPending = holiday.status === 'PENDING' || holiday.status === 'pending' || holiday.status === 'Offen';

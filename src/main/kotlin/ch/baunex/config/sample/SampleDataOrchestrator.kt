@@ -11,6 +11,7 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.enterprise.event.Observes
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
+import jakarta.annotation.Priority
 
 /**
  * Sample data orchestrator that runs ONLY in dev profile.
@@ -28,8 +29,8 @@ class SampleDataOrchestrator {
     @Inject lateinit var timeEntryLoader: SampleTimeEntryLoader
 
     @Transactional
-    fun loadSampleData(@Observes event: StartupEvent) {
-        println("🚀 Loading sample data for development environment...")
+    fun loadSampleData(@Observes @Priority(10) event: StartupEvent) {
+        println("🚀 Loading sample data for development environment at ${java.time.LocalDateTime.now()}...")
         
         // Load in dependency order
         companyLoader.load()
@@ -40,6 +41,6 @@ class SampleDataOrchestrator {
         projectCatalogLoader.load()
         timeEntryLoader.load()
         
-        println("✅ Sample data loading completed.")
+        println("✅ Sample data loading completed at ${java.time.LocalDateTime.now()}.")
     }
 } 
