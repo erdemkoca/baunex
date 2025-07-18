@@ -456,34 +456,87 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Setup event listeners
     function setupEventListeners() {
         // Employee search
-        document.getElementById('employee-search')?.addEventListener('input', function(e) {
-            filterEmployees(null, e.target.value);
-        });
+        const employeeSearch = document.getElementById('employee-search');
+        if (employeeSearch) {
+            employeeSearch.addEventListener('input', function() {
+                filterEmployees(null, this.value);
+            });
+        }
 
-        // Banner event listeners
-        document.getElementById('review-now-btn')?.addEventListener('click', function() {
-            // Scroll to pending requests section
-            const requestsSection = document.getElementById('holiday-requests-section');
-            if (requestsSection) {
-                requestsSection.scrollIntoView({ behavior: 'smooth' });
-                // Activate pending tab
-                const pendingTab = document.getElementById('pending-tab');
-                if (pendingTab) {
-                    pendingTab.click();
+        // Review now button
+        const reviewNowBtn = document.getElementById('review-now-btn');
+        if (reviewNowBtn) {
+            reviewNowBtn.addEventListener('click', function() {
+                document.getElementById('holiday-requests-section').style.display = 'block';
+                document.getElementById('pending-requests-banner').style.display = 'none';
+                document.getElementById('pending-tab').click();
+            });
+        }
+
+        // Dismiss banner button
+        const dismissBannerBtn = document.getElementById('dismiss-banner-btn');
+        if (dismissBannerBtn) {
+            dismissBannerBtn.addEventListener('click', function() {
+                document.getElementById('pending-requests-banner').style.display = 'none';
+            });
+        }
+
+        // Conflict modal override button
+        const overrideConflictBtn = document.getElementById('override-conflict-btn');
+        if (overrideConflictBtn) {
+            overrideConflictBtn.addEventListener('click', function() {
+                console.log('Override button clicked');
+                
+                // Get the form data directly from the absence form
+                const form = document.getElementById('absenceForm');
+                if (!form) {
+                    console.error('Absence form not found');
+                    alert('Fehler: Formular nicht gefunden.');
+                    return;
                 }
-            }
-        });
-
-        document.getElementById('dismiss-banner-btn')?.addEventListener('click', function() {
-            appState.bannerDismissed = true;
-            const banner = document.getElementById('pending-requests-banner');
-            if (banner) {
-                banner.style.display = 'none';
+                
+                const formData = new FormData(form);
+                
+                // Get the selected holiday type display name
+                const typeSelect = document.getElementById('absence-type');
+                const selectedTypeOption = typeSelect.options[typeSelect.selectedIndex];
+                const holidayTypeName = selectedTypeOption ? selectedTypeOption.text : '';
+                
+                const absenceData = {
+                    employeeId: parseInt(formData.get('employee')),
+                    type: holidayTypeName,
+                    startDate: formData.get('startDate'),
+                    endDate: formData.get('endDate'),
+                    reason: formData.get('reason') || null
+                };
+                
+                console.log('Created absence data from form:', absenceData);
+                
+                if (!absenceData.employeeId || !absenceData.type || !absenceData.startDate || !absenceData.endDate) {
+                    alert('Fehler: Bitte füllen Sie alle Pflichtfelder aus.');
+                    return;
+                }
+                
+                try {
+                    // Close conflict modal
+                    const conflictModal = document.getElementById('conflictModal');
+                    const modalInstance = bootstrap.Modal.getInstance(conflictModal);
+                    if (modalInstance) {
+                        modalInstance.hide();
+                    }
+                    
+                    // Proceed with override
+                    saveAbsenceWithOverride(absenceData);
+                } catch (error) {
+                    console.error('Error in override button handler:', error);
+                    alert('Fehler beim Verarbeiten der Abwesenheitsdaten.');
                 }
             });
         }
+    }
         
     function filterEmployees(employeeId = null, searchTerm = '') {
         // This function can be expanded to filter the calendar view
@@ -606,6 +659,92 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        // First check for conflicts
+        checkForConflicts(absenceData)
+            .then(conflicts => {
+                if (conflicts && conflicts.conflictingHolidays && conflicts.conflictingHolidays.length > 0) {
+                    // Show conflict modal
+                    showConflictModal(conflicts, absenceData);
+                } else {
+                    // No conflicts, proceed with saving
+                    saveAbsence(absenceData);
+                }
+            })
+            .catch(error => {
+                console.error('Error checking for conflicts:', error);
+                // If conflict check fails, try to save anyway
+                saveAbsence(absenceData);
+            });
+    });
+
+    function checkForConflicts(absenceData) {
+        const url = `/timetracking/api/holidays/conflicts?employeeId=${absenceData.employeeId}&startDate=${absenceData.startDate}&endDate=${absenceData.endDate}`;
+        
+        return fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to check for conflicts');
+                }
+                return response.json();
+            });
+    }
+
+    // Global variable to track if error was handled in modal
+    let errorHandledInModal = false;
+    
+    // Global variable to store absence data for override
+    let currentAbsenceData = null;
+
+    function showConflictModal(conflicts, absenceData) {
+        // Reset error handling flag
+        errorHandledInModal = false;
+        
+        // Store absence data globally
+        currentAbsenceData = absenceData;
+        console.log('Storing absence data globally:', currentAbsenceData);
+        
+        // Hide any previous error message
+        const errorDiv = document.getElementById('conflict-error-message');
+        if (errorDiv) {
+            errorDiv.classList.add('d-none');
+            errorDiv.textContent = '';
+        }
+        // Populate the conflict list
+        const conflictList = document.getElementById('conflicting-holidays-list');
+        conflictList.innerHTML = '';
+        
+        conflicts.conflictingHolidays.forEach(holiday => {
+            const startDate = new Date(holiday.startDate).toLocaleDateString('de-DE');
+            const endDate = new Date(holiday.endDate).toLocaleDateString('de-DE');
+            const statusClass = holiday.status.toLowerCase();
+            const statusText = getGermanStatusText(holiday.status);
+            
+            const conflictItem = document.createElement('div');
+            conflictItem.className = 'conflict-item border rounded p-3 mb-2';
+            conflictItem.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong>${startDate} - ${endDate}:</strong> ${holiday.type}
+                        <br>
+                        <small class="text-muted">Status: <span class="badge bg-${statusClass === 'approved' ? 'success' : statusClass === 'pending' ? 'warning' : 'danger'}">${statusText}</span></small>
+                        ${holiday.reason ? `<br><small class="text-muted">Grund: ${holiday.reason}</small>` : ''}
+                    </div>
+                </div>
+            `;
+            conflictList.appendChild(conflictItem);
+        });
+        
+        // Show the modal
+        const conflictModal = document.getElementById('conflictModal');
+        if (conflictModal) {
+            const modal = new bootstrap.Modal(conflictModal);
+            modal.show();
+        } else {
+            console.error('Conflict modal not found');
+        }
+    }
+
+    function saveAbsence(absenceData) {
         fetch('/timetracking/api/holidays', {
             method: 'POST',
             headers: {
@@ -625,6 +764,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     try {
                         const errorData = JSON.parse(responseText);
                         console.log('Parsed error data:', errorData);
+                        // If it's a HolidayOverlapException, show in modal
+                        if (errorData.type === 'HolidayOverlapException') {
+                            errorHandledInModal = true;
+                            showConflictErrorInModal(formatErrorResponse(errorData));
+                            throw new Error('handled-in-modal');
+                        }
                         throw new Error(formatErrorResponse(errorData));
                     } catch (parseError) {
                         console.error('Failed to parse error response as JSON:', parseError);
@@ -655,6 +800,17 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => window.location.reload(), 1500);
         })
         .catch(error => {
+            console.log('Catch block - error type:', typeof error);
+            console.log('Catch block - error:', error);
+            console.log('Catch block - error.message:', error?.message);
+            console.log('Error handled in modal:', errorHandledInModal);
+            
+            // Check if error was already handled in modal
+            if (errorHandledInModal) {
+                console.log('Error already handled in modal, returning early');
+                return;
+            }
+            
             console.error('Error saving absence:', error);
             
             // Check if the error message is a JSON string (raw error response)
@@ -662,6 +818,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (error.message && error.message.startsWith('{') && error.message.includes('"error"')) {
                 try {
                     const errorData = JSON.parse(error.message);
+                    console.log('Parsed error data in catch:', errorData);
                     displayMessage = formatErrorResponse(errorData);
                 } catch (parseError) {
                     // If parsing fails, use the original message
@@ -671,7 +828,158 @@ document.addEventListener('DOMContentLoaded', function() {
             
             alert('Fehler beim Speichern der Abwesenheit: ' + displayMessage);
         });
-    });
+    }
+
+    function saveAbsenceWithOverride(absenceData) {
+        console.log('Saving absence with override:', absenceData);
+        
+        // First, get the conflicting holidays to cancel them
+        fetch(`/timetracking/api/holidays/conflicts?employeeId=${absenceData.employeeId}&startDate=${absenceData.startDate}&endDate=${absenceData.endDate}`)
+            .then(response => {
+                if (!response.ok) {
+                    console.warn('Failed to get conflicts, proceeding anyway');
+                    return { conflictingHolidays: [] };
+                }
+                return response.json();
+            })
+            .then(conflicts => {
+                console.log('Found conflicts to cancel:', conflicts);
+                
+                // Cancel all conflicting holidays
+                if (conflicts.conflictingHolidays && conflicts.conflictingHolidays.length > 0) {
+                    const cancelPromises = conflicts.conflictingHolidays.map(holiday => {
+                        console.log('Canceling holiday:', holiday.id);
+                        return fetch(`/timetracking/api/holidays/${holiday.id}/cancel`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        });
+                    });
+                    
+                    return Promise.all(cancelPromises);
+                } else {
+                    console.log('No conflicts to cancel');
+                    return Promise.resolve();
+                }
+            })
+            .then(() => {
+                console.log('All conflicts canceled, creating new holiday');
+                // Now create the new holiday
+                return fetch('/timetracking/api/holidays', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(absenceData)
+                });
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // Try to get more details about the error
+                    return response.text().then(responseText => {
+                        console.log('Error response from holiday creation:', responseText);
+                        try {
+                            const errorData = JSON.parse(responseText);
+                            if (errorData.type === 'HolidayOverlapException') {
+                                console.log('Holiday overlap detected, automatically canceling existing holidays');
+                                
+                                // Automatically cancel all existing holidays for this date range
+                                return cancelAllHolidaysForDateRange(absenceData.employeeId, absenceData.startDate, absenceData.endDate)
+                                    .then(() => {
+                                        console.log('All existing holidays canceled, retrying creation');
+                                        // Retry creating the new holiday
+                                        return fetch('/timetracking/api/holidays', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                            },
+                                            body: JSON.stringify(absenceData)
+                                        });
+                                    })
+                                    .then(retryResponse => {
+                                        if (!retryResponse.ok) {
+                                            return retryResponse.text().then(retryText => {
+                                                throw new Error(`Fehler beim zweiten Versuch: ${retryText}`);
+                                            });
+                                        }
+                                        return retryResponse.json();
+                                    });
+                            }
+                            throw new Error(`Fehler beim Erstellen der Abwesenheit: ${errorData.error || responseText}`);
+                        } catch (parseError) {
+                            throw new Error(`Fehler beim Erstellen der Abwesenheit: ${responseText}`);
+                        }
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                showSuccessMessage('Abwesenheit erfolgreich erfasst! Bestehende Abwesenheiten wurden angepasst.');
+                
+                // Close any open modals
+                const absenceModal = document.getElementById('absenceModal');
+                const absenceModalInstance = bootstrap.Modal.getInstance(absenceModal);
+                if (absenceModalInstance) {
+                    absenceModalInstance.hide();
+                }
+                
+                const conflictModal = document.getElementById('conflictModal');
+                const conflictModalInstance = bootstrap.Modal.getInstance(conflictModal);
+                if (conflictModalInstance) {
+                    conflictModalInstance.hide();
+                }
+                
+                // Reset form
+                const form = document.getElementById('absenceForm');
+                if (form) {
+                    form.reset();
+                }
+                
+                // Reload page to refresh data
+                setTimeout(() => window.location.reload(), 1500);
+            })
+            .catch(error => {
+                console.error('Error saving absence with override:', error);
+                alert('Fehler beim Überschreiben der Abwesenheit: ' + error.message);
+            });
+    }
+
+    function showConflictErrorInModal(message) {
+        console.log('Showing conflict error in modal:', message);
+        
+        // Make sure the conflict modal is visible
+        const conflictModal = document.getElementById('conflictModal');
+        if (conflictModal) {
+            const modalInstance = bootstrap.Modal.getInstance(conflictModal);
+            if (!modalInstance || !modalInstance._isShown) {
+                console.log('Conflict modal not visible, showing it now');
+                const newModalInstance = new bootstrap.Modal(conflictModal);
+                newModalInstance.show();
+            }
+        }
+        
+        const errorDiv = document.getElementById('conflict-error-message');
+        if (errorDiv) {
+            errorDiv.innerHTML = `
+                <i class="bi bi-exclamation-triangle"></i>
+                <strong>Fehler:</strong> ${message}
+            `;
+            errorDiv.classList.remove('d-none');
+            
+            // Scroll to the error message
+            errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Add some visual emphasis
+            errorDiv.style.border = '2px solid #dc3545';
+            errorDiv.style.backgroundColor = '#f8d7da';
+            errorDiv.style.color = '#721c24';
+            
+            console.log('Error message added to modal');
+        } else {
+            console.error('Error div not found in modal');
+        }
+    }
 
     function showSuccessMessage(message) {
         const successDiv = document.createElement('div');
@@ -973,6 +1281,54 @@ document.addEventListener('DOMContentLoaded', function() {
             default:
                 return `❌ **Fehler**: ${error}`;
         }
+    }
+
+    function cancelAllHolidaysForDateRange(employeeId, startDate, endDate) {
+        console.log(`Canceling all holidays for employee ${employeeId} from ${startDate} to ${endDate}`);
+        
+        // First, get all holidays for this employee and date range
+        return fetch(`/timetracking/api/holidays/employee/${employeeId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to get employee holidays');
+                }
+                return response.json();
+            })
+            .then(holidays => {
+                console.log('All employee holidays:', holidays);
+                
+                // Filter holidays that overlap with the date range
+                const overlappingHolidays = holidays.filter(holiday => {
+                    const holidayStart = new Date(holiday.startDate);
+                    const holidayEnd = new Date(holiday.endDate);
+                    const requestStart = new Date(startDate);
+                    const requestEnd = new Date(endDate);
+                    
+                    // Check for overlap
+                    return (holidayStart <= requestEnd && holidayEnd >= requestStart) &&
+                           (holiday.status === 'PENDING' || holiday.status === 'APPROVED');
+                });
+                
+                console.log('Overlapping holidays to cancel:', overlappingHolidays);
+                
+                if (overlappingHolidays.length === 0) {
+                    console.log('No overlapping holidays found');
+                    return Promise.resolve();
+                }
+                
+                // Cancel all overlapping holidays
+                const cancelPromises = overlappingHolidays.map(holiday => {
+                    console.log(`Canceling holiday ${holiday.id}: ${holiday.startDate} to ${holiday.endDate} (${holiday.type})`);
+                    return fetch(`/timetracking/api/holidays/${holiday.id}/cancel`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                });
+                
+                return Promise.all(cancelPromises);
+            });
     }
 
     // Initialize the app

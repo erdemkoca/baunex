@@ -197,6 +197,37 @@ class TimeTrackingController {
     fun requestHoliday(dto: HolidayDTO): HolidayDTO =
         holidayFacade.requestHoliday(dto)
 
+    @GET
+    @Path("/api/holidays/conflicts")
+    @Produces(MediaType.APPLICATION_JSON)
+    fun checkHolidayConflicts(
+        @QueryParam("employeeId") employeeId: Long,
+        @QueryParam("startDate") startDate: String,
+        @QueryParam("endDate") endDate: String
+    ): ch.baunex.timetracking.dto.HolidayConflictDTO {
+        log.info("Checking holiday conflicts for employee $employeeId from $startDate to $endDate")
+        return try {
+            val start = LocalDate.parse(startDate)
+            val end = LocalDate.parse(endDate)
+            log.info("Parsed dates: start=$start, end=$end")
+            val result = holidayFacade.getHolidayConflicts(employeeId, start, end)
+            log.info("Found ${result.conflictingHolidays.size} conflicts")
+            result
+        } catch (e: Exception) {
+            log.error("Error checking holiday conflicts", e)
+            throw e
+        }
+    }
+
+    @POST
+    @Path("/api/holidays/{id}/cancel")
+    @Produces(MediaType.APPLICATION_JSON)
+    fun cancelHoliday(@PathParam("id") holidayId: Long): Response {
+        val canceled = holidayFacade.cancelHoliday(holidayId)
+        return if (canceled != null) Response.ok(canceled).build()
+        else Response.status(Response.Status.NOT_FOUND).build()
+    }
+
     @POST
     @Path("/api/holidays/{id}/approve")
     @Consumes(MediaType.APPLICATION_JSON)

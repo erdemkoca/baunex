@@ -100,4 +100,44 @@ class HolidayService @Inject constructor(
             throw e
         }
     }
+
+    /**
+     * Find holiday conflicts for a given date range and employee
+     * Returns conflicting holidays that would overlap with the requested period
+     */
+    fun findHolidayConflicts(employeeId: Long, startDate: LocalDate, endDate: LocalDate): List<HolidayModel> {
+        log.info("Finding holiday conflicts for employee $employeeId from $startDate to $endDate")
+        return try {
+            val existingHolidays = holidayRepository.findByEmployeeAndDateRange(employeeId, startDate, endDate)
+            
+            // Filter for pending or approved holidays only
+            val conflictingHolidays = existingHolidays.filter { holiday ->
+                holiday.approvalStatus == ApprovalStatus.PENDING || holiday.approvalStatus == ApprovalStatus.APPROVED
+            }
+            
+            log.info("Found ${conflictingHolidays.size} conflicting holidays for employee $employeeId")
+            conflictingHolidays
+        } catch (e: Exception) {
+            log.error("Failed to find holiday conflicts for employee $employeeId", e)
+            throw e
+        }
+    }
+
+    /**
+     * Cancel a holiday by setting its status to CANCELED
+     */
+    @Transactional
+    fun cancelHoliday(holidayId: Long): HolidayModel? {
+        log.info("Canceling holiday $holidayId")
+        return try {
+            val holiday = holidayRepository.findById(holidayId) ?: return null
+            holiday.approvalStatus = ApprovalStatus.CANCELED
+            holiday.approvedAt = java.time.LocalDate.now()
+            log.info("Canceled holiday $holidayId")
+            holiday
+        } catch (e: Exception) {
+            log.error("Failed to cancel holiday $holidayId", e)
+            throw e
+        }
+    }
 }

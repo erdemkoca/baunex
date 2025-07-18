@@ -8,6 +8,7 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import org.jboss.logging.Logger
+import java.time.LocalDate
 
 @ApplicationScoped
 class HolidayFacade @Inject constructor(
@@ -40,13 +41,48 @@ class HolidayFacade @Inject constructor(
 
     @Transactional
     fun approveHoliday(holidayId: Long, dto: HolidayApprovalDTO): HolidayDTO? {
-        log.info("Approving holiday $holidayId with status ${dto.approval.status}")
+        log.debug("Approving holiday: $holidayId")
         val updated = holidayService.approveHoliday(
-            holidayId = holidayId,
-            approverId = dto.approval.approverId ?: throw IllegalArgumentException("Approver ID is required"),
-            approvalStatus = dto.approval.status
-        ) ?: return null
+            holidayId,
+            dto.approval.approverId ?: throw IllegalArgumentException("Approver ID is required"),
+            dto.approval.status
+        )
+        return updated?.let { holidayMapper.toDTO(it) }
+    }
 
-        return holidayMapper.toDTO(updated)
+    /**
+     * Get holiday conflicts for a given date range and employee
+     */
+    fun getHolidayConflicts(employeeId: Long, startDate: LocalDate, endDate: LocalDate): ch.baunex.timetracking.dto.HolidayConflictDTO {
+        log.debug("Getting holiday conflicts for employee: $employeeId from $startDate to $endDate")
+        val conflictingHolidays = holidayService.findHolidayConflicts(employeeId, startDate, endDate)
+        
+        val conflictingHolidayDTOs = conflictingHolidays.map { holiday ->
+            ch.baunex.timetracking.dto.ConflictingHolidayDTO(
+                id = holiday.id,
+                startDate = holiday.startDate,
+                endDate = holiday.endDate,
+                type = holiday.holidayType.displayName ?: holiday.holidayType.code,
+                status = holiday.approvalStatus.name,
+                reason = holiday.reason
+            )
+        }
+        
+        return ch.baunex.timetracking.dto.HolidayConflictDTO(
+            employeeId = employeeId,
+            requestedStartDate = startDate,
+            requestedEndDate = endDate,
+            conflictingHolidays = conflictingHolidayDTOs
+        )
+    }
+
+    /**
+     * Cancel a holiday
+     */
+    @Transactional
+    fun cancelHoliday(holidayId: Long): HolidayDTO? {
+        log.debug("Canceling holiday: $holidayId")
+        val canceled = holidayService.cancelHoliday(holidayId)
+        return canceled?.let { holidayMapper.toDTO(it) }
     }
 }

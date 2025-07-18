@@ -232,6 +232,46 @@
       </div>
     </div>
 
+    <!-- Konflikt Modal -->
+    <div class="modal fade" id="conflictModal" tabindex="-1" aria-labelledby="conflictModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="conflictModalLabel">
+              <i class="bi bi-exclamation-triangle text-warning"></i> 
+              Konflikt mit bestehenden Abwesenheiten
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div id="conflict-error-message" class="alert alert-danger d-none"></div>
+            <div class="alert alert-warning">
+              <i class="bi bi-info-circle"></i>
+              <strong>Für diesen Zeitraum sind bereits andere Abwesenheiten hinterlegt worden.</strong>
+              <br>
+              Sie können diese beim Anlegen jedoch überschreiben lassen. Die vorhandenen Abwesenheiten werden dann passend gekürzt oder komplett entfernt, falls notwendig.
+            </div>
+            
+            <h6>Folgende Abwesenheiten sind betroffen:</h6>
+            <div id="conflicting-holidays-list" class="mb-3">
+              <!-- Conflicting holidays will be populated here -->
+            </div>
+            
+            <div class="alert alert-info">
+              <i class="bi bi-lightbulb"></i>
+              <strong>Hinweis:</strong> Wenn Sie fortfahren, werden die bestehenden Abwesenheiten automatisch angepasst oder entfernt.
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+            <button type="button" class="btn btn-warning" id="override-conflict-btn">
+              <i class="bi bi-check"></i> Ja, die neue Abwesenheit anlegen und die vorhandenen Abwesenheiten anpassen
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Floating Add Button -->
     <button class="add-absence-btn" onclick="openAbsenceModal()" 
             data-bs-toggle="tooltip" 
