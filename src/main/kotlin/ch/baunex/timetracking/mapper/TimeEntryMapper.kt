@@ -7,13 +7,16 @@ import ch.baunex.timetracking.model.TimeEntryModel
 import ch.baunex.timetracking.service.TimeEntryCostService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
+import org.jboss.logging.Logger
 
 @ApplicationScoped
 class TimeEntryMapper @Inject constructor(
     private val timeEntryCostService: TimeEntryCostService
 ) {
+    private val log = Logger.getLogger(TimeEntryMapper::class.java)
 
     fun toTimeEntryResponseDTO(entry: TimeEntryModel): TimeEntryDTO {
+        log.debug("Mapping time entry model to DTO: ${entry.id}")
         // 1) Compute the cost breakdown directly from the model
         val breakdown = try {
             timeEntryCostService.calculateCostBreakdown(entry)

@@ -45,7 +45,7 @@ class ProjectService @Inject constructor(
     }
 
     fun getAllProjects(): List<ProjectModel> = projectRepository.listAllProjects()
-    fun getProjectWithEntries(id: Long): ProjectModel? = projectRepository.findByIdWithTimeEntries(id)
+    fun getProjectWithEntries(id: Long): ProjectModel? = projectRepository.findByIdWithoutTimeEntries(id)
     
     fun getProjectWithoutEntries(id: Long): ProjectModel? = projectRepository.findByIdWithoutTimeEntries(id)
     @Transactional

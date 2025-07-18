@@ -2,13 +2,16 @@ package ch.baunex.timetracking.util
 
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
+import org.jboss.logging.Logger
 
 object HolidayCalculator {
+    private val log = Logger.getLogger(HolidayCalculator::class.java)
     
     /**
      * Berechnet das Osterdatum für ein gegebenes Jahr (Gaußsche Osterformel)
      */
     fun calculateEasterSunday(year: Int): LocalDate {
+        log.debug("Calculating Easter Sunday for year: $year")
         val a = year % 19
         val b = year / 100
         val c = year % 100
@@ -31,6 +34,7 @@ object HolidayCalculator {
      * Berechnet alle beweglichen Feiertage für ein Jahr
      */
     fun calculateMovableHolidays(year: Int): Map<String, LocalDate> {
+        log.debug("Calculating movable holidays for year: $year")
         val easterSunday = calculateEasterSunday(year)
         
         return mapOf(
@@ -45,6 +49,7 @@ object HolidayCalculator {
      * Generiert alle Schweizer Feiertage für ein Jahr
      */
     fun generateSwissHolidays(year: Int): List<Triple<LocalDate, String, Boolean>> {
+        log.debug("Generating Swiss holidays for year: $year")
         val holidays = mutableListOf<Triple<LocalDate, String, Boolean>>()
         
         // Fixe Feiertage
@@ -59,6 +64,7 @@ object HolidayCalculator {
             holidays.add(Triple(date, name, false))
         }
         
+        log.debug("Generated ${holidays.size} Swiss holidays for year: $year")
         return holidays.sortedBy { it.first }
     }
     
@@ -66,6 +72,7 @@ object HolidayCalculator {
      * Prüft ob ein Datum ein Feiertag ist
      */
     fun isHoliday(date: LocalDate, holidayDefinitions: List<ch.baunex.timetracking.model.HolidayDefinitionModel>): Boolean {
+        log.debug("Checking if date is holiday: $date")
         return holidayDefinitions.any { it.date == date && it.active && it.isWorkFree }
     }
     
@@ -73,6 +80,7 @@ object HolidayCalculator {
      * Berechnet die Anzahl Arbeitstage zwischen zwei Daten (ohne Wochenenden und Feiertage)
      */
     fun calculateWorkingDays(startDate: LocalDate, endDate: LocalDate, holidayDefinitions: List<ch.baunex.timetracking.model.HolidayDefinitionModel>): Int {
+        log.debug("Calculating working days from $startDate to $endDate")
         var workingDays = 0
         var currentDate = startDate
         
@@ -87,6 +95,7 @@ object HolidayCalculator {
             currentDate = currentDate.plusDays(1)
         }
         
+        log.debug("Calculated $workingDays working days from $startDate to $endDate")
         return workingDays
     }
 } 

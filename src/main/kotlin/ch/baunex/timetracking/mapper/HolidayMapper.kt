@@ -6,13 +6,16 @@ import ch.baunex.timetracking.model.HolidayModel
 import ch.baunex.timetracking.repository.HolidayTypeRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
+import org.jboss.logging.Logger
 
 @ApplicationScoped
 class HolidayMapper @Inject constructor(
     private val holidayTypeRepository: HolidayTypeRepository
 ) {
+    private val log = Logger.getLogger(HolidayMapper::class.java)
 
     fun toModel(dto: HolidayDTO): HolidayModel {
+        log.debug("Mapping holiday DTO to model for employee ${dto.employeeId}")
         return HolidayModel().apply {
             id = dto.id
             startDate = dto.startDate
@@ -37,6 +40,7 @@ class HolidayMapper @Inject constructor(
     }
 
     fun toDTO(model: HolidayModel): HolidayDTO {
+        log.debug("Mapping holiday model to DTO for employee ${model.employee.id}")
         return HolidayDTO(
             id = model.id,
             employeeId = model.employee.id!!,

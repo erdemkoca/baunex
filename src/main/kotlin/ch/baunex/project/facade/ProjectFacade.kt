@@ -30,12 +30,14 @@ class ProjectFacade @Inject constructor(
 
     fun getProjectWithDetails(id: Long): ProjectDetailDTO? {
         println("Getting project with ID: $id")
-        return projectService.getProjectWithEntries(id)
-            ?.let { 
-                println("Found project: ${it.name}")
-                projectMapper.toDetailDTO(it) 
-            }
-            ?.also { println("Project not found with ID: $id") }
+        val project = projectService.getProjectWithEntries(id)
+        return if (project != null) {
+            println("Found project: ${project.name}")
+            projectMapper.toDetailDTO(project)
+        } else {
+            println("Project not found with ID: $id")
+            null
+        }
     }
 
     @Transactional

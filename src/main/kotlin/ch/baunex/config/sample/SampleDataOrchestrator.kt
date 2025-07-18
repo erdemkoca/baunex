@@ -1,11 +1,5 @@
 package ch.baunex.config.sample
 
-import ch.baunex.config.sample.SampleCompanyLoader
-import ch.baunex.config.sample.SampleCustomerAndContactsLoader
-import ch.baunex.config.sample.SampleCatalogLoader
-import ch.baunex.config.sample.SampleEmployeeLoader
-import ch.baunex.config.sample.SampleTimeEntryLoader
-import ch.baunex.config.sample.SampleHolidayLoader
 import io.quarkus.arc.profile.IfBuildProfile
 import io.quarkus.runtime.StartupEvent
 import jakarta.enterprise.context.ApplicationScoped
@@ -33,17 +27,15 @@ class SampleDataOrchestrator {
     @Transactional
     fun loadSampleData(@Observes @Priority(10) event: StartupEvent) {
         println("🚀 Loading sample data for development environment at ${java.time.LocalDateTime.now()}...")
-        
-        // Load in dependency order - TESTING ONE BY ONE
+
         companyLoader.load()
         catalogLoader.load()
         employeeLoader.load()
         customerAndContactsLoader.load()
         projectLoader.load()
         projectCatalogLoader.load()
-        
-        // holidayLoader.load() // TEMPORARILY DISABLED
-        // timeEntryLoader.load() // TEMPORARILY DISABLED
+        holidayLoader.load()
+        timeEntryLoader.load()
         
         println("✅ Sample data loading completed at ${java.time.LocalDateTime.now()}.")
     }

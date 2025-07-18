@@ -6,11 +6,14 @@ import ch.baunex.timetracking.dto.HolidayTypeUpdateDTO
 import ch.baunex.timetracking.model.HolidayTypeModel
 import jakarta.enterprise.context.ApplicationScoped
 import java.time.LocalDate
+import org.jboss.logging.Logger
 
 @ApplicationScoped
 class HolidayTypeMapper {
+    private val log = Logger.getLogger(HolidayTypeMapper::class.java)
 
     fun toDTO(model: HolidayTypeModel): HolidayTypeDTO {
+        log.debug("Mapping holiday type model to DTO: ${model.code}")
         return HolidayTypeDTO(
             id = model.id,
             code = model.code,
@@ -26,6 +29,7 @@ class HolidayTypeMapper {
     }
 
     fun toModel(dto: HolidayTypeCreateDTO): HolidayTypeModel {
+        log.debug("Mapping holiday type create DTO to model: ${dto.code}")
         return HolidayTypeModel().apply {
             code = dto.code
             displayName = dto.displayName
@@ -39,6 +43,7 @@ class HolidayTypeMapper {
     }
 
     fun updateModel(model: HolidayTypeModel, dto: HolidayTypeUpdateDTO) {
+        log.debug("Updating holiday type model: ${model.code}")
         dto.displayName?.let { model.displayName = it }
         dto.defaultExpectedHours?.let { model.defaultExpectedHours = it }
         dto.active?.let { model.active = it }
@@ -48,6 +53,7 @@ class HolidayTypeMapper {
     }
 
     fun toDTOList(models: List<HolidayTypeModel>): List<HolidayTypeDTO> {
+        log.debug("Mapping ${models.size} holiday type models to DTOs")
         return models.map { toDTO(it) }
     }
 } 

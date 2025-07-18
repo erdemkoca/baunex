@@ -57,20 +57,10 @@ class TimeTrackingStundenkontoController {
         // Generate years list (current year and 5 years back)
         val years = (currentYear downTo currentYear - 5).toList()
 
-        println("DEBUG: Controller - currentYear: $currentYear")
-        println("DEBUG: Controller - selectedEmployeeId: $selectedEmployeeId")
-        println("DEBUG: Controller - employees count: ${employees.size}")
-        println("DEBUG: Controller - TEST DEBUG LOG - THIS SHOULD APPEAR")
-
         val monthlyAccount = if (selectedEmployeeId > 0) {
-            println("DEBUG: Controller - calling getMonthlyHoursAccount for employee $selectedEmployeeId, year $currentYear")
             val result = workSummaryService.getMonthlyHoursAccount(selectedEmployeeId, currentYear)
-            println("DEBUG: Controller - getMonthlyHoursAccount returned: ${result != null}")
-            if (result != null) {
-                println("DEBUG: Controller - monthlyData size: ${result.monthlyData.size}")
-                result.monthlyData.forEach { month ->
-                    println("DEBUG: Controller - Month ${month.month} - ${month.monthName}")
-                }
+            result?.monthlyData?.forEach { month ->
+                println("DEBUG: Controller - Month ${month.month} - ${month.monthName}")
             }
             result
         } else {
