@@ -38,10 +38,10 @@ class TimeTrackingService @Inject constructor(
         // Validate the time entry before processing
         timeEntryValidator.validateTimeEntry(dto, isUpdate = false)
         
-        val employee = employeeRepository.findById(dto.employeeId!!)
-            ?: throw EmployeeNotFoundException(dto.employeeId!!)
-        val project = projectRepository.findById(dto.projectId!!)
-            ?: throw ProjectNotFoundException(dto.projectId!!)
+        val employee = employeeRepository.findById(dto.employeeId)
+            ?: throw EmployeeNotFoundException(dto.employeeId)
+        val project = projectRepository.findById(dto.projectId)
+            ?: throw ProjectNotFoundException(dto.projectId)
 
         // Always create a single time entry, calculating hours worked from breaks
         val timeEntry = createSingleTimeEntry(dto, employee, project)
@@ -154,16 +154,16 @@ class TimeTrackingService @Inject constructor(
         // Validate the time entry before processing
         timeEntryValidator.validateTimeEntry(dto, isUpdate = true)
         
-        val employee = employeeRepository.findById(dto.employeeId!!)
-            ?: throw EmployeeNotFoundException(dto.employeeId!!)
-        val project = projectRepository.findById(dto.projectId!!)
-            ?: throw ProjectNotFoundException(dto.projectId!!)
+        val employee = employeeRepository.findById(dto.employeeId)
+            ?: throw EmployeeNotFoundException(dto.employeeId)
+        val project = projectRepository.findById(dto.projectId)
+            ?: throw ProjectNotFoundException(dto.projectId)
 
         // Always update the single entry, calculating hours worked from breaks
         log.debug("Updating single entry with ${dto.breaks.size} breaks")
         
         // Calculate hours worked by subtracting breaks from total duration
-        val totalDurationMinutes = java.time.temporal.ChronoUnit.MINUTES.between(dto.startTime!!, dto.endTime!!)
+        val totalDurationMinutes = java.time.temporal.ChronoUnit.MINUTES.between(dto.startTime, dto.endTime)
         val breakMinutes = dto.breaks.sumOf { breakItem ->
             java.time.temporal.ChronoUnit.MINUTES.between(breakItem.start, breakItem.end)
         }

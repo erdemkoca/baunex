@@ -51,12 +51,12 @@ class HolidayValidator @Inject constructor(
         requireNotNull(dto.employeeId) { "employeeId is required" }
         requireNotNull(dto.startDate) { "startDate is required" }
         requireNotNull(dto.endDate) { "endDate is required" }
-        require(!dto.type.isNullOrBlank()) { "type is required" }
+        require(dto.type.isNotBlank()) { "type is required" }
         
         // Validate date range
-        if (dto.startDate!!.isAfter(dto.endDate!!)) {
+        if (dto.startDate.isAfter(dto.endDate)) {
             throw InvalidDateException(
-                dto.startDate!!,
+                dto.startDate,
                 "Start date cannot be after end date"
             )
         }
@@ -67,8 +67,8 @@ class HolidayValidator @Inject constructor(
      */
     private fun validateEntities(dto: HolidayDTO) {
         // Validate employee exists
-        val employee = employeeService.findEmployeeById(dto.employeeId!!)
-            ?: throw EmployeeNotFoundException(dto.employeeId!!)
+        val employee = employeeService.findEmployeeById(dto.employeeId)
+            ?: throw EmployeeNotFoundException(dto.employeeId)
         
         // Validate holiday type exists (can be either code or display name)
         val holidayType = holidayTypeService.getHolidayTypeByCode(dto.type)
@@ -90,7 +90,7 @@ class HolidayValidator @Inject constructor(
         validateNoOverlap(dto)
         
         // Check for reasonable duration (e.g., not more than 30 days)
-        val daysBetween = ChronoUnit.DAYS.between(dto.startDate!!, dto.endDate!!) + 1
+        val daysBetween = ChronoUnit.DAYS.between(dto.startDate, dto.endDate) + 1
         if (daysBetween > 30) {
             throw BusinessRuleViolationException(
                 "MAX_DURATION",
@@ -104,9 +104,9 @@ class HolidayValidator @Inject constructor(
      */
     private fun validateNoOverlap(dto: HolidayDTO) {
         val existingHolidays = holidayRepository.findByEmployeeAndDateRange(
-            dto.employeeId!!,
-            dto.startDate!!,
-            dto.endDate!!
+            dto.employeeId,
+            dto.startDate,
+            dto.endDate
         )
         
         // Filter for pending or approved holidays only
@@ -122,12 +122,12 @@ class HolidayValidator @Inject constructor(
                     "conflicts with existing ${conflictingHoliday.startDate} to ${conflictingHoliday.endDate}")
             
             throw HolidayOverlapException(
-                dto.employeeId!!,
-                dto.startDate!!,
-                dto.endDate!!,
+                dto.employeeId,
+                dto.startDate,
+                dto.endDate,
                 conflictingHoliday.startDate,
                 conflictingHoliday.endDate,
-                conflictingHoliday.holidayType?.displayName ?: "Unknown"
+                conflictingHoliday.holidayType.displayName ?: "Unknown"
             )
         }
     }

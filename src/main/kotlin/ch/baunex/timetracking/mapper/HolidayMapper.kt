@@ -43,7 +43,7 @@ class HolidayMapper @Inject constructor(
         log.debug("Mapping holiday model to DTO for employee ${model.employee.id}")
         return HolidayDTO(
             id = model.id,
-            employeeId = model.employee.id!!,
+            employeeId = model.employee.id ?: throw IllegalStateException("Employee ID is null for holiday model ${model.id}"),
             employeeName = "${model.employee.person.firstName} ${model.employee.person.lastName}",
             startDate = model.startDate,
             endDate = model.endDate,

@@ -190,8 +190,8 @@ class ApprovalService @Inject constructor(
                 .map { holiday ->
                     val workingDays = calculateWorkingDays(holiday.startDate, holiday.endDate)
                     VacationApprovalDTO(
-                        id = holiday.id!!,
-                        employeeId = holiday.employee.id!!,
+                        id = holiday.id ?: throw IllegalStateException("Holiday ID is null"),
+                        employeeId = holiday.employee.id ?: throw IllegalStateException("Employee ID is null for holiday ${holiday.id}"),
                         employeeName = "${holiday.employee.person.firstName} ${holiday.employee.person.lastName}",
                         startDate = holiday.startDate,
                         endDate = holiday.endDate,

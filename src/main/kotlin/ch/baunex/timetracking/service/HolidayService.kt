@@ -27,14 +27,14 @@ class HolidayService @Inject constructor(
             // Validate the holiday request before processing
             holidayValidator.validateHoliday(dto)
             
-            val employee = employeeRepository.findById(dto.employeeId!!)
+            val employee = employeeRepository.findById(dto.employeeId)
                 ?: throw IllegalArgumentException("Employee not found with id: ${dto.employeeId}")
             
             // Create the holiday model
             val model = HolidayModel().apply {
                 this.employee = employee
-                this.startDate = dto.startDate!!
-                this.endDate = dto.endDate!!
+                this.startDate = dto.startDate
+                this.endDate = dto.endDate
                 this.reason = dto.reason
                 this.holidayType = holidayType
                 // Use the status from DTO, default to PENDING if not specified

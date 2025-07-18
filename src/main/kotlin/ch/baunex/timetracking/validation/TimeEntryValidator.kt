@@ -83,17 +83,17 @@ class TimeEntryValidator @Inject constructor(
      */
     private fun validateEntities(dto: TimeEntryDTO) {
         // Validate employee exists
-        val employee = employeeService.findEmployeeById(dto.employeeId!!)
-            ?: throw EmployeeNotFoundException(dto.employeeId!!)
+        val employee = employeeService.findEmployeeById(dto.employeeId)
+            ?: throw EmployeeNotFoundException(dto.employeeId)
         
         // Validate project exists
-        val project = projectService.getProjectWithEntries(dto.projectId!!)
-            ?: throw ProjectNotFoundException(dto.projectId!!)
+        val project = projectService.getProjectWithEntries(dto.projectId)
+            ?: throw ProjectNotFoundException(dto.projectId)
         
         // Validate employee start date
-        if (dto.date!!.isBefore(employee.startDate)) {
+        if (dto.date.isBefore(employee.startDate)) {
             throw InvalidDateException(
-                dto.date!!,
+                dto.date,
                 "Datum liegt vor dem Eintrittsdatum des Mitarbeiters (${employee.startDate})"
             )
         }
@@ -106,23 +106,23 @@ class TimeEntryValidator @Inject constructor(
         val today = LocalDate.now()
         
         // Check if date is too far in the future
-        if (dto.date!!.isAfter(today.plusDays(MAX_FUTURE_DAYS.toLong()))) {
+        if (dto.date.isAfter(today.plusDays(MAX_FUTURE_DAYS.toLong()))) {
             throw InvalidDateException(
-                dto.date!!,
+                dto.date,
                 "Datum liegt mehr als $MAX_FUTURE_DAYS Tage in der Zukunft"
             )
         }
         
         // Check if date is too far in the past
-        if (dto.date!!.isBefore(today.minusDays(MAX_PAST_DAYS.toLong()))) {
+        if (dto.date.isBefore(today.minusDays(MAX_PAST_DAYS.toLong()))) {
             throw InvalidDateException(
-                dto.date!!,
+                dto.date,
                 "Datum liegt mehr als $MAX_PAST_DAYS Tage in der Vergangenheit"
             )
         }
         
         // Validate time range
-        validateTimeRange(dto.startTime!!, dto.endTime!!)
+        validateTimeRange(dto.startTime, dto.endTime)
     }
     
     /**
@@ -190,14 +190,14 @@ class TimeEntryValidator @Inject constructor(
         // Check for overlaps with existing entries
         existingEntries.forEach { existingEntry ->
             if (hasTimeOverlap(
-                dto.startTime!!, dto.endTime!!,
+                dto.startTime, dto.endTime,
                 existingEntry.startTime, existingEntry.endTime
             )) {
                 throw DuplicateTimeEntryException(
-                    dto.employeeId!!,
-                    dto.date!!,
-                    dto.startTime!!,
-                    dto.endTime!!
+                    dto.employeeId,
+                    dto.date,
+                    dto.startTime,
+                    dto.endTime
                 )
             }
         }
@@ -217,7 +217,7 @@ class TimeEntryValidator @Inject constructor(
      * Validates weekend work rules
      */
     private fun validateWeekendWork(dto: TimeEntryDTO) {
-        val dayOfWeek = dto.date!!.dayOfWeek
+        val dayOfWeek = dto.date.dayOfWeek
         
         if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
             log.info("Weekend work detected for employee ${dto.employeeId} on ${dto.date}")
@@ -234,7 +234,7 @@ class TimeEntryValidator @Inject constructor(
      */
     private fun validateHolidayWork(dto: TimeEntryDTO) {
         // Check if the date is a public holiday
-        val isHoliday = holidayDefinitionService.isHoliday(dto.date!!)
+        val isHoliday = holidayDefinitionService.isHoliday(dto.date)
         
         if (isHoliday) {
             log.info("Holiday work detected for employee ${dto.employeeId} on ${dto.date}")
@@ -251,11 +251,11 @@ class TimeEntryValidator @Inject constructor(
      */
     private fun validateBreaks(dto: TimeEntryDTO) {
         dto.breaks.forEach { breakItem ->
-            validateBreak(breakItem, dto.startTime!!, dto.endTime!!)
+            validateBreak(breakItem, dto.startTime, dto.endTime)
         }
         
         // Validate total break time doesn't exceed work time
-        val totalWorkMinutes = ChronoUnit.MINUTES.between(dto.startTime!!, dto.endTime!!)
+        val totalWorkMinutes = ChronoUnit.MINUTES.between(dto.startTime, dto.endTime)
         val totalBreakMinutes = dto.breaks.sumOf { breakItem ->
             ChronoUnit.MINUTES.between(breakItem.start, breakItem.end)
         }
@@ -310,7 +310,7 @@ class TimeEntryValidator @Inject constructor(
      * Validates calculated hours
      */
     private fun validateHours(dto: TimeEntryDTO) {
-        val totalWorkMinutes = ChronoUnit.MINUTES.between(dto.startTime!!, dto.endTime!!)
+        val totalWorkMinutes = ChronoUnit.MINUTES.between(dto.startTime, dto.endTime)
         val totalBreakMinutes = dto.breaks.sumOf { breakItem ->
             ChronoUnit.MINUTES.between(breakItem.start, breakItem.end)
         }

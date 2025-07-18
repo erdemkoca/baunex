@@ -39,8 +39,8 @@ class TimeEntryMapper @Inject constructor(
             notes               = try {
                 entry.notes.filter { it.id != null }.map { nm ->
                     NoteDto(
-                        id           = nm.id!!,
-                        projectId    = nm.project?.id,
+                        id           = nm.id ?: throw IllegalStateException("Note ID is null"),
+                        projectId    = nm.project.id,
                         timeEntryId  = nm.timeEntry?.id,
                         documentId   = nm.document?.id,
                         title        = nm.title,
@@ -48,7 +48,7 @@ class TimeEntryMapper @Inject constructor(
                         category     = nm.category,
                         tags         = nm.tags,
                         attachments  = nm.attachments.map { it.toDto() },
-                        createdById  = nm.createdBy?.id ?: entry.employee?.id ?: throw IllegalArgumentException("Note createdBy is null and no fallback employee available"),
+                        createdById  = nm.createdBy.id ?: entry.employee.id ?: throw IllegalArgumentException("Note createdBy is null and no fallback employee available"),
                         createdAt    = nm.createdAt,
                         updatedAt    = nm.updatedAt
                     )
@@ -64,8 +64,8 @@ class TimeEntryMapper @Inject constructor(
                 entry.usedCatalogItems.map { ci ->
                     TimeEntryCatalogItemDTO(
                         id            = ci.id,
-                        timeEntryId   = ci.timeEntry.id!!,
-                        catalogItemId = ci.catalogItem.id!!,
+                        timeEntryId   = ci.timeEntry.id ?: throw IllegalStateException("TimeEntry ID is null for catalog item ${ci.id}"),
+                        catalogItemId = ci.catalogItem.id ?: throw IllegalStateException("CatalogItem ID is null for catalog item ${ci.id}"),
                         quantity      = ci.quantity,
                         itemName      = ci.catalogItem.name,
                         unitPrice     = ci.unitPrice,
