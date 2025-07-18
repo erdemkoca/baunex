@@ -62,7 +62,7 @@ class HolidayTypeService @Inject constructor(
             val model = holidayTypeRepository.findById(id)
             val dto = model?.let { holidayTypeMapper.toDTO(it) }
             if (dto != null) log.info("Fetched holiday type with ID: $id")
-            else log.warn("Holiday type with ID $id not found")
+            else log.info("Holiday type with ID $id not found (business validation)")
             dto
         } catch (e: Exception) {
             log.error("Failed to fetch holiday type by ID: $id", e)
@@ -79,7 +79,7 @@ class HolidayTypeService @Inject constructor(
             val model = holidayTypeRepository.findActiveByCode(code)
             val dto = model?.let { holidayTypeMapper.toDTO(it) }
             if (dto != null) log.info("Fetched holiday type with code: $code")
-            else log.warn("Holiday type with code $code not found")
+            else log.info("Holiday type with code $code not found (business validation)")
             dto
         } catch (e: Exception) {
             log.error("Failed to fetch holiday type by code: $code", e)

@@ -614,8 +614,24 @@ document.addEventListener('DOMContentLoaded', function() {
             body: JSON.stringify(absenceData)
         })
         .then(response => {
+            console.log('Response status:', response.status, response.statusText);
+            console.log('Response headers:', response.headers);
+            
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                // Try to parse error response
+                return response.text().then(responseText => {
+                    console.log('Raw response text:', responseText);
+                    
+                    try {
+                        const errorData = JSON.parse(responseText);
+                        console.log('Parsed error data:', errorData);
+                        throw new Error(formatErrorResponse(errorData));
+                    } catch (parseError) {
+                        console.error('Failed to parse error response as JSON:', parseError);
+                        // If error response is not JSON, use the raw text
+                        throw new Error(responseText || 'Network response was not ok');
+                    }
+                });
             }
             return response.json();
         })
@@ -640,7 +656,20 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Error saving absence:', error);
-            alert('Fehler beim Speichern der Abwesenheit.');
+            
+            // Check if the error message is a JSON string (raw error response)
+            let displayMessage = error.message;
+            if (error.message && error.message.startsWith('{') && error.message.includes('"error"')) {
+                try {
+                    const errorData = JSON.parse(error.message);
+                    displayMessage = formatErrorResponse(errorData);
+                } catch (parseError) {
+                    // If parsing fails, use the original message
+                    displayMessage = error.message;
+                }
+            }
+            
+            alert('Fehler beim Speichern der Abwesenheit: ' + displayMessage);
         });
     });
 
@@ -900,6 +929,50 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         
         return statusMap[status] || 'Unbekannt';
+    }
+
+    function formatErrorResponse(errorData) {
+        console.log('Formatting error response:', errorData);
+        
+        // Handle cases where errorData might be a string or have different structure
+        if (typeof errorData === 'string') {
+            return errorData;
+        }
+        
+        if (!errorData || typeof errorData !== 'object') {
+            return 'Ein unbekannter Fehler ist aufgetreten';
+        }
+        
+        const { error, type, field, value } = errorData;
+        
+        // If no error message is provided, use a default
+        if (!error) {
+            return 'Ein Fehler ist aufgetreten';
+        }
+        
+        // Benutzerfreundliche Fehlermeldungen basierend auf dem Fehlertyp
+        switch (type) {
+            case 'HolidayOverlapException':
+                return error; // Die Fehlermeldung ist bereits benutzerfreundlich
+            
+            case 'MissingRequiredFieldException':
+                return `📝 **Pflichtfeld fehlt**: Das Feld "${field}" ist erforderlich. Bitte füllen Sie alle markierten Felder aus.`;
+            
+            case 'InvalidDateException':
+                return '📅 **Ungültiges Datum**: ' + error;
+            
+            case 'EmployeeNotFoundException':
+                return '👤 **Mitarbeiter nicht gefunden**: Der ausgewählte Mitarbeiter existiert nicht mehr.';
+            
+            case 'BusinessRuleViolationException':
+                return '⚠️ **Geschäftsregel verletzt**: ' + error;
+            
+            case 'ValidationError':
+                return `⚠️ **Validierungsfehler**: ${error}`;
+            
+            default:
+                return `❌ **Fehler**: ${error}`;
+        }
     }
 
     // Initialize the app

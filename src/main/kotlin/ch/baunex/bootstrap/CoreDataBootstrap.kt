@@ -20,11 +20,15 @@ class CoreDataBootstrap @Inject constructor(
     
     @Transactional
     fun bootstrapCoreData(@Observes @Priority(1) ev: StartupEvent) {
+        println("🔧 Starting core data bootstrap...")
         bootstrapHolidayTypes()
+        println("✅ Core data bootstrap completed successfully")
         // Add other core data bootstrap methods here as needed
     }
     
     private fun bootstrapHolidayTypes() {
+        println("🎯 Bootstrapping holiday types...")
+        
         val coreHolidayTypes = listOf(
             HolidayTypeCreateDTO("PAID_VACATION", "Bezahlter Urlaub", 0.0),
             HolidayTypeCreateDTO("UNPAID_LEAVE", "Unbezahlter Urlaub", 8.0),
@@ -36,16 +40,27 @@ class CoreDataBootstrap @Inject constructor(
             HolidayTypeCreateDTO("PUBLIC_HOLIDAY", "Öffentlicher Feiertag", 0.0)
         )
         
+        var createdCount = 0
+        var existingCount = 0
+        
         for (type in coreHolidayTypes) {
             try {
                 if (holidayTypeService.getHolidayTypeByCode(type.code) == null) {
                     holidayTypeService.createHolidayType(type)
+                    createdCount++
+                } else {
+                    existingCount++
                 }
             } catch (e: Exception) {
                 // Log but don't fail startup if holiday type creation fails
                 println("⚠️  Warning: Could not create holiday type ${type.code}: ${e.message}")
             }
         }
-        println("✅ Core holiday types bootstrapped at ${java.time.LocalDateTime.now()}")
+        
+        println("✅ Holiday types bootstrapped: $createdCount created, $existingCount already existed")
+        
+        // Verify that holiday types are available
+        val availableTypes = holidayTypeService.getActiveHolidayTypes()
+        println("✅ Available holiday types: ${availableTypes.map { it.code }}")
     }
 } 

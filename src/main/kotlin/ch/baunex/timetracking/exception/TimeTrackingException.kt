@@ -156,4 +156,27 @@ class BusinessRuleViolationException(
 ) : TimeTrackingException(
     "Geschäftsregel verletzt: $rule - $details",
     cause
-) 
+)
+
+/**
+ * Holiday overlap exception
+ */
+class HolidayOverlapException(
+    employeeId: Long,
+    startDate: LocalDate,
+    endDate: LocalDate,
+    existingHolidayStart: LocalDate,
+    existingHolidayEnd: LocalDate,
+    existingHolidayType: String,
+    cause: Throwable? = null
+) : TimeTrackingException(
+    "Ein Urlaubsantrag existiert bereits für den Zeitraum $existingHolidayStart bis $existingHolidayEnd ($existingHolidayType)",
+    cause
+) {
+    val employeeId: Long = employeeId
+    val requestedStartDate: LocalDate = startDate
+    val requestedEndDate: LocalDate = endDate
+    val existingStartDate: LocalDate = existingHolidayStart
+    val existingEndDate: LocalDate = existingHolidayEnd
+    val existingType: String = existingHolidayType
+} 

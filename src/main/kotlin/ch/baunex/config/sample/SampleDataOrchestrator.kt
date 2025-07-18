@@ -5,6 +5,7 @@ import ch.baunex.config.sample.SampleCustomerAndContactsLoader
 import ch.baunex.config.sample.SampleCatalogLoader
 import ch.baunex.config.sample.SampleEmployeeLoader
 import ch.baunex.config.sample.SampleTimeEntryLoader
+import ch.baunex.config.sample.SampleHolidayLoader
 import io.quarkus.arc.profile.IfBuildProfile
 import io.quarkus.runtime.StartupEvent
 import jakarta.enterprise.context.ApplicationScoped
@@ -27,6 +28,7 @@ class SampleDataOrchestrator {
     @Inject lateinit var projectLoader: SampleProjectLoader
     @Inject lateinit var projectCatalogLoader: SampleProjectCatalogItemLoader
     @Inject lateinit var timeEntryLoader: SampleTimeEntryLoader
+    @Inject lateinit var holidayLoader: SampleHolidayLoader
 
     @Transactional
     fun loadSampleData(@Observes @Priority(10) event: StartupEvent) {
@@ -39,6 +41,11 @@ class SampleDataOrchestrator {
         customerAndContactsLoader.load()
         projectLoader.load()
         projectCatalogLoader.load()
+        
+        // Load holidays BEFORE time entries to ensure holiday types are available
+        holidayLoader.load()
+        
+        // Load time entries last (they might reference holidays)
         timeEntryLoader.load()
         
         println("✅ Sample data loading completed at ${java.time.LocalDateTime.now()}.")

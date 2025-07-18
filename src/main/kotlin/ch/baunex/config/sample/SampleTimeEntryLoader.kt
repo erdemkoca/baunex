@@ -2,12 +2,8 @@ package ch.baunex.config.sample
 
 import ch.baunex.notes.dto.NoteDto
 import ch.baunex.notes.model.NoteCategory
-import ch.baunex.timetracking.dto.ApprovalDTO
-import ch.baunex.timetracking.dto.HolidayDTO
 import ch.baunex.timetracking.dto.TimeEntryDTO
-import ch.baunex.timetracking.facade.HolidayFacade
 import ch.baunex.timetracking.facade.TimeTrackingFacade
-import ch.baunex.timetracking.service.HolidayTypeService
 import ch.baunex.user.facade.EmployeeFacade
 import io.quarkus.arc.profile.IfBuildProfile
 import jakarta.enterprise.context.ApplicationScoped
@@ -32,13 +28,7 @@ class SampleTimeEntryLoader {
     lateinit var timeTrackingFacade: TimeTrackingFacade
 
     @Inject
-    lateinit var holidayFacade: HolidayFacade
-
-    @Inject
     lateinit var employeeFacade: EmployeeFacade
-
-    @Inject
-    lateinit var holidayTypeService: HolidayTypeService
 
     // Konfigurierbare Parameter
     private val weeksToGenerate = 10
@@ -47,7 +37,6 @@ class SampleTimeEntryLoader {
     private val minHoursPerDayPerProject = 2.0
     private val maxHoursPerDayPerProject = 4.0
     private val projectIds = listOf(1, 2, 3, 4, 5, 6, 7)
-    private val holidayChance = 0.05 // 5% Wahrscheinlichkeit für Urlaubstag
     private val workDayStart = LocalTime.of(8, 0)
     private val workDayEnd = LocalTime.of(17, 0)
 
@@ -125,142 +114,14 @@ class SampleTimeEntryLoader {
                 // Nächstes Datum auf diesen Wochentag verschieben
                 currentDate = currentDate.with(TemporalAdjusters.nextOrSame(dayOfWeek))
                 
-                // Prüfen ob es ein Urlaubstag werden soll
-                if (Math.random() < holidayChance) {
-                    createHoliday(employee, currentDate)
-                } else {
+                // Only create time entries for past dates
+                if (currentDate.isBefore(LocalDate.now())) {
                     createMultipleTimeEntries(employee, currentDate)
                 }
                 
                 // Zum nächsten Tag
                 currentDate = currentDate.plusDays(1)
             }
-        }
-    }
-
-    private fun createHoliday(employee: ch.baunex.user.dto.EmployeeDTO, date: LocalDate) {
-        // Lade Holiday-Types aus der Datenbank
-        var holidayTypes = holidayTypeService.getActiveHolidayTypes()
-        
-        // Falls keine Holiday-Types gefunden wurden, warte kurz und versuche es nochmal
-        if (holidayTypes.isEmpty()) {
-            println("WARNING: No holiday types found in database, waiting for core bootstrap...")
-            Thread.sleep(1000) // Warte 1 Sekunde
-            holidayTypes = holidayTypeService.getActiveHolidayTypes()
-            
-            if (holidayTypes.isEmpty()) {
-                println("WARNING: Still no holiday types found, skipping holiday creation")
-                return
-            }
-        }
-        
-        // Erstelle Wahrscheinlichkeitsverteilung basierend auf Holiday-Types
-        val holidayTypesWithProbabilities = mutableMapOf<String, Double>()
-        
-        // Standard-Wahrscheinlichkeiten für bekannte Typen
-        val defaultProbabilities = mapOf(
-            "PAID_VACATION" to 0.45,     // 45% - häufigster Typ
-            "SICK_LEAVE" to 0.25,        // 25% - relativ häufig
-            "UNPAID_LEAVE" to 0.15,      // 15% - gelegentlich
-            "SPECIAL_LEAVE" to 0.08,     // 8% - selten
-            "COMPENSATORY_TIME" to 0.04, // 4% - selten
-            "MATERNITY_LEAVE" to 0.015,  // 1.5% - sehr selten
-            "PATERNITY_LEAVE" to 0.015   // 1.5% - sehr selten
-        )
-        
-        // Verwende Standard-Wahrscheinlichkeiten für bekannte Typen, sonst 0.01
-        holidayTypes.forEach { holidayType ->
-            val probability = defaultProbabilities[holidayType.code] ?: 0.01
-            holidayTypesWithProbabilities[holidayType.code] = probability
-        }
-        
-        // Normalisiere Wahrscheinlichkeiten (sollten sich zu 1.0 addieren)
-        val totalProbability = holidayTypesWithProbabilities.values.sum()
-        holidayTypesWithProbabilities.replaceAll { _, value -> value / totalProbability }
-        
-        // Wähle Holiday-Type basierend auf Wahrscheinlichkeiten
-        val random = Math.random()
-        var cumulativeProbability = 0.0
-        var selectedType = holidayTypes.first().code // Fallback auf ersten verfügbaren Typ
-        
-        for ((type, probability) in holidayTypesWithProbabilities) {
-            cumulativeProbability += probability
-            if (random <= cumulativeProbability) {
-                selectedType = type
-                break
-            }
-        }
-        
-        // Gründe für verschiedene Holiday-Types
-        val reasonsByType = mapOf(
-            "PAID_VACATION" to listOf(
-                "Sommerurlaub",
-                "Winterurlaub",
-                "Familienurlaub",
-                "Erholungsurlaub",
-                "Urlaub mit Freunden",
-                "Kurzer Ausflug"
-            ),
-            "SICK_LEAVE" to listOf(
-                "Erkältung",
-                "Grippe",
-                "Migräne",
-                "Rückenprobleme",
-                "Magen-Darm",
-                "Arzttermin"
-            ),
-            "UNPAID_LEAVE" to listOf(
-            "Persönliche Angelegenheit",
-                "Familienangelegenheit",
-                "Reise ohne Urlaub",
-                "Studium",
-                "Weiterbildung"
-            ),
-            "SPECIAL_LEAVE" to listOf(
-                "Hochzeit",
-                "Beerdigung",
-                "Geburt",
-                "Umzug",
-                "Gerichtstermin",
-                "Prüfung"
-            ),
-            "COMPENSATORY_TIME" to listOf(
-                "Überstundenausgleich",
-                "Zeitausgleich",
-                "Gleitzeitausgleich",
-                "Feiertagsausgleich"
-            ),
-            "MATERNITY_LEAVE" to listOf(
-                "Mutterschaftsurlaub",
-                "Schwangerschaftsurlaub"
-            ),
-            "PATERNITY_LEAVE" to listOf(
-                "Vaterschaftsurlaub",
-                "Vaterschaftsfreistellung"
-            )
-        )
-        
-        val reasons = reasonsByType[selectedType] ?: listOf("Urlaub")
-        val selectedReason = reasons.random()
-        
-        try {
-            holidayFacade.requestHoliday(
-                HolidayDTO(
-                    id = null,
-                    employeeId = employee.id,
-                    startDate = date,
-                    endDate = date,
-                    type = selectedType,
-                    reason = selectedReason,
-                    approval = ApprovalDTO(
-                        approved = Math.random() > 0.2, // 80% approved
-                        approverId = 1,
-                        approverName = "Admin"
-                    )
-                )
-            )
-        } catch (e: Exception) {
-            // Ignore if holiday already exists
         }
     }
 

@@ -16,8 +16,12 @@ class HolidayFacade @Inject constructor(
 
     @Transactional
     fun requestHoliday(dto: HolidayDTO): HolidayDTO {
+        // First create the model to get the holiday type
         val model = holidayMapper.toModel(dto)
-        val saved = holidayService.createHoliday(model, dto.employeeId)
+        
+        // Create holiday with validation, passing the holiday type
+        val saved = holidayService.createHolidayWithValidation(dto, model.holidayType)
+        
         return holidayMapper.toDTO(saved)
     }
 

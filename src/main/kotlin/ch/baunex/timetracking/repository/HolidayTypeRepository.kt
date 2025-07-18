@@ -7,24 +7,12 @@ import jakarta.enterprise.context.ApplicationScoped
 @ApplicationScoped
 class HolidayTypeRepository : PanacheRepository<HolidayTypeModel> {
 
-    fun findByCode(code: String): HolidayTypeModel? {
-        return find("code", code).firstResult<HolidayTypeModel>()
-    }
-
     fun findActive(): List<HolidayTypeModel> {
         return find("active", true).list<HolidayTypeModel>().sortedBy { it.sortOrder }
     }
 
     fun findActiveByCode(code: String): HolidayTypeModel? {
         return find("code = ?1 and active = ?2", code, true).firstResult<HolidayTypeModel>()
-    }
-
-    fun findSystemTypes(): List<HolidayTypeModel> {
-        return find("isSystemType", true).list<HolidayTypeModel>().sortedBy { it.sortOrder }
-    }
-
-    fun findCustomTypes(): List<HolidayTypeModel> {
-        return find("isSystemType", false).list<HolidayTypeModel>().sortedBy { it.sortOrder }
     }
 
     fun existsByCode(code: String): Boolean {

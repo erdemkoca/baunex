@@ -57,7 +57,7 @@ class HolidayTypeController @Inject constructor(
                 log.info("Successfully fetched holiday type with ID: $id")
                 Response.ok(holidayType).build()
             } else {
-                log.warn("Holiday type with ID $id not found")
+                log.info("Holiday type with ID $id not found (business validation)")
                 Response.status(Response.Status.NOT_FOUND).build()
             }
         } catch (e: Exception) {
@@ -76,7 +76,7 @@ class HolidayTypeController @Inject constructor(
                 log.info("Successfully fetched holiday type with code: $code")
                 Response.ok(holidayType).build()
             } else {
-                log.warn("Holiday type with code $code not found")
+                log.info("Holiday type with code $code not found (business validation)")
                 Response.status(Response.Status.NOT_FOUND).build()
             }
         } catch (e: Exception) {

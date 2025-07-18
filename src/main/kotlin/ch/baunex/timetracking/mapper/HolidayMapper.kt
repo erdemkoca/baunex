@@ -26,7 +26,12 @@ class HolidayMapper @Inject constructor(
                         throw IllegalStateException("No holiday type found for: ${dto.type}")
                 }
             }
-            approvalStatus = ApprovalStatus.valueOf(dto.status)
+            // Safely convert status, default to PENDING if invalid
+            approvalStatus = try {
+                ApprovalStatus.valueOf(dto.status.uppercase())
+            } catch (e: IllegalArgumentException) {
+                ApprovalStatus.PENDING
+            }
             reason = dto.reason
         }
     }

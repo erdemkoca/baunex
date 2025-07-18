@@ -49,6 +49,7 @@ class TimeTrackingExceptionHandler : ExceptionMapper<TimeTrackingException> {
             is InvalidHoursException -> Response.Status.BAD_REQUEST
             is InvalidBreakException -> Response.Status.BAD_REQUEST
             is DuplicateTimeEntryException -> Response.Status.CONFLICT
+            is HolidayOverlapException -> Response.Status.CONFLICT
             is ApprovalException -> Response.Status.BAD_REQUEST
             is BusinessRuleViolationException -> Response.Status.BAD_REQUEST
             else -> Response.Status.INTERNAL_SERVER_ERROR
@@ -57,7 +58,7 @@ class TimeTrackingExceptionHandler : ExceptionMapper<TimeTrackingException> {
     
     private fun logError(exception: TimeTrackingException, status: Response.Status) {
         val logMessage = buildString {
-            append("TimeTracking API Error: ${exception.message}")
+            append("TimeTracking API ${if (status.statusCode >= 500) "Error" else "Validation"}: ${exception.message}")
             if (exception is TimeEntryValidationException) {
                 exception.field?.let { append(" (Field: $it)") }
                 exception.value?.let { append(" (Value: $it)") }
@@ -66,8 +67,14 @@ class TimeTrackingExceptionHandler : ExceptionMapper<TimeTrackingException> {
         }
         
         when {
-            status.statusCode in 400..499 -> log.warn(logMessage, exception)
-            status.statusCode >= 500 -> log.error(logMessage, exception)
+            status.statusCode in 400..499 -> {
+                // For client errors (4xx), log without stack trace - these are expected business logic
+                log.info(logMessage)
+            }
+            status.statusCode >= 500 -> {
+                // For server errors (5xx), log with full stack trace
+                log.error(logMessage, exception)
+            }
             else -> log.info(logMessage)
         }
     }
@@ -87,7 +94,8 @@ class GeneralValidationExceptionHandler : ExceptionMapper<IllegalArgumentExcepti
             type = "ValidationError"
         )
         
-        log.warn("Validation error: ${exception.message}", exception)
+        // Log validation errors at INFO level without stack trace - these are expected
+        log.info("Validation error: ${exception.message}")
         
         return Response.status(Response.Status.BAD_REQUEST)
             .entity(errorResponse)

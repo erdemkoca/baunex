@@ -4,6 +4,8 @@ import ch.baunex.timetracking.model.HolidayModel
 import ch.baunex.timetracking.model.ApprovalStatus
 import ch.baunex.timetracking.repository.HolidayRepository
 import ch.baunex.user.repository.EmployeeRepository
+import ch.baunex.timetracking.validation.HolidayValidator
+import ch.baunex.timetracking.dto.HolidayDTO
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -13,23 +15,47 @@ import org.jboss.logging.Logger
 @ApplicationScoped
 class HolidayService @Inject constructor(
     private val holidayRepository: HolidayRepository,
-    private val employeeRepository: EmployeeRepository
+    private val employeeRepository: EmployeeRepository,
+    private val holidayValidator: HolidayValidator
 ) {
     private val log = Logger.getLogger(HolidayService::class.java)
 
     @Transactional
-    fun createHoliday(model: HolidayModel, employeeId: Long): HolidayModel {
-        log.info("Creating holiday for employee $employeeId")
+    fun createHolidayWithValidation(dto: HolidayDTO, holidayType: ch.baunex.timetracking.model.HolidayTypeModel): HolidayModel {
+        log.info("Creating holiday with validation for employee ${dto.employeeId}")
         return try {
-            val employee = employeeRepository.findById(employeeId)
-                ?: throw IllegalArgumentException("Employee not found with id: $employeeId")
-            model.employee = employee
-            model.approvalStatus = ApprovalStatus.PENDING
+            // Validate the holiday request before processing
+            holidayValidator.validateHoliday(dto)
+            
+            val employee = employeeRepository.findById(dto.employeeId!!)
+                ?: throw IllegalArgumentException("Employee not found with id: ${dto.employeeId}")
+            
+            // Create the holiday model
+            val model = HolidayModel().apply {
+                this.employee = employee
+                this.startDate = dto.startDate!!
+                this.endDate = dto.endDate!!
+                this.reason = dto.reason
+                this.holidayType = holidayType
+                // Use the status from DTO, default to PENDING if not specified
+                this.approvalStatus = try {
+                    ApprovalStatus.valueOf(dto.status.uppercase())
+                } catch (e: IllegalArgumentException) {
+                    ApprovalStatus.PENDING
+                }
+                this.createdAt = LocalDate.now()
+            }
+            
             holidayRepository.persist(model)
-            log.info("Created holiday with ID: ${model.id}")
+            log.info("Successfully created holiday with ID: ${model.id} for employee ${dto.employeeId} with status: ${model.approvalStatus}")
             model
+        } catch (e: ch.baunex.timetracking.exception.TimeTrackingException) {
+            // Business logic exceptions should not be logged as errors - they're expected
+            log.info("Holiday validation failed for employee ${dto.employeeId}: ${e.message}")
+            throw e
         } catch (e: Exception) {
-            log.error("Failed to create holiday for employee $employeeId", e)
+            // Only log unexpected exceptions as errors
+            log.error("Unexpected error creating holiday for employee ${dto.employeeId}", e)
             throw e
         }
     }
@@ -37,7 +63,7 @@ class HolidayService @Inject constructor(
     fun getHolidaysForEmployee(employeeId: Long): List<HolidayModel> {
         log.info("Fetching holidays for employee $employeeId")
         return try {
-            val holidays = holidayRepository.list("employee.id", employeeId)
+            val holidays = holidayRepository.find("FROM HolidayModel h WHERE h.employee.id = ?1", employeeId).list<HolidayModel>()
             log.info("Fetched ${holidays.size} holidays for employee $employeeId")
             holidays
         } catch (e: Exception) {
@@ -49,7 +75,7 @@ class HolidayService @Inject constructor(
     fun getAllHolidays(): List<HolidayModel> {
         log.info("Fetching all holidays")
         return try {
-            val holidays = holidayRepository.listAll()
+            val holidays = holidayRepository.findAllWithoutCollections()
             log.info("Fetched ${holidays.size} holidays")
             holidays
         } catch (e: Exception) {

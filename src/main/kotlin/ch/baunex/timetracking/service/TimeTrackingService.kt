@@ -136,12 +136,12 @@ class TimeTrackingService @Inject constructor(
     }
 
     fun getAllTimeEntries(): List<TimeEntryModel> {
-        return timeEntryRepository.listAll()
+        return timeEntryRepository.findAllWithoutCollections()
     }
 
     fun getTimeEntryById(id: Long): TimeEntryModel? {
         log.debug("Fetching time entry with ID: $id")
-        val entry = timeEntryRepository.findById(id)
+        val entry = timeEntryRepository.findByIdWithoutCollections(id)
         if (entry == null) {
             log.warn("Time entry with ID $id not found")
         }
@@ -250,7 +250,7 @@ class TimeTrackingService @Inject constructor(
             ?: throw EmployeeNotFoundException(approverId)
         
         // Find all time entries for the employee in the date range
-        val entries = timeEntryRepository.list("employee.id = ?1 and date between ?2 and ?3", employeeId, fromDate, toDate)
+        val entries = timeEntryRepository.find("FROM TimeEntryModel te WHERE te.employee.id = ?1 AND te.date BETWEEN ?2 AND ?3", employeeId, fromDate, toDate).list<TimeEntryModel>()
         
         if (entries.isEmpty()) {
             log.warn("No time entries found for employee $employeeId in date range $fromDate to $toDate")
@@ -258,7 +258,7 @@ class TimeTrackingService @Inject constructor(
         }
         
         // Approve all entries
-        entries.forEach { entry ->
+        entries.forEach { entry: TimeEntryModel ->
             entry.approvalStatus = ApprovalStatus.APPROVED
             entry.approvedBy = approver
             entry.approvedAt = LocalDate.now()
@@ -269,7 +269,7 @@ class TimeTrackingService @Inject constructor(
     }
 
     fun getTimeEntryWithBreaks(id: Long): TimeEntryDTO? {
-        val timeEntry = timeEntryRepository.findById(id) ?: return null
+        val timeEntry = timeEntryRepository.findByIdWithoutCollections(id) ?: return null
         
         // With the new single-entry approach, we just return the entry as-is
         // The breaks are stored in the DTO, not in the database
