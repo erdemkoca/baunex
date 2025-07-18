@@ -13,4 +13,11 @@ class ProjectRepository : PanacheRepository<ProjectModel> {
             id
         ).firstResult()
     }
+    
+    fun findByIdWithoutTimeEntries(id: Long): ProjectModel? {
+        return find("FROM ProjectModel p WHERE p.id = ?1", id).firstResult()
+    }
+    
+    fun listAllProjects(): List<ProjectModel> =
+        find("FROM ProjectModel p").list()
 }

@@ -26,7 +26,7 @@ class InvoiceModel : PanacheEntity() {
     var vatAmount: Double = 0.0
     var totalBrutto: Double = 0.0
 
-    @OneToMany(mappedBy = "invoice", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "invoice", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var items: MutableList<InvoiceItemModel> = mutableListOf()
 
     @OneToMany(mappedBy = "invoice", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)

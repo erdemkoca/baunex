@@ -23,6 +23,9 @@ class EmployeeFacade @Inject constructor(
 
     fun listAll(): List<EmployeeDTO> =
         employeeService.listAllEmployees().map { it.toEmployeeDTO() }
+        
+    fun listAllWithoutPerson(): List<EmployeeDTO> =
+        employeeService.listAllEmployeesWithoutPerson().map { it.toEmployeeDTO() }
 
     @Transactional
     fun create(createDTO: EmployeeCreateDTO): EmployeeDTO {

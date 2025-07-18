@@ -9,4 +9,8 @@ class DocumentRepository : PanacheRepository<DocumentModel> {
     fun findByIdWithEntries(id: Long): DocumentModel? {
         return find("FROM DocumentModel d LEFT JOIN FETCH d.entries WHERE d.id = ?1", id).firstResult()
     }
+    
+    fun findByIdWithoutEntries(id: Long): DocumentModel? {
+        return find("FROM DocumentModel d WHERE d.id = ?1", id).firstResult()
+    }
 }

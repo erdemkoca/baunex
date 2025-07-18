@@ -63,7 +63,7 @@ class ControlReportModel : PanacheEntity() {
     var deadlineNote: String? = null
     var generalNotes: String? = null
 
-    @OneToMany(mappedBy = "controlReport", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "controlReport", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var defectPositions: MutableList<DefectPositionModel> = mutableListOf()
 
     @OneToMany(mappedBy = "controlReport", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)

@@ -20,12 +20,12 @@ class HolidayTypeRepository : PanacheRepository<HolidayTypeModel> {
     }
 
     fun findNextSortOrder(): Int {
-        val allTypes = listAll()
+        val allTypes = find("FROM HolidayTypeModel h").list<HolidayTypeModel>()
         val maxSortOrder = allTypes.maxOfOrNull { it.sortOrder } ?: 0
         return maxSortOrder + 1
     }
 
     fun listAllOrdered(): List<HolidayTypeModel> {
-        return listAll().sortedBy { it.sortOrder }
+        return find("FROM HolidayTypeModel h ORDER BY h.sortOrder").list<HolidayTypeModel>()
     }
 } 

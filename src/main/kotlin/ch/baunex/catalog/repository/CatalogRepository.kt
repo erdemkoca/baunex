@@ -5,4 +5,8 @@ import io.quarkus.hibernate.orm.panache.PanacheRepository
 import jakarta.enterprise.context.ApplicationScoped
 
 @ApplicationScoped
-class CatalogRepository : PanacheRepository<CatalogItemModel>
+class CatalogRepository : PanacheRepository<CatalogItemModel> {
+    
+    fun listAllCatalogItems(): List<CatalogItemModel> =
+        find("FROM CatalogItemModel c").list()
+}

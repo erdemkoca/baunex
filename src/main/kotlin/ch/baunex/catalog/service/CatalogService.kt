@@ -10,7 +10,7 @@ import jakarta.transaction.Transactional
 class CatalogService @Inject constructor(
     private val repo: CatalogRepository
 ) {
-    fun getAll(): List<CatalogItemModel> = repo.listAll()
+    fun getAll(): List<CatalogItemModel> = repo.listAllCatalogItems()
 
     fun findById(id: Long): CatalogItemModel? = repo.findById(id)
 

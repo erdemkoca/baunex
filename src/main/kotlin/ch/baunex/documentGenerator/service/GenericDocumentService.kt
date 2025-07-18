@@ -11,7 +11,7 @@ class GenericDocumentService(
     private val documentRepository: DocumentRepository
 ) {
     fun findById(id: Long): DocumentModel =
-        documentRepository.findByIdWithEntries(id)
+        documentRepository.findByIdWithoutEntries(id)
             ?: throw NotFoundException("Document $id not found")
 
     fun listAll(): List<DocumentModel> =

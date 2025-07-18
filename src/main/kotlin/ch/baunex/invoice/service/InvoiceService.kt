@@ -35,7 +35,7 @@ class InvoiceService {
     lateinit var mapper: InvoiceMapper
 
     fun getAll(): List<InvoiceModel> {
-        return repository.listAll()
+        return repository.find("FROM InvoiceModel i").list<InvoiceModel>()
     }
 
     fun getById(id: Long): InvoiceModel {
@@ -99,8 +99,8 @@ class InvoiceService {
     }
 
     fun generateInvoiceNumber(): String {
-        val lastInvoice = repository
-            .listAll()
+        val invoices = repository.find("FROM InvoiceModel i").list<InvoiceModel>()
+        val lastInvoice = invoices
             .mapNotNull { it.invoiceNumber?.toIntOrNull() }
             .maxOrNull() ?: 1000
 

@@ -13,4 +13,10 @@ class EmployeeRepository : PanacheRepository<EmployeeModel> {
 
     fun findByRole(role: Role): EmployeeModel =
         find("role", role).firstResult()
+        
+    fun listAllEmployees(): List<EmployeeModel> =
+        find("FROM EmployeeModel e").list<EmployeeModel>()
+        
+    fun listAllEmployeesWithoutPerson(): List<EmployeeModel> =
+        find("SELECT e FROM EmployeeModel e WHERE e.id IS NOT NULL").list<EmployeeModel>()
 }

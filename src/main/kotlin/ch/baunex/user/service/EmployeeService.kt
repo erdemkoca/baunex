@@ -38,7 +38,10 @@ class EmployeeService @Inject constructor(
         employeeRepository.findById(id)
 
     fun listAllEmployees(): List<EmployeeModel> =
-        employeeRepository.listAll()
+        employeeRepository.listAllEmployees()
+        
+    fun listAllEmployeesWithoutPerson(): List<EmployeeModel> =
+        employeeRepository.listAllEmployeesWithoutPerson()
 
     @Transactional
     fun deleteEmployee(id: Long) {

@@ -241,7 +241,7 @@ class WorkSummaryService @Inject constructor(
      * Get daily work summary for all employees in a date range
      */
     fun getAllEmployeesDailyWorkSummary(from: LocalDate, to: LocalDate): List<EmployeeDailyWorkDTO> {
-        val employees = employeeRepository.listAll()
+        val employees = employeeRepository.listAllEmployees()
         return employees.flatMap { employee ->
             getDailyWorkSummary(employee.id!!, from, to)
         }
@@ -251,7 +251,7 @@ class WorkSummaryService @Inject constructor(
      * Get weekly work summary for all employees
      */
     fun getAllEmployeesWeeklyWorkSummary(year: Int, week: Int): List<WeeklyWorkSummaryDTO> {
-        val employees = employeeRepository.listAll()
+        val employees = employeeRepository.listAllEmployees()
         return employees.mapNotNull { employee ->
             getWeeklyWorkSummary(employee.id!!, year, week)
         }

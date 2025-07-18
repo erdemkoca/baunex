@@ -64,7 +64,7 @@ class CustomerService {
     }
 
     fun getAll(): List<CustomerDTO> {
-        return customerRepo.listAll().map { mapper.toDTO(it) }
+        return customerRepo.listAllCustomers().map { mapper.toDTO(it) }
     }
 
     fun getById(id: Long): CustomerDTO {

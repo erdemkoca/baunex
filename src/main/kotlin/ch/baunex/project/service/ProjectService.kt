@@ -44,13 +44,15 @@ class ProjectService @Inject constructor(
         return existing
     }
 
-    fun getAllProjects(): List<ProjectModel> = projectRepository.listAll()
+    fun getAllProjects(): List<ProjectModel> = projectRepository.listAllProjects()
     fun getProjectWithEntries(id: Long): ProjectModel? = projectRepository.findByIdWithTimeEntries(id)
+    
+    fun getProjectWithoutEntries(id: Long): ProjectModel? = projectRepository.findByIdWithoutTimeEntries(id)
     @Transactional
     fun deleteProject(id: Long): Boolean = projectRepository.deleteById(id)
 
     fun getAll(): List<ProjectDTO> {
-        return projectRepository.listAll().map { mapper.toDTO(it) }
+        return projectRepository.listAllProjects().map { mapper.toDTO(it) }
     }
 
     fun getById(id: Long): ProjectDTO? {
@@ -82,7 +84,7 @@ class ProjectService @Inject constructor(
 
     fun generateNextProjectNumber(): Int {
         val maxNumber = projectRepository
-            .listAll()
+            .listAllProjects()
             .map { it.projectNumber }
             .maxOrNull() ?: 1000
         return maxNumber + 1

@@ -29,6 +29,15 @@ class SampleTimeEntryLoader {
 
     @Inject
     lateinit var employeeFacade: EmployeeFacade
+    
+    @Inject
+    lateinit var timeEntryRepository: ch.baunex.timetracking.repository.TimeEntryRepository
+    
+    @Inject
+    lateinit var employeeRepository: ch.baunex.user.repository.EmployeeRepository
+    
+    @Inject
+    lateinit var projectRepository: ch.baunex.project.repository.ProjectRepository
 
     // Konfigurierbare Parameter
     private val weeksToGenerate = 10
@@ -93,10 +102,13 @@ class SampleTimeEntryLoader {
 
     @Transactional
     fun load() {
-        val employees = employeeFacade.listAll()
+        val employees = employeeFacade.listAllWithoutPerson()
         
-        employees.forEach { employee ->
-            generateTimeEntriesForEmployee(employee)
+        // Process employees in smaller batches to reduce memory pressure
+        employees.chunked(2).forEach { employeeBatch ->
+            employeeBatch.forEach { employee ->
+                generateTimeEntriesForEmployee(employee)
+            }
         }
     }
 
@@ -191,10 +203,6 @@ class SampleTimeEntryLoader {
         // Zufälliger Titel
         val title = workTitles.random()
         
-        // Zufällige Notiz
-        val noteCategory = NoteCategory.values().random()
-        val noteContent = sampleNotes[noteCategory]?.random() ?: "Arbeit durchgeführt"
-        
         // Zufällige Sonderfaktoren
         val hasNightSurcharge = Math.random() < 0.1 // 10% Nachtarbeit
         val hasWeekendSurcharge = Math.random() < 0.05 // 5% Wochenendarbeit
@@ -203,48 +211,34 @@ class SampleTimeEntryLoader {
         val waitingTimeMinutes = if (Math.random() < 0.2) (Math.random() * 120).toInt() else 0
 
         try {
-            timeTrackingFacade.logTime(
-                TimeEntryDTO(
-                    employeeId = employee.id,
-                    projectId = projectId.toLong(),
-                    date = date,
-                    startTime = startTime,
-                    endTime = endTime,
-                    hoursWorked = hours,
-                    title = title,
-                    notes = listOf(
-                        NoteDto(
-                            id = 0,
-                            projectId = projectId.toLong(),
-                            timeEntryId = null,
-                            documentId = null,
-                            title = title,
-                            content = noteContent,
-                            category = noteCategory,
-                            tags = listOf("Auto-Generated", date.dayOfWeek.name),
-                            attachments = emptyList(),
-                            createdById = employee.id,
-                            createdAt = null,
-                            updatedAt = null
-                        )
-                    ),
-                    hourlyRate = employee.hourlyRate,
-                    billable = Math.random() > 0.1, // 90% billable
-                    invoiced = Math.random() > 0.3, // 70% invoiced
-                    hasNightSurcharge = hasNightSurcharge,
-                    hasWeekendSurcharge = hasWeekendSurcharge,
-                    hasHolidaySurcharge = hasHolidaySurcharge,
-                    travelTimeMinutes = travelTimeMinutes,
-                    waitingTimeMinutes = waitingTimeMinutes,
-                    disposalCost = 0.0,
-                    catalogItems = emptyList(), // Keine Katalog-Items für automatische Einträge
-                    employeeLastName = "",
-                    employeeFirstName = "",
-                    projectName = "",
-                    employeeEmail = "",
-                    cost = 0.0
-                )
-            )
+            // Direkte Repository-Nutzung ohne Facade
+            val employeeModel = employeeRepository.findById(employee.id!!)
+            val projectModel = projectRepository.findById(projectId.toLong())
+            
+            if (employeeModel != null && projectModel != null) {
+                val timeEntry = ch.baunex.timetracking.model.TimeEntryModel().apply {
+                    this.employee = employeeModel
+                    this.project = projectModel
+                    this.date = date
+                    this.startTime = startTime
+                    this.endTime = endTime
+                    this.hoursWorked = hours
+                    this.title = title
+                    this.hourlyRate = employee.hourlyRate
+                    this.billable = Math.random() > 0.1 // 90% billable
+                    this.invoiced = Math.random() > 0.3 // 70% invoiced
+                    this.hasNightSurcharge = hasNightSurcharge
+                    this.hasWeekendSurcharge = hasWeekendSurcharge
+                    this.hasHolidaySurcharge = hasHolidaySurcharge
+                    this.travelTimeMinutes = travelTimeMinutes
+                    this.waitingTimeMinutes = waitingTimeMinutes
+                    this.disposalCost = 0.0
+                    this.breaks = "[]"
+                    this.approvalStatus = ch.baunex.timetracking.model.ApprovalStatus.PENDING
+                }
+                
+                timeEntryRepository.persist(timeEntry)
+            }
         } catch (e: Exception) {
             // Ignore if entry already exists or other errors
         }

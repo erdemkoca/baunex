@@ -17,6 +17,6 @@ class CustomerRepository : PanacheRepository<CustomerModel> {
         list("industry = ?1", industry)
 
     fun listAllCustomers(): List<CustomerModel> =
-        listAll()
+        find("FROM CustomerModel c").list<CustomerModel>()
 
 }
