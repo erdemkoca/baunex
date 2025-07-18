@@ -26,7 +26,7 @@ class InvoiceDocumentService @Inject constructor(
      */
     @Transactional
     fun createFromInvoice(invoiceId: Long): InvoiceDocumentModel {
-        val invoice  = invoiceRepository.findByIdWithItems(invoiceId)
+        val invoice  = invoiceRepository.findByIdWithoutItems(invoiceId)
             ?: throw NotFoundException("Invoice $invoiceId not found")
         val customer = customerRepository.findById(invoice.customerId)
         val project  = invoice.projectId?.let { projectRepository.findById(it) }

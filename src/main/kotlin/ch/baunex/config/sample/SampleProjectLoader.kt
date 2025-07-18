@@ -28,13 +28,16 @@ class SampleProjectLoader {
 
     @Inject
     lateinit var customerFacade: CustomerFacade
+    
+    @Inject
+    lateinit var customerService: ch.baunex.user.service.CustomerService
 
     @Transactional
     fun load() {
         // wenn schon Projekte existieren, abbrechen
         if (projectFacade.getAllProjects().isNotEmpty()) return
 
-        val customers = customerFacade.listAll()
+        val customers = customerService.getAll()
         logger.info("Found ${customers.size} customers: ${customers.map { it.companyName }}")
 
         val today = LocalDate.now()

@@ -18,6 +18,9 @@ class SampleEmployeeLoader {
 
     @Inject
     lateinit var employeeFacade: EmployeeFacade
+    
+    @Inject
+    lateinit var employeeService: ch.baunex.user.service.EmployeeService
 
     @Transactional
     fun load() {
@@ -90,7 +93,7 @@ class SampleEmployeeLoader {
 
         employeesToCreate.forEach { dto ->
             try {
-                employeeFacade.create(dto)
+                employeeService.createEmployee(dto)
             } catch (_: Exception) {
                 // Eintrag vermutlich schon vorhanden oder anderes Problem – ignorieren
             }

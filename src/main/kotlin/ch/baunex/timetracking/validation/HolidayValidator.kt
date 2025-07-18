@@ -48,35 +48,16 @@ class HolidayValidator @Inject constructor(
      */
     private fun validateBasicData(dto: HolidayDTO) {
         // Check required fields
-        if (dto.employeeId == null) {
-            throw MissingRequiredFieldException("employeeId")
-        }
-        
-        if (dto.startDate == null) {
-            throw MissingRequiredFieldException("startDate")
-        }
-        
-        if (dto.endDate == null) {
-            throw MissingRequiredFieldException("endDate")
-        }
-        
-        if (dto.type.isNullOrBlank()) {
-            throw MissingRequiredFieldException("type")
-        }
+        requireNotNull(dto.employeeId) { "employeeId is required" }
+        requireNotNull(dto.startDate) { "startDate is required" }
+        requireNotNull(dto.endDate) { "endDate is required" }
+        require(!dto.type.isNullOrBlank()) { "type is required" }
         
         // Validate date range
         if (dto.startDate!!.isAfter(dto.endDate!!)) {
             throw InvalidDateException(
                 dto.startDate!!,
                 "Start date cannot be after end date"
-            )
-        }
-        
-        // Validate that start date is not in the past
-        if (dto.startDate!!.isBefore(LocalDate.now())) {
-            throw InvalidDateException(
-                dto.startDate!!,
-                "Holiday start date cannot be in the past"
             )
         }
     }

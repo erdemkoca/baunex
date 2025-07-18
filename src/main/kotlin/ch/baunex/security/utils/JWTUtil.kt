@@ -47,7 +47,7 @@ object JWTUtil {
         } catch (e: ExpiredJwtException) {
             println("❌ Token Expired: ${e.message}")
             throw e
-        } catch (e: SignatureException) {
+        } catch (e: SecurityException) {
             println("❌ Invalid Token Signature: ${e.message}")
             throw e
         } catch (e: Exception) {

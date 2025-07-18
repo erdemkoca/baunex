@@ -70,29 +70,12 @@ class TimeEntryValidator @Inject constructor(
      * Validates required fields are present
      */
     private fun validateRequiredFields(dto: TimeEntryDTO) {
-        if (dto.employeeId == null || dto.employeeId <= 0) {
-            throw MissingRequiredFieldException("employeeId")
-        }
-        
-        if (dto.projectId == null || dto.projectId <= 0) {
-            throw MissingRequiredFieldException("projectId")
-        }
-        
-        if (dto.date == null) {
-            throw MissingRequiredFieldException("date")
-        }
-        
-        if (dto.startTime == null) {
-            throw MissingRequiredFieldException("startTime")
-        }
-        
-        if (dto.endTime == null) {
-            throw MissingRequiredFieldException("endTime")
-        }
-        
-        if (dto.title.isNullOrBlank()) {
-            throw MissingRequiredFieldException("title")
-        }
+        requireNotNull(dto.employeeId) { "employeeId is required" }
+        requireNotNull(dto.projectId) { "projectId is required" }
+        requireNotNull(dto.date) { "date is required" }
+        requireNotNull(dto.startTime) { "startTime is required" }
+        requireNotNull(dto.endTime) { "endTime is required" }
+        require(!dto.title.isNullOrBlank()) { "title is required" }
     }
     
     /**

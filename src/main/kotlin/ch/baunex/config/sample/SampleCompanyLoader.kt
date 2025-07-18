@@ -17,10 +17,13 @@ class SampleCompanyLoader {
 
     @Inject
     lateinit var companyFacade: CompanyFacade
+    
+    @Inject
+    lateinit var companyService: ch.baunex.company.service.CompanyService
 
     @Transactional
     fun load() {
-        if (companyFacade.getCompany() != null) return
+        if (companyService.getCompany() != null) return
 
         val company = CompanyDTO(
             name = "Baunex AG",
@@ -57,6 +60,24 @@ class SampleCompanyLoader {
             """.trimIndent()
         )
 
-        companyFacade.createCompany(company)
+        val model = ch.baunex.company.model.CompanyModel().apply {
+            name = company.name
+            street = company.street
+            city = company.city
+            zipCode = company.zipCode
+            country = company.country
+            phone = company.phone
+            email = company.email
+            website = company.website
+            iban = company.iban
+            bic = company.bic
+            bankName = company.bankName
+            vatNumber = company.vatNumber
+            taxNumber = company.taxNumber
+            logo = company.logo
+            defaultInvoiceFooter = company.defaultInvoiceFooter
+            defaultInvoiceTerms = company.defaultInvoiceTerms
+        }
+        companyService.save(model)
     }
 } 

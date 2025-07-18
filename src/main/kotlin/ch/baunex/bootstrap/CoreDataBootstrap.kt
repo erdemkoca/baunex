@@ -56,11 +56,5 @@ class CoreDataBootstrap @Inject constructor(
                 println("⚠️  Warning: Could not create holiday type ${type.code}: ${e.message}")
             }
         }
-        
-        println("✅ Holiday types bootstrapped: $createdCount created, $existingCount already existed")
-        
-        // Verify that holiday types are available
-        val availableTypes = holidayTypeService.getActiveHolidayTypes()
-        println("✅ Available holiday types: ${availableTypes.map { it.code }}")
     }
 } 

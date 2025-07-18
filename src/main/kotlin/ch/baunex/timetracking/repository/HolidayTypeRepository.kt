@@ -8,7 +8,7 @@ import jakarta.enterprise.context.ApplicationScoped
 class HolidayTypeRepository : PanacheRepository<HolidayTypeModel> {
 
     fun findActive(): List<HolidayTypeModel> {
-        return find("active", true).list<HolidayTypeModel>().sortedBy { it.sortOrder }
+        return find("FROM HolidayTypeModel h WHERE h.active = true ORDER BY h.sortOrder").list<HolidayTypeModel>()
     }
 
     fun findActiveByCode(code: String): HolidayTypeModel? {

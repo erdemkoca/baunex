@@ -67,7 +67,7 @@ fun CustomerContactUpdateDTO.applyTo(entity: CustomerContact) {
     }
 }
 
-fun CustomerContactForm.toUpdateDTO() = CustomerContactUpdateDTO(
+fun CustomerContactForm.toUpdateDTOFromForm() = CustomerContactUpdateDTO(
     personId  = this.personId!!,
     firstName = this.firstName!!,
     lastName  = this.lastName!!,

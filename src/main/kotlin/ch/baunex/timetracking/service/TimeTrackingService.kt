@@ -107,12 +107,8 @@ class TimeTrackingService @Inject constructor(
 
     private fun createNotes(notes: List<ch.baunex.notes.dto.NoteDto>, timeEntry: TimeEntryModel, employee: ch.baunex.user.model.EmployeeModel): MutableList<ch.baunex.notes.model.NoteModel> {
         return notes.map { noteDto ->
-            val noteCreator = if (noteDto.createdById != null) {
-                employeeRepository.findById(noteDto.createdById)
-                    ?: throw IllegalArgumentException("Note creator not found with id: ${noteDto.createdById}")
-            } else {
-                employee
-            }
+            val noteCreator = employeeRepository.findById(noteDto.createdById)
+                ?: throw IllegalArgumentException("Note creator not found with id: ${noteDto.createdById}")
             
             ch.baunex.notes.model.NoteModel().apply {
                 this.project = timeEntry.project
@@ -132,7 +128,7 @@ class TimeTrackingService @Inject constructor(
         val startMinutes = start.hour * 60 + start.minute
         val endMinutes = end.hour * 60 + end.minute
         val diffMinutes = endMinutes - startMinutes
-        return if (diffMinutes > 0) diffMinutes / 60.0 else 0.0
+        return diffMinutes / 60.0
     }
 
     fun getAllTimeEntries(): List<TimeEntryModel> {

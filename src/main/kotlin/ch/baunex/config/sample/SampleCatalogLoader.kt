@@ -17,10 +17,13 @@ class SampleCatalogLoader {
 
     @Inject
     lateinit var catalogFacade: CatalogFacade
+    
+    @Inject
+    lateinit var catalogService: ch.baunex.catalog.service.CatalogService
 
     @Transactional
     fun load() {
-        if (catalogFacade.getAllItems().isNotEmpty()) return
+        if (catalogService.getAll().isNotEmpty()) return
 
         val items = listOf(
             CatalogItemDTO(name = "Serverraum-Klimaanlage", unitPrice = 3500.0, description = "Professionelle Klimaanlage für Serverraum"),
@@ -61,6 +64,13 @@ class SampleCatalogLoader {
             CatalogItemDTO(name = "Notfallkühlung", unitPrice = 450.0, description = "Mobile Notfallkühlung für Serverraum")
         )
 
-        items.forEach { catalogFacade.createItem(it) }
+        items.forEach { 
+            val model = ch.baunex.catalog.model.CatalogItemModel().apply {
+                name = it.name
+                unitPrice = it.unitPrice
+                description = it.description
+            }
+            catalogService.save(model)
+        }
     }
 } 

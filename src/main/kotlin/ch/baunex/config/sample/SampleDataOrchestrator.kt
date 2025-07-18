@@ -34,7 +34,7 @@ class SampleDataOrchestrator {
     fun loadSampleData(@Observes @Priority(10) event: StartupEvent) {
         println("🚀 Loading sample data for development environment at ${java.time.LocalDateTime.now()}...")
         
-        // Load in dependency order
+        // Load in dependency order - TESTING ONE BY ONE
         companyLoader.load()
         catalogLoader.load()
         employeeLoader.load()
@@ -42,11 +42,8 @@ class SampleDataOrchestrator {
         projectLoader.load()
         projectCatalogLoader.load()
         
-        // Load holidays BEFORE time entries to ensure holiday types are available
-        holidayLoader.load()
-        
-        // Load time entries last (they might reference holidays)
-        timeEntryLoader.load()
+        // holidayLoader.load() // TEMPORARILY DISABLED
+        // timeEntryLoader.load() // TEMPORARILY DISABLED
         
         println("✅ Sample data loading completed at ${java.time.LocalDateTime.now()}.")
     }

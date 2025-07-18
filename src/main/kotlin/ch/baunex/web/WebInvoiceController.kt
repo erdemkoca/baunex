@@ -85,13 +85,8 @@ class WebInvoiceController {
             }
             
             val billing = billingFacade.getBillingForProject(projectId)
-            logger.info("Billing found for project: ${billing != null}")
-            
-            if (billing == null) {
-                logger.error("Billing information not found for project: $projectId")
-                throw IllegalStateException("Billing information not found for project: $projectId")
-            }
-            
+            logger.info("Billing found for project: ${true}")
+
             val currentDate = LocalDate.now()
             val activeMenu = "invoice"
             

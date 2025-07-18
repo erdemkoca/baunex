@@ -17,4 +17,8 @@ class InvoiceRepository : PanacheRepository<InvoiceModel> {
     fun findByIdWithItems(id: Long): InvoiceModel? {
         return find("FROM InvoiceModel i LEFT JOIN FETCH i.items WHERE i.id = ?1", id).firstResult()
     }
+    
+    fun findByIdWithoutItems(id: Long): InvoiceModel? {
+        return find("FROM InvoiceModel i WHERE i.id = ?1", id).firstResult()
+    }
 } 

@@ -29,6 +29,9 @@ class SampleHolidayLoader {
 
     @Inject
     lateinit var holidayTypeService: HolidayTypeService
+    
+    @Inject
+    lateinit var employeeRepository: ch.baunex.user.repository.EmployeeRepository
 
     // Konfigurierbare Parameter
     private val weeksToGenerate = 10
@@ -39,7 +42,7 @@ class SampleHolidayLoader {
     fun load() {
         println("🎯 Loading sample holidays...")
         
-        val employees = employeeFacade.listAll()
+        val employees = employeeRepository.listAllEmployeesWithoutPerson()
         val holidayTypes = holidayTypeService.getActiveHolidayTypes()
         
         if (holidayTypes.isEmpty()) {
@@ -57,7 +60,7 @@ class SampleHolidayLoader {
         }
     }
 
-    private fun generateHolidaysForEmployee(employee: ch.baunex.user.dto.EmployeeDTO, holidayTypes: List<ch.baunex.timetracking.dto.HolidayTypeDTO>): Int {
+    private fun generateHolidaysForEmployee(employee: ch.baunex.user.model.EmployeeModel, holidayTypes: List<ch.baunex.timetracking.dto.HolidayTypeDTO>): Int {
         // Generate holidays for the next 10 weeks (future dates only)
         val startDate = LocalDate.now().plusDays(1) // Start from tomorrow
         val endDate = startDate.plusWeeks(weeksToGenerate.toLong()) // 10 weeks into the future
@@ -82,7 +85,7 @@ class SampleHolidayLoader {
         return holidaysCreated
     }
 
-    private fun createHoliday(employee: ch.baunex.user.dto.EmployeeDTO, date: LocalDate, holidayTypes: List<ch.baunex.timetracking.dto.HolidayTypeDTO>): Boolean {
+    private fun createHoliday(employee: ch.baunex.user.model.EmployeeModel, date: LocalDate, holidayTypes: List<ch.baunex.timetracking.dto.HolidayTypeDTO>): Boolean {
         // Erstelle Wahrscheinlichkeitsverteilung basierend auf Holiday-Types
         val holidayTypesWithProbabilities = mutableMapOf<String, Double>()
         
@@ -183,7 +186,7 @@ class SampleHolidayLoader {
             holidayFacade.requestHoliday(
                 HolidayDTO(
                     id = null,
-                    employeeId = employee.id,
+                    employeeId = employee.id!!,
                     startDate = date,
                     endDate = date,
                     type = selectedType,
