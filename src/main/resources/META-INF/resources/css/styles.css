@@ -5,6 +5,7 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #333;
     background-color: #f9f9f9;
+    overflow-x: hidden;
 }
 
 /* Header and navigation */
@@ -26,8 +27,54 @@ body {
     min-height: 100vh;
     background: #2c3e50;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-    position: relative;
-    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 16.666667%; /* col-md-2 equivalent */
+    z-index: 1000;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+/* Custom scrollbar for sidebar */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Responsive sidebar adjustments */
+@media (min-width: 992px) {
+    .sidebar {
+        width: 16.666667%; /* col-lg-2 equivalent */
+    }
+}
+
+@media (max-width: 991.98px) {
+    .sidebar {
+        width: 25%; /* col-md-3 equivalent */
+    }
+}
+
+@media (max-width: 767.98px) {
+    .sidebar {
+        position: relative;
+        width: 100%;
+        min-height: auto;
+    }
 }
 
 .sidebar::before {
@@ -158,6 +205,39 @@ body {
     width: 4px;
     height: 4px;
     right: 8px;
+}
+
+/* Main content adjustments for fixed sidebar */
+.container-fluid {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+/* Adjust main content to account for fixed sidebar */
+.col-md-9.col-lg-10 {
+    margin-left: 16.666667%; /* col-md-2 equivalent */
+    width: 83.333333%;
+}
+
+@media (min-width: 992px) {
+    .col-md-9.col-lg-10 {
+        margin-left: 16.666667%; /* col-lg-2 equivalent */
+        width: 83.333333%;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .col-md-9.col-lg-10 {
+        margin-left: 25%; /* col-md-3 equivalent */
+        width: 75%;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .col-md-9.col-lg-10 {
+        margin-left: 0;
+        width: 100%;
+    }
 }
 
 /* Cards */

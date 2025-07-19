@@ -23,13 +23,11 @@
   />
 </head>
 <body>
-<div class="container-fluid">
-  <div class="row">
-    <!-- Sidebar -->
-    <div class="col-md-3 col-lg-2 px-0 sidebar">
-      <div class="p-3">
-        <h4 class="mb-4">Baunex</h4>
-        <ul class="nav flex-column">
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="p-3">
+    <h4 class="mb-4">Baunex</h4>
+    <ul class="nav flex-column">
           <li class="nav-item">
             <a class="nav-link {#if activeMenu == 'dashboard'}active{/if}" href="/">
               <i class="bi bi-speedometer2 me-2"></i>Dashboard
@@ -112,14 +110,14 @@
               </li>
             </ul>
             {/if}
-          </li>
+                    </li>
         </ul>
       </div>
     </div>
 
-    <!-- Main content -->
-    <div class="col-md-9 col-lg-10 px-4 py-3">
-      <h2 class="mb-4">{#insert header}Dashboard{/}</h2>
+<!-- Main content -->
+<div class="col-md-9 col-lg-10 px-4 py-3">
+  <h2 class="mb-4">{#insert header}Dashboard{/}</h2>
 
       {#if activeMenu == 'projects' && projectId != null}
         <div class="mb-4 btn-group">
@@ -141,8 +139,6 @@
 
       {#insert content}No content provided{/}
     </div>
-  </div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
