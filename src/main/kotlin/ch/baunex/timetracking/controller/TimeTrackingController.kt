@@ -188,7 +188,7 @@ class TimeTrackingController {
                 isEditable = model.isEditable,
                 active = model.active,
                 isWorkFree = model.isWorkFree,
-                holidayType = model.holidayType.name,
+                holidayType = model.holidayType.displayName,
                 description = model.description
             )
         }

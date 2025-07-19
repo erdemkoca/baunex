@@ -14,8 +14,8 @@ class HolidayTypeModel : PanacheEntity() {
     @Column(nullable = false, length = 100)
     lateinit var displayName: String
 
-    @Column(name = "default_expected_hours", nullable = false)
-    var defaultExpectedHours: Double = 0.0
+    @Column(name = "factor", nullable = false)
+    var factor: Double = 1.0
 
     @Column(nullable = false)
     var active: Boolean = true

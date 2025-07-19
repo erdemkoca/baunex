@@ -74,6 +74,7 @@
                                 <thead>
                                     <tr>
                                         <th>Anzeigename</th>
+                                        <th>Faktor</th>
                                         <th>Erwartete Stunden</th>
                                         <th>Beschreibung</th>
                                         <th>Sortierung</th>
@@ -112,10 +113,16 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="holidayTypeExpectedHours" class="form-label">Erwartete Arbeitsstunden *</label>
-                            <input type="number" class="form-control" id="holidayTypeExpectedHours" required 
+                            <label for="holidayTypeFactor" class="form-label">Faktor *</label>
+                            <input type="number" class="form-control" id="holidayTypeFactor" required 
+                                   min="0" max="2" step="0.1" value="1.0">
+                            <div class="form-text">Faktor der geplanten Wochenstunden (1.0 = ganzer Tag, 0.5 = halber Tag, 0.0 = arbeitsfrei)</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="holidayTypeExpectedHours" class="form-label">Erwartete Arbeitsstunden (berechnet)</label>
+                            <input type="number" class="form-control" id="holidayTypeExpectedHours" readonly 
                                    min="0" max="24" step="0.5" value="0.0">
-                            <div class="form-text">Anzahl Stunden, die an diesem Tag erwartet werden (0.0 = arbeitsfrei)</div>
+                            <div class="form-text">Wird automatisch aus Faktor und geplanten Wochenstunden berechnet</div>
                         </div>
                         <div class="mb-3">
                             <label for="holidayTypeDescription" class="form-label">Beschreibung</label>

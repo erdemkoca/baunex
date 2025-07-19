@@ -18,7 +18,7 @@ class HolidayTypeMapper {
             id = model.id,
             code = model.code,
             displayName = model.displayName,
-            defaultExpectedHours = model.defaultExpectedHours,
+            factor = model.factor,
             active = model.active,
             description = model.description,
             sortOrder = model.sortOrder,
@@ -33,7 +33,7 @@ class HolidayTypeMapper {
         return HolidayTypeModel().apply {
             code = dto.code
             displayName = dto.displayName
-            defaultExpectedHours = dto.defaultExpectedHours
+            factor = dto.factor
             description = dto.description
             sortOrder = dto.sortOrder
             active = true
@@ -41,11 +41,27 @@ class HolidayTypeMapper {
             createdAt = LocalDate.now()
         }
     }
+    
+    fun toModelFromDTO(dto: HolidayTypeDTO): HolidayTypeModel {
+        log.debug("Mapping holiday type DTO to model: ${dto.code}")
+        return HolidayTypeModel().apply {
+            id = dto.id
+            code = dto.code
+            displayName = dto.displayName
+            factor = dto.factor
+            description = dto.description
+            sortOrder = dto.sortOrder
+            active = dto.active
+            isSystemType = dto.isSystemType
+            createdAt = dto.createdAt ?: LocalDate.now()
+            updatedAt = dto.updatedAt ?: LocalDate.now()
+        }
+    }
 
     fun updateModel(model: HolidayTypeModel, dto: HolidayTypeUpdateDTO) {
         log.debug("Updating holiday type model: ${model.code}")
         dto.displayName?.let { model.displayName = it }
-        dto.defaultExpectedHours?.let { model.defaultExpectedHours = it }
+        dto.factor?.let { model.factor = it }
         dto.active?.let { model.active = it }
         dto.description?.let { model.description = it }
         dto.sortOrder?.let { model.sortOrder = it }

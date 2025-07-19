@@ -24,6 +24,18 @@ class HolidayTypeSettingsApp {
             const code = this.generateCodeFromDisplayName(displayName);
             document.getElementById('holidayTypeCode').value = code;
         });
+        
+        // Auto-calculate expected hours when factor changes
+        document.getElementById('holidayTypeFactor').addEventListener('input', (e) => {
+            this.calculateExpectedHours();
+        });
+    }
+    
+    calculateExpectedHours() {
+        const factor = parseFloat(document.getElementById('holidayTypeFactor').value) || 0;
+        const plannedWeeklyHours = 40.0; // Default company setting
+        const expectedHours = factor * plannedWeeklyHours / 5; // Divide by 5 workdays per week
+        document.getElementById('holidayTypeExpectedHours').value = expectedHours.toFixed(1);
     }
 
     generateCodeFromDisplayName(displayName) {
@@ -70,7 +82,7 @@ class HolidayTypeSettingsApp {
         if (this.holidayTypes.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" class="text-center text-muted py-4">
+                    <td colspan="8" class="text-center text-muted py-4">
                         <i class="bi bi-inbox"></i> Keine Abwesenheitstypen gefunden
                     </td>
                 </tr>
@@ -82,12 +94,21 @@ class HolidayTypeSettingsApp {
             const row = document.createElement('tr');
             row.className = type.isSystemType ? 'system-type' : 'custom-type';
             
+            // Calculate expected hours based on factor
+            const plannedWeeklyHours = 40.0; // This should come from company settings
+            const workdaysPerWeek = 5;
+            const defaultWorkdayHours = plannedWeeklyHours / workdaysPerWeek;
+            const expectedHours = defaultWorkdayHours * type.factor;
+            
             row.innerHTML = `
                 <td>
                     <strong>${type.displayName}</strong>
                 </td>
+                <td class="text-center">
+                    <span class="badge bg-light text-dark">${type.factor || 1.0}</span>
+                </td>
                 <td class="expected-hours-cell">
-                    ${type.defaultExpectedHours.toFixed(1)}h
+                    ${expectedHours.toFixed(1)}h
                 </td>
                 <td>
                     ${type.description || '<span class="text-muted">-</span>'}
@@ -178,7 +199,13 @@ class HolidayTypeSettingsApp {
         document.getElementById('holidayTypeId').value = type.id;
         document.getElementById('holidayTypeCode').value = type.code;
         document.getElementById('holidayTypeDisplayName').value = type.displayName;
-        document.getElementById('holidayTypeExpectedHours').value = type.defaultExpectedHours;
+        document.getElementById('holidayTypeFactor').value = type.factor || 1.0;
+        // Calculate and set expected hours
+        const plannedWeeklyHours = 40.0; // This should come from company settings
+        const workdaysPerWeek = 5;
+        const defaultWorkdayHours = plannedWeeklyHours / workdaysPerWeek;
+        const expectedHours = defaultWorkdayHours * type.factor;
+        document.getElementById('holidayTypeExpectedHours').value = expectedHours.toFixed(1);
         document.getElementById('holidayTypeDescription').value = type.description || '';
         document.getElementById('holidayTypeSortOrder').value = type.sortOrder;
         document.getElementById('holidayTypeActive').checked = type.active;
@@ -196,7 +223,7 @@ class HolidayTypeSettingsApp {
         const holidayTypeData = {
             code: document.getElementById('holidayTypeCode').value,
             displayName: document.getElementById('holidayTypeDisplayName').value,
-            defaultExpectedHours: parseFloat(document.getElementById('holidayTypeExpectedHours').value),
+            factor: parseFloat(document.getElementById('holidayTypeFactor').value),
             description: document.getElementById('holidayTypeDescription').value || null,
             sortOrder: parseInt(document.getElementById('holidayTypeSortOrder').value) || 1
         };

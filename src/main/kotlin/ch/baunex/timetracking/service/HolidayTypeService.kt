@@ -17,7 +17,8 @@ import org.jboss.logging.Logger
 @ApplicationScoped
 class HolidayTypeService @Inject constructor(
     private val holidayTypeRepository: HolidayTypeRepository,
-    private val holidayTypeMapper: HolidayTypeMapper
+    private val holidayTypeMapper: HolidayTypeMapper,
+    private val companySettingsService: ch.baunex.company.service.CompanySettingsService
 ) {
     private val log = Logger.getLogger(HolidayTypeService::class.java)
 
@@ -88,7 +89,7 @@ class HolidayTypeService @Inject constructor(
     }
 
     /**
-     * Get expected hours for a holiday type code
+     * Get expected hours for a holiday type code using factor calculation
      */
     fun getExpectedHoursForHolidayType(holidayTypeCode: String?): Double {
         log.info("Fetching expected hours for holiday type code: $holidayTypeCode")
@@ -99,8 +100,11 @@ class HolidayTypeService @Inject constructor(
                 return hours
             }
             val holidayType = holidayTypeRepository.findActiveByCode(holidayTypeCode)
-            val hours = holidayType?.defaultExpectedHours ?: getDefaultWorkdayHours()
-            log.info("Expected hours for code $holidayTypeCode: $hours")
+            val plannedWeeklyHours = companySettingsService.getPlannedWeeklyHours()
+            val workdaysPerWeek = companySettingsService.getDefaultWorkdaysPerWeek().toDouble()
+            val defaultWorkdayHours = plannedWeeklyHours / workdaysPerWeek
+            val hours = holidayType?.let { defaultWorkdayHours * it.factor } ?: defaultWorkdayHours
+            log.info("Expected hours for code $holidayTypeCode: $hours (factor: ${holidayType?.factor}, default: $defaultWorkdayHours)")
             hours
         } catch (e: Exception) {
             log.error("Failed to fetch expected hours for code: $holidayTypeCode", e)
@@ -128,8 +132,11 @@ class HolidayTypeService @Inject constructor(
             }
             
             val holidayType = holidayTypeRepository.findActiveByCode(holidayTypeCode)
-            val hours = holidayType?.defaultExpectedHours ?: getDefaultWorkdayHours()
-            log.info("Expected hours for code $holidayTypeCode: $hours")
+            val plannedWeeklyHours = companySettingsService.getPlannedWeeklyHours()
+            val workdaysPerWeek = companySettingsService.getDefaultWorkdaysPerWeek().toDouble()
+            val defaultWorkdayHours = plannedWeeklyHours / workdaysPerWeek
+            val hours = holidayType?.let { defaultWorkdayHours * it.factor } ?: defaultWorkdayHours
+            log.info("Expected hours for code $holidayTypeCode: $hours (factor: ${holidayType?.factor}, default: $defaultWorkdayHours)")
             hours
         } catch (e: Exception) {
             log.error("Failed to fetch expected hours for code: $holidayTypeCode", e)
@@ -138,14 +145,15 @@ class HolidayTypeService @Inject constructor(
     }
 
     /**
-     * Get default workday hours (from PAID_VACATION or first active type)
+     * Get default workday hours from company settings
      */
     fun getDefaultWorkdayHours(): Double {
         log.info("Fetching default workday hours")
         return try {
-            val paidVacation = holidayTypeRepository.findActiveByCode("PAID_VACATION")
-            val hours = paidVacation?.defaultExpectedHours ?: 8.0
-            log.info("Default workday hours: $hours")
+            val plannedWeeklyHours = companySettingsService.getPlannedWeeklyHours()
+            val workdaysPerWeek = companySettingsService.getDefaultWorkdaysPerWeek().toDouble()
+            val hours = plannedWeeklyHours / workdaysPerWeek
+            log.info("Default workday hours: $hours (plannedWeeklyHours: $plannedWeeklyHours / workdaysPerWeek: $workdaysPerWeek)")
             hours
         } catch (e: Exception) {
             log.error("Failed to fetch default workday hours", e)

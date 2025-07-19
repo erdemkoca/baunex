@@ -23,6 +23,7 @@ class CoreDataBootstrap @Inject constructor(
         println("🔧 Starting core data bootstrap...")
         bootstrapHolidayTypes()
         println("✅ Core data bootstrap completed successfully")
+        // TODO: Prüfen, wann Bootstrap HolidayTypes und CompanySettings erneut ausgeführt werden soll
         // Add other core data bootstrap methods here as needed
     }
     
@@ -31,13 +32,14 @@ class CoreDataBootstrap @Inject constructor(
         
         val coreHolidayTypes = listOf(
             HolidayTypeCreateDTO("PAID_VACATION", "Bezahlter Urlaub", 0.0),
-            HolidayTypeCreateDTO("UNPAID_LEAVE", "Unbezahlter Urlaub", 8.0),
+            HolidayTypeCreateDTO("UNPAID_LEAVE", "Unbezahlter Urlaub", 1.0),
             HolidayTypeCreateDTO("SICK_LEAVE", "Krankheit", 0.0),
             HolidayTypeCreateDTO("SPECIAL_LEAVE", "Sonderurlaub", 0.0),
             HolidayTypeCreateDTO("COMPENSATORY_TIME", "Zeitausgleich", 0.0),
             HolidayTypeCreateDTO("MATERNITY_LEAVE", "Mutterschaftsurlaub", 0.0),
             HolidayTypeCreateDTO("PATERNITY_LEAVE", "Vaterschaftsurlaub", 0.0),
-            HolidayTypeCreateDTO("PUBLIC_HOLIDAY", "Öffentlicher Feiertag", 0.0)
+            HolidayTypeCreateDTO("PUBLIC_HOLIDAY", "Öffentlicher Feiertag", 0.0),
+            HolidayTypeCreateDTO("HALF_DAY", "Halbtag", 0.5)
         )
         
         var createdCount = 0

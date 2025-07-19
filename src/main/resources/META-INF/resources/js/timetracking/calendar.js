@@ -62,7 +62,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Holiday types
                 holidayTypes: [],
                 defaultWorkdayHours: 8.0, // Will be updated from API
-                employeeDefaultWorkdayHours: {} // Cache for employee-specific workday hours
+                employeeDefaultWorkdayHours: {},
+                
+                // Company settings for expected hours calculation
+                companySettings: {
+                    plannedWeeklyHours: 40.0,
+                    defaultWorkdaysPerWeek: 5
+                }
             };
         },
         computed: {
@@ -215,23 +221,46 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             
             /**
+             * Lädt die Unternehmenseinstellungen vom Server
+             */
+            async loadCompanySettings() {
+                try {
+                    const response = await fetch('/api/company-settings');
+                    if (response.ok) {
+                        const settings = await response.json();
+                        this.companySettings = {
+                            plannedWeeklyHours: settings.plannedWeeklyHours || 40.0,
+                            defaultWorkdaysPerWeek: settings.defaultWorkdaysPerWeek || 5
+                        };
+                        console.log('Company settings loaded:', this.companySettings);
+                    } else {
+                        console.warn('Failed to load company settings, using defaults');
+                    }
+                } catch (error) {
+                    console.warn('Error loading company settings, using defaults:', error);
+                }
+            },
+            
+            /**
              * Verwendet die Standard-Holiday-Types falls der Server nicht erreichbar ist
              */
             useDefaultHolidayTypes() {
                 this.holidayTypes = [
-                    { code: 'PAID_VACATION', displayName: 'Bezahlter Urlaub', defaultExpectedHours: 0.0 },
-                    { code: 'UNPAID_LEAVE', displayName: 'Unbezahlter Urlaub', defaultExpectedHours: 8.0 },
-                    { code: 'SICK_LEAVE', displayName: 'Krankheit', defaultExpectedHours: 0.0 },
-                    { code: 'SPECIAL_LEAVE', displayName: 'Sonderurlaub', defaultExpectedHours: 0.0 },
-                    { code: 'COMPENSATORY_TIME', displayName: 'Zeitausgleich', defaultExpectedHours: 0.0 },
-                    { code: 'MATERNITY_LEAVE', displayName: 'Mutterschaftsurlaub', defaultExpectedHours: 0.0 },
-                    { code: 'PATERNITY_LEAVE', displayName: 'Vaterschaftsurlaub', defaultExpectedHours: 0.0 },
-                    { code: 'PUBLIC_HOLIDAY', displayName: 'Öffentlicher Feiertag', defaultExpectedHours: 0.0 }
+                    { code: 'PAID_VACATION', displayName: 'Bezahlter Urlaub', factor: 0.0 },
+                    { code: 'UNPAID_LEAVE', displayName: 'Unbezahlter Urlaub', factor: 1.0 },
+                    { code: 'SICK_LEAVE', displayName: 'Krankheit', factor: 0.0 },
+                    { code: 'SPECIAL_LEAVE', displayName: 'Sonderurlaub', factor: 0.0 },
+                    { code: 'COMPENSATORY_TIME', displayName: 'Zeitausgleich', factor: 0.0 },
+                    { code: 'MATERNITY_LEAVE', displayName: 'Mutterschaftsurlaub', factor: 0.0 },
+                    { code: 'PATERNITY_LEAVE', displayName: 'Vaterschaftsurlaub', factor: 0.0 },
+                    { code: 'PUBLIC_HOLIDAY', displayName: 'Öffentlicher Feiertag', factor: 0.0 },
+                    { code: 'HALF_DAY', displayName: 'Halbtag', factor: 0.5 }
                 ];
             },
             
             /**
              * Gibt die erwarteten Arbeitsstunden für einen gegebenen HolidayType zurück.
+             * Berechnet die erwarteten Stunden basierend auf dem Faktor und den geplanten Wochenstunden.
              * Falls der Typ nicht konfiguriert ist, wird der Standard-Arbeitstag zurückgegeben.
              */
             getExpectedHoursForHolidayType(holidayTypeCode) {
@@ -240,7 +269,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 const holidayType = this.holidayTypes.find(ht => ht.code === holidayTypeCode);
-                return holidayType ? holidayType.defaultExpectedHours : this.defaultWorkdayHours;
+                if (!holidayType) {
+                    return this.defaultWorkdayHours;
+                }
+                
+                // Calculate expected hours using factor and company planned weekly hours
+                const plannedWeeklyHours = this.companySettings.plannedWeeklyHours;
+                const workdaysPerWeek = this.companySettings.defaultWorkdaysPerWeek;
+                const defaultWorkdayHours = plannedWeeklyHours / workdaysPerWeek;
+                const expectedHours = defaultWorkdayHours * holidayType.factor;
+                
+                return expectedHours;
             },
             
             /**
@@ -1429,6 +1468,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.loadEmployeeDefaultWorkdayHours(this.selectedEmployeeId);
                 }
             });
+            
+            // Load company settings for expected hours calculation
+            this.loadCompanySettings();
             
             // Listen for entry-saved events from the form
             document.addEventListener('entry-saved', (event) => {

@@ -2,12 +2,16 @@ package ch.baunex.timetracking.mapper
 
 import ch.baunex.timetracking.dto.HolidayDefinitionDTO
 import ch.baunex.timetracking.model.HolidayDefinitionModel
-import ch.baunex.timetracking.model.HolidayDefinitionType
+import ch.baunex.timetracking.model.HolidayTypeModel
 import jakarta.enterprise.context.ApplicationScoped
+import jakarta.inject.Inject
 import org.jboss.logging.Logger
 
 @ApplicationScoped
-class HolidayDefinitionMapper {
+class HolidayDefinitionMapper @Inject constructor(
+    private val holidayTypeService: ch.baunex.timetracking.service.HolidayTypeService,
+    private val holidayTypeMapper: ch.baunex.timetracking.mapper.HolidayTypeMapper
+) {
     private val log = Logger.getLogger(HolidayDefinitionMapper::class.java)
 
     fun toModel(dto: HolidayDefinitionDTO): HolidayDefinitionModel {
@@ -22,7 +26,8 @@ class HolidayDefinitionMapper {
             isEditable = dto.isEditable
             active = dto.active
             isWorkFree = dto.isWorkFree
-            holidayType = HolidayDefinitionType.fromDisplayNameOrDefault(dto.holidayType)
+            // TODO: Get holiday type from database by code or name
+        holidayType = getHolidayTypeFromDatabase(dto.holidayType)
             description = dto.description
             createdAt = dto.createdAt
             updatedAt = dto.updatedAt
@@ -46,5 +51,22 @@ class HolidayDefinitionMapper {
             createdAt = model.createdAt,
             updatedAt = model.updatedAt
         )
+    }
+    
+    private fun getHolidayTypeFromDatabase(holidayTypeName: String?): HolidayTypeModel {
+        if (holidayTypeName == null) {
+                    return holidayTypeService.getHolidayTypeByCode("PUBLIC_HOLIDAY")?.let { 
+            holidayTypeMapper.toModelFromDTO(it) 
+        } ?: throw IllegalStateException("Default holiday type not found")
+        }
+        
+        // Try to find by display name first
+        val holidayType = holidayTypeService.getAllHolidayTypes()
+            .find { it.displayName == holidayTypeName }
+            ?.let { holidayTypeMapper.toModelFromDTO(it) }
+        
+        return holidayType ?: holidayTypeService.getHolidayTypeByCode("PUBLIC_HOLIDAY")?.let { 
+            holidayTypeMapper.toModelFromDTO(it) 
+        } ?: throw IllegalStateException("Holiday type not found: $holidayTypeName")
     }
 } 

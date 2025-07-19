@@ -27,7 +27,8 @@ class WorkSummaryService @Inject constructor(
     private val employeeRepository: EmployeeRepository,
     private val timeEntryMapper: TimeEntryMapper,
     private val holidayDefinitionService: ch.baunex.timetracking.service.HolidayDefinitionService,
-    private val holidayTypeService: ch.baunex.timetracking.service.HolidayTypeService
+    private val holidayTypeService: ch.baunex.timetracking.service.HolidayTypeService,
+    private val companySettingsService: ch.baunex.company.service.CompanySettingsService
 ) {
     private val log = Logger.getLogger(WorkSummaryService::class.java)
 
@@ -67,20 +68,20 @@ class WorkSummaryService @Inject constructor(
             return holidayHours
         }
 
-        // 4. Calculate default workday hours based on employee's plannedWeeklyHours
-        val defaultHours = calculateDefaultWorkdayHours(employee)
-        log.debug("$date is a regular workday, expected hours: $defaultHours (based on plannedWeeklyHours: ${employee.plannedWeeklyHours})")
+        // 4. Calculate default workday hours based on company settings
+        val defaultHours = calculateDefaultWorkdayHours()
+        log.debug("$date is a regular workday, expected hours: $defaultHours (based on company plannedWeeklyHours)")
         return defaultHours
     }
 
     /**
-     * Calculate default workday hours based on employee's plannedWeeklyHours
+     * Calculate default workday hours based on company settings
      * CENTRAL FUNCTION: This method provides the single source of truth for workday hours calculation
-     * Assumes 5 working days per week (Monday to Friday)
+     * Uses company settings for planned weekly hours and workdays per week
      */
-    fun calculateDefaultWorkdayHours(employee: ch.baunex.user.model.EmployeeModel): Double {
-        val plannedWeeklyHours = employee.plannedWeeklyHours
-        val workdaysPerWeek = 5.0 // Monday to Friday
+    fun calculateDefaultWorkdayHours(): Double {
+        val plannedWeeklyHours = companySettingsService.getPlannedWeeklyHours()
+        val workdaysPerWeek = companySettingsService.getDefaultWorkdaysPerWeek().toDouble()
         val defaultHours = plannedWeeklyHours / workdaysPerWeek
         
         log.debug("Calculated default workday hours: $defaultHours (plannedWeeklyHours: $plannedWeeklyHours / workdaysPerWeek: $workdaysPerWeek)")
@@ -92,8 +93,7 @@ class WorkSummaryService @Inject constructor(
      * CONVENIENCE METHOD: Returns the default workday hours for an employee
      */
     fun getDefaultWorkdayHoursForEmployee(employeeId: Long): Double {
-        val employee = employeeRepository.findById(employeeId) ?: return 8.0
-        return calculateDefaultWorkdayHours(employee)
+        return calculateDefaultWorkdayHours()
     }
 
     /**

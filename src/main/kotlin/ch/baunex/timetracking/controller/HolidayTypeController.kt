@@ -4,6 +4,8 @@ import ch.baunex.timetracking.dto.HolidayTypeDTO
 import ch.baunex.timetracking.dto.HolidayTypeCreateDTO
 import ch.baunex.timetracking.dto.HolidayTypeUpdateDTO
 import ch.baunex.timetracking.dto.HolidayTypeListDTO
+import ch.baunex.timetracking.dto.ExpectedHoursDTO
+import ch.baunex.timetracking.dto.DefaultWorkdayHoursDTO
 import ch.baunex.timetracking.facade.HolidayTypeFacade
 import io.quarkus.qute.CheckedTemplate
 import io.quarkus.qute.TemplateInstance
@@ -97,7 +99,7 @@ class HolidayTypeController @Inject constructor(
         return try {
             val expectedHours = holidayTypeFacade.getExpectedHoursForHolidayType(code)
             log.info("Successfully fetched expected hours ($expectedHours) for holiday type code: $code")
-            Response.ok(mapOf("expectedHours" to expectedHours)).build()
+            Response.ok(ExpectedHoursDTO(expectedHours)).build()
         } catch (e: Exception) {
             log.error("Failed to fetch expected hours for holiday type code: $code", e)
             throw e
@@ -114,7 +116,7 @@ class HolidayTypeController @Inject constructor(
         return try {
             val expectedHours = holidayTypeFacade.getExpectedHoursForHolidayType(code, employeeId)
             log.info("Successfully fetched expected hours ($expectedHours) for holiday type code: $code, employee: $employeeId")
-            Response.ok(mapOf("expectedHours" to expectedHours)).build()
+            Response.ok(ExpectedHoursDTO(expectedHours)).build()
         } catch (e: Exception) {
             log.error("Failed to fetch expected hours for holiday type code: $code, employee: $employeeId", e)
             throw e
@@ -128,7 +130,7 @@ class HolidayTypeController @Inject constructor(
         return try {
             val defaultHours = holidayTypeFacade.getDefaultWorkdayHours()
             log.info("Successfully fetched default workday hours: $defaultHours")
-            Response.ok(mapOf("defaultWorkdayHours" to defaultHours)).build()
+            Response.ok(DefaultWorkdayHoursDTO(defaultHours)).build()
         } catch (e: Exception) {
             log.error("Failed to fetch default workday hours", e)
             throw e

@@ -32,9 +32,9 @@ class HolidayDefinitionModel : PanacheEntity() {
     @Column(name = "is_work_free", nullable = false)
     var isWorkFree: Boolean = true
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "holiday_type", nullable = false)
-    var holidayType: HolidayDefinitionType = HolidayDefinitionType.PUBLIC_HOLIDAY
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "holiday_type_id", nullable = false)
+    lateinit var holidayType: HolidayTypeModel
 
     @Column(length = 500)
     var description: String? = null
@@ -46,17 +46,4 @@ class HolidayDefinitionModel : PanacheEntity() {
     var updatedAt: LocalDate? = null
 }
 
-enum class HolidayDefinitionType(val displayName: String) {
-    PUBLIC_HOLIDAY("Öffentlicher Feiertag"),
-    CANTONAL_HOLIDAY("Kantonaler Feiertag"),
-    COMPANY_HOLIDAY("Betriebsfeiertag"),
-    CUSTOM_HOLIDAY("Benutzerdefinierter Feiertag");
-
-    companion object {
-        fun fromDisplayNameOrDefault(name: String?): HolidayDefinitionType {
-            if (name == null) return PUBLIC_HOLIDAY
-            values().firstOrNull { it.displayName == name }?.let { return it }
-            return PUBLIC_HOLIDAY
-        }
-    }
-} 
+ 

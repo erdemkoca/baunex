@@ -9,7 +9,7 @@ data class HolidayTypeDTO(
     val id: Long? = null,
     val code: String,
     val displayName: String,
-    val defaultExpectedHours: Double,
+    val factor: Double = 1.0,
     val active: Boolean = true,
     val description: String? = null,
     val sortOrder: Int = 0,
@@ -22,7 +22,7 @@ data class HolidayTypeDTO(
 data class HolidayTypeCreateDTO(
     val code: String,
     val displayName: String,
-    val defaultExpectedHours: Double,
+    val factor: Double = 1.0,
     val description: String? = null,
     val sortOrder: Int = 0
 )
@@ -30,14 +30,17 @@ data class HolidayTypeCreateDTO(
 @Serializable
 data class HolidayTypeUpdateDTO(
     val displayName: String? = null,
-    val defaultExpectedHours: Double? = null,
-    val active: Boolean? = null,
+    val factor: Double? = null,
     val description: String? = null,
-    val sortOrder: Int? = null
+    val sortOrder: Int? = null,
+    val active: Boolean? = null
 )
 
-@Serializable
 data class HolidayTypeListDTO(
     val holidayTypes: List<HolidayTypeDTO>,
     val totalCount: Long
+)
+
+data class DefaultWorkdayHoursDTO(
+    val defaultWorkdayHours: Double
 ) 

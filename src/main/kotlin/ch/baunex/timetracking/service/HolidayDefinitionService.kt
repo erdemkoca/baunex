@@ -12,7 +12,9 @@ import org.jboss.logging.Logger
 
 @ApplicationScoped
 class HolidayDefinitionService @Inject constructor(
-    private val holidayDefinitionRepository: HolidayDefinitionRepository
+    private val holidayDefinitionRepository: HolidayDefinitionRepository,
+    private val holidayTypeService: ch.baunex.timetracking.service.HolidayTypeService,
+    private val holidayTypeMapper: ch.baunex.timetracking.mapper.HolidayTypeMapper
 ) {
     private val log = Logger.getLogger(HolidayDefinitionService::class.java)
 
@@ -55,7 +57,10 @@ class HolidayDefinitionService @Inject constructor(
                     this.isEditable = false // Automatisch generierte Feiertage sind nicht editierbar
                     this.active = true
                     this.isWorkFree = true
-                    this.holidayType = ch.baunex.timetracking.model.HolidayDefinitionType.PUBLIC_HOLIDAY
+                    // TODO: Get default holiday type from database
+        this.holidayType = holidayTypeService.getHolidayTypeByCode("PUBLIC_HOLIDAY")?.let { 
+            holidayTypeMapper.toModelFromDTO(it) 
+        } ?: throw IllegalStateException("Default holiday type not found")
                     this.description = if (isFixed) "Fester Schweizer Feiertag" else "Beweglicher Schweizer Feiertag"
                     this.createdAt = LocalDate.now()
                 }
