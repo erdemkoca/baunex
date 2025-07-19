@@ -585,13 +585,13 @@ function initializeForm() {
                         <div class="row g-3 mb-3">
                             <div class="col-md-12">
                                 <!-- NEW: Simple Large Toggle Switch -->
-                                <div style="text-align: center; padding: 20px; background: #f0f0f0; border-radius: 10px; margin: 20px 0;">
-                                    <h5 style="margin-bottom: 20px; color: #333;">Verrechenbar</h5>
+                                <div style="text-align: left; padding: 15px; background: #f0f0f0; border-radius: 10px; margin: 20px 0;">
                                     
                                     <!-- Large Toggle Button -->
                                     <button 
                                         type="button"
                                         @click="entry.billable = !entry.billable"
+                                        :title="entry.billable ? 'Verrechenbar: EIN - Diese Zeit wird dem Kunden in Rechnung gestellt' : 'Verrechenbar: AUS - Diese Zeit wird dem Kunden nicht in Rechnung gestellt'"
                                         :style="{
                                             width: '150px',
                                             height: '80px',
@@ -626,16 +626,6 @@ function initializeForm() {
                                             €
                                         </div>
                                     </button>
-                                    
-                                    <!-- Status Display -->
-                                    <div style="margin-top: 15px; font-size: 16px; color: #666;">
-                                        Status: <strong>{{ entry.billable ? 'EIN' : 'AUS' }}</strong>
-                                    </div>
-                                    
-                                    <!-- Debug Info -->
-                                    <div style="margin-top: 10px; font-size: 12px; color: #999;">
-                                        Boolean: {{ entry.billable }} | Type: {{ typeof entry.billable }}
-                                    </div>
                                 </div>
                             </div>
                         </div>
