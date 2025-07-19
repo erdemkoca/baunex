@@ -34,9 +34,6 @@ function initializeForm() {
         return;
     }
     
-    console.log('Time tracking form element found:', el);
-    console.log('Element dataset:', el.dataset);
-    
     // Check if the element has been properly initialized by Vue
     if (!el.dataset.entry || !el.dataset.employees) {
         console.log('Form element found but not yet initialized by Vue, retrying...');
@@ -115,7 +112,13 @@ function initializeForm() {
                 catalogItems: entry.catalogItems || [],
             };
             
+            // Ensure billable is a boolean
+            if (typeof entryData.billable !== 'boolean') {
+                entryData.billable = Boolean(entryData.billable);
+            }
+            
             console.log('Vue app entry data initialized:', entryData);
+            console.log('Entry billable value:', entryData.billable, typeof entryData.billable);
             console.log('Entry ID in Vue app:', entryData.id);
             console.log('Employee ID in Vue app:', entryData.employeeId);
             console.log('Project ID in Vue app:', entryData.projectId);
@@ -152,7 +155,8 @@ function initializeForm() {
                     zIndex: 100,
                     borderTop: '1px solid #dee2e6',
                     padding: '1rem 0'
-                }
+                },
+                showCustomTooltip: false, // New data property for tooltip
             };
         },
         computed: {
@@ -177,25 +181,28 @@ function initializeForm() {
                 return (mins / 60).toFixed(2);
             },
             // Tab validation
-            isGeneralTabValid() {
-                return this.entry.employeeId && this.entry.projectId && this.entry.date && this.entry.title && this.entry.title.trim() !== '';
+            isErfassungTabValid() {
+                return this.entry.employeeId && this.entry.projectId && this.entry.date && 
+                       this.entry.startTime && this.entry.endTime && 
+                       this.entry.title && this.entry.title.trim() !== '';
             },
-            isWorkTimeTabValid() {
-                return this.entry.startTime && this.entry.endTime;
+            isOptionenTabValid() {
+                // Optionen tab is optional, so always valid
+                return true;
             },
             getTabIcon() {
                 return (tabIndex) => {
-                    const icons = ['person-badge', 'clock', 'box-seam', 'sticky', 'check2-circle'];
-                    const isValid = tabIndex === 0 ? this.isGeneralTabValid : 
-                                   tabIndex === 1 ? this.isWorkTimeTabValid : true;
+                    const icons = ['person-badge', 'gear', 'box-seam', 'sticky', 'check2-circle'];
+                    const isValid = tabIndex === 0 ? this.isErfassungTabValid : 
+                                   tabIndex === 1 ? this.isOptionenTabValid : true;
                     
                     return isValid ? icons[tabIndex] : 'exclamation-triangle';
                 };
             },
             getTabClass() {
                 return (tabIndex) => {
-                    const isValid = tabIndex === 0 ? this.isGeneralTabValid : 
-                                   tabIndex === 1 ? this.isWorkTimeTabValid : true;
+                    const isValid = tabIndex === 0 ? this.isErfassungTabValid : 
+                                   tabIndex === 1 ? this.isOptionenTabValid : true;
                     
                     return {
                         'nav-link': true,
@@ -207,14 +214,12 @@ function initializeForm() {
             }
         },
         mounted() {
-            console.log('Time tracking form Vue app mounted');
-            console.log('Entry data in mounted:', this.entry);
-            console.log('Entry ID in mounted:', this.entry.id);
-            console.log('Employee ID in mounted:', this.entry.employeeId);
-            console.log('Project ID in mounted:', this.entry.projectId);
-            console.log('Date in mounted:', this.entry.date);
-            console.log('Start Time in mounted:', this.entry.startTime);
-            console.log('End Time in mounted:', this.entry.endTime);
+            console.log('Vue app mounted, entry.billable =', this.entry.billable);
+        },
+        watch: {
+            'entry.billable': function(newVal, oldVal) {
+                console.log('Billable changed from', oldVal, 'to', newVal);
+            }
         },
         methods: {
             // Tab navigation
@@ -222,6 +227,12 @@ function initializeForm() {
             // Icon helper for template
             icon(name) {
                 return `<i class='bi bi-${name}'></i>`;
+            },
+            // Tooltip helper
+            getBillableTooltip() {
+                const status = this.entry.billable ? 'EIN' : 'AUS';
+                const description = 'Diese Zeit wird dem Kunden in Rechnung gestellt';
+                return `Verrechenbar: ${status}\n${description}`;
             },
             // Breaks
             addBreak() {
@@ -434,9 +445,6 @@ function initializeForm() {
                         end: breakItem.end + ":00"
                     }));
 
-                    console.log("DEBUG: Breaks being sent:", formattedBreaks);
-                    console.log("DEBUG: Entry breaks:", this.entry.breaks);
-
                     const payload = {
                         id: this.entry.id,
                         employeeId: this.entry.employeeId,
@@ -460,15 +468,10 @@ function initializeForm() {
                         waitingTimeMinutes:  this.entry.waitingTimeMinutes
                     };
 
-                    console.log("DEBUG: Full payload:", payload);
-
                     // Determine if this is a create or update operation
                     const isUpdate = this.entry.id && this.entry.id !== 0;
                     const method = isUpdate ? 'PUT' : 'POST';
                     const url = isUpdate ? `/timetracking/api/${this.entry.id}` : '/timetracking/api';
-                    
-                    console.log(`DEBUG: Using ${method} for ${isUpdate ? 'update' : 'create'} operation`);
-                    console.log(`DEBUG: URL: ${url}`);
 
                     const saveRes = await fetch(url, {
                         method,
@@ -515,13 +518,17 @@ function initializeForm() {
                     this.showError(this.parseErrorMessage(e));
                     this.saving = false;
                 }
-            }
+            },
         },
         template: `
+        <style>
+        /* No CSS needed - using inline styles */
+        </style>
+        
         <div class="container-fluid">
             <!-- Tab Navigation -->
             <ul class="nav nav-tabs mb-4" role="tablist" style="border-bottom: 2px solid #e9ecef;">
-                <li class="nav-item" v-for="(tab, i) in ['Allgemein', 'Arbeitszeit', 'Material', 'Notizen', 'Übersicht']" :key="i">
+                <li class="nav-item" v-for="(tab, i) in ['Erfassung', 'Optionen', 'Material', 'Notizen', 'Übersicht']" :key="i">
                     <button :class="getTabClass(i)" @click="setTab(i)" style="border: none; border-radius: 6px 6px 0 0; margin-right: 0.25rem; font-weight: 500; transition: all 0.2s ease;">
                         <span v-html="icon(getTabIcon(i))"></span>
                         {{ tab }}
@@ -529,7 +536,7 @@ function initializeForm() {
                 </li>
             </ul>
 
-                    <!-- Allgemein -->
+                    <!-- Erfassung (Tab 1) - Alle Pflichtfelder + Verrechenbar -->
                     <div v-show="activeTab === 0">
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
@@ -556,67 +563,93 @@ function initializeForm() {
                                 <label class="form-label">Datum <span class="text-danger">*</span></label>
                                 <input v-model="entry.date" type="date" class="form-control" required>
                             </div>
-                            <div class="col-md-8">
-                                <label class="form-label">Titel <span class="text-danger">*</span></label>
-                                <input v-model="entry.title" type="text" class="form-control" placeholder="Kurze Beschreibung" required>
-                            </div>
-                        </div>
-                                </div>
-
-                    <!-- Arbeitszeit -->
-                    <div v-show="activeTab === 1">
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <label class="form-label">Startzeit <span class="text-danger">*</span></label>
                                 <input v-model="entry.startTime" type="time" class="form-control" required>
-                                </div>
-                            <div class="col-md-3">
+                            </div>
+                            <div class="col-md-4">
                                 <label class="form-label">Endzeit <span class="text-danger">*</span></label>
                                 <input v-model="entry.endTime" type="time" class="form-control" required>
-                                </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Pausen</label>
-                                <button class="btn btn-outline-secondary btn-sm ms-2" @click="showBreaks = !showBreaks">
-                                    {{ showBreaks ? 'Verbergen' : 'Anzeigen' }}
-                                            </button>
-                                        </div>
-                            <div class="col-md-3">
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label">Titel / Beschreibung <span class="text-danger">*</span></label>
+                                <input v-model="entry.title" type="text" class="form-control" placeholder="Kurze Beschreibung der Arbeit" required>
+                            </div>
+                            <div class="col-md-4">
                                 <label class="form-label">Gearbeitete Stunden</label>
                                 <input :value="autoHoursWorked" type="text" class="form-control bg-light" readonly>
                             </div>
                         </div>
-                        <div v-show="showBreaks" class="mb-3">
-                            <div class="card card-body bg-light mb-2">
-                                <div class="row g-2 align-items-end">
-                                    <div class="col-auto">
-                                        <label class="form-label">Pause von</label>
-                                        <input v-model="breakStart" type="time" class="form-control">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-12">
+                                <!-- NEW: Simple Large Toggle Switch -->
+                                <div style="text-align: center; padding: 20px; background: #f0f0f0; border-radius: 10px; margin: 20px 0;">
+                                    <h5 style="margin-bottom: 20px; color: #333;">Verrechenbar</h5>
+                                    
+                                    <!-- Large Toggle Button -->
+                                    <button 
+                                        type="button"
+                                        @click="entry.billable = !entry.billable"
+                                        :style="{
+                                            width: '150px',
+                                            height: '80px',
+                                            backgroundColor: entry.billable ? '#007bff' : '#ccc',
+                                            border: 'none',
+                                            borderRadius: '40px',
+                                            position: 'relative',
+                                            cursor: 'pointer',
+                                            transition: 'background-color 0.3s ease',
+                                            outline: 'none',
+                                            boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+                                        }">
+                                        
+                                        <!-- Toggle Circle -->
+                                        <div :style="{
+                                            position: 'absolute',
+                                            top: '4px',
+                                            left: entry.billable ? '66px' : '4px',
+                                            width: '72px',
+                                            height: '72px',
+                                            backgroundColor: 'white',
+                                            borderRadius: '50%',
+                                            transition: 'left 0.3s ease',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                                            fontSize: '24px',
+                                            fontWeight: 'bold',
+                                            color: entry.billable ? '#007bff' : '#666'
+                                        }">
+                                            €
+                                        </div>
+                                    </button>
+                                    
+                                    <!-- Status Display -->
+                                    <div style="margin-top: 15px; font-size: 16px; color: #666;">
+                                        Status: <strong>{{ entry.billable ? 'EIN' : 'AUS' }}</strong>
                                     </div>
-                                    <div class="col-auto">
-                                        <label class="form-label">bis</label>
-                                        <input v-model="breakEnd" type="time" class="form-control">
+                                    
+                                    <!-- Debug Info -->
+                                    <div style="margin-top: 10px; font-size: 12px; color: #999;">
+                                        Boolean: {{ entry.billable }} | Type: {{ typeof entry.billable }}
                                     </div>
-                                    <div class="col-auto">
-                                        <button class="btn btn-success" @click="addBreak" v-html="icon('plus-circle') + ' Hinzufügen'"></button>
-                                    </div>
-                                </div>
-                                <div v-if="entry.breaks.length > 0" class="mt-2">
-                                    <ul class="list-group">
-                                        <li v-for="(br, i) in entry.breaks" :key="i" class="list-group-item d-flex justify-content-between align-items-center">
-                                            {{ br.start }} - {{ br.end }}
-                                            <button class="btn btn-danger btn-sm" @click="removeBreak(i)" v-html="icon('trash')"></button>
-                                        </li>
-                                    </ul>
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Optionen (Tab 2) - Alle optionalen Felder -->
+                    <div v-show="activeTab === 1">
                         <div class="row g-3 mb-3">
                             <div class="col-md-4">
-                            <label class="form-label">Stundensatz (CHF)</label>
-                            <input v-model.number="entry.hourlyRate" type="number" step="0.01" class="form-control">
-                        </div>
+                                <label class="form-label">Stundensatz (CHF)</label>
+                                <input v-model.number="entry.hourlyRate" type="number" step="0.01" class="form-control">
+                            </div>
                             <div class="col-md-8">
-                            <label class="form-label">Zuschläge</label>
+                                <label class="form-label">Zuschläge</label>
                                 <div class="form-check form-check-inline">
                                 <input v-model="entry.hasNightSurcharge" type="checkbox" class="form-check-input" id="hasNightSurcharge">
                                 <label class="form-check-label" for="hasNightSurcharge">Nachtzuschlag</label>
@@ -633,12 +666,12 @@ function initializeForm() {
                         </div>
                         <div class="row g-3 mb-3">
                             <div class="col-md-4">
-                                    <label class="form-label">Reisezeit (Minuten)</label>
-                                    <input v-model.number="entry.travelTimeMinutes" type="number" min="0" class="form-control">
-                                </div>
+                                <label class="form-label">Reisezeit (Minuten)</label>
+                                <input v-model.number="entry.travelTimeMinutes" type="number" min="0" class="form-control">
+                            </div>
                             <div class="col-md-4">
-                                    <label class="form-label">Entsorgungskosten (CHF)</label>
-                                    <input v-model.number="entry.disposalCost" type="number" step="0.01" min="0" class="form-control">
+                                <label class="form-label">Entsorgungskosten (CHF)</label>
+                                <input v-model.number="entry.disposalCost" type="number" step="0.01" min="0" class="form-control">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Wartezeit (Minuten)</label>
@@ -648,18 +681,47 @@ function initializeForm() {
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <div class="form-check">
-                                    <input v-model="entry.billable" type="checkbox" class="form-check-input" id="billable">
-                                    <label class="form-check-label" for="billable">Verrechenbar</label>
-                                </div>
-                            </div>
-                                <div class="col-md-6">
-                                <div class="form-check">
                                     <input v-model="entry.invoiced" type="checkbox" class="form-check-input" id="invoiced">
                                     <label class="form-check-label" for="invoiced">Fakturiert</label>
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Pausen -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0">Pausen</h6>
+                                <button class="btn btn-outline-secondary btn-sm" @click="showBreaks = !showBreaks">
+                                    {{ showBreaks ? 'Verbergen' : 'Anzeigen' }}
+                                </button>
+                            </div>
+                            <div v-show="showBreaks">
+                                <div class="card card-body bg-light mb-2">
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-auto">
+                                            <label class="form-label">Pause von</label>
+                                            <input v-model="breakStart" type="time" class="form-control">
+                                        </div>
+                                        <div class="col-auto">
+                                            <label class="form-label">bis</label>
+                                            <input v-model="breakEnd" type="time" class="form-control">
+                                        </div>
+                                        <div class="col-auto">
+                                            <button class="btn btn-success" @click="addBreak" v-html="icon('plus-circle') + ' Hinzufügen'"></button>
+                                        </div>
+                                    </div>
+                                    <div v-if="entry.breaks.length > 0" class="mt-2">
+                                        <ul class="list-group">
+                                            <li v-for="(br, i) in entry.breaks" :key="i" class="list-group-item d-flex justify-content-between align-items-center">
+                                                {{ br.start }} - {{ br.end }}
+                                                <button class="btn btn-danger btn-sm" @click="removeBreak(i)" v-html="icon('trash')"></button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                    </div>
 
                     <!-- Material -->
                     <div v-show="activeTab === 2">
@@ -794,7 +856,7 @@ function initializeForm() {
                             <i class="bi bi-x-circle me-1"></i>
                             Abbrechen
                         </button>
-                        <button type="button" class="btn btn-primary" :disabled="saving" @click="saveEntry" style="border-radius: 6px; padding: 0.5rem 1.5rem; font-weight: 500; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <button type="button" class="btn btn-success" :disabled="saving" @click="saveEntry" style="border-radius: 6px; padding: 0.5rem 1.5rem; font-weight: 500; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                             <i class="bi bi-check-circle me-1"></i>
                             {{ saving ? 'Speichern...' : 'Speichern' }}
                         </button>

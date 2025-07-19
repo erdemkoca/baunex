@@ -649,8 +649,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     return [];
                 }
                 
-                console.log('Processing time entries:', timeEntries.length);
-                
                 // Sort entries by start time
                 const sortedEntries = [...timeEntries].sort((a, b) => {
                     const aStart = this.timeToMinutes(a.startTime);
@@ -692,12 +690,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         laneIndex: laneIndex,
                         totalLanes: Math.max(lanes.length, 1)
                     };
-                    
-                    console.log('Created layout item:', layoutItem);
+
                     layout.push(layoutItem);
                 }
-                
-                console.log('Final layout:', layout);
+
                 return layout;
             },
             timeToMinutes(timeStr) {
@@ -1308,12 +1304,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Check if the time block overlaps with the visible range
                     // Now we show blocks that are within or overlap the visible range
                     const isVisible = (startHour < this.timeRangeEnd && endHour > this.timeRangeStart);
-                    console.log('Time block visibility check:', { 
-                        startTime, endTime, startHour, endHour, 
-                        timeRangeStart: this.timeRangeStart, 
-                        timeRangeEnd: this.timeRangeEnd, 
-                        isVisible 
-                    });
                     
                     return isVisible;
                 } catch (error) {
