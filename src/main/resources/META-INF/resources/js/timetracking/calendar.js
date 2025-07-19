@@ -1746,7 +1746,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                         <!-- Holiday: Show holiday type instead of "von X.Xh" -->
                                         <div v-else-if="day.summary.holidayTypeCode || day.summary.isPublicHoliday" style="text-align:center;">
                                             <div style="font-size:14px; font-weight:bold; color: #333;">
-                                                {{ day.summary.workedHours.toFixed(1) }}h
+                                                {{ (day.summary.workedHours - day.summary.expectedHours) > 0 ? '+' : '' }}{{ (day.summary.workedHours - day.summary.expectedHours).toFixed(1) }}h
                                             </div>
                                             <div v-if="day.summary.holidayTypeCode" style="font-size:10px; color: #0dcaf0; font-weight: 500;">
                                                 {{ getHolidayTypeDisplayName(day.summary.holidayTypeCode) }}

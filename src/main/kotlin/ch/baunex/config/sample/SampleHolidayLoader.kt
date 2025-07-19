@@ -61,27 +61,41 @@ class SampleHolidayLoader {
     }
 
     private fun generateHolidaysForEmployee(employee: ch.baunex.user.model.EmployeeModel, holidayTypes: List<ch.baunex.timetracking.dto.HolidayTypeDTO>): Int {
-        // Generate holidays for the next 10 weeks (future dates only)
-        val startDate = LocalDate.now().plusDays(1) // Start from tomorrow
-        val endDate = startDate.plusWeeks(weeksToGenerate.toLong()) // 10 weeks into the future
+        // Generate holidays from employee start date to future
+        val employeeStartDate = employee.startDate
+        val currentDate = LocalDate.now()
         
-        var currentDate = startDate
+        // Use the later of employee start date or current date (to avoid past dates)
+        val startDate = if (employeeStartDate.isBefore(currentDate)) {
+            currentDate.plusDays(1) // Start from tomorrow if employee started in the past
+        } else {
+            employeeStartDate // Start from employee start date if it's in the future
+        }
+        
+        val endDate = startDate.plusWeeks(weeksToGenerate.toLong()) // 10 weeks from start date
+        
+        println("📅 Generating holidays for ${employee.person.firstName} ${employee.person.lastName}")
+        println("   Employee start date: $employeeStartDate")
+        println("   Holiday generation range: $startDate to $endDate")
+        
+        var currentHolidayDate = startDate
         var holidaysCreated = 0
 
-        while (!currentDate.isAfter(endDate)) {
+        while (!currentHolidayDate.isAfter(endDate)) {
             // Only create holidays on workdays (Monday to Friday)
-            if (currentDate.dayOfWeek in workDays) {
+            if (currentHolidayDate.dayOfWeek in workDays) {
                 if (Math.random() < holidayChance) {
-                    if (createHoliday(employee, currentDate, holidayTypes)) {
+                    if (createHoliday(employee, currentHolidayDate, holidayTypes)) {
                         holidaysCreated++
                     }
                 }
             }
             
             // Move to next day
-            currentDate = currentDate.plusDays(1)
+            currentHolidayDate = currentHolidayDate.plusDays(1)
         }
         
+        println("   ✅ Created $holidaysCreated holidays")
         return holidaysCreated
     }
 
