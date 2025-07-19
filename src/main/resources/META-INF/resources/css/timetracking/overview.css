@@ -1,0 +1,240 @@
+/* Overview Page Styles */
+
+/* Calendar Mini */
+.calendar-mini {
+    font-size: 0.9rem;
+}
+
+.calendar-header {
+    font-weight: bold;
+    color: #6c757d;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 4px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.calendar-day:hover {
+    background-color: #f8f9fa;
+    transform: scale(1.05);
+}
+
+.calendar-day.weekend {
+    background-color: #f8f9fa;
+    color: #6c757d;
+}
+
+.calendar-day.public-holiday {
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+}
+
+.calendar-day.holiday {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+}
+
+.calendar-day.has-entries {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.day-number {
+    font-weight: bold;
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+.day-indicator {
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.day-indicator.entries {
+    background-color: #28a745;
+}
+
+.day-indicator.holiday {
+    background-color: #17a2b8;
+}
+
+.day-indicator.public-holiday {
+    background-color: #ffc107;
+}
+
+/* Activity Timeline */
+.activity-timeline {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    width: 32px;
+    height: 32px;
+    background-color: #e9ecef;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.activity-description {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.activity-time {
+    color: #adb5bd;
+    font-size: 0.8rem;
+}
+
+/* KPI Cards */
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+/* Quick Actions */
+.btn-lg {
+    padding: 12px 24px;
+    font-size: 1rem;
+}
+
+/* Team Table */
+.table th {
+    font-weight: 600;
+    color: #495057;
+    border-top: none;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .calendar-day {
+        font-size: 0.7rem;
+        padding: 2px;
+    }
+    
+    .day-number {
+        font-size: 0.7rem;
+    }
+    
+    .btn-lg {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+    
+    .activity-item {
+        padding: 8px 0;
+    }
+    
+    .activity-icon {
+        width: 24px;
+        height: 24px;
+        margin-right: 8px;
+    }
+}
+
+/* Loading Animation */
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Alert Styles */
+.alert {
+    border: none;
+    border-radius: 8px;
+}
+
+.alert-heading {
+    font-size: 1rem;
+    margin-bottom: 8px;
+}
+
+/* Badge Styles */
+.badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+}
+
+/* Trend Stats */
+.trend-stats {
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin-top: 8px;
+}
+
+/* Custom Scrollbar */
+.activity-timeline::-webkit-scrollbar {
+    width: 6px;
+}
+
+.activity-timeline::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.activity-timeline::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.activity-timeline::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+} 

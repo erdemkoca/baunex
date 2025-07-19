@@ -46,6 +46,7 @@ class TimeTrackingController {
     @Inject lateinit var holidayFacade: HolidayFacade
     @Inject lateinit var workSummaryService: WorkSummaryService
     @Inject lateinit var holidayDefinitionService: ch.baunex.timetracking.service.HolidayDefinitionService
+    @Inject lateinit var overviewService: ch.baunex.timetracking.service.OverviewService
 
     private val log = Logger.getLogger(TimeTrackingController::class.java)
     private fun today() = LocalDate.now().toString()
@@ -90,6 +91,13 @@ class TimeTrackingController {
             currentYear: Int
         ): TemplateInstance
         
+        @JvmStatic
+        external fun overview(
+            activeMenu: String,
+            activeSubMenu: String,
+            overviewDataJson: String
+        ): TemplateInstance
+        
 
     }
 
@@ -98,8 +106,23 @@ class TimeTrackingController {
     @GET
     @Produces(MediaType.TEXT_HTML)
     fun indexView(): Response {
-        // Redirect to calendar view as the main time tracking page
-        return Response.seeOther(URI("/timetracking/calendar")).build()
+        // Redirect to overview as the main time tracking page
+        return Response.seeOther(URI("/timetracking/overview")).build()
+    }
+    
+    @GET
+    @Path("/overview")
+    @Produces(MediaType.TEXT_HTML)
+    fun overviewView(
+        @QueryParam("employeeId") employeeId: Long?
+    ): Response {
+        val overviewData = overviewService.getOverviewData(employeeId)
+        val page = Templates.overview(
+            activeMenu = "timetracking",
+            activeSubMenu = "overview",
+            overviewDataJson = json.encodeToString(overviewData)
+        )
+        return Response.ok(page.render()).build()
     }
     
     @GET
