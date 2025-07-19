@@ -76,10 +76,16 @@ class TimeTrackingStundenkontoController {
                 val usedVacationDays = workSummaryService.calculateUsedVacationDays(selectedEmployeeId, currentYear)
                 val remainingVacationDays = totalVacationDays - usedVacationDays
                 
+                // NEW: Calculate cumulative statistics
+                val cumulativeSickLeaveDays = workSummaryService.calculateCumulativeSickLeaveDays(selectedEmployeeId)
+                val cumulativeVacationDays = workSummaryService.calculateCumulativeVacationDays(selectedEmployeeId)
+                
                 mapOf(
                     "totalVacationDays" to totalVacationDays,
                     "usedVacationDays" to usedVacationDays,
-                    "remainingVacationDays" to remainingVacationDays
+                    "remainingVacationDays" to remainingVacationDays,
+                    "cumulativeSickLeaveDays" to cumulativeSickLeaveDays,
+                    "cumulativeVacationDays" to cumulativeVacationDays
                 )
             } else null
         } else null
@@ -111,5 +117,129 @@ class TimeTrackingStundenkontoController {
         } else {
             Response.status(Response.Status.NOT_FOUND).build()
         }
+    }
+
+    @GET
+    @Path("/api/debug/holidays")
+    @Produces(MediaType.APPLICATION_JSON)
+    fun debugHolidays(@QueryParam("employeeId") employeeId: Long?): Response {
+        val testEmployeeId = employeeId ?: 1L
+        
+        val sickLeaveDays = workSummaryService.calculateCumulativeSickLeaveDays(testEmployeeId)
+        val vacationDays = workSummaryService.calculateCumulativeVacationDays(testEmployeeId)
+        
+        val jsonResponse = """
+            {
+                "employeeId": $testEmployeeId,
+                "sickLeaveDays": $sickLeaveDays,
+                "vacationDays": $vacationDays,
+                "timestamp": "${java.time.LocalDateTime.now()}"
+            }
+        """.trimIndent()
+        
+        return Response.ok(jsonResponse).build()
+    }
+
+    @GET
+    @Path("/api/debug/holidays-db")
+    @Produces(MediaType.APPLICATION_JSON)
+    fun debugHolidaysDb(@QueryParam("employeeId") employeeId: Long?): Response {
+        val testEmployeeId = employeeId ?: 1L
+        val today = java.time.LocalDate.now()
+        val startDate = today.minusMonths(6)
+        
+        // Use the existing service methods instead of direct repository access
+        val sickLeaveDays = workSummaryService.calculateCumulativeSickLeaveDays(testEmployeeId)
+        val vacationDays = workSummaryService.calculateCumulativeVacationDays(testEmployeeId)
+        
+        val jsonResponse = """
+            {
+                "employeeId": $testEmployeeId,
+                "sickLeaveDays": $sickLeaveDays,
+                "vacationDays": $vacationDays,
+                "startDate": "$startDate",
+                "endDate": "$today",
+                "timestamp": "${java.time.LocalDateTime.now()}"
+            }
+        """.trimIndent()
+        
+        return Response.ok(jsonResponse).build()
+    }
+
+    @GET
+    @Path("/api/debug/holidays-raw")
+    @Produces(MediaType.APPLICATION_JSON)
+    fun debugHolidaysRaw(@QueryParam("employeeId") employeeId: Long?): Response {
+        val testEmployeeId = employeeId ?: 1L
+        val today = java.time.LocalDate.now()
+        val startDate = today.minusMonths(6)
+        
+        // Use the new service method
+        val holidaySummary = workSummaryService.getHolidaySummary(testEmployeeId, startDate, today)
+        
+        val jsonResponse = """
+            {
+                "employeeId": $testEmployeeId,
+                "holidaySummary": "${holidaySummary}",
+                "dateRange": "$startDate to $today",
+                "timestamp": "${java.time.LocalDateTime.now()}"
+            }
+        """.trimIndent()
+        
+        return Response.ok(jsonResponse).build()
+    }
+
+    @GET
+    @Path("/api/holidays/cumulative-sick-leave")
+    @Produces(MediaType.APPLICATION_JSON)
+    fun getCumulativeSickLeaveDays(
+        @QueryParam("employeeId") employeeId: Long?,
+        @QueryParam("week") week: Int?,
+        @QueryParam("year") year: Int?
+    ): Response {
+        val targetEmployeeId = employeeId ?: 1L
+        val targetWeek = week ?: 1
+        val targetYear = year ?: LocalDate.now().year
+        
+        val cumulativeSickLeaveDays = workSummaryService.calculateCumulativeSickLeaveDaysUpToWeek(targetEmployeeId, targetWeek, targetYear)
+        
+        val jsonResponse = """
+            {
+                "employeeId": $targetEmployeeId,
+                "week": $targetWeek,
+                "year": $targetYear,
+                "cumulativeSickLeaveDays": $cumulativeSickLeaveDays,
+                "timestamp": "${java.time.LocalDateTime.now()}"
+            }
+        """.trimIndent()
+        
+        return Response.ok(jsonResponse).build()
+    }
+
+    @GET
+    @Path("/api/holidays/cumulative-vacation")
+    @Produces(MediaType.APPLICATION_JSON)
+    fun getCumulativeVacationDays(
+        @QueryParam("employeeId") employeeId: Long?,
+        @QueryParam("week") week: Int?,
+        @QueryParam("year") year: Int?
+    ): Response {
+        val targetEmployeeId = employeeId ?: 1L
+        val targetWeek = week ?: 1
+        val targetYear = year ?: LocalDate.now().year
+        
+        val cumulativeVacationDays = workSummaryService.calculateCumulativeVacationDaysUpToWeek(targetEmployeeId, targetWeek, targetYear)
+        
+        val jsonResponse = """
+            {
+                "employeeId": $targetEmployeeId,
+                "week": $targetWeek,
+                "year": $targetYear,
+                "cumulativeVacationDays": $cumulativeVacationDays,
+                "timestamp": "${java.time.LocalDateTime.now()}"
+            }
+        """.trimIndent()
+        
+        return Response.ok(jsonResponse).build()
     }
 } 

@@ -190,6 +190,130 @@ class WorkSummaryService @Inject constructor(
     }
 
     /**
+     * Calculate cumulative sick leave days for an employee up to end of current week
+     * NEW FEATURE: Returns total sick leave days from employee start date until end of current week
+     */
+    fun calculateCumulativeSickLeaveDays(employeeId: Long): Int {
+        val today = LocalDate.now()
+        val weekFields = WeekFields.of(Locale.getDefault())
+        val currentWeek = today.get(weekFields.weekOfYear())
+        val currentYear = today.year
+        return calculateCumulativeSickLeaveDaysUpToWeek(employeeId, currentWeek, currentYear)
+    }
+
+    /**
+     * Calculate cumulative sick leave days for an employee up to end of specified week
+     * NEW FEATURE: Returns total sick leave days from employee start date until end of specified week
+     */
+    fun calculateCumulativeSickLeaveDaysUpToWeek(employeeId: Long, week: Int, year: Int): Int {
+        val employee = employeeRepository.findById(employeeId) ?: return 0
+        val startDate = employee.startDate
+        
+        // Calculate end of specified week (Sunday)
+        val weekFields = WeekFields.of(Locale.getDefault())
+        val weekStart = LocalDate.now().withYear(year).with(weekFields.weekOfYear(), week.toLong())
+            .with(weekFields.dayOfWeek(), 1L) // Monday
+        val weekEnd = weekStart.plusDays(6) // Sunday
+        
+        log.info("🔍 DEBUG: calculateCumulativeSickLeaveDaysUpToWeek for employee ${employee.person.firstName} ${employee.person.lastName}")
+        log.info("   Employee start date: $startDate")
+        log.info("   Target week: $week, year: $year")
+        log.info("   Week start: $weekStart, Week end: $weekEnd")
+        
+        val allHolidays = holidayRepository.findByEmployeeAndDateRange(employeeId, startDate, weekEnd)
+        log.info("   Total holidays found: ${allHolidays.size}")
+        
+        val sickLeaveHolidays = allHolidays.filter { 
+            it.holidayType.code == "SICK_LEAVE" && 
+            it.approvalStatus == ApprovalStatus.APPROVED &&
+            it.startDate <= weekEnd
+        }
+        
+        log.info("   SICK_LEAVE holidays found: ${sickLeaveHolidays.size}")
+        sickLeaveHolidays.forEach { holiday ->
+            log.info("   - SICK_LEAVE: ${holiday.startDate} to ${holiday.endDate} (${holiday.approvalStatus})")
+        }
+        
+        val totalDays = sickLeaveHolidays.sumOf { holiday ->
+            val effectiveEndDate = if (holiday.endDate > weekEnd) weekEnd else holiday.endDate
+            val workingDays = holidayDefinitionService.calculateWorkingDays(holiday.startDate, effectiveEndDate)
+            log.info("   - Working days for ${holiday.startDate} to $effectiveEndDate: $workingDays")
+            workingDays
+        }
+        
+        log.info("   Total sick leave days up to week $week: $totalDays")
+        return totalDays
+    }
+
+    /**
+     * Calculate cumulative vacation days for an employee up to end of current week
+     * NEW FEATURE: Returns total vacation days (PAID_VACATION + COMPENSATORY_TIME) from employee start date until end of current week
+     */
+    fun calculateCumulativeVacationDays(employeeId: Long): Int {
+        val today = LocalDate.now()
+        val weekFields = WeekFields.of(Locale.getDefault())
+        val currentWeek = today.get(weekFields.weekOfYear())
+        val currentYear = today.year
+        return calculateCumulativeVacationDaysUpToWeek(employeeId, currentWeek, currentYear)
+    }
+
+    /**
+     * Calculate cumulative vacation days for an employee up to end of specified week
+     * NEW FEATURE: Returns total vacation days (PAID_VACATION + COMPENSATORY_TIME) from employee start date until end of specified week
+     */
+    fun calculateCumulativeVacationDaysUpToWeek(employeeId: Long, week: Int, year: Int): Int {
+        val employee = employeeRepository.findById(employeeId) ?: return 0
+        val startDate = employee.startDate
+        
+        // Calculate end of specified week (Sunday)
+        val weekFields = WeekFields.of(Locale.getDefault())
+        val weekStart = LocalDate.now().withYear(year).with(weekFields.weekOfYear(), week.toLong())
+            .with(weekFields.dayOfWeek(), 1L) // Monday
+        val weekEnd = weekStart.plusDays(6) // Sunday
+        
+        log.info("🔍 DEBUG: calculateCumulativeVacationDaysUpToWeek for employee ${employee.person.firstName} ${employee.person.lastName}")
+        log.info("   Employee start date: $startDate")
+        log.info("   Target week: $week, year: $year")
+        log.info("   Week start: $weekStart, Week end: $weekEnd")
+        
+        val allHolidays = holidayRepository.findByEmployeeAndDateRange(employeeId, startDate, weekEnd)
+        log.info("   Total holidays found: ${allHolidays.size}")
+        
+        val vacationHolidays = allHolidays.filter { 
+            (it.holidayType.code == "PAID_VACATION" || it.holidayType.code == "COMPENSATORY_TIME") && 
+            it.approvalStatus == ApprovalStatus.APPROVED &&
+            it.startDate <= weekEnd
+        }
+        
+        log.info("   Vacation holidays found: ${vacationHolidays.size}")
+        vacationHolidays.forEach { holiday ->
+            log.info("   - ${holiday.holidayType.code}: ${holiday.startDate} to ${holiday.endDate} (${holiday.approvalStatus})")
+        }
+        
+        val totalDays = vacationHolidays.sumOf { holiday ->
+            val effectiveEndDate = if (holiday.endDate > weekEnd) weekEnd else holiday.endDate
+            val workingDays = holidayDefinitionService.calculateWorkingDays(holiday.startDate, effectiveEndDate)
+            log.info("   - Working days for ${holiday.startDate} to $effectiveEndDate: $workingDays")
+            workingDays
+        }
+        
+        log.info("   Total vacation days up to week $week: $totalDays")
+        return totalDays
+    }
+
+    /**
+     * Get holiday summary for debugging purposes
+     * NEW FEATURE: Returns summary of all holidays for an employee in a date range
+     */
+    fun getHolidaySummary(employeeId: Long, startDate: LocalDate, endDate: LocalDate): Map<String, Map<String, Int>> {
+        val allHolidays = holidayRepository.findByEmployeeAndDateRange(employeeId, startDate, endDate)
+        
+        return allHolidays.groupBy { it.holidayType.code }.mapValues { (_, holidays) ->
+            holidays.groupBy { it.approvalStatus.toString() }.mapValues { (_, statusHolidays) -> statusHolidays.size }
+        }
+    }
+
+    /**
      * Get weekly work summary for an employee
      * UNIFIED APPROACH: Uses the unified getDailyWorkSummary method
      */

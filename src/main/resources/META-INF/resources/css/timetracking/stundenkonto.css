@@ -35,6 +35,43 @@
     line-height: 1.5;
 }
 
+/* NEW: Absence and Vacation info styling */
+.absence-info, .vacation-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.absence-row, .vacation-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.absence-row:last-child, .vacation-row:last-child {
+    border-bottom: none;
+}
+
+.absence-label, .vacation-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.absence-value, .vacation-value {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+/* Icon styling in titles */
+.summary-card-title i {
+    color: #6c757d;
+    font-size: 1.1em;
+}
+
 .hours-info {
     font-size: 0.875rem;
     color: #6c757d;

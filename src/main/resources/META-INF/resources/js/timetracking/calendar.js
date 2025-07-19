@@ -56,7 +56,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     usedVacationDays: 0,
                     remainingVacationDays: 0,
                     holidayDays: 0,
-                    pendingHolidayRequests: 0
+                    pendingHolidayRequests: 0,
+                    cumulativeSickLeaveDays: 0,
+                    cumulativeVacationDays: 0
                 }, // Store cumulative hours account data
                 
                 // Holiday types
@@ -400,7 +402,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             usedVacationDays: 0,
                             remainingVacationDays: 0,
                             holidayDays: 0,
-                            pendingHolidayRequests: 0
+                            pendingHolidayRequests: 0,
+                            cumulativeSickLeaveDays: 0,
+                            cumulativeVacationDays: 0
                         };
                         
                         // Load weekly summary to get vacation data
@@ -416,6 +420,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 this.cumulativeHoursAccount.pendingHolidayRequests = summary.pendingHolidayRequests;
                             }
                         }
+                        
+                        // Load cumulative sick leave days and vacation days
+                        await this.loadCumulativeSickLeaveDays();
+                        await this.loadCumulativeVacationDays();
                     }
                 } catch (error) {
                     console.error('Error loading cumulative account for saldo calculation:', error);
@@ -432,7 +440,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         usedVacationDays: 0,
                         remainingVacationDays: 0,
                         holidayDays: 0,
-                        pendingHolidayRequests: 0
+                        pendingHolidayRequests: 0,
+                        cumulativeSickLeaveDays: 0
                     };
                 }
             },
@@ -447,6 +456,36 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } catch (error) {
                     console.error('Error loading monthly account:', error);
+                }
+            },
+            
+            async loadCumulativeSickLeaveDays() {
+                if (!this.selectedEmployeeId) return;
+                
+                try {
+                    const response = await fetch(`/timetracking/stundenkonto/api/holidays/cumulative-sick-leave?employeeId=${this.selectedEmployeeId}&week=${this.currentWeek}&year=${this.currentYear}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.cumulativeHoursAccount.cumulativeSickLeaveDays = data.cumulativeSickLeaveDays || 0;
+                    }
+                } catch (error) {
+                    console.error('Error loading cumulative sick leave days:', error);
+                    this.cumulativeHoursAccount.cumulativeSickLeaveDays = 0;
+                }
+            },
+            
+            async loadCumulativeVacationDays() {
+                if (!this.selectedEmployeeId) return;
+                
+                try {
+                    const response = await fetch(`/timetracking/stundenkonto/api/holidays/cumulative-vacation?employeeId=${this.selectedEmployeeId}&week=${this.currentWeek}&year=${this.currentYear}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.cumulativeHoursAccount.cumulativeVacationDays = data.cumulativeVacationDays || 0;
+                    }
+                } catch (error) {
+                    console.error('Error loading cumulative vacation days:', error);
+                    this.cumulativeHoursAccount.cumulativeVacationDays = 0;
                 }
             },
             previousWeek() {
@@ -1846,7 +1885,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                             
                                 <div class="metric-card secondary-metric"
-                                     :aria-label="'Urlaubstage: ' + cumulativeHoursAccount.remainingVacationDays + ' von ' + cumulativeHoursAccount.totalVacationDays + ' Tagen verbleibend'">
+                                     :aria-label="'Urlaubstage: ' + cumulativeHoursAccount.cumulativeVacationDays + ' Tage kumuliert bis KW ' + currentWeek">
                                     <div class="metric-icon">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                                             <!-- Sonne -->
@@ -1857,29 +1896,26 @@ document.addEventListener('DOMContentLoaded', () => {
                                             <path d="M2 18C4 16 8 17 12 17C16 17 20 16 22 18" stroke="#fd7e14" stroke-width="2" fill="none" stroke-linecap="round"/>
                                         </svg>
                                         </div>
-                                    <div class="metric-title">Urlaubstage</div>
+                                    <div class="metric-title">Urlaubstage (kumuliert)</div>
                                     <div class="metric-value secondary">
-                                        {{ cumulativeHoursAccount.remainingVacationDays }} / {{ cumulativeHoursAccount.totalVacationDays }}
+                                        {{ cumulativeHoursAccount.cumulativeVacationDays }} Tage
                                     </div>
                                     <div class="metric-subtitle">
-                                        Verbraucht {{ cumulativeHoursAccount.usedVacationDays }}, Rest {{ cumulativeHoursAccount.remainingVacationDays }}
+                                        Kumuliert bis KW {{ currentWeek }}
                                     </div>
                                 </div>
                                 
                                 <div class="metric-card secondary-metric"
-                                     :aria-label="'Abwesenheitstage: ' + cumulativeHoursAccount.holidayDays + ' Tage, ' + (cumulativeHoursAccount.pendingHolidayRequests > 0 ? cumulativeHoursAccount.pendingHolidayRequests + ' ausstehend' : 'alle genehmigt')">
+                                     :aria-label="'Krankheitstage: ' + cumulativeHoursAccount.cumulativeSickLeaveDays + ' Tage kumuliert bis KW ' + currentWeek">
                                     <div class="metric-icon">
-                                        <i class="bi bi-briefcase"></i>
+                                        <i class="bi bi-heart-pulse"></i>
                                         </div>
-                                    <div class="metric-title">Abwesenheitstage</div>
+                                    <div class="metric-title">Krankheitstage</div>
                                     <div class="metric-value secondary">
-                                        {{ cumulativeHoursAccount.holidayDays }} Tage
+                                        {{ cumulativeHoursAccount.cumulativeSickLeaveDays }} Tage
                                     </div>
                                     <div class="metric-subtitle">
-                                        <span v-if="cumulativeHoursAccount.pendingHolidayRequests > 0" class="status-pending">
-                                            {{ cumulativeHoursAccount.pendingHolidayRequests }} ausstehend
-                                        </span>
-                                        <span v-else class="status-approved">Genehmigt</span>
+                                        Kumuliert bis KW {{ currentWeek }}
                                     </div>
                                 </div>
                             </div>

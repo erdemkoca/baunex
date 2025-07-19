@@ -36,13 +36,24 @@
             <!-- Summary Section -->
             <div class="summary-section">
               <div class="row">
-                <!-- Urlaubstage Box -->
+                <!-- Abwesenheiten Box - Links oben -->
                 <div class="col-md-6 mb-4">
                   <div class="summary-card">
-                    <h5 class="summary-card-title">Urlaubstage</h5>
+                    <h5 class="summary-card-title">
+                      <i class="bi bi-calendar-x me-2"></i>Abwesenheiten
+                    </h5>
                     <div class="summary-card-content">
                       {#if vacationStats}
-                        {vacationStats.usedVacationDays} von {vacationStats.totalVacationDays}, Rest {vacationStats.remainingVacationDays}
+                        <div class="absence-info">
+                          <div class="absence-row">
+                            <span class="absence-label">Urlaubstage:</span>
+                            <span class="absence-value">{vacationStats.usedVacationDays} von {vacationStats.totalVacationDays}, Rest {vacationStats.remainingVacationDays}</span>
+                          </div>
+                          <div class="absence-row">
+                            <span class="absence-label">Krankheitstage:</span>
+                            <span class="absence-value">{vacationStats.cumulativeSickLeaveDays} Tage</span>
+                          </div>
+                        </div>
                       {#else}
                         Keine Daten verfügbar
                       {/if}
@@ -50,7 +61,7 @@
                   </div>
                 </div>
                 
-                <!-- Stundenkonto Box -->
+                <!-- Stundenkonto Box - Rechts -->
                 <div class="col-md-6 mb-4">
                   <div class="summary-card">
                     <h5 class="summary-card-title">Stundenkonto</h5>
