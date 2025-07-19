@@ -5,11 +5,14 @@ import ch.baunex.timetracking.dto.HolidayTypeCreateDTO
 import ch.baunex.timetracking.dto.HolidayTypeUpdateDTO
 import ch.baunex.timetracking.dto.HolidayTypeListDTO
 import ch.baunex.timetracking.facade.HolidayTypeFacade
+import io.quarkus.qute.CheckedTemplate
+import io.quarkus.qute.TemplateInstance
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import org.jboss.logging.Logger
+import java.time.LocalDate
 
 @Path("/api/holiday-types")
 @Produces(MediaType.APPLICATION_JSON)
@@ -19,6 +22,8 @@ class HolidayTypeController @Inject constructor(
 ) {
     
     private val log = Logger.getLogger(HolidayTypeController::class.java)
+
+
 
     @GET
     fun getActiveHolidayTypes(): List<HolidayTypeDTO> {
@@ -199,6 +204,8 @@ class HolidayTypeController @Inject constructor(
             throw e
         }
     }
+
+    
 
     @POST
     @Path("/{id}/deactivate")

@@ -9,7 +9,8 @@ import ch.baunex.timetracking.dto.ErrorResponseDTO
 import ch.baunex.timetracking.facade.TimeTrackingFacade
 import ch.baunex.user.facade.EmployeeFacade
 import ch.baunex.user.model.Role
-import ch.baunex.web.WebController.Templates
+import io.quarkus.qute.CheckedTemplate
+import io.quarkus.qute.TemplateInstance
 import org.jboss.resteasy.reactive.multipart.FileUpload
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
@@ -44,9 +45,71 @@ class TimeTrackingController {
     @Inject lateinit var noteAttachmentFacade: NoteAttachmentFacade
     @Inject lateinit var holidayFacade: HolidayFacade
     @Inject lateinit var workSummaryService: WorkSummaryService
+    @Inject lateinit var holidayDefinitionService: ch.baunex.timetracking.service.HolidayDefinitionService
 
     private val log = Logger.getLogger(TimeTrackingController::class.java)
     private fun today() = LocalDate.now().toString()
+
+    @CheckedTemplate(basePath = "timetracking", requireTypeSafeExpressions = false)
+    object Templates {
+        @JvmStatic
+        external fun form(
+            entryJson: String,
+            employeesJson: String,
+            projectsJson: String,
+            catalogItemsJson: String,
+            categoriesJson: String,
+            currentDate: String,
+            activeMenu: String,
+            activeSubMenu: String
+        ): TemplateInstance
+        
+        @JvmStatic
+        external fun calendar(
+            activeMenu: String,
+            activeSubMenu: String,
+            timeEntriesJson: String,
+            holidaysJson: String,
+            currentDate: String,
+            employeesJson: String,
+            projectsJson: String,
+            monthlyAccountJson: String
+        ): TemplateInstance
+        
+        @JvmStatic
+        external fun absences(
+            activeMenu: String,
+            activeSubMenu: String,
+            holidaysJson: String,
+            employeesJson: String,
+            pendingHolidaysJson: String,
+            approvedHolidaysJson: String,
+            rejectedHolidaysJson: String,
+            employeeStatsJson: String,
+            publicHolidaysJson: String,
+            currentYear: Int
+        ): TemplateInstance
+        
+        @JvmStatic
+        external fun overview(
+            activeMenu: String,
+            activeSubMenu: String,
+            currentDate: LocalDate,
+            employeesJson: String,
+            projectsJson: String,
+            pendingApprovalsJson: String,
+            recentTimeEntriesJson: String,
+            weeklyStatsJson: String,
+            pendingHolidaysJson: String,
+            projectStatsJson: String
+        ): TemplateInstance
+        
+        @JvmStatic
+        external fun list(
+            activeMenu: String,
+            activeSubMenu: String
+        ): TemplateInstance
+    }
 
     //─── HTML ────────────────────────────────────────────────────────────────────
 
@@ -55,6 +118,175 @@ class TimeTrackingController {
     fun listView(): Response {
         // Redirect to the new overview page
         return Response.seeOther(URI("/timetracking/overview")).build()
+    }
+    
+    @GET
+    @Path("/calendar")
+    @Produces(MediaType.TEXT_HTML)
+    fun calendarView(
+        @QueryParam("employeeId") employeeId: Long?,
+        @QueryParam("year") year: Int?
+    ): Response {
+        val currentYear = year ?: LocalDate.now().year
+        val employees = employeeFacade.listAll()
+        val selectedEmployeeId = employeeId ?: employees.firstOrNull()?.id ?: 0L
+        
+        val entries = timeTrackingFacade.getAllTimeEntries()
+        val projects = projectFacade.getAllProjects()
+        val holidays = holidayFacade.getAllHolidays()
+        
+        // Load monthly account for consistent saldo calculation
+        val monthlyAccount = if (selectedEmployeeId > 0) {
+            workSummaryService.getMonthlyHoursAccount(selectedEmployeeId, currentYear)
+        } else null
+        
+        val page = Templates.calendar(
+            activeMenu = "timetracking",
+            activeSubMenu = "calendar",
+            timeEntriesJson = json.encodeToString(entries),
+            holidaysJson = json.encodeToString(holidays),
+            currentDate = LocalDate.now().toString(),
+            employeesJson = json.encodeToString(employees),
+            projectsJson = json.encodeToString(projects),
+            monthlyAccountJson = monthlyAccount?.let { json.encodeToString(it) } ?: "null"
+        )
+        
+        return Response.ok(page.render()).build()
+    }
+    
+    @GET
+    @Path("/absences")
+    @Produces(MediaType.TEXT_HTML)
+    fun absencesView(): Response {
+        val holidays = holidayFacade.getAllHolidays()
+        val employees = employeeFacade.listAll()
+        val currentYear = LocalDate.now().year
+        
+        // Get fresh data after creating samples
+        val allHolidays = holidays
+        
+        // Für das Frontend: requestDate = createdAt
+        val pendingHolidays = allHolidays.filter { it.status == "PENDING" || it.status == "UNDEFINED" }
+        val approvedHolidays = allHolidays.filter { it.status == "APPROVED" }
+        val rejectedHolidays = allHolidays.filter { it.status == "REJECTED" }
+        
+        // Get public holidays for the current year
+        val publicHolidayModels = holidayDefinitionService.getHolidaysForYear(currentYear)
+        val publicHolidays = publicHolidayModels.map { model ->
+            ch.baunex.timetracking.dto.PublicHolidayDTO(
+                id = model.id,
+                year = model.year,
+                holidayDate = model.date.toString(),
+                name = model.name,
+                canton = model.canton,
+                isFixed = model.isFixed,
+                isEditable = model.isEditable,
+                active = model.active,
+                isWorkFree = model.isWorkFree,
+                holidayType = model.holidayType.name,
+                description = model.description
+            )
+        }
+        
+        // Calculate employee statistics with proper structure
+        val employeeStats = employees.map { employee ->
+            val employeeHolidays = allHolidays.filter { it.employeeId == employee.id }
+            val approvedDays = employeeHolidays.filter { it.status == "APPROVED" }
+                .sumOf { 
+                    val days = java.time.temporal.ChronoUnit.DAYS.between(it.startDate, it.endDate) + 1
+                    days.toInt()
+                }
+            val pendingDays = employeeHolidays.filter { it.status == "PENDING" || it.status == "UNDEFINED" }
+                .sumOf { 
+                    val days = java.time.temporal.ChronoUnit.DAYS.between(it.startDate, it.endDate) + 1
+                    days.toInt()
+                }
+            
+            ch.baunex.timetracking.dto.EmployeeAbsenceStatsDTO(
+                employee = employee,
+                totalHolidays = employeeHolidays.size,
+                approvedDays = approvedDays,
+                pendingDays = pendingDays,
+                remainingDays = (employee.vacationDays - approvedDays)
+            )
+        }
+        
+        val page = Templates.absences(
+            activeMenu = "timetracking",
+            activeSubMenu = "absences",
+            holidaysJson = json.encodeToString(allHolidays),
+            employeesJson = json.encodeToString(employees),
+            pendingHolidaysJson = json.encodeToString(pendingHolidays),
+            approvedHolidaysJson = json.encodeToString(approvedHolidays),
+            rejectedHolidaysJson = json.encodeToString(rejectedHolidays),
+            employeeStatsJson = json.encodeToString(employeeStats),
+            publicHolidaysJson = json.encodeToString(publicHolidays),
+            currentYear = currentYear
+        )
+        
+        return Response.ok(page.render()).build()
+    }
+    
+    @GET
+    @Path("/overview")
+    @Produces(MediaType.TEXT_HTML)
+    fun overviewView(): Response {
+        val currentDate = LocalDate.now()
+        val employees = employeeFacade.listAll()
+        val projects = projectFacade.getAllProjects()
+        
+        // Get current week
+        val weekFields = java.time.temporal.WeekFields.of(java.util.Locale.getDefault())
+        val currentWeek = currentDate.get(weekFields.weekOfYear())
+        val currentYear = currentDate.year
+        
+        // Get pending approvals (time entries not approved)
+        val pendingApprovals = timeTrackingFacade.getAllTimeEntries()
+            .filter { !it.approval.approved }
+            .take(10) // Limit to 10 most recent
+        
+        // Get recent time entries
+        val recentTimeEntries = timeTrackingFacade.getAllTimeEntries()
+            .sortedByDescending { it.date }
+            .take(10)
+        
+        // Get weekly statistics for all employees
+        val weeklyStats = workSummaryService.getAllEmployeesWeeklyWorkSummary(currentYear, currentWeek)
+        
+        // Get pending holiday requests
+        val pendingHolidays = holidayFacade.getAllHolidays()
+            .filter { it.status == "PENDING" }
+            .take(10)
+        
+        // Get project statistics (active projects with time entries)
+        val projectStats = projects.map { project ->
+            val projectTimeEntries = timeTrackingFacade.getAllTimeEntries()
+                .filter { it.projectId == project.id }
+            val totalHours = projectTimeEntries.sumOf { it.hoursWorked }
+            val employeeCount = projectTimeEntries.map { it.employeeId }.distinct().size
+            
+            ch.baunex.timetracking.dto.ProjectStatsDTO(
+                project = project,
+                totalHours = totalHours,
+                employeeCount = employeeCount,
+                lastActivity = projectTimeEntries.maxByOrNull { it.date }?.date
+            )
+        }.sortedByDescending { it.totalHours }
+        
+        val page = Templates.overview(
+            activeMenu = "timetracking",
+            activeSubMenu = "overview",
+            currentDate = currentDate,
+            employeesJson = json.encodeToString(employees),
+            projectsJson = json.encodeToString(projects),
+            pendingApprovalsJson = json.encodeToString(pendingApprovals),
+            recentTimeEntriesJson = json.encodeToString(recentTimeEntries),
+            weeklyStatsJson = json.encodeToString(weeklyStats),
+            pendingHolidaysJson = json.encodeToString(pendingHolidays),
+            projectStatsJson = json.encodeToString(projectStats)
+        )
+        
+        return Response.ok(page.render()).build()
     }
 
     @GET
@@ -65,7 +297,7 @@ class TimeTrackingController {
         val projs       = projectFacade.getAllProjects()
         val cats        = catalogFacade.getAllItems()
         val categories  = NoteCategory.values().toList()
-        val page = Templates.timeTrackingForm(
+        val page = Templates.form(
             entryJson        = entry?.let { json.encodeToString(it) } ?: "",
             employeesJson    = json.encodeToString(emps),
             projectsJson     = json.encodeToString(projs),

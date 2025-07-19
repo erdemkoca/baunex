@@ -1,4 +1,4 @@
-package ch.baunex.web
+package ch.baunex.timetracking.controller
 
 import ch.baunex.timetracking.dto.MonthlyHoursAccountDTO
 import ch.baunex.timetracking.facade.TimeTrackingFacade
@@ -30,7 +30,7 @@ class TimeTrackingStundenkontoController {
     @Inject
     lateinit var holidayFacade: HolidayFacade
 
-    @CheckedTemplate(requireTypeSafeExpressions = false)
+    @CheckedTemplate(basePath = "timetracking", requireTypeSafeExpressions = false)
     object Templates {
         @JvmStatic
         external fun stundenkonto(

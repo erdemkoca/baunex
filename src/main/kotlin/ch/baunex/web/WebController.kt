@@ -154,28 +154,7 @@ class WebController {
         @JvmStatic
         external fun employeeForm(employee: EmployeeDTO?, currentDate: LocalDate, activeMenu: String, roles: List<String>): TemplateInstance
 
-        @JvmStatic
-        external fun timeTracking(
-            activeMenu: String,
-            timeEntriesJson: String,
-            holidaysJson: String,
-            currentDate: String,
-            employeesJson: String,
-            projectsJson: String,
-            entryJson: String
-        ): TemplateInstance
 
-        @JvmStatic
-        external fun timeTrackingForm(
-            activeMenu: String,
-            entryJson: String,
-            employeesJson: String,
-            projectsJson: String,
-            categoriesJson: String,
-            catalogItemsJson: String,
-            currentDate: String,
-            activeSubMenu: String
-        ): TemplateInstance
 
         @JvmStatic
         external fun customers(
@@ -214,20 +193,6 @@ class WebController {
             activeMenu: String,
             currentDate: LocalDate,
             activeSubMenu: String = "company"
-        ): TemplateInstance
-
-        @JvmStatic
-        external fun holidaySettings(
-            activeMenu: String,
-            currentDate: LocalDate,
-            activeSubMenu: String = "holidays"
-        ): TemplateInstance
-
-        @JvmStatic
-        external fun holidayTypeSettings(
-            activeMenu: String,
-            currentDate: LocalDate,
-            activeSubMenu: String = "holiday-types"
         ): TemplateInstance
 
         @JvmStatic

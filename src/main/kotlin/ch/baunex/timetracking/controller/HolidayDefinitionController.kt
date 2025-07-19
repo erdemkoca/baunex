@@ -3,6 +3,8 @@ package ch.baunex.timetracking.controller
 import ch.baunex.timetracking.dto.HolidayDefinitionDTO
 import ch.baunex.timetracking.dto.HolidayDefinitionListDTO
 import ch.baunex.timetracking.facade.HolidayDefinitionFacade
+import io.quarkus.qute.CheckedTemplate
+import io.quarkus.qute.TemplateInstance
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
@@ -18,6 +20,8 @@ class HolidayDefinitionController @Inject constructor(
 ) {
     
     private val log = Logger.getLogger(HolidayDefinitionController::class.java)
+
+
 
     @GET
     @Path("/year/{year}")
@@ -157,4 +161,6 @@ class HolidayDefinitionController @Inject constructor(
             throw e
         }
     }
+
+
 } 
