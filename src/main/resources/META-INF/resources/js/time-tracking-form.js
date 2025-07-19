@@ -573,53 +573,50 @@ function initializeForm() {
                             </div>
                         </div>
                         <div class="row g-3 mb-3">
-                            <div class="col-md-8">
+                            <div class="col-md-6">
                                 <label class="form-label">Titel / Beschreibung <span class="text-danger">*</span></label>
                                 <input v-model="entry.title" type="text" class="form-control" placeholder="Kurze Beschreibung der Arbeit" required>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">Gearbeitete Stunden</label>
                                 <input :value="autoHoursWorked" type="text" class="form-control bg-light" readonly>
                             </div>
-                        </div>
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-12">
-                                <!-- NEW: Simple Large Toggle Switch -->
-                                <div style="text-align: left; padding: 15px; background: #f0f0f0; border-radius: 10px; margin: 20px 0;">
-                                    
-                                    <!-- Large Toggle Button -->
+                            <div class="col-md-3">
+                                <label class="form-label">Verrechenbar</label>
+                                <!-- Compact Toggle Switch -->
+                                <div style="display: flex; align-items: center; justify-content: center; height: 100%;">
                                     <button 
                                         type="button"
                                         @click="entry.billable = !entry.billable"
-                                        :title="entry.billable ? 'Verrechenbar: EIN - Diese Zeit wird dem Kunden in Rechnung gestellt' : 'Verrechenbar: AUS - Diese Zeit wird dem Kunden nicht in Rechnung gestellt'"
+                                        :title="entry.billable ? 'Verrechenbar: EIN' : 'Verrechenbar: AUS'"
                                         :style="{
-                                            width: '150px',
-                                            height: '80px',
+                                            width: '60px',
+                                            height: '30px',
                                             backgroundColor: entry.billable ? '#007bff' : '#ccc',
                                             border: 'none',
-                                            borderRadius: '40px',
+                                            borderRadius: '15px',
                                             position: 'relative',
                                             cursor: 'pointer',
                                             transition: 'background-color 0.3s ease',
                                             outline: 'none',
-                                            boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+                                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                                         }">
                                         
                                         <!-- Toggle Circle -->
                                         <div :style="{
                                             position: 'absolute',
-                                            top: '4px',
-                                            left: entry.billable ? '66px' : '4px',
-                                            width: '72px',
-                                            height: '72px',
+                                            top: '2px',
+                                            left: entry.billable ? '32px' : '2px',
+                                            width: '26px',
+                                            height: '26px',
                                             backgroundColor: 'white',
                                             borderRadius: '50%',
                                             transition: 'left 0.3s ease',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                                            fontSize: '24px',
+                                            boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                                            fontSize: '12px',
                                             fontWeight: 'bold',
                                             color: entry.billable ? '#007bff' : '#666'
                                         }">
