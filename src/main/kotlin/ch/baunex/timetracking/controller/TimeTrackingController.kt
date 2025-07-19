@@ -90,34 +90,16 @@ class TimeTrackingController {
             currentYear: Int
         ): TemplateInstance
         
-        @JvmStatic
-        external fun overview(
-            activeMenu: String,
-            activeSubMenu: String,
-            currentDate: LocalDate,
-            employeesJson: String,
-            projectsJson: String,
-            pendingApprovalsJson: String,
-            recentTimeEntriesJson: String,
-            weeklyStatsJson: String,
-            pendingHolidaysJson: String,
-            projectStatsJson: String
-        ): TemplateInstance
-        
-        @JvmStatic
-        external fun list(
-            activeMenu: String,
-            activeSubMenu: String
-        ): TemplateInstance
+
     }
 
     //─── HTML ────────────────────────────────────────────────────────────────────
 
     @GET
     @Produces(MediaType.TEXT_HTML)
-    fun listView(): Response {
-        // Redirect to the new overview page
-        return Response.seeOther(URI("/timetracking/overview")).build()
+    fun indexView(): Response {
+        // Redirect to calendar view as the main time tracking page
+        return Response.seeOther(URI("/timetracking/calendar")).build()
     }
     
     @GET
@@ -227,67 +209,7 @@ class TimeTrackingController {
         return Response.ok(page.render()).build()
     }
     
-    @GET
-    @Path("/overview")
-    @Produces(MediaType.TEXT_HTML)
-    fun overviewView(): Response {
-        val currentDate = LocalDate.now()
-        val employees = employeeFacade.listAll()
-        val projects = projectFacade.getAllProjects()
-        
-        // Get current week
-        val weekFields = java.time.temporal.WeekFields.of(java.util.Locale.getDefault())
-        val currentWeek = currentDate.get(weekFields.weekOfYear())
-        val currentYear = currentDate.year
-        
-        // Get pending approvals (time entries not approved)
-        val pendingApprovals = timeTrackingFacade.getAllTimeEntries()
-            .filter { !it.approval.approved }
-            .take(10) // Limit to 10 most recent
-        
-        // Get recent time entries
-        val recentTimeEntries = timeTrackingFacade.getAllTimeEntries()
-            .sortedByDescending { it.date }
-            .take(10)
-        
-        // Get weekly statistics for all employees
-        val weeklyStats = workSummaryService.getAllEmployeesWeeklyWorkSummary(currentYear, currentWeek)
-        
-        // Get pending holiday requests
-        val pendingHolidays = holidayFacade.getAllHolidays()
-            .filter { it.status == "PENDING" }
-            .take(10)
-        
-        // Get project statistics (active projects with time entries)
-        val projectStats = projects.map { project ->
-            val projectTimeEntries = timeTrackingFacade.getAllTimeEntries()
-                .filter { it.projectId == project.id }
-            val totalHours = projectTimeEntries.sumOf { it.hoursWorked }
-            val employeeCount = projectTimeEntries.map { it.employeeId }.distinct().size
-            
-            ch.baunex.timetracking.dto.ProjectStatsDTO(
-                project = project,
-                totalHours = totalHours,
-                employeeCount = employeeCount,
-                lastActivity = projectTimeEntries.maxByOrNull { it.date }?.date
-            )
-        }.sortedByDescending { it.totalHours }
-        
-        val page = Templates.overview(
-            activeMenu = "timetracking",
-            activeSubMenu = "overview",
-            currentDate = currentDate,
-            employeesJson = json.encodeToString(employees),
-            projectsJson = json.encodeToString(projects),
-            pendingApprovalsJson = json.encodeToString(pendingApprovals),
-            recentTimeEntriesJson = json.encodeToString(recentTimeEntries),
-            weeklyStatsJson = json.encodeToString(weeklyStats),
-            pendingHolidaysJson = json.encodeToString(pendingHolidays),
-            projectStatsJson = json.encodeToString(projectStats)
-        )
-        
-        return Response.ok(page.render()).build()
-    }
+
 
     @GET
     @Path("/{id}") @Produces(MediaType.TEXT_HTML)
